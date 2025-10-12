@@ -1,5 +1,4 @@
 import os
-
 from src.cli.command_line import CommandLine
 from dotenv import load_dotenv
 

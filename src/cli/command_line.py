@@ -1,34 +1,34 @@
-from sympy.strategies.core import switch
-
-from src.controllers.base_controller import BaseController
-from src.utils.utils import safe_int
+from src.cli.commands.command_quit import CommandQuit
+from src.controllers.controller_base import ControllerBase
 
 class CommandLine:
-    controller: BaseController
+    controller: ControllerBase
 
-    def __init__(self, controller: BaseController):
+    def __init__(self, controller: ControllerBase):
         self.controller = controller
 
     def run(self):
+
         while True:
-            self.show(f"(agent-x)/{self.controller.info()}")
-            command = list(map(str, input().split()))
-            if command == ["quit"] or command == ["q"]:
+            self.show(self.controller.info())
+            command_arguments = list(map(str, input().split()))
+            if len(command_arguments) <= 0:
+                continue
+
+            command = command_arguments[0]
+
+            if command not in self.controller.commands.table.keys():
+                print("Command not found")
+                continue
+
+            found = self.controller.commands.table[command]
+            found.run(command_arguments[1:])
+
+            if isinstance(found, CommandQuit):
                 self.show("Finish")
                 break
 
-            match command:
-                case ["sum", x, y]:
-                    if safe_int(x) and safe_int(y):
-                        result = str(int(x) + int(y))
-                        self.show(" ".join(command) + " -> " + result)
-                    else:
-                        self.show("Invalid params for sum command")
-                case ["help"]:
-                    self.show("HELP:")
-                case _:
-                    self.show(f"Invalid command: {command}")
 
 
     def show(self, message: str):
-        print(message)
+        print(f"(agent-x)/{message}")
