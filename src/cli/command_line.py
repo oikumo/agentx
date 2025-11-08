@@ -1,5 +1,16 @@
-from src.cli.commands.command_quit import CommandQuit
-from src.controllers.controller_base import ControllerBase
+import os
+from cli.commands.command_quit import CommandQuit
+from controllers.controller_base import ControllerBase
+
+
+def clear_console():
+    """Clears the console screen."""
+    # For Windows
+    if os.name == 'nt':
+        _ = os.system('cls')
+    # For macOS and Linux
+    else:
+        _ = os.system('clear')
 
 class CommandLine:
     controller: ControllerBase
@@ -8,17 +19,18 @@ class CommandLine:
         self.controller = controller
 
     def run(self):
-
+        clear_console()
+        
         while True:
-            self.show(self.controller.info())
+            self._show(self.controller.info())
             command_arguments = list(map(str, input().split()))
-            if len(command_arguments) <= 0:
-                continue
+            if len(command_arguments) <= 0: continue
 
             command = command_arguments[0]
 
             if command not in self.controller.commands.table.keys():
                 print("Command not found")
+                clear_console()
                 continue
 
             found = self.controller.commands.table[command]
@@ -28,7 +40,5 @@ class CommandLine:
                 self.show("Finish")
                 break
 
-
-
-    def show(self, message: str):
-        print(f"(agent-x)/{message}")
+    def _show(self, message: str):
+        print(f"(agent-x)/{message}$ ", end='')

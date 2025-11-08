@@ -1,8 +1,8 @@
 import os
-from src.cli.command_line import CommandLine
+from cli.command_line import CommandLine
 from dotenv import load_dotenv
 
-from src.controllers.main_controller import MainController
+from controllers.main_controller import MainController
 
 load_dotenv()
 

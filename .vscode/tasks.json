@@ -1,0 +1,19 @@
+    {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Run main",
+                "type": "shell",
+                "command": "${workspaceFolder}/.venv/bin/python ./src/main.py",
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "presentation": {
+                    "reveal": "always",
+                    "panel": "new"
+                },
+                "problemMatcher": []
+            }
+        ]
+    }

@@ -85,3 +85,9 @@ LangChain
             return len(text)
         -> Decorardor. @tool
         -> Requiere comentario para que las LLMs decidan ocuparlas
+
+Frontend
+--------
+
+- streamlit
+    streamlit run frontend.py 

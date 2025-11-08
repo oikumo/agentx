@@ -1,7 +1,7 @@
-from src.cli.commands.command_help import CommandHelp
-from src.cli.commands.command_math import CommandMath
-from src.cli.commands.command_quit import CommandQuit
-from src.controllers.controller_base import ControllerBase
+from cli.commands.command_help import CommandHelp
+from cli.commands.command_math import CommandMath
+from cli.commands.command_quit import CommandQuit
+from controllers.controller_base import ControllerBase
 
 
 class MainController(ControllerBase):

@@ -1,7 +1,7 @@
 from abc import ABC
 
-from src.cli.commands.command_base import CommandBase
-from src.utils.utils import safe_int
+from cli.commands.command_base import CommandBase
+from utils.utils import safe_int
 
 
 class CommandMath(CommandBase):

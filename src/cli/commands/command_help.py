@@ -1,6 +1,6 @@
 from abc import ABC
 
-from src.cli.commands.command_base import CommandBase
+from cli.commands.command_base import CommandBase
 
 class CommandHelp(CommandBase):
     def __init__(self):
