@@ -1,7 +1,8 @@
+from controllers.controller_base import ControllerBase
 from cli.commands.command_help import CommandHelp
 from cli.commands.command_math import CommandMath
 from cli.commands.command_quit import CommandQuit
-from controllers.controller_base import ControllerBase
+from cli.commands.command_clean import CommandClean
 
 
 class MainController(ControllerBase):
@@ -10,6 +11,7 @@ class MainController(ControllerBase):
         self.commands.add(CommandQuit())
         self.commands.add(CommandMath())
         self.commands.add(CommandHelp())
+        self.commands.add(CommandClean())
 
     def info(self) -> str:
         return "main"

@@ -1,16 +1,6 @@
-import os
 from cli.commands.command_quit import CommandQuit
 from controllers.controller_base import ControllerBase
-
-
-def clear_console():
-    """Clears the console screen."""
-    # For Windows
-    if os.name == 'nt':
-        _ = os.system('cls')
-    # For macOS and Linux
-    else:
-        _ = os.system('clear')
+from utils.utils import clear_console
 
 class CommandLine:
     controller: ControllerBase
@@ -30,7 +20,6 @@ class CommandLine:
 
             if command not in self.controller.commands.table.keys():
                 print("Command not found")
-                clear_console()
                 continue
 
             found = self.controller.commands.table[command]
