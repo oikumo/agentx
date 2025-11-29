@@ -1,6 +1,6 @@
-from cli.commands.command_quit import CommandQuit
-from controllers.controller_base import ControllerBase
-from utils.utils import clear_console
+from src.cli.commands.command_quit import CommandQuit
+from src.controllers.controller_base import ControllerBase
+from src.utils.utils import clear_console
 
 class CommandLine:
     controller: ControllerBase

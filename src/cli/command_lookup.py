@@ -1,5 +1,4 @@
-from cli.commands.command_base import CommandBase
-
+from src.cli.commands.command_base import CommandBase
 
 class CommandsLookUp:
     def __init__(self):

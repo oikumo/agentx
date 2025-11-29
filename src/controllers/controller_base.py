@@ -1,5 +1,5 @@
-from cli.command_lookup import CommandsLookUp
-from cli.commands.command_base import CommandBase
+from src.cli.command_lookup import CommandsLookUp
+
 
 class ControllerBase:
     def __init__(self):
