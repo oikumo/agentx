@@ -7,7 +7,7 @@ from langchain_core.tools import Tool
 from langchain_experimental.agents.agent_toolkits import create_csv_agent
 from langchain_experimental.tools import PythonREPLTool
 
-from ai.llm.llms import get_local_llm_qwen3
+from ai.llm.llms import get_local_llm_qwen3, get_remote_llm_openai_gpt4
 
 load_dotenv()
 
@@ -81,7 +81,7 @@ def router_agent():
     print(
         grand_agent_executor.invoke(
             {
-                "input": "<<<ALWAYS USE THE TOOL>>> Generate in the directory 'udemy_qr' in current path, 15 DIFFERENT qrcodes that point to `www.udemy.com/course/langchain`."
+                "input": "<<<ALWAYS USE THE TOOL>>> Generate in the directory './resources/udemy_qr' in current path, 15 DIFFERENT qrcodes that point to `www.udemy.com/course/langchain`."
                          "Verify if the files are created, if not, TRY AGAIN once until it are created. RUN THE CODE and print the results",
             }
         )
