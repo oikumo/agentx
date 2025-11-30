@@ -1,10 +1,9 @@
-VS Code
--------
+Agent-X
+=======
 
-- Python
-    - Control + Shift p
-        - Create enviroment 
-        - Usar ambiente
+Agent REPL
+
+
 
 Gestor de paquetes Python
 -------------------------
