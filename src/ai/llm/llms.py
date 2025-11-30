@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from langchain_community.chat_models import ChatLlamaCpp
@@ -24,3 +25,6 @@ def get_local_llm_qwen3():
 def get_local_llm_gemma3():
     return ChatOllama(temperature=0, model="qwen3:1.7b", reasoning=True)
     #return ChatOllama(temperature=0, model="gemma3:1b"),
+
+def get_remote_llm_openai_gpt4():
+    return ChatOpenAI(temperature=0, model="gpt-4-turbo"),
