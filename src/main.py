@@ -5,6 +5,7 @@ from ai.chat.simple_chat import simple_chat_prompt_template
 from ai.llm.llms import get_local_llm_qwen3, get_local_llm_qwen2_5, get_remote_llm_openai_gpt3_5_turbo, \
     get_local_llm_qwen2_5_coder, get_llama_cpp_llm
 from ai.react_agents_tools.react_tools import react_tools
+from ai.react_search_agent.search_agent import search_agent
 from ai.router_agents.router_react_agent import router_agent
 from src.command_line import CommandLine
 from src.commands.commands import add
@@ -24,7 +25,10 @@ if __name__ == "__main__":
         "tool": lambda args: simple_tool(
             llm= get_local_llm_qwen2_5()),
         "rtool": lambda args: react_tools(
-            llm=get_local_llm_qwen2_5())
+            llm=get_local_llm_qwen2_5()),
+        "search": lambda args: search_agent(
+            llm=get_local_llm_qwen2_5()
+        )
     }
 
     loop = CommandLine(commands)
