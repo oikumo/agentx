@@ -1,0 +1,20 @@
+[project]
+name = "agent-x"
+version = "0.1.0"
+readme="README.md"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "black>=25.1.0",
+    "chromadb>=1.0.20",
+    "isort>=6.0.1",
+    "langchain>=0.3.27",
+    "langchain-community>=0.3.29",
+    "langchain-ollama>=0.3.7",
+    "langchain-openai>=0.3.32",
+    "langchain-pinecone>=0.2.12",
+    "langchain-tavily>=0.2.11",
+    "langchainhub>=0.1.21",
+    "pypdf==6.4.0",
+    "python-dotenv>=1.1.1",
+]
