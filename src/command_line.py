@@ -8,16 +8,24 @@ class CommandLine:
     def run(self):
         clear_console()
         self._show("")
-        command_arguments = list(map(str, input().split()))
+        try:
+            command_entry = input()
+        except (EOFError, KeyboardInterrupt):
+            exit(0)
+        except Exception as e:
+            exit(1)
+
+        command_arguments = list(map(str, command_entry.split()))
         if len(command_arguments) <= 0: return
 
         command = command_arguments[0]
 
         if command not in self.commands:
-            print("Command not found")
+            print("command not found")
             return
 
         result = self.commands[command](command_arguments[1:])
+
         if result is not None:
             print(result)
 

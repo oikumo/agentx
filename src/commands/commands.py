@@ -5,8 +5,8 @@ def add(arguments):
         case (x, y):
             if safe_int(x) and safe_int(y):
                 result = str(int(x) + int(y))
-                return f"-> {result}"
+                return f"{result}"
             else:
-                return "Invalid params for sum command"
+                return "invalid params for sum command"
         case _:
-            return "Invalid command"
+            return "invalid command"
