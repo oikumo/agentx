@@ -7,7 +7,7 @@ from agent_x.ai.react_agents_tools.react_tools import react_tools
 from agent_x.ai.react_search_agent.search_agent import search_agent
 from agent_x.ai.router_agents.router_react_agent import router_agent
 from agent_x.command_line import CommandLine
-from agent_x.commands.commands import add
+from agent_x.commands.console_commands import add
 from agent_x.utils.utils import clear_console
 
 load_dotenv()
@@ -20,7 +20,10 @@ if __name__ == "__main__":
         "sum": lambda args : add(args),
         "router": lambda args: router_agent(),
         "chat": lambda args: simple_chat_prompt_template(
-            llm = get_llama_cpp_llm()),
+            llm = get_llama_cpp_llm(),
+            query="best game of 2023",
+            information="consider all games like dark souls"
+        ),
         "tool": lambda args: simple_tool(
             llm= get_local_llm_qwen2_5()),
         "rtool": lambda args: react_tools(
