@@ -7,7 +7,7 @@ class Command:
 
 @dataclass
 class CommandData:
-    command: str
+    key: str
     arguments: List[Any]
 
 class Commands:
@@ -17,14 +17,18 @@ class Commands:
     def add(self, command: Command):
         self.commands_list.append(command)
 
-    def call(self, text_command):
-        print(f"command process input: {text_command}")
-        raw_command = self._parse_text_command(text_command)
-        if raw_command:
-            print("command process OK")
-        else:
+    def call(self, text):
+        print(f"command process input: {text}")
+        raw_command = self._parse_text_command(text)
+        if raw_command is None:
             print("command process INVALID COMMAND")
             return
+
+        if raw_command.key not in self.commands_list:
+            print("command not found")
+            return
+
+        print("command process OK")
 
         self._tokenize_arguments(raw_command.arguments)
 
@@ -35,7 +39,7 @@ class Commands:
         command = command_arguments[0]
         raw_arguments = command_arguments[1:]
 
-        return CommandData(command=command, arguments=raw_arguments)
+        return CommandData(key=command, arguments=raw_arguments)
 
     def _tokenize_arguments(self, arguments: List[str]):
         raw_arguments = [(a, type(a).__name__) for a in arguments]
