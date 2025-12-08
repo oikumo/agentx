@@ -1,4 +1,4 @@
-from src.utils.utils import clear_console
+from agent_x.utils.utils import clear_console
 
 class CommandLine:
     def __init__(self, commands: dict):
