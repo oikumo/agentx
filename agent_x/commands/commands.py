@@ -1,9 +1,6 @@
 from typing import Optional, List, Any
 from dataclasses import dataclass
-
-class Command:
-    def __init__(self):
-        pass
+from agent_x.commands.command import Command
 
 @dataclass
 class CommandData:
