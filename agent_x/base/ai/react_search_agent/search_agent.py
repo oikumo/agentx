@@ -10,7 +10,7 @@ from langchain_tavily import TavilySearch
 from typing import List
 from pydantic import BaseModel, Field
 
-from agent_x.ai.react_search_agent.prompt import REACT_PROMPT_WITH_FORMAT_INSTRUCTIONS
+from agent_x.base.ai.react_search_agent.prompt import REACT_PROMPT_WITH_FORMAT_INSTRUCTIONS
 
 
 class Source(BaseModel):

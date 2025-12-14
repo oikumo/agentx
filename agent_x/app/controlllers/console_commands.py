@@ -1,4 +1,4 @@
-from agent_x.utils.utils import safe_int
+from agent_x.core.utils.utils import safe_int
 
 def add(arguments):
     match arguments:

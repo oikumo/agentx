@@ -1,36 +1,33 @@
-from typing import Optional, List, Any
+from typing import List
 from dataclasses import dataclass
-from agent_x.commands.command import Command
+
+from agent_x.core.repl.command import Command
+
 
 @dataclass
 class CommandData:
     key: str
-    arguments: List[Any]
+    arguments: list[str]
 
-class Commands:
+class CommandParser:
     def __init__(self):
         self.commands_list: list[Command] = []
 
     def add(self, command: Command):
         self.commands_list.append(command)
 
-    def call(self, text):
+    def parse(self, text) -> CommandData | None:
         print(f"command process input: {text}")
-        raw_command = self._parse_text_command(text)
+
+        raw_command : CommandData = self._parse_text_command(text)
         if raw_command is None:
             print("command process INVALID COMMAND")
-            return
+            return None
 
-        if raw_command.key not in self.commands_list:
-            print("command not found")
-            return
+        return raw_command
 
-        print("command process OK")
-
-        self._tokenize_arguments(raw_command.arguments)
-
-    def _parse_text_command(self, text_command: str) -> Optional[CommandData]:
-        command_arguments = list(map(str, text_command.split()))
+    def _parse_text_command(self, text_command: str) -> CommandData | None:
+        command_arguments = text_command.split()
         if len(command_arguments) <= 0: return None
 
         command = command_arguments[0]
