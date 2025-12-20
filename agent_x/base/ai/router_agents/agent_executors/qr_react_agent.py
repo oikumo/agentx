@@ -1,13 +1,10 @@
-from typing import Any
-
 from langchain_classic import hub
 from langchain_classic.agents import create_react_agent, AgentExecutor
+from langchain_core.language_models import BaseLanguageModel
 
 from langchain_experimental.tools import PythonREPLTool
 
-from src.ai.llm.llms import get_local_llm_qwen3
-
-def create_qr_react_agent_executor():
+def create_qr_react_agent_executor(llm: BaseLanguageModel):
     print("create_qr_generator_agent_executor")
 
     instructions = """You are an agent designed to write and execute python code to answer questions.
@@ -24,7 +21,7 @@ def create_qr_react_agent_executor():
     tools = [PythonREPLTool()]
     python_agent = create_react_agent(
         prompt=prompt,
-        llm= get_local_llm_qwen3(),
+        llm=llm,
         tools=tools,
     )
 
