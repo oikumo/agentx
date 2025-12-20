@@ -10,7 +10,10 @@ from agent_x.core.repl.command import Command
 class AIChat(Command):
     def __init__(self, key: str):
         super().__init__(key)
-    def run(cls, arguments: list[str]):
+    def run(self, arguments: list[str]):
+        if arguments is None or not arguments:
+            print("missing args")
+            return
         simple_chat_prompt_template(
             llm=get_llama_cpp_llm(),
             query=arguments[0],

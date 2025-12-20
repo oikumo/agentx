@@ -1,6 +1,5 @@
 from typing import List
 from dataclasses import dataclass
-
 from agent_x.core.repl.command import Command
 
 
@@ -17,8 +16,6 @@ class CommandParser:
         self.commands_list.append(command)
 
     def parse(self, text) -> CommandData | None:
-        print(f"command process input: {text}")
-
         raw_command : CommandData = self._parse_text_command(text)
         if raw_command is None:
             print("command process INVALID COMMAND")

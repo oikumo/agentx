@@ -1,9 +1,9 @@
-from agent_x.core.repl.command_parser import CommandParser
-from agent_x.core.repl.commands_table import CommandsTable
+from agent_x.core.repl.command_parser import CommandParser, CommandData
+from agent_x.core.repl.controllers.commands_controller import CommandsController
 from agent_x.core.utils.utils import clear_console
 
 class CommandLine:
-    def __init__(self, commands_table: CommandsTable):
+    def __init__(self, commands_table: CommandsController):
         self.info = ""
         self.commands_table = commands_table
         self.command_parser = CommandParser()
@@ -13,7 +13,6 @@ class CommandLine:
         self._show("")
         try:
             command_entry = input()
-            print(f"input: {command_entry}")
 
         except (EOFError, KeyboardInterrupt):
             exit(0)

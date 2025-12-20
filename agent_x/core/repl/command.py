@@ -1,6 +1,5 @@
 from abc import ABC, abstractclassmethod
 
-
 class Command(ABC):
     def __init__(self, key: str):
         self.key = key
@@ -10,7 +9,6 @@ class Command(ABC):
     @abstractclassmethod
     def run(cls, arguments: list[str]):
         pass
-
 
 
 
