@@ -1,10 +1,10 @@
 from agent_x.app.llm.llms import get_llama_cpp_llm, get_local_llm_qwen2_5
-from agent_x.base.ai.agent_tools.simple_tool import simple_tool
-from agent_x.base.ai.chat.simple_chat import simple_chat_prompt_template
-from agent_x.base.ai.react_agents_tools.react_tools import react_tools
-from agent_x.base.ai.react_search_agent.search_agent import search_agent
-from agent_x.base.ai.router_agents.router_react_agent import router_agent
-from agent_x.core.repl.command import Command
+from agent_x.app.ai.agent_tools.simple_tool import simple_tool
+from agent_x.app.ai.chat.simple_chat import simple_chat_prompt_template
+from agent_x.app.ai.react_agents_tools.react_tools import react_tools
+from agent_x.app.ai.react_search_agent.search_agent import search_agent
+from agent_x.app.ai.router_agents.router_react_agent import router_agent
+from agent_x.core.controllers.command_line_controller.command import Command
 
 
 class AIChat(Command):
@@ -16,7 +16,7 @@ class AIChat(Command):
             return
         simple_chat_prompt_template(
             llm=get_llama_cpp_llm(),
-            query=arguments[0],
+            query= " ".join(arguments),
             information="consider all games like dark souls")
 
 class AITools(Command):

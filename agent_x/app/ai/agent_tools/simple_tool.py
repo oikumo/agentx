@@ -1,7 +1,7 @@
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_classic.agents import create_tool_calling_agent, AgentExecutor
-from agent_x.base.ai.agent_tools.tools.math_tools import multiply
+from agent_x.app.ai.agent_tools.tools.math_tools import multiply
 
 def simple_tool(llm: BaseLanguageModel):
     print("simple tool")

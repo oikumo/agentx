@@ -1,12 +1,12 @@
-from agent_x.core.repl.command import Command
-from agent_x.core.repl.interface.interfaces import ICommandsController
+from agent_x.core.controllers.command_line_controller.command import Command
+from agent_x.core.controllers.controller import Controller
 
 
-class CommandsController(ICommandsController) :
+class CommandsController(Controller) :
     commands: dict[str, Command] = {}
 
     def __init__(self):
-        pass
+        super().__init__()
 
     def get_commands(self) -> list[Command]:
         return list(self.commands.values())

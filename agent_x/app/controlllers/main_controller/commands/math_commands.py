@@ -1,4 +1,4 @@
-from agent_x.core.repl.command import Command
+from agent_x.core.controllers.command_line_controller.command import Command
 from agent_x.core.utils.utils import safe_int
 
 
@@ -7,7 +7,6 @@ class SumCommand(Command):
         super().__init__(key)
 
     def run(self, arguments: list[str]):
-        print(f"sum command args: {arguments}")
         match arguments:
             case (x, y):
                 if safe_int(x) and safe_int(y):
