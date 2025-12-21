@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 class LLMModel(BaseModel):
     name: str = Field(description="Name of the model")
 
-class Config(BaseModel):
+class AppConfiguration(BaseModel):
     description: str = ""
-    llmModels: List[LLMModel] = []
+    llmModels: list[LLMModel] = []
 
 
