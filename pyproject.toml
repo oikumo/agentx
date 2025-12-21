@@ -27,3 +27,8 @@ dependencies = [
     "faiss-cpu==1.13.1",
     "langchain-chroma==1.1.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
