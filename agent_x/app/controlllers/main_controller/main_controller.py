@@ -2,7 +2,7 @@ from agent_x.app.controlllers.main_controller.imain_controller import IMainContr
 from agent_x.app.controlllers.main_controller.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, \
     HelpCommand
 from agent_x.app.controlllers.main_controller.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, \
-    AIReactTools, AISearch, AIFunction
+    AIReactTools, AISearch, AIFunction, RagPDF
 from agent_x.app.controlllers.main_controller.commands.math_commands import SumCommand
 from agent_x.core.controllers.command_line_controller.commands_controller import CommandsController
 
@@ -22,4 +22,5 @@ class MainController(CommandsController, IMainController):
         self.add_command(AISearch("search"))
         self.add_command(ReadFile("read"))
         self.add_command(AIFunction("f"))
+        self.add_command(RagPDF("rag"))
         self.add_command(HelpCommand("help", self))

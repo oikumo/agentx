@@ -1,5 +1,9 @@
+from langchain_classic import hub
+from langchain_ollama import OllamaEmbeddings
+
 from agent_x.app.ai.functions.function_call import function_call
-from agent_x.app.llm.llms import get_llama_cpp_llm, get_local_llm_qwen2_5
+from agent_x.app.ai.rag.rag_pdf.rag_pdf import rag_pdf
+from agent_x.app.llm.llms import get_llama_cpp_llm, get_local_llm_qwen2_5, get_local_llm_qwen3
 from agent_x.app.ai.agent_tools.simple_tool import simple_tool
 from agent_x.app.ai.chat.simple_chat import simple_chat_prompt_template
 from agent_x.app.ai.react_agents_tools.react_tools import react_tools
@@ -41,3 +45,21 @@ class AIReactTools(Command):
 class AISearch(Command):
     def run(cls, arguments: list[str]):
         search_agent(llm=get_local_llm_qwen2_5())
+
+class RagPDF(Command):
+    def run(cls, arguments: list[str]):
+        if arguments is None or not arguments:
+            print("missing args")
+            return
+        #"Give me the gist of ReAct in 3 sentences, the output MUST BE in bullet points"
+        rag_pdf(
+            query= " ".join(arguments),
+            pdf_path="/home/oikumo/Proyectos/llm-projects/agent-x/resources/react.pdf",
+            vectorstore_path="/home/oikumo/Proyectos/llm-projects/agent-x/local/faiss_index_react",
+            retrieval_qa_chat_prompt=hub.pull("langchain-ai/retrieval-qa-chat"),
+            # llm = get_llama_cpp_llm()
+            llm=get_local_llm_qwen3(),
+            embeddings=OllamaEmbeddings(model="nomic-embed-text")
+            # llm = OpenAI()
+            # embeddings = OpenAIEmbeddings()
+        )
