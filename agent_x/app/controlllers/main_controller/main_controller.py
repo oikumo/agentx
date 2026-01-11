@@ -1,3 +1,4 @@
+from agent_x.app.controlllers.main_controller.commands.llm_graph_commands import AIGraphSimple
 from agent_x.app.controlllers.main_controller.imain_controller import IMainController
 from agent_x.app.controlllers.main_controller.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, \
     HelpCommand
@@ -23,4 +24,5 @@ class MainController(CommandsController, IMainController):
         self.add_command(ReadFile("read"))
         self.add_command(AIFunction("f"))
         self.add_command(RagPDF("rag"))
+        self.add_command(AIGraphSimple("graph"))
         self.add_command(HelpCommand("help", self))
