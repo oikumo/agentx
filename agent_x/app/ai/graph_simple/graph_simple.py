@@ -32,7 +32,7 @@ flow.add_edge(ACT, AGENT_REASON)
 app = flow.compile()
 app.get_graph().draw_mermaid_png(output_file_path="flow.png")
 
-def graph_simple(llm):
+def graph_simple():
     print(f"graph simple")
     print("Hello ReAct LangGraph with Function Calling")
     res = app.invoke({"messages": [HumanMessage(content="What is the temperature in Tokyo? List it and then triple it")]})
