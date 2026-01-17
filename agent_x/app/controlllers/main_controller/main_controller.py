@@ -1,4 +1,5 @@
-from agent_x.app.controlllers.main_controller.commands.llm_graph_commands import AIGraphSimple, AIGraphChains
+from agent_x.app.controlllers.main_controller.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, \
+    AIGraphReflexion
 from agent_x.app.controlllers.main_controller.imain_controller import IMainController
 from agent_x.app.controlllers.main_controller.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, \
     HelpCommand
@@ -26,4 +27,5 @@ class MainController(CommandsController, IMainController):
         self.add_command(RagPDF("rag"))
         self.add_command(AIGraphSimple("graph"))
         self.add_command(AIGraphChains("chains"))
+        self.add_command(AIGraphReflexion("reflex"))
         self.add_command(HelpCommand("help", self))
