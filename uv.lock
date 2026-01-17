@@ -14,6 +14,7 @@ dependencies = [
     { name = "black" },
     { name = "chromadb" },
     { name = "faiss-cpu" },
+    { name = "grandalf" },
     { name = "isort" },
     { name = "langchain" },
     { name = "langchain-chroma" },
@@ -43,10 +44,11 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "black", specifier = "==25.12.0" },
-    { name = "chromadb", specifier = "==1.4.0" },
+    { name = "chromadb", specifier = "==1.4.1" },
     { name = "faiss-cpu", specifier = "==1.13.2" },
+    { name = "grandalf", specifier = ">=0.8" },
     { name = "isort", specifier = ">=6.0.1" },
-    { name = "langchain", specifier = "==1.2.3" },
+    { name = "langchain", specifier = "==1.2.6" },
     { name = "langchain-chroma", specifier = "==1.1.0" },
     { name = "langchain-community", specifier = ">=0.4.1" },
     { name = "langchain-experimental", specifier = "==0.4.1" },
@@ -55,7 +57,7 @@ requires-dist = [
     { name = "langchain-pinecone", specifier = ">=0.2.12" },
     { name = "langchain-tavily", specifier = "==0.2.16" },
     { name = "langchainhub", specifier = ">=0.1.21" },
-    { name = "langgraph", specifier = "==1.0.5" },
+    { name = "langgraph", specifier = "==1.0.6" },
     { name = "llama-cpp-python", specifier = ">=0.3.16" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "pillow", specifier = "==12.1.0" },
@@ -418,7 +420,7 @@ wheels = [
 
 [[package]]
 name = "chromadb"
-version = "1.4.0"
+version = "1.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "bcrypt" },
@@ -449,13 +451,13 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "uvicorn", extra = ["standard"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/43/54/2bc73eac5d8fd7ffc41f8e6e4dd13ad0fd916f8973f85b1411011ba1e05b/chromadb-1.4.0.tar.gz", hash = "sha256:5b4e6d1ede4faaaf12ec772c3c603ea19f39b255ef0795855b40dd79f00a4183", size = 2001752, upload-time = "2025-12-24T02:58:18.326Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/35/24479ac00e74b86e388854a573a9ebe6d41c51c37e03d00864bb967d861f/chromadb-1.4.1.tar.gz", hash = "sha256:3cceb83e0a7a3c2db0752ebf62e9cfe652da657594c093fe07e74022581a58eb", size = 2226347, upload-time = "2026-01-14T19:18:15.189Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/d5/7ce34021304bdf1a5eefaaf434d2be078828dd71aa3871d89eeeecedfb19/chromadb-1.4.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:ab4ad96c21d0038f6d8d84b9cac2010ce1f448926e9a2ee35251552f2e85da07", size = 20882057, upload-time = "2025-12-24T02:58:15.916Z" },
-    { url = "https://files.pythonhosted.org/packages/76/6d/9fbf794f3672bfaf227b0e8642b1af6e1ef7d5f5b20f7505ac684ff0b155/chromadb-1.4.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:4d3c8abd762f092f73482e3eb1dae560a8a1c2674575d11eaac0dddf35e9cc6d", size = 20148106, upload-time = "2025-12-24T02:58:12.915Z" },
-    { url = "https://files.pythonhosted.org/packages/1f/cc/d33e24258027c6a14a49a5abf94c75dd6f82e5ab5ed44fe622c0de303420/chromadb-1.4.0-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:29fe47563c460a6cadbdc481b503c520ab4e424730c97d6a85d488a13009b6ce", size = 20759866, upload-time = "2025-12-24T02:58:06.987Z" },
-    { url = "https://files.pythonhosted.org/packages/96/da/048ea86c7cb04a873aaab912be62d90b403a8b15a98ae7781ea777371373/chromadb-1.4.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1942e1ee074c7d1e421ea04391a1fccfd18a4b3b94a8e61e853d88dc6924abfa", size = 21666411, upload-time = "2025-12-24T02:58:10.044Z" },
-    { url = "https://files.pythonhosted.org/packages/a0/49/933091cf12ee4ce4527a8e99b778f768f63df67e7d3ed9c20eecc0385169/chromadb-1.4.0-cp39-abi3-win_amd64.whl", hash = "sha256:2ec0485e715357a41078c20ebed65d5d5b941bf2fff418c6f1c64176dc36f837", size = 21930010, upload-time = "2025-12-24T02:58:20.138Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/f0/7c815bb80a2aaa349757ed0c743fa7e85bbe16f612057b25cf1809456a32/chromadb-1.4.1-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:05d98ffe4a9a5549c9a78eee7624277f9d99c53200a01f1176ecb1d31ea3c819", size = 20313209, upload-time = "2026-01-14T19:18:12.111Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/4b/c16236d56bf6bf144edbe5a03c431b59ba089bd6f86baefa8ebc288bf8b8/chromadb-1.4.1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:38336431c01562cffdb3ef693f22f7a88df5304f942e01ed66ee0bbaf08f35da", size = 19634405, upload-time = "2026-01-14T19:18:08.264Z" },
+    { url = "https://files.pythonhosted.org/packages/70/9c/33c6c3036e30632c2b64d333e92af3972e6bef423a8285e0edc5f487d322/chromadb-1.4.1-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ffaaf9c7d4ddbbdc74bd7cac45d9729032020cc6e65a2b8f313257e6c949beed", size = 20276410, upload-time = "2026-01-14T19:18:00.226Z" },
+    { url = "https://files.pythonhosted.org/packages/29/bc/0c6a6255cd55fe384c1bda6bebb47b5ff9d5c535d993fd3451e4a3fbe42f/chromadb-1.4.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ad50fbb5799dcaef5ae7613be583a06b44b637283db066396490863266f48623", size = 21082323, upload-time = "2026-01-14T19:18:04.604Z" },
+    { url = "https://files.pythonhosted.org/packages/79/be/5092571f87ddf08022a3d9434d3374d3f5aa20ebad1c75d63107c0c046d6/chromadb-1.4.1-cp39-abi3-win_amd64.whl", hash = "sha256:cedc9941dad1081eb9be89a7f5f66374715d4f99f731f1eb9da900636c501330", size = 21376957, upload-time = "2026-01-14T19:18:16.95Z" },
 ]
 
 [[package]]
@@ -694,6 +696,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e5/7b/adfd75544c415c487b33061fe7ae526165241c1ea133f9a9125a56b39fd8/googleapis_common_protos-1.72.0.tar.gz", hash = "sha256:e55a601c1b32b52d7a3e65f43563e2aa61bcd737998ee672ac9b951cd49319f5", size = 147433, upload-time = "2025-11-06T18:29:24.087Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c4/ab/09169d5a4612a5f92490806649ac8d41e3ec9129c636754575b3553f4ea4/googleapis_common_protos-1.72.0-py3-none-any.whl", hash = "sha256:4299c5a82d5ae1a9702ada957347726b167f9f8d1fc352477702a1e851ff4038", size = 297515, upload-time = "2025-11-06T18:29:13.14Z" },
+]
+
+[[package]]
+name = "grandalf"
+version = "0.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyparsing" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/95/0e/4ac934b416857969f9135dec17ac80660634327e003a870835dd1f382659/grandalf-0.8.tar.gz", hash = "sha256:2813f7aab87f0d20f334a3162ccfbcbf085977134a17a5b516940a93a77ea974", size = 38128, upload-time = "2023-01-26T07:37:06.668Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/30/44c7eb0a952478dbb5f2f67df806686d6a7e4b19f6204e091c4f49dc7c69/grandalf-0.8-py3-none-any.whl", hash = "sha256:793ca254442f4a79252ea9ff1ab998e852c1e071b863593e5383afee906b4185", size = 41802, upload-time = "2023-01-10T15:16:19.753Z" },
 ]
 
 [[package]]
@@ -1112,16 +1126,16 @@ wheels = [
 
 [[package]]
 name = "langchain"
-version = "1.2.3"
+version = "1.2.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain-core" },
     { name = "langgraph" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/78/9565319259d92818d96f30d55507ee1072fbf5c008b95a6acecf5e47c4d6/langchain-1.2.3.tar.gz", hash = "sha256:9d6171f9c3c760ca3c7c2cf8518e6f8625380962c488b41e35ebff1f1d611077", size = 548296, upload-time = "2026-01-08T20:26:30.149Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/bc/d8f506a525baadee99a65c6cc28c1c35c9eaf1cb2009f048e9861d81a600/langchain-1.2.6.tar.gz", hash = "sha256:7d46cbf719d860a16f6fc182d5d3de17453dda187f3d43e9c40ac352a5094fdd", size = 553127, upload-time = "2026-01-16T19:21:19.611Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/e5/9b4f58533f8ce3013b1a993289eb11e8607d9c9d9d14699b29c6ac3b4132/langchain-1.2.3-py3-none-any.whl", hash = "sha256:5cdc7c80f672962b030c4b0d16d0d8f26d849c0ada63a4b8653a20d7505512ae", size = 106428, upload-time = "2026-01-08T20:26:29.162Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/28/d5dc4cb06ccb29d62a590d446072964766555e85863f5044c6e644c07d0d/langchain-1.2.6-py3-none-any.whl", hash = "sha256:a9a6c39f03c09b6eb0f1b47e267ad2a2fd04e124dfaa9753bd6c11d2fe7d944e", size = 108458, upload-time = "2026-01-16T19:21:18.085Z" },
 ]
 
 [[package]]
@@ -1299,7 +1313,7 @@ wheels = [
 
 [[package]]
 name = "langgraph"
-version = "1.0.5"
+version = "1.0.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain-core" },
@@ -1309,9 +1323,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "xxhash" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7d/47/28f4d4d33d88f69de26f7a54065961ac0c662cec2479b36a2db081ef5cb6/langgraph-1.0.5.tar.gz", hash = "sha256:7f6ae59622386b60fe9fa0ad4c53f42016b668455ed604329e7dc7904adbf3f8", size = 493969, upload-time = "2025-12-12T23:05:48.224Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c2/9c/dac99ab1732e9fb2d3b673482ac28f02bee222c0319a3b8f8f73d90727e6/langgraph-1.0.6.tar.gz", hash = "sha256:dd8e754c76d34a07485308d7117221acf63990e7de8f46ddf5fe256b0a22e6c5", size = 495092, upload-time = "2026-01-12T20:33:30.778Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/23/1b/e318ee76e42d28f515d87356ac5bd7a7acc8bad3b8f54ee377bef62e1cbf/langgraph-1.0.5-py3-none-any.whl", hash = "sha256:b4cfd173dca3c389735b47228ad8b295e6f7b3df779aba3a1e0c23871f81281e", size = 157056, upload-time = "2025-12-12T23:05:46.499Z" },
+    { url = "https://files.pythonhosted.org/packages/10/45/9960747781416bed4e531ed0c6b2f2c739bc7b5397d8e92155463735a40e/langgraph-1.0.6-py3-none-any.whl", hash = "sha256:bcfce190974519c72e29f6e5b17f0023914fd6f936bfab8894083215b271eb89", size = 157356, upload-time = "2026-01-12T20:33:29.191Z" },
 ]
 
 [[package]]
@@ -2540,6 +2554,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b0140bde72ea885a803b82086995367bf2037de0159d924/pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887", size = 4968631, upload-time = "2025-06-21T13:39:12.283Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b", size = 1225217, upload-time = "2025-06-21T13:39:07.939Z" },
+]
+
+[[package]]
+name = "pyparsing"
+version = "3.3.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/33/c1/1d9de9aeaa1b89b0186e5fe23294ff6517fce1bc69149185577cd31016b2/pyparsing-3.3.1.tar.gz", hash = "sha256:47fad0f17ac1e2cad3de3b458570fbc9b03560aa029ed5e16ee5554da9a2251c", size = 1550512, upload-time = "2025-12-23T03:14:04.391Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8b/40/2614036cdd416452f5bf98ec037f38a1afb17f327cb8e6b652d4729e0af8/pyparsing-3.3.1-py3-none-any.whl", hash = "sha256:023b5e7e5520ad96642e2c6db4cb683d3970bd640cdf7115049a6e9c3682df82", size = 121793, upload-time = "2025-12-23T03:14:02.103Z" },
 ]
 
 [[package]]
