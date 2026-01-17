@@ -3,6 +3,29 @@ Agent-X
 
 Agent REPL
 
+Environment Variables
+--------------------
+
+# OpenAI
+OPENAI_API_KEY
+
+# Tavily
+TAVILY_API_KEY
+
+# LangSmith
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT
+LANGSMITH_API_KEY
+LANGSMITH_PROJECT
+
+# Pinecone
+INDEX_NAME
+PINECONE_API_KEY
+
+
+INDEX_NAME_OLLAMA
+INDEX_NAME_OPENAI
+INDEX_NAME_DOCUMENT_HELPER
 
 
 Gestor de paquetes Python
