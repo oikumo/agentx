@@ -1,4 +1,4 @@
-from agent_x.app.ai.graph_chains.graph_chains import graph_chains
+from agent_x.app.ai.graph_reflector_chain.graph_chains import graph_chains
 from agent_x.app.ai.graph_simple.graph_simple import graph_simple
 from agent_x.core.controllers.command_line_controller.command import Command
 

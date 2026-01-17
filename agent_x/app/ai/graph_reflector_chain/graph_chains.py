@@ -2,9 +2,7 @@ from typing import TypedDict, Annotated
 from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
-
-from agent_x.app.ai.graph_chains.chains import reflect_chain, generate_chain
-
+from agent_x.app.ai.graph_reflector_chain.chains import generate_chain, reflect_chain
 
 
 def graph_chains():
