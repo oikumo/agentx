@@ -6,7 +6,7 @@ from langgraph.graph import END, START, StateGraph, MessagesState
 
 from agent_x.app.ai.graph_reflexion_agent.chains import first_responder, revisor
 from agent_x.app.ai.graph_reflexion_agent.tool_executor import execute_tools
-from agent_x.core.common.files.file_utils import saveToOutput
+from agent_x.core.common.files.file_utils import save_to_output
 
 
 def graph_reflexion_agent():
@@ -65,5 +65,5 @@ def graph_reflexion_agent():
     if isinstance(last_message, AIMessage) and last_message.tool_calls:
         print(last_message.tool_calls[0]["args"]["answer"])
     print(res)
-    saveToOutput(pprint.pformat(last_message))
+    save_to_output(pprint.pformat(last_message))
 

@@ -4,7 +4,7 @@ from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from agent_x.app.ai.graph_reflector_chain.chains import generate_chain, reflect_chain
-from agent_x.core.common.files.file_utils import saveToOutput
+from agent_x.core.common.files.file_utils import save_to_output
 import pprint
 
 def graph_chains():
@@ -59,4 +59,4 @@ def graph_chains():
     print(response)
 
     pprint.pprint(response)
-    saveToOutput(pprint.pformat(response))
+    save_to_output(pprint.pformat(response))
