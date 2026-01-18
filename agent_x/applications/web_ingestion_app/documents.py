@@ -2,7 +2,9 @@ import asyncio
 from typing import List
 
 from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from agent_x.applications.web_ingestion_app.helpers import load_docs_from_jsonl
 from agent_x.core.common.logger import log_header, log_info, log_success, log_error
 
 
@@ -35,3 +37,10 @@ async def index_documents_async(vectorstore, documents: List[Document], batch_si
     else:
         log_error(f"Documents processed {successful}/{len(batches)}")
 
+def process_documents(result_json_file_path: str) -> list[Document]:
+    all_docs = load_docs_from_jsonl(result_json_file_path)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=4000, chunk_overlap=200)
+    splitted_docs = text_splitter.split_documents(all_docs)
+
+    log_success(f"splitted docs: {len(splitted_docs)}")
+    return splitted_docs

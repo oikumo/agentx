@@ -1,7 +1,12 @@
 import json
-from typing import List
+from typing import List, Any
 
 from langchain_core.documents import Document
+
+def save_docs(all_docs: list[Any], result_json_file_path: str):
+    with open(result_json_file_path, "w") as jsonl_file:
+        for doc in all_docs:
+            jsonl_file.write(doc.model_dump_json() + "\n")
 
 def chunk_urls(urls: List[str], chunk_size: int = 3) -> List[List[str]]:
     """Split URLs into chunks of specified size."""
