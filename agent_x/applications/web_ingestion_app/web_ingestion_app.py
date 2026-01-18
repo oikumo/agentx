@@ -10,11 +10,12 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from agent_x.applications.web_ingestion_app.constants import vectorstore_chroma_dir, site_url, result_json_file_path
 from agent_x.applications.web_ingestion_app.documents import index_documents_async
-from agent_x.applications.web_ingestion_app.helpers import chunk_urls, async_extract, load_docs_from_jsonl
-from agent_x.applications.web_ingestion_app.tavily import tavily_map, vectorstore
+from agent_x.applications.web_ingestion_app.helpers import chunk_urls, load_docs_from_jsonl
+from agent_x.applications.web_ingestion_app.tavily import tavily_map, vectorstore, async_extract
 from agent_x.core.common.logger import log_header, log_info, Colors, log_success, log_error
 
 load_dotenv()
+
 
 
 ssl_context = ssl.create_default_context(cafile=certifi.where())
