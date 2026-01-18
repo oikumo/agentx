@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from langchain_tavily import TavilySearch
-from agent_x.modules.ai.langgraph.graph_reflexion_agent.schemas import AnswerQuestion, ReviseAnswer
+
+from agent_x.modules.llm.langgraph.graph_reflexion_agent.schemas import AnswerQuestion, ReviseAnswer
 
 load_dotenv()
 

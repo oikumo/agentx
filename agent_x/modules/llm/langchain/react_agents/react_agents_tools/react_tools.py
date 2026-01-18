@@ -8,7 +8,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.tools import Tool, render_text_description
 from langchain_core.agents import AgentAction, AgentFinish
 
-from agent_x.modules.ai.langchain.react_agents.react_agents_tools.callbacks import AgentCallbackHandler
+from agent_x.modules.llm.langchain.react_agents.react_agents_tools.callbacks import AgentCallbackHandler
 
 
 @tool

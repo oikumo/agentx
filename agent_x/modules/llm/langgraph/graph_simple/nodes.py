@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from langgraph.graph import MessagesState
 from langgraph.prebuilt import ToolNode
 
-from agent_x.modules.ai.langgraph.graph_simple.react import llm, tools
+from agent_x.modules.llm.langgraph.graph_simple.react import llm, tools
 
 load_dotenv()
 
