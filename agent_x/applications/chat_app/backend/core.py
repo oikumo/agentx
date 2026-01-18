@@ -1,23 +1,16 @@
 import multiprocessing
 from dotenv import load_dotenv
+from langchain_core.language_models import BaseChatModel
 
 load_dotenv()
 from typing import Any, Dict, List
 
-from langchain_classic import hub
-from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_classic.chains.history_aware_retriever import \
     create_history_aware_retriever
 from langchain_chroma import Chroma
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 
 from langchain_classic.chains.retrieval import create_retrieval_chain
-from langchain_community.llms.ollama import Ollama
-from langchain_core.prompts import PromptTemplate
-from langchain_community.chat_models.llamacpp import ChatLlamaCpp
 import time
 
 load_dotenv()
@@ -26,7 +19,7 @@ from langchain_classic import hub
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 
 
-def run_llm(query: str, chat_history: List[Dict[str, Any]] = []):
+def run_llm(chat: BaseChatModel, query: str, chat_history: List[Dict[str, Any]] = []):
     #embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     #docsearch = PineconeVectorStore(index_name=INDEX_NAME, embedding=embeddings)
 
@@ -44,15 +37,7 @@ def run_llm(query: str, chat_history: List[Dict[str, Any]] = []):
             top_p=0.5,
             verbose=False)
     """
-    
-    
 
-    #chat = ChatOllama(temperature=0.5, model="deepseek-r1:1.5b", reasoning=True)
-    chat = ChatOllama(temperature=0.5, model="qwen3:1.7b", reasoning=True)
-    #chat = ChatOpenAI(verbose=True, temperature=0.5)
-    #chat = ChatOllama(temperature=0.5, model="gemma3:4b", keep_alive=-1)
-    #chat = ChatOllama(temperature=0.5, model="gemma3n:e2b", keep_alive=-1)
-        
     embeddings = OllamaEmbeddings(model="nomic-embed-text", keep_alive=-1)
 
     vectorstore_chroma_path = "chroma_db_vf_device_management"

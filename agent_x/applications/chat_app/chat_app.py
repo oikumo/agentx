@@ -1,8 +1,10 @@
 from agent_x.applications.chat_app.backend.core import run_llm
-from agent_x.core.common.logger import log_info, log_warning
+from agent_x.core.common.logger import log_warning
 from dotenv import load_dotenv
 from typing import Set
 import streamlit as st
+
+from agent_x.llm_models.local.llms import get_local_llm_qwen3
 
 load_dotenv()
 
@@ -104,6 +106,7 @@ class ChatApp:
         if prompt:
             with st.spinner("Generating response..."):
                 generated_response = run_llm(
+                    get_local_llm_qwen3(),
                     query=prompt, chat_history=st.session_state["chat_history"]
                 )
 
