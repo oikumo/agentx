@@ -23,5 +23,5 @@ vectorstore = Chroma(persist_directory=vectorstore_chroma_dir, embedding_functio
 #vectorstore = PineconeVectorStore(index_name=os.environ["INDEX_NAME_DOCUMENT_HELPER"], embedding=embeddings)
 
 tavily_extract = TavilyExtract()
-tavily_map = TavilyMap(max_depth=5, max_breadth=2, max_pages=1000)
+tavily_map = TavilyMap(max_depth=1, max_breadth=2, max_pages=1000)
 #tavily_crawl = TavilyCrawl()
