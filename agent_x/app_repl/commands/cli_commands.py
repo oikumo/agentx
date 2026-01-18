@@ -1,4 +1,4 @@
-from agent_x.app_repl.controlllers.main_controller.commands.repl_commands import ReplCommand
+from agent_x.app_repl.commands.repl_commands import ReplCommand
 from agent_x.app_repl.controlllers.main_controller.imain_controller import IMainController
 from agent_x.core.controllers.command_line_controller.command import Command
 

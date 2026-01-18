@@ -1,10 +1,9 @@
-from agent_x.app_repl.controlllers.main_controller.commands.cli_commands import QuitCommand, ClearCommand, HelpCommand, \
+from agent_x.app_repl.commands.cli_commands import QuitCommand, ClearCommand, HelpCommand, \
     ReadFile
-from agent_x.app_repl.controlllers.main_controller.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, \
+from agent_x.app_repl.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, \
     AIReactTools, AISearch, AIFunction, RagPDF
-from agent_x.app_repl.controlllers.main_controller.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, \
-    AIGraphReflexion
-from agent_x.app_repl.controlllers.main_controller.commands.math_commands import SumCommand
+from agent_x.app_repl.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, AIGraphReflexion
+from agent_x.app_repl.commands.math_commands import SumCommand
 from agent_x.app_repl.controlllers.main_controller.imain_controller import IMainController
 from agent_x.core.controllers.command_line_controller.commands_controller import CommandsController
 

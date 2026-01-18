@@ -54,8 +54,8 @@ class RagPDF(Command):
         #"Give me the gist of ReAct in 3 sentences, the output MUST BE in bullet points"
         rag_pdf(
             query= " ".join(arguments),
-            pdf_path="/home/oikumo/Proyectos/llm-projects/agent-x/resources/react.pdf",
-            vectorstore_path="/home/oikumo/Proyectos/llm-projects/agent-x/local/faiss_index_react",
+            pdf_path="/resources/react.pdf",
+            vectorstore_path="/local/faiss_index_react",
             retrieval_qa_chat_prompt=hub.pull("langchain-ai/retrieval-qa-chat"),
             # llm = get_llama_cpp_llm()
             llm=get_local_llm_qwen3(),
