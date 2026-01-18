@@ -2,29 +2,13 @@ import asyncio
 from typing import List, Dict, Any
 
 from dotenv import load_dotenv
-from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_ollama import OllamaEmbeddings
 from langchain_tavily import TavilyExtract, TavilyMap
 
-from agent_x.applications.web_ingestion_app.constants import vectorstore_chroma_dir
 from agent_x.core.common.logger import log_info, Colors, log_error, log_header
 
 load_dotenv()
 
-"""
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-small",
-    show_progress_bar=False,
-    chunk_size=50,
-    retry_min_seconds=10,)
-"""
-
-embeddings = OllamaEmbeddings(model="nomic-embed-text")
-#embeddings = OllamaEmbeddings(model="embeddinggemma")
-
-vectorstore = Chroma(persist_directory=vectorstore_chroma_dir, embedding_function=embeddings)
-#vectorstore = PineconeVectorStore(index_name=os.environ["INDEX_NAME_DOCUMENT_HELPER"], embedding=embeddings)
 
 tavily_extract = TavilyExtract()
 tavily_map = TavilyMap(max_depth=1, max_breadth=2, max_pages=1000)

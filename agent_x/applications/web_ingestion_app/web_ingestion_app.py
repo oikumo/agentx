@@ -5,13 +5,15 @@ from typing import List
 
 import certifi
 from dotenv import load_dotenv
+from langchain_chroma import Chroma
 from langchain_core.documents import Document
+from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from agent_x.applications.web_ingestion_app.constants import vectorstore_chroma_dir, site_url, result_json_file_path
+from agent_x.applications.web_ingestion_app.constants import result_json_file_path
 from agent_x.applications.web_ingestion_app.documents import index_documents_async
 from agent_x.applications.web_ingestion_app.helpers import chunk_urls, load_docs_from_jsonl
-from agent_x.applications.web_ingestion_app.tavily import tavily_map, vectorstore, async_extract
+from agent_x.applications.web_ingestion_app.tavily import tavily_map, async_extract
 from agent_x.core.common.logger import log_header, log_info, Colors, log_success, log_error
 
 load_dotenv()
@@ -23,12 +25,25 @@ os.environ["SSL_CERT_FILE"] = certifi.where()
 os.environ["REQUEST_CA_BUNDLE"] = certifi.where()
 
 class WebIngestionApp:
-    def run(self):
-        asyncio.run(self.data_ingestion())
+    def run(self, site_url: str, vectorstore_chroma_dir: str):
+        asyncio.run(self.data_ingestion(site_url, vectorstore_chroma_dir))
 
-    async def data_ingestion(self):
+    async def data_ingestion(self, site_url: str, vectorstore_chroma_dir: str):
         """Main async function"""
         log_header("INIT")
+
+        embeddings = OllamaEmbeddings(model="nomic-embed-text")
+        # embeddings = OllamaEmbeddings(model="embeddinggemma")
+        """
+        embeddings = OpenAIEmbeddings(
+            model="text-embedding-3-small",
+            show_progress_bar=False,
+            chunk_size=50,
+            retry_min_seconds=10,)
+        """
+
+        vectorstore = Chroma(persist_directory=vectorstore_chroma_dir, embedding_function=embeddings)
+        # vectorstore = PineconeVectorStore(index_name=os.environ["INDEX_NAME_DOCUMENT_HELPER"], embedding=embeddings)
 
         log_info(f"Tavily Map and Extract from: {site_url}", Colors.PURPLE)
         log_info(f"Vector store Chroma: {vectorstore_chroma_dir}")
