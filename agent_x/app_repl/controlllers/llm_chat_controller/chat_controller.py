@@ -1,4 +1,4 @@
-from agent_x.app.controlllers.main_controller.commands.llm_chat_commands import AIChat
+from agent_x.app_repl.commands.llm_chat_commands import AIChat
 from agent_x.core.controllers.command_line_controller.commands_controller import CommandsController
 
 class ChatController(CommandsController):
