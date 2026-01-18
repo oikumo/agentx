@@ -9,7 +9,7 @@ from agent_x.core.common.logger import log_header, log_info, log_success, log_er
 
 
 async def index_documents_async(vectorstore, documents: List[Document], batch_size: int = 50):
-    log_header("VECTOR STORE PHASE")
+    log_info("VECTOR STORE PHASE")
     log_info(f"Documents to store: {len(documents)}")
 
     batches = [

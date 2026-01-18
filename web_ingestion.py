@@ -9,8 +9,7 @@ if __name__ == "__main__":
     #site_url= "https://developer.android.com/"
     site_url = "https://www.verifone.cloud/docs/device-management/device-management-user-guide/"
 
-
-    session = Session("x")
+    session = Session("test")
     session.create()
     session_directory = session.directory
 
@@ -20,8 +19,8 @@ if __name__ == "__main__":
     #vectorstore = create_vectorstore_pinecone(os.environ["INDEX_NAME_DOCUMENT_HELPER"])
 
     tav = WebExtract(1, 1, 1000)
-
     app = WebIngestionApp(vectorstore, tav)
+
     asyncio.run(app.run(
         site_url= site_url,
         result_json_file_path= result_json_file_path

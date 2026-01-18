@@ -31,7 +31,7 @@ class WebExtract:
 
 
     async def async_extract(self, urls_batches: List[List[str]]):
-        log_header("DOCUMENT EXTRACTION")
+        log_info("DOCUMENT EXTRACTION")
         log_info(f"Concurrent extraction of {len(urls_batches)}", Colors.GREEN)
 
         tasks = [self.extract_batch(batch, i + 1) for i, batch in enumerate(urls_batches)]
