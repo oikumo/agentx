@@ -1,6 +1,6 @@
-from agent_x.app_repl.replapp import ReplApp
 from dotenv import load_dotenv
 
+from agent_x.repl_app.replapp import ReplApp
 
 load_dotenv()
 

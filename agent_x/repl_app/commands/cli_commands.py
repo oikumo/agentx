@@ -1,5 +1,5 @@
-from agent_x.app_repl.commands.repl_commands import ReplCommand
-from agent_x.app_repl.controlllers.main_controller.imain_controller import IMainController
+from agent_x.repl_app.commands.repl_commands import ReplCommand
+from agent_x.repl_app.controlllers.main_controller.imain_controller import IMainController
 from agent_x.core.controllers.command_line_controller.command import Command
 
 from agent_x.core.utils.utils import clear_console
