@@ -5,7 +5,7 @@ from agent_x.app.ai.functions.function_call import function_call
 from agent_x.app.ai.rag.rag_pdf.rag_pdf import rag_pdf
 from agent_x.app.llm.llms import get_llama_cpp_llm, get_local_llm_qwen2_5, get_local_llm_qwen3
 from agent_x.app.ai.agent_tools.simple_tool import simple_tool
-from agent_x.app.ai.chat.simple_chat import simple_chat_prompt_template
+from agent_x.modules.langchain.chat.simple_chat import simple_chat_prompt_template
 from agent_x.app.ai.react_agents_tools.react_tools import react_tools
 from agent_x.app.ai.react_search_agent.search_agent import search_agent
 from agent_x.app.ai.router_agents.router_react_agent import router_agent
