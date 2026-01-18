@@ -1,8 +1,8 @@
 from langchain_classic import hub
 from langchain_ollama import OllamaEmbeddings
 
+from agent_x.modules.data_stores.faiss_rag.rag_pdf.rag_pdf import rag_pdf
 from agent_x.modules.functions.function_call import function_call
-from agent_x.app.ai.rag.rag_pdf.rag_pdf import rag_pdf
 from agent_x.app.llm.llms import get_llama_cpp_llm, get_local_llm_qwen2_5, get_local_llm_qwen3
 from agent_x.app.ai.agent_tools.simple_tool import simple_tool
 from agent_x.modules.langchain.chat.simple_chat import simple_chat_prompt_template
