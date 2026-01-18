@@ -2,7 +2,7 @@ import datetime
 
 from dotenv import load_dotenv
 
-from agent_x.app.ai.graph_reflexion_agent.schemas import AnswerQuestion, ReviseAnswer
+from agent_x.modules.ai.langgraph.graph_reflexion_agent.schemas import AnswerQuestion, ReviseAnswer
 
 load_dotenv()
 
