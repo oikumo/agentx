@@ -1,1 +1,0 @@
-result_json_file_path = "sessions/web_ingestion/saved_documents_vf_device_management.jsonl"
