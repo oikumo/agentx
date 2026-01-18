@@ -2,6 +2,10 @@ from agent_x.applications.chat_app.backend.core import run_llm
 from agent_x.core.common.logger import log_warning
 from dotenv import load_dotenv
 from typing import Set
+from io import BytesIO
+from PIL import Image
+
+import requests
 import streamlit as st
 
 from agent_x.llm_models.local.llms import get_local_llm_qwen3
@@ -18,11 +22,6 @@ class ChatApp:
             layout="wide",
             initial_sidebar_state="expanded",
         )
-        from io import BytesIO
-
-        import requests
-        # Add these imports
-        from PIL import Image
 
         def create_sources_string(source_urls: Set[str]) -> str:
             if not source_urls:
