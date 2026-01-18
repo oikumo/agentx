@@ -9,7 +9,6 @@ class CommandLine:
         self.command_parser = CommandParser()
 
     def run(self):
-        clear_console()
         self._show("")
         try:
             command_entry = input()

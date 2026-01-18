@@ -12,6 +12,7 @@ class QuitCommand(Command):
     def run(self, arguments: list[str]):
         print(f"QUIT COMMAND")
         self.controller.close()
+        exit(0)
 
 
 class ClearCommand(Command):
