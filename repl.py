@@ -1,9 +1,9 @@
-from agent_x.app_repl.app import App
+from agent_x.app_repl.replapp import ReplApp
 from dotenv import load_dotenv
 
 
 load_dotenv()
 
 if __name__ == "__main__":
-    app = App()
+    app = ReplApp()
     app.run()

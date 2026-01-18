@@ -3,7 +3,7 @@ from agent_x.core.common.logger import log_info
 from agent_x.core.controllers.command_line_controller.command_line import CommandLine
 
 
-class App:
+class ReplApp:
     def __init__(self):
         pass
     def run(self):
