@@ -1,6 +1,5 @@
-import asyncio
-
-from agent_x.modules.llm.langchain.tools.tavily_web_ingestion.custom_ingestion_map_extract import data_ingestion
+from agent_x.applications.web_ingestion_app.web_ingestion_app import WebIngestionApp
 
 if __name__ == "__main__":
-    asyncio.run(data_ingestion())
+    app = WebIngestionApp()
+    app.run()
