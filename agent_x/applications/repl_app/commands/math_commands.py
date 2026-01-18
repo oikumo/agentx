@@ -1,4 +1,4 @@
-from agent_x.core.controllers.command_line_controller.command import Command
+from agent_x.applications.repl_app.command_line_controller.command import Command
 from agent_x.core.utils.utils import safe_int
 
 

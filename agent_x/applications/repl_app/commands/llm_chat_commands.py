@@ -3,7 +3,7 @@ from langchain_ollama import OllamaEmbeddings
 
 from agent_x.llm_models.local.llms import get_llama_cpp_llm, get_local_llm_qwen2_5, get_local_llm_qwen3
 from agent_x.modules.data_stores.faiss_rag.rag_pdf.rag_pdf import rag_pdf
-from agent_x.core.controllers.command_line_controller.command import Command
+from agent_x.applications.repl_app.command_line_controller.command import Command
 from agent_x.modules.llm.functions.function_call import function_call
 from agent_x.modules.llm.langchain.chat.simple_chat import simple_chat_prompt_template
 from agent_x.modules.llm.langchain.react_agents.react_agents_tools.react_tools import react_tools

@@ -1,5 +1,5 @@
 from agent_x.core.common.logger import log_info
-from agent_x.core.controllers.command_line_controller.command_line import CommandLine
+from agent_x.applications.repl_app.command_line_controller.command_line import CommandLine
 from agent_x.applications.repl_app.controlllers.main_controller.main_controller import MainController
 
 

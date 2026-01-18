@@ -1,6 +1,6 @@
-from agent_x.core.controllers.command_line_controller.command_parser import CommandParser, CommandData
-from agent_x.core.controllers.command_line_controller.commands_controller import CommandsController
-from agent_x.core.utils.utils import clear_console
+from agent_x.applications.repl_app.command_line_controller.command_parser import CommandParser, CommandData
+from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
+
 
 class CommandLine:
     def __init__(self, commands_table: CommandsController):

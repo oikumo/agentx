@@ -5,7 +5,7 @@ from agent_x.applications.repl_app.commands.llm_chat_commands import AIChat, AIT
 from agent_x.applications.repl_app.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, AIGraphReflexion
 from agent_x.applications.repl_app.commands.math_commands import SumCommand
 from agent_x.applications.repl_app.controlllers.main_controller.imain_controller import IMainController
-from agent_x.core.controllers.command_line_controller.commands_controller import CommandsController
+from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
 
 class MainController(CommandsController, IMainController):
     def close(self) -> None:
