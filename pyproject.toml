@@ -28,6 +28,8 @@ dependencies = [
     "langchain-chroma==1.1.0",
     "langgraph==1.0.6",
     "grandalf>=0.8",
+    "streamlit>=1.53.0",
+    "streamlit-chat>=0.1.1",
 ]
 
 [dependency-groups]
