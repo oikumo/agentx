@@ -1,4 +1,4 @@
-from agent_x.app.controlllers.main_controller.main_controller import MainController
+from agent_x.app_repl.controlllers.main_controller.main_controller import MainController
 from agent_x.core.common.logger import log_info
 from agent_x.core.controllers.command_line_controller.command_line import CommandLine
 
