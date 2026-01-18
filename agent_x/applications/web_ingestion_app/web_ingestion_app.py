@@ -16,15 +16,18 @@ ssl_context = ssl.create_default_context(cafile=certifi.where())
 os.environ["SSL_CERT_FILE"] = certifi.where()
 os.environ["REQUEST_CA_BUNDLE"] = certifi.where()
 
-
 class WebIngestionApp:
     def __init__(self, vectorstore: VectorStore, tav: WebExtract):
         self.vectorstore = vectorstore
         self.tav = tav
 
+
     async def run(self, site_url: str, result_json_file_path: str):
         log_info("INIT")
-        all_docs = await self.data_ingestion(site_url, result_json_file_path)
+        log_info(f"map and extract from: {site_url}", Colors.PURPLE)
+        log_info(f"generated document file path: {result_json_file_path}")
+
+        all_docs = await self.data_ingestion(site_url)
 
         log_info(f"SAVING DOCS")
         save_docs(all_docs, result_json_file_path)
@@ -36,12 +39,7 @@ class WebIngestionApp:
         await index_documents_async(self.vectorstore, docs, batch_size=500)
 
 
-    async def data_ingestion(self,site_url: str, result_json_file_path: str):
-        """Main async function"""
-
-        log_info(f"Tavily Map and Extract from: {site_url}", Colors.PURPLE)
-        log_info(f"Generated document file path: {result_json_file_path}")
-
+    async def data_ingestion(self,site_url: str):
         log_info("site mapping")
         site_map = self.tav.tavily_map.invoke(site_url)
         log_info(f"results: {site_map}")
