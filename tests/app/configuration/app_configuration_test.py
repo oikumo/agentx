@@ -1,6 +1,6 @@
 import unittest
 
-from agent_x.repl_app.configuration.app_configuration import AppConfiguration
+from agent_x.applications.repl_app.configuration import AppConfiguration
 
 
 class ConfigTest(unittest.TestCase):
