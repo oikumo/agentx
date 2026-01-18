@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from langchain_classic import hub
 from langchain_classic.agents import AgentExecutor, create_react_agent
 from langchain_core.tools import Tool
-from agent_x.app.llm.llms import get_local_llm_qwen3
+from agent_x.llm_models.llms import get_local_llm_qwen3
 from agent_x.modules.ai.langchain.react_agents.router_agents.agent_executors.csv_agent import create_csv_agent_executor
 from agent_x.modules.ai.langchain.react_agents.router_agents.agent_executors.qr_react_agent import create_qr_react_agent_executor
 
