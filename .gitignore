@@ -1,7 +1,6 @@
 chroma_db/
 
 local/
-sessions/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,5 +1,5 @@
 from agent_x.applications.repl_app.command_line_controller.command import Command
-from agent_x.core.utils.utils import safe_int
+from agent_x.utils.utils import safe_int
 
 
 class SumCommand(Command):

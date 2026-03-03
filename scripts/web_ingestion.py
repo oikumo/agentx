@@ -2,8 +2,8 @@ import asyncio
 
 from agent_x.applications.web_ingestion_app.tavily import WebExtract
 from agent_x.applications.web_ingestion_app.web_ingestion_app import WebIngestionApp
-from agent_x.core.sessions.session import Session
 from agent_x.llm_models.local.vectorstores.vectorstrore_chroma import create_vectorstore_chroma
+from agent_x.user_sessions.session import Session
 
 if __name__ == "__main__":
     #site_url= "https://developer.android.com/"

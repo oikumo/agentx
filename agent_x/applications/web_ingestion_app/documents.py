@@ -5,7 +5,7 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from agent_x.applications.web_ingestion_app.helpers import load_docs_from_jsonl
-from agent_x.core.common.logger import log_header, log_info, log_success, log_error
+from agent_x.common.logger import log_info, log_success, log_error
 
 
 async def index_documents_async(vectorstore, documents: List[Document], batch_size: int = 50):

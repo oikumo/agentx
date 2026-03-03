@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_tavily import TavilyExtract, TavilyMap
 
-from agent_x.core.common.logger import log_info, Colors, log_error, log_header
+from agent_x.common.logger import log_info, Colors, log_error
 
 load_dotenv()
 

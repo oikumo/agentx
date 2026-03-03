@@ -1,6 +1,6 @@
 from agent_x.applications.chat_app.backend.core import run_llm
 from agent_x.applications.chat_app.frontend.page_css import page_css
-from agent_x.core.common.logger import log_warning, log_info
+from agent_x.common.logger import log_warning, log_info
 from dotenv import load_dotenv
 from typing import Set
 from io import BytesIO
