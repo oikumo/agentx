@@ -16,7 +16,6 @@ def chunk_urls(urls: List[str], chunk_size: int = 3) -> List[List[str]]:
         chunks.append(chunk)
     return chunks
 
-
 def load_docs_from_jsonl(file_path):
     loaded_documents = []
     with open(file_path, "r") as jsonl_file:

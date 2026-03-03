@@ -18,7 +18,7 @@ if __name__ == "__main__":
     vectorstore = create_vectorstore_chroma(vectorstore_chroma_dir)
     #vectorstore = create_vectorstore_pinecone(os.environ["INDEX_NAME_DOCUMENT_HELPER"])
 
-    tav = WebExtract(1, 1, 1000)
+    tav = WebExtract(5, 10, 1000)
     app = WebIngestionApp(vectorstore, tav)
 
     asyncio.run(app.run(

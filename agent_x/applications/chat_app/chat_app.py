@@ -1,5 +1,6 @@
 from agent_x.applications.chat_app.backend.core import run_llm
-from agent_x.core.common.logger import log_warning
+from agent_x.applications.chat_app.frontend.page_css import page_css
+from agent_x.core.common.logger import log_warning, log_info
 from dotenv import load_dotenv
 from typing import Set
 from io import BytesIO
@@ -12,10 +13,33 @@ from agent_x.llm_models.local.llms import get_local_llm_qwen3
 
 load_dotenv()
 
+
+def create_sources_string(source_urls: Set[str]) -> str:
+    if not source_urls:
+        return ""
+    sources_list = list(source_urls)
+    sources_list.sort()
+    sources_string = "sources:\n"
+    for i, source in enumerate(sources_list):
+        sources_string += f"{i + 1}. {source}\n"
+    return sources_string
+
+
+# Add this function to get a profile picture
+def get_profile_picture(email):
+    # This uses Gravatar to get a profile picture based on email
+    # You can replace this with a different service or use a default image
+    gravatar_url = f"https://www.gravatar.com/avatar/{hash(email)}?d=identicon&s=200"
+    response = requests.get(gravatar_url)
+    img = Image.open(BytesIO(response.content))
+    return img
+
 class ChatApp:
     def run(self):
         log_warning("chat app: run it with command: $streamlit run chat.py")
+        self.create_page()
 
+    def create_page(self):
         st.set_page_config(
             page_title="Your App Title",
             page_icon="🧊",
@@ -23,53 +47,7 @@ class ChatApp:
             initial_sidebar_state="expanded",
         )
 
-        def create_sources_string(source_urls: Set[str]) -> str:
-            if not source_urls:
-                return ""
-            sources_list = list(source_urls)
-            sources_list.sort()
-            sources_string = "sources:\n"
-            for i, source in enumerate(sources_list):
-                sources_string += f"{i + 1}. {source}\n"
-            return sources_string
-
-        # Add this function to get a profile picture
-        def get_profile_picture(email):
-            # This uses Gravatar to get a profile picture based on email
-            # You can replace this with a different service or use a default image
-            gravatar_url = f"https://www.gravatar.com/avatar/{hash(email)}?d=identicon&s=200"
-            response = requests.get(gravatar_url)
-            img = Image.open(BytesIO(response.content))
-            return img
-
-        # Custom CSS for dark theme and modern look
-        st.markdown(
-            """
-        <style>
-            .stApp {
-                background-color: #1E1E1E;
-                color: #FFFFFF;
-            }
-            .stTextInput > div > div > input {
-                background-color: #2D2D2D;
-                color: #FFFFFF;
-            }
-            .stButton > button {
-                background-color: #4CAF50;
-                color: #FFFFFF;
-            }
-            .stSidebar {
-                background-color: #252526;
-            }
-            .stMessage {
-                background-color: #2D2D2D;
-            }
-        </style>
-        """,
-            unsafe_allow_html=True,
-        )
-
-        # Set page config at the very beginning
+        st.markdown(page_css(), unsafe_allow_html=True)
 
         # Sidebar user information
         with st.sidebar:
@@ -108,6 +86,8 @@ class ChatApp:
                     get_local_llm_qwen3(),
                     query=prompt, chat_history=st.session_state["chat_history"]
                 )
+
+                log_info(f"generated response: [{generated_response}]")
 
                 sources = set(doc.metadata["source"] for doc in generated_response["context"])
                 formatted_response = (

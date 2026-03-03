@@ -3,32 +3,32 @@ name = "agent-x"
 version = "0.1.0"
 readme="README.md"
 description = "Add your description here"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     "black==26.1.0",
-    "chromadb==1.4.1",
-    "isort>=6.0.1",
-    "langchain==1.2.6",
+    "chromadb==1.5.2",
+    "isort==8.0.1",
+    "langchain==1.2.10",
     "langchain-community>=0.4.1",
     "langchain-ollama==1.0.1",
-    "langchain-openai==1.1.7",
+    "langchain-openai==1.1.10",
     "langchain-pinecone>=0.2.12",
     "langchain-tavily==0.2.17",
     "langchainhub>=0.1.21",
-    "pypdf==6.6.0",
-    "python-dotenv>=1.1.1",
+    "pypdf==6.7.5",
+    "python-dotenv==1.2.2",
     "langchain-experimental==0.4.1",
     "llama-cpp-python>=0.3.16",
     "pandas>=2.3.3",
-    "pillow==12.1.0",
+    "pillow==12.1.1",
     "qr>=0.6.0",
     "qrcode>=8.2",
     "tabulate>=0.9.0",
     "faiss-cpu==1.13.2",
     "langchain-chroma==1.1.0",
-    "langgraph==1.0.6",
+    "langgraph==1.0.10",
     "grandalf>=0.8",
-    "streamlit>=1.53.0",
+    "streamlit==1.54.0",
     "streamlit-chat>=0.1.1",
 ]
 
