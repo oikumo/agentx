@@ -1,7 +1,7 @@
 Agent-X
 =======
 
-Agent REPL
+Agent-X is an application for assist programming.
 
 Environment Variables
 --------------------
