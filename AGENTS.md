@@ -133,23 +133,82 @@ isort .
 
 ---
 
+## Configuration System
+
+The project uses a configuration system located in `agent_x/app/configuration/`.
+
+### AgentXConfiguration
+
+```python
+from agent_x.app.agent_x import AgentX
+from agent_x.app.configuration.configuration import (
+    AgentXConfiguration,
+    AppType,
+    LLMProvider,
+    configure_agentx,
+)
+
+# Create configuration
+config = AgentXConfiguration(
+    app=AppType.CHAT,           # REPL, CHAT, WEB_INGESTION
+    default_model="gpt-4",
+    debug=True,
+    session_directory="sessions"
+)
+
+# Add models
+config.add_model("gpt-4", LLMProvider.OPENAI, temperature=0.7)
+config.add_model("llama-3", LLMProvider.OLLAMA, temperature=0.5)
+
+# Get models
+model = config.get_model("gpt-4")
+default = config.get_default_model()
+
+# Configure AgentX
+agentx = AgentX()
+configure_agentx(config, agentx)
+```
+
+### Enums
+
+- **AppType**: `REPL`, `CHAT`, `WEB_INGESTION`
+- **LLMProvider**: `OPENAI`, `OLLAMA`, `ANTHROPIC`
+
+### LLMModel Settings
+
+- `name`: Model name
+- `provider`: LLM provider enum
+- `temperature`: 0.0 to 2.0 (default 0.7)
+- `max_tokens`: Maximum tokens (default 2048)
+
+---
+
 ## Project Structure
 
 ```
 agent-x/
-├── agent_x/           # Main application code
-│   ├── app/           # App components
-│   ├── applications/  # Application-specific code
-│   ├── common/        # Shared utilities
-│   ├── llm_models/    # LLM integrations
-│   ├── modules/      # Reusable modules
-│   ├── user_sessions/ # Session management
-│   └── utils/         # Utility functions
-├── tests/             # Test suite
-├── scripts/           # Helper scripts
-├── resources/         # Static resources
-├── local/             # Local development files
-└── .venv/             # Virtual environment
+├── agent_x/                  # Main application code
+│   ├── app/                  # Core app components
+│   │   ├── agent_x.py        # Main AgentX class
+│   │   └── configuration/    # Configuration system
+│   ├── applications/         # App implementations
+│   │   ├── chat_app/         # Chat UI
+│   │   ├── repl_app/         # REPL interface
+│   │   └── web_ingestion_app/# Web ingestion
+│   ├── common/               # Shared utilities
+│   ├── llm_models/           # LLM integrations
+│   ├── modules/              # Reusable modules
+│   │   ├── data_stores/      # Data storage
+│   │   ├── document_loaders/# Document handling
+│   │   ├── llm/              # LLM utilities
+│   │   └── vector_store/     # Vector stores
+│   ├── user_sessions/        # Session management
+│   └── utils/                # Utility functions
+├── tests/                    # Test suite
+├── scripts/                  # Helper scripts
+├── resources/                # Static resources
+├── local/                    # Local development files
+└── .venv/                    # Virtual environment
 ```
 
 ---
@@ -158,7 +217,7 @@ agent-x/
 
 - Environment variables are stored in `.env` (do not commit secrets)
 - Use `python-dotenv` for loading environment variables
-- Required variables: API keys for LLM providers (OpenAI, Ollama, etc.)
+- Required variables: API keys for LLM providers (OpenAI, Ollama, Tavily, Pinecone, etc.)
 
 ---
 
@@ -166,7 +225,7 @@ agent-x/
 
 - Managed via `pyproject.toml`
 - Install dev dependencies: `pip install -e ".[dev]"` (if configured)
-- Main deps: langchain, langgraph, langchain-community, streamlit, chromadb
+- Main deps: langchain, langgraph, langchain-community, streamlit, chromadb, pydantic
 
 ---
 

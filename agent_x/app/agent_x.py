@@ -1,12 +1,11 @@
-import dataclasses
-
 from agent_x.applications.repl_app.replapp import ReplApp
+from agent_x.app.configuration.configuration import AgentXConfiguration
+
 
 class AgentX:
-    llms: list[str] = []
-
     def __init__(self):
-        pass
+        self.llms: list[str] = []
+        self.configuration: AgentXConfiguration = AgentXConfiguration()
 
     def run(self):
         app = ReplApp()
