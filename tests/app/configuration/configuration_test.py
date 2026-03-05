@@ -24,9 +24,9 @@ class AgentXConfigurationTest(unittest.TestCase):
 
     def test_add_multiple_models(self):
         config = AgentXConfiguration()
-        model1 = LLMModel.model_validate({"name": "gpt-4"})
-        model2 = LLMModel.model_validate({"name": "claude-3"})
-        model3 = LLMModel.model_validate({"name": "ollama"})
+        model1 = LLMModel(name="gpt-4")
+        model2 = LLMModel(name="claude-3")
+        model3 = LLMModel(name="ollama")
 
         config.llm_models.extend([model1, model2, model3])
 
@@ -36,7 +36,7 @@ class AgentXConfigurationTest(unittest.TestCase):
         self.assertEqual(config.llm_models[2].name, "ollama")
 
     def test_llm_model_creation(self):
-        model = LLMModel.model_validate({"name": "test-model"})
+        model = LLMModel(name="test-model")
         self.assertEqual(model.name, "test-model")
 
     def test_configure_agentx(self):
