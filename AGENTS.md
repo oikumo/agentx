@@ -1,167 +1,177 @@
 # AGENTS.md - Agent-X Development Guide
 
-## Overview
+## Project Overview
 
-Agent-X is a Python app for assisting with programming, built on LangChain and LangGraph.
+Agent-X is a Python project using LangChain, LangGraph, and various LLM integrations. It requires Python 3.13+.
+
+---
+
+## Commands
+
+### Running the Application
+
+```bash
+# Run main.py
+python main.py
+
+# Or using the virtual environment
+./.venv/bin/python main.py
+```
+
+### Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run a single test file
+pytest tests/app/
+
+# Run a single test function (specify file::function)
+pytest tests/app/test_file.py::test_function_name
+
+# Run tests matching a pattern
+pytest -k "test_pattern"
+
+# Run with verbose output
+pytest -v
+
+# Run with coverage (if installed)
+pytest --cov=agent_x --cov-report=html
+```
+
+### Linting & Formatting
+
+```bash
+# Run all linters and formatters
+black .
+isort .
+
+# Check formatting without applying changes
+black --check .
+isort --check .
+
+# Sort imports only
+isort .
+```
+
+---
+
+## Code Style Guidelines
+
+### General Rules
+
+- **Python version**: 3.13+
+- **Type hints**: Always use type hints for function signatures and variables when beneficial
+- **Docstrings**: Use Google-style docstrings for public functions
+- **Line length**: 88 characters (Black default)
+
+### Imports
+
+- Use `isort` for automatic import sorting
+- Order: stdlib → third-party → local/application
+- Group: imports → from imports → explicit re-exports
+- Example:
+  ```python
+  import os
+  import sys
+  from pathlib import Path
+  from typing import Any, Optional
+  
+  import pytest
+  from langchain_core.messages import BaseMessage
+  
+  from agent_x.app import some_module
+  from agent_x.common import utils
+  ```
+
+### Naming Conventions
+
+- **Functions/variables**: `snake_case` (e.g., `get_user_data`, `max_retries`)
+- **Classes**: `PascalCase` (e.g., `AgentRunner`, `SessionManager`)
+- **Constants**: `UPPER_SNAKE_CASE` (e.g., `MAX_TOKENS`, `DEFAULT_TIMEOUT`)
+- **Private members**: Prefix with underscore (e.g., `_internal_method`)
+- **Files**: `snake_case.py`
+
+### Error Handling
+
+- Use custom exceptions for domain-specific errors
+- Catch specific exceptions, avoid bare `except:`
+- Always log errors before re-raising or returning error values
+- Example:
+  ```python
+  try:
+      result = await agent.run(input_data)
+  except ValidationError as e:
+      logger.warning(f"Invalid input: {e}")
+      raise
+  except APIError as e:
+      logger.error(f"API failed: {e}")
+      raise AgentError(f"Agent execution failed: {e}") from e
+  ```
+
+### Async Code
+
+- Use `async`/`await` for I/O-bound operations
+- Avoid blocking calls in async functions
+- Use `asyncio.gather()` for concurrent operations when appropriate
+
+### LangChain/LangGraph Patterns
+
+- Use `langgraph` for agent state management and workflows
+- Prefer structured output with `with_structured_output()`
+- Handle token limits and API rate limits gracefully
+- Use langchain's built-in retry mechanisms
+
+### Testing Guidelines
+
+- Place tests in `tests/` directory mirroring the source structure
+- Use `pytest` with descriptive test names: `test_<function>_<expected_behavior>`
+- Use fixtures for shared test setup
+- Mock external API calls; use `pytest-mock` or `unittest.mock`
+- Keep tests independent; avoid test order dependencies
+
+---
 
 ## Project Structure
 
 ```
 agent-x/
 ├── agent_x/           # Main application code
-├── tests/            # Test suite
-├── main.py           # Entry point
-└── pyproject.toml    # Project configuration
+│   ├── app/           # App components
+│   ├── applications/  # Application-specific code
+│   ├── common/        # Shared utilities
+│   ├── llm_models/    # LLM integrations
+│   ├── modules/      # Reusable modules
+│   ├── user_sessions/ # Session management
+│   └── utils/         # Utility functions
+├── tests/             # Test suite
+├── scripts/           # Helper scripts
+├── resources/         # Static resources
+├── local/             # Local development files
+└── .venv/             # Virtual environment
 ```
-
-## Build, Lint, and Test Commands
-
-### Package Management (uv)
-
-```bash
-# Install dependencies
-uv sync
-
-# Add dependencies
-uv add <package>
-
-# Add dev dependencies
-uv add --group dev <package>
-```
-
-### Running the Application
-
-```bash
-# Run main application
-python main.py
-
-# Or via uv
-uv run python main.py
-```
-
-### Testing
-
-Run all tests:
-```bash
-pytest
-```
-
-Run a single test:
-```bash
-pytest tests/app/agent_x_test.py::AgentXTest::test_run
-pytest tests/app/agent_x_test.py -k "test_run"
-```
-
-### Code Formatting
-
-Format all (black + isort):
-```bash
-isort . && black .
-```
-
-### Type Checking
-
-Python 3.13+ with type hints. No explicit type checker configured.
 
 ---
 
-## Code Style Guidelines
+## Environment
 
-### General Principles
-
-- **Python Version**: Requires Python >= 3.13
-- **Type Hints**: Use type hints for all function parameters and return types
-- **Documentation**: Use docstrings for public functions and classes
-
-### Naming Conventions
-
-- **Classes**: `PascalCase` (e.g., `AgentX`, `ReplApp`)
-- **Functions/Variables**: `snake_case` (e.g., `run()`, `llms`)
-- **Constants**: `UPPER_SNAKE_CASE` (e.g., `COLORS`)
-- **Files**: `snake_case.py`
-
-### Imports
-
-- Use absolute imports from the `agent_x` package
-- Group imports: standard library, third-party, local application
-- Use `isort` for automatic import sorting
-
-### Formatting
-
-- **Line Length**: Default (88 characters via black)
-- Run `isort . && black .` before committing
-
-### Error Handling
-
-- Use appropriate exception types
-- Provide meaningful error messages
-- Use the logging utilities in `agent_x/common/logger.py`:
-  - `log_info()` - General information
-  - `log_success()` - Success messages
-  - `log_error()` - Error messages
-  - `log_warning()` - Warning messages
-  - `log_header()` - Section headers
-
-### Data Classes
-
-Use `@dataclasses.dataclass` for simple data containers:
-
-```python
-import dataclasses
-
-@dataclasses.dataclass
-class Config:
-    api_key: str
-    model: str = "gpt-4"
-```
-
-### Testing
-
-- Use `unittest.TestCase` for test classes
-- Place tests in the `tests/` directory mirroring the source structure
-- Test file naming: `<module>_test.py`
-
-Example:
-```python
-import unittest
-
-from agent_x.app.agent_x import AgentX
-
-class AgentXTest(unittest.TestCase):
-    def test_run(self):
-        agentx = AgentX()
-        agentx.run()
-```
-
-### LangChain/LangGraph Patterns
-
-Use the `@tool` decorator for custom tools:
-```python
-from langchain.tools import tool
-
-@tool
-def get_text_length(text: str) -> int:
-    """Return the length of a text by characters."""
-    return len(text)
-```
-
-### Environment Variables
-
-- Use `python-dotenv` for loading `.env` files
-- Never commit secrets; use `.env` files (already gitignored)
-- Required variables: `OPENAI_API_KEY`, `TAVILY_API_KEY`, `PINECONE_API_KEY`
-
-### Dependencies
-
-- Add production dependencies to `dependencies` in `pyproject.toml`
-- Add dev dependencies (like pytest) to the `dev` dependency group
+- Environment variables are stored in `.env` (do not commit secrets)
+- Use `python-dotenv` for loading environment variables
+- Required variables: API keys for LLM providers (OpenAI, Ollama, etc.)
 
 ---
 
-## Development Workflow
+## Dependencies
 
-1. Activate the virtual environment: `source .venv/bin/activate`
-2. Make changes to code
-3. Run formatting: `isort . && black .`
-4. Run tests: `pytest`
-5. Test manually: `python main.py`
+- Managed via `pyproject.toml`
+- Install dev dependencies: `pip install -e ".[dev]"` (if configured)
+- Main deps: langchain, langgraph, langchain-community, streamlit, chromadb
+
+---
+
+## IDE Integration
+
+- VS Code tasks defined in `.vscode/tasks.json`
+- Python interpreter: `./.venv/bin/python`
+- Recommended extensions: Python, Pylance, Ruff (or Black/ISort)
