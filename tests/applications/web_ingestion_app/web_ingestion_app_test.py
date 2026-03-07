@@ -13,13 +13,22 @@ from langchain_core.documents import Document
 _MOD = "agent_x.applications.web_ingestion_app.web_ingestion_app"
 
 
-def _make_app():
+def _make_app(site_url: str = "http://site.com", result_path: str = "/tmp/out.jsonl"):
     """Build a WebIngestionApp with fully mocked collaborators."""
     from agent_x.applications.web_ingestion_app.web_ingestion_app import WebIngestionApp
 
     vectorstore = MagicMock()
     tav = MagicMock()
-    return WebIngestionApp(vectorstore=vectorstore, tav=tav), vectorstore, tav
+    return (
+        WebIngestionApp(
+            vectorstore=vectorstore,
+            tav=tav,
+            site_url=site_url,
+            result_json_file_path=result_path,
+        ),
+        vectorstore,
+        tav,
+    )
 
 
 class WebIngestionAppRunTest(unittest.TestCase):
@@ -38,7 +47,7 @@ class WebIngestionAppRunTest(unittest.TestCase):
             patch(f"{_MOD}.index_documents_async", new=AsyncMock()),
             patch(f"{_MOD}.log_info"),
         ):
-            self._run(app.run("http://site.com", "/tmp/out.jsonl"))
+            self._run(app.run())
             app.data_ingestion.assert_called_once_with("http://site.com")
 
     def test_run_saves_docs_to_provided_file_path(self):
@@ -52,7 +61,7 @@ class WebIngestionAppRunTest(unittest.TestCase):
             patch(f"{_MOD}.index_documents_async", new=AsyncMock()),
             patch(f"{_MOD}.log_info"),
         ):
-            self._run(app.run("http://site.com", "/tmp/out.jsonl"))
+            self._run(app.run())
             mock_save.assert_called_once_with(docs, "/tmp/out.jsonl")
 
     def test_run_processes_documents_from_file(self):
@@ -66,7 +75,7 @@ class WebIngestionAppRunTest(unittest.TestCase):
             patch(f"{_MOD}.index_documents_async", new=AsyncMock()),
             patch(f"{_MOD}.log_info"),
         ):
-            self._run(app.run("http://site.com", "/tmp/out.jsonl"))
+            self._run(app.run())
             mock_proc.assert_called_once_with("/tmp/out.jsonl")
 
     def test_run_indexes_processed_documents(self):
@@ -81,7 +90,7 @@ class WebIngestionAppRunTest(unittest.TestCase):
             patch(f"{_MOD}.index_documents_async", new=AsyncMock()) as mock_index,
             patch(f"{_MOD}.log_info"),
         ):
-            self._run(app.run("http://site.com", "/tmp/out.jsonl"))
+            self._run(app.run())
             mock_index.assert_called_once_with(
                 app.vectorstore, split_docs, batch_size=500
             )
