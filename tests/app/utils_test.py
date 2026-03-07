@@ -1,6 +1,7 @@
 import unittest
+from unittest.mock import patch, MagicMock
 
-from agent_x.utils.utils import safe_int
+from agent_x.utils.utils import safe_int, clear_console
 
 
 class UtilsTest(unittest.TestCase):
@@ -35,3 +36,21 @@ class UtilsTest(unittest.TestCase):
     def test_safe_int_with_whitespace_string(self):
         result = safe_int("  ")
         self.assertIsNone(result)
+
+    # ── clear_console ─────────────────────────────────────────────────────────
+
+    def test_clear_console_calls_cls_on_windows(self):
+        # On Windows (os.name == 'nt'), clear_console must invoke `cls` via
+        # os.system so the terminal buffer is actually cleared.
+        with patch("agent_x.utils.utils.os") as mock_os:
+            mock_os.name = "nt"
+            clear_console()
+            mock_os.system.assert_called_once_with("cls")
+
+    def test_clear_console_calls_clear_on_unix(self):
+        # On Unix-like systems (os.name != 'nt'), the POSIX `clear` command
+        # is used instead of `cls`.
+        with patch("agent_x.utils.utils.os") as mock_os:
+            mock_os.name = "posix"
+            clear_console()
+            mock_os.system.assert_called_once_with("clear")

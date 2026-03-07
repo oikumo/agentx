@@ -20,8 +20,10 @@ class CommandLine:
 
         except (EOFError, KeyboardInterrupt):
             exit(0)
+            return
         except Exception as e:
             exit(1)
+            return
 
         command_data: CommandData | None = self.command_parser.parse(command_entry)
         if not command_data:
