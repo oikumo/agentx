@@ -1,7 +1,6 @@
 from __future__ import annotations
-
+from agent_x.app.agent_x import AgentX
 from enum import Enum
-
 from pydantic import BaseModel, Field
 
 
@@ -25,11 +24,12 @@ class LLMModel(BaseModel):
 
 
 class AgentXConfiguration(BaseModel):
-    app: AppType = Field(default=AppType.REPL)
-    default_model: str = Field(default="gpt-4")
-    llm_models: list[LLMModel] = Field(default_factory=list)
-    session_directory: str = Field(default="sessions")
-    debug: bool = Field(default=False)
+    def __init__(self):
+        self.llm_models: list[LLMModel] = []
+        self.app: AppType = Field(default=AppType.REPL)
+        self.default_model: str = Field(default="gpt-4")
+        self.session_directory: str = Field(default="sessions")
+        self.debug: bool = Field(default=False)
 
     def add_model(
         self,
@@ -51,6 +51,5 @@ class AgentXConfiguration(BaseModel):
 
 
 def configure_agentx(config: "AgentXConfiguration", agentx: "AgentX") -> bool:
-    """Configure an AgentX instance with the given configuration."""
     agentx.configuration = config
     return True

@@ -2,7 +2,7 @@ from agent_x.applications.repl_app.command_line_controller.command import Comman
 from agent_x.applications.repl_app.controller import Controller
 
 
-class CommandsController(Controller) :
+class CommandsController(Controller):
     commands: dict[str, Command] = {}
 
     def __init__(self):

@@ -5,8 +5,9 @@ from langchain_core.language_models import BaseChatModel
 load_dotenv()
 from typing import Any, Dict, List
 
-from langchain_classic.chains.history_aware_retriever import \
-    create_history_aware_retriever
+from langchain_classic.chains.history_aware_retriever import (
+    create_history_aware_retriever,
+)
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
 
@@ -20,8 +21,8 @@ from langchain_classic.chains.combine_documents import create_stuff_documents_ch
 
 
 def run_llm(chat: BaseChatModel, query: str, chat_history: List[Dict[str, Any]] = []):
-    #embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    #docsearch = PineconeVectorStore(index_name=INDEX_NAME, embedding=embeddings)
+    # embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    # docsearch = PineconeVectorStore(index_name=INDEX_NAME, embedding=embeddings)
 
     """
     #model_path = "/home/oikumo/.cache/llama.cpp/unsloth_Qwen3-1.7B-GGUF_Qwen3-1.7B-Q4_K_M.gguf"
@@ -41,8 +42,9 @@ def run_llm(chat: BaseChatModel, query: str, chat_history: List[Dict[str, Any]] 
     embeddings = OllamaEmbeddings(model="nomic-embed-text", keep_alive=-1)
 
     vectorstore_chroma_path = "chroma_db_vf_device_management"
-    docsearch = Chroma(persist_directory=vectorstore_chroma_path, embedding_function=embeddings)
-
+    docsearch = Chroma(
+        persist_directory=vectorstore_chroma_path, embedding_function=embeddings
+    )
 
     rephrase_prompt = hub.pull("langchain-ai/chat-langchain-rephrase")
 
@@ -58,7 +60,7 @@ def run_llm(chat: BaseChatModel, query: str, chat_history: List[Dict[str, Any]] 
     )
 
     print("CORE: create_retrieval_chain")
- 
+
     qa = create_retrieval_chain(
         retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain
     )
@@ -74,7 +76,9 @@ def run_llm(chat: BaseChatModel, query: str, chat_history: List[Dict[str, Any]] 
     new_result = {
         "query": result["input"],
         "result": result["answer"],
-        "source_documents": result["context"]
+        "source_documents": result["context"],
     }
-    
+
+    if "answer" not in result:
+        raise ValueError("Response does not contain expected answer key.")
     return new_result

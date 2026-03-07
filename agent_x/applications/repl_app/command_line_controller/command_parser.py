@@ -9,6 +9,7 @@ class CommandData:
     key: str
     arguments: list[str]
 
+
 class CommandParser:
     def __init__(self):
         self.commands_list: list[Command] = []
@@ -16,8 +17,8 @@ class CommandParser:
     def add(self, command: Command):
         self.commands_list.append(command)
 
-    def parse(self, text) -> CommandData | None:
-        raw_command : CommandData = self._parse_text_command(text)
+    def parse(self, text: str) -> CommandData | None:
+        raw_command: CommandData | None = self._parse_text_command(text)
         if raw_command is None:
             print("command process INVALID COMMAND")
             return None
@@ -26,7 +27,8 @@ class CommandParser:
 
     def _parse_text_command(self, text_command: str) -> CommandData | None:
         command_arguments = text_command.split()
-        if len(command_arguments) <= 0: return None
+        if len(command_arguments) <= 0:
+            return None
 
         command = command_arguments[0]
         raw_arguments = command_arguments[1:]
@@ -35,4 +37,4 @@ class CommandParser:
 
     def _tokenize_arguments(self, arguments: List[str]):
         raw_arguments = [(a, type(a).__name__) for a in arguments]
-        print(*raw_arguments, sep='\n')
+        print(*raw_arguments, sep="\n")

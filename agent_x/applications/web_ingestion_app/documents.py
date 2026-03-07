@@ -8,12 +8,14 @@ from agent_x.applications.web_ingestion_app.helpers import load_docs_from_jsonl
 from agent_x.common.logger import log_info, log_success, log_error
 
 
-async def index_documents_async(vectorstore, documents: List[Document], batch_size: int = 50):
+async def index_documents_async(
+    vectorstore, documents: List[Document], batch_size: int = 50
+):
     log_info("VECTOR STORE PHASE")
     log_info(f"Documents to store: {len(documents)}")
 
     batches = [
-        documents[i: batch_size + 1] for i in range(0, len(documents), batch_size)
+        documents[i : i + batch_size] for i in range(0, len(documents), batch_size)
     ]
 
     log_info(f"Splitted into {len(batches)} batches of size {batch_size}")
@@ -36,6 +38,7 @@ async def index_documents_async(vectorstore, documents: List[Document], batch_si
         log_success(f"Documents processed {successful}/{len(batches)}")
     else:
         log_error(f"Documents processed {successful}/{len(batches)}")
+
 
 def process_documents(result_json_file_path: str) -> list[Document]:
     all_docs = load_docs_from_jsonl(result_json_file_path)
