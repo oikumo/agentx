@@ -234,3 +234,285 @@ agent-x/
 - VS Code tasks defined in `.vscode/tasks.json`
 - Python interpreter: `./.venv/bin/python`
 - Recommended extensions: Python, Pylance, Ruff (or Black/ISort)
+
+---
+
+## Unit Testing — Learned Knowledge and Forward Strategy
+
+> "The goal of testing is not to show that tests pass. The goal is to have tests
+> that give you the confidence to change the code." — Kent Beck
+
+This section captures concrete lessons learned while writing 114 unit tests for
+the Agent-X REPL subsystem, and a forward strategy for the rest of the project.
+Read it before writing a new test. Read it again when a test feels hard to write —
+that difficulty is a design signal.
+
+---
+
+### Part 1: What We Learned (Lessons from the REPL test sprint)
+
+#### 1.1 Tests reveal bugs that reviews miss
+
+Writing tests is not a verification step after coding — it is a second reading
+of the code that catches things the first reading missed. During this sprint,
+tests uncovered two real production bugs:
+
+- **`CommandLine.run()` — unbound local after mocked exit.**
+  The exception handlers called `exit()` but did not `return`. In production
+  `exit()` raises `SystemExit`, so execution never continued. When `exit` is
+  mocked (as in every test), execution fell through to `command_entry`, which
+  was unbound. The fix (`return` after each `exit()` call) makes the code
+  correct in both contexts. The test did not introduce the requirement — it
+  revealed an existing fragility.
+
+- **`SumCommand` — zero is falsy.**
+  `if safe_int(x) and safe_int(y)` silently rejects `"0"` as an operand
+  because `int("0") == 0` is falsy. The guard should be
+  `if safe_int(x) is not None and safe_int(y) is not None`. The bug is
+  documented in `math_commands_test.py` with explicit regression tests so it
+  cannot be fixed without the tests being updated intentionally.
+
+- **`CommandsController` — shared class-level dict.**
+  An earlier bug had commands stored at the class level (shared across all
+  instances). A test that creates two controllers and asserts their independence
+  catches this immediately and cheaply. The fix is one line; the test is
+  permanent protection.
+
+**Rule:** When a test is hard to write because of a mocking gymnastics problem,
+stop and ask whether the production code is making untestable assumptions.
+Often, fixing the code is the right answer.
+
+#### 1.2 Patch at the import site, not the definition site
+
+When mocking, always patch the name as it is seen by the module under test,
+not where it is originally defined.
+
+```python
+# WRONG — patches the logger module, not the reference in cli_commands
+patch("agent_x.common.logger.log_info")
+
+# CORRECT — patches the name that cli_commands.py actually calls
+patch("agent_x.applications.repl_app.commands.cli_commands.log_info")
+```
+
+Every mock target in this project follows the pattern:
+`"<dotted.path.to.module.under.test>.<name_used_in_that_module>"`.
+
+#### 1.3 Infinite loops must be broken, not avoided
+
+`ReplApp.run()` contains `while True: loop.run()`. The test cannot skip it.
+The clean solution is to make the mock raise a sentinel exception after N calls:
+
+```python
+mock_loop.run.side_effect = StopIteration
+with self.assertRaises(StopIteration):
+    app.run()
+```
+
+This approach also lets you assert how many iterations ran — which is itself
+a behavioural claim worth making.
+
+#### 1.4 Stub helpers belong at the top of the test file
+
+Every test file that exercises an abstract class needs a concrete stub
+(`FakeCommand`, `ConcreteController`, etc.). These stubs:
+
+- Live at module level, above the test class.
+- Have a docstring explaining *why* they exist (not just what they are).
+- Do the minimum necessary to satisfy the ABC — no extra logic.
+- Are never shared across test files (copy the stub if you need it elsewhere;
+  shared stubs create hidden coupling between test files).
+
+#### 1.5 `setUp` is for state, not for decisions
+
+`setUp` creates the object under test. It does not decide which mock to use,
+which path to exercise, or what arguments to pass. Those are test-method
+responsibilities. A `setUp` that is getting complex is a sign the test class
+is testing too many things at once — split it.
+
+#### 1.6 Document known bugs as first-class tests
+
+When a known bug cannot be fixed immediately (e.g., the `SumCommand` zero
+bug), write a test that asserts the current broken behaviour and name it
+explicitly:
+
+```python
+def test_run_zero_as_first_argument_is_treated_as_invalid_due_to_bug(self):
+    # BUG: safe_int("0") returns 0 (falsy). Guard should use `is not None`.
+    # This test documents the existing behaviour. Update it when the bug is fixed.
+    ...
+```
+
+This is far better than leaving the test out. It means the bug cannot be
+accidentally "fixed" by an unrelated change that restores the wrong behaviour,
+and it gives the next developer immediate context.
+
+#### 1.7 LLM wrapper commands are not worth unit-testing
+
+Classes like `AIChat`, `AITools`, `AISearch`, etc. are single-line delegations
+to LangChain/LangGraph. Testing them at the unit level would test only Python's
+import system and LangChain's own internals — neither of which is our
+responsibility. Skip them. Cover them at the integration/e2e level when LLM
+calls are exercised end-to-end with real or recorded responses.
+
+#### 1.8 The test structure mirrors the source structure
+
+```
+agent_x/applications/repl_app/commands/cli_commands.py
+→ tests/app/cli_commands_test.py
+
+agent_x/applications/repl_app/command_line_controller/command_parser.py
+→ tests/app/command_parser_test.py
+```
+
+This 1:1 mapping means any developer can find the tests for a file instantly.
+Do not create "mega test files" that cover multiple source modules.
+
+---
+
+### Part 2: Forward Strategy
+
+#### 2.1 The testing pyramid for Agent-X
+
+```
+         /\
+        /  \   E2E / Integration
+       /    \  (LLM calls, Streamlit UI, vector DB)
+      /------\
+     /        \ Component tests
+    /          \ (REPL loop, session lifecycle, config pipeline)
+   /------------\
+  /              \ Unit tests  ← where we are now
+ /________________\ (pure logic, no I/O, fully mocked)
+```
+
+The bulk of the test suite must live at the bottom. Unit tests are cheap,
+fast, and precise. Integration tests are valuable but expensive. E2E tests
+catch what nothing else does, but they are slow and brittle — keep them few.
+
+#### 2.2 The three questions before writing any test
+
+1. **What behaviour am I specifying?**
+   Name the test after the behaviour, not the method.
+   `test_run_warns_on_no_arguments` is better than `test_run_with_empty_list`.
+
+2. **What is the smallest unit that exhibits this behaviour?**
+   If the answer involves more than one real class, consider a narrower test
+   or a dedicated component test.
+
+3. **How will this test fail?**
+   Write the assertion first (even if the code does not exist yet). A test
+   that cannot fail in a meaningful way is not a test — it is a comment.
+
+#### 2.3 Coverage targets by layer
+
+| Layer | Target | Notes |
+|---|---|---|
+| Pure logic (utils, parsers, dataclasses) | 100% branch | No excuse to miss any branch here |
+| Command classes (non-LLM) | 100% line | Mock I/O, assert on logger calls |
+| Controller / dispatcher classes | 90%+ | Focus on dispatch table correctness |
+| LLM wrapper commands | 0% unit | Covered at integration level only |
+| UI / Streamlit | 0% unit | Snapshot/e2e only |
+| Configuration system | 100% line | Already achieved; maintain it |
+
+#### 2.4 What to write next (priority order)
+
+The following areas have no unit tests yet. Tackle them in this order:
+
+1. **`WebIngestionApp` pipeline** — `web_ingestion_app/` contains session
+   creation, document loading, and vector store ingestion. Each step is a
+   pure function or a class with injectable dependencies. High value, low risk.
+
+2. **`Session.create()` error path** — The `raise Exception("create directory
+   error")` path (line 27 of `session.py`) is not yet covered. It requires
+   mocking `Path.mkdir` to succeed but `os.path.isdir` to return `False` on
+   the post-creation check.
+
+3. **`CommandParser._tokenize_arguments()`** — Currently dead code (never
+   called). Write a test that calls it directly to confirm its output, then
+   decide whether to integrate or delete it.
+
+4. **`AgentXConfiguration` edge cases** — `get_default_model()` when
+   `default_model` names a model that was never added to `llm_models`. The
+   current implementation returns `None`; test and document it.
+
+5. **`configure_agentx()` failure paths** — What happens when `agentx` is
+   `None`? When `config` has no models? Specify the contract with tests.
+
+6. **LLM module integration tests** — Once a test fixture exists that can
+   replay recorded LangChain responses (via `langsmith` or a cassette library),
+   add integration tests for `AIChat`, `AITools`, and `RagPDF`. Do not write
+   these as unit tests.
+
+#### 2.5 Test naming convention (canonical form)
+
+```
+test_<method_or_behaviour>_<condition>_<expected_outcome>
+```
+
+Examples from this codebase:
+- `test_run_warns_on_no_arguments` ✓
+- `test_find_command_returns_none_for_unknown_key` ✓
+- `test_two_instances_do_not_share_state` ✓
+- `test_run` ✗ (too vague — says nothing about condition or outcome)
+- `test_it_works` ✗ (communicates nothing)
+
+#### 2.6 The mock budget rule
+
+A test that needs more than **3 mocks** is testing too large a unit or the
+production code has too many direct dependencies. When you reach for a fourth
+mock, stop. Either:
+
+- Break the production class into smaller pieces (prefer this), or
+- Write a component test that uses real collaborators instead.
+
+The REPL tests in this project consistently use 1–2 mocks per test. That is
+the target.
+
+#### 2.7 Red–Green–Refactor in the context of an existing codebase
+
+For new features, always follow the cycle strictly:
+
+1. **Red** — Write a failing test first. Commit it if working with a team.
+2. **Green** — Write the minimum code to make it pass. No extra logic.
+3. **Refactor** — Clean up both the test and the production code under green.
+
+For existing untested code (legacy), use a lighter variant:
+
+1. Read the code and form a hypothesis about its intended behaviour.
+2. Write a test that encodes the hypothesis.
+3. Run it. If it passes, the hypothesis is confirmed. If it fails, you found
+   a bug or a misread — investigate before writing more tests.
+
+Never write tests and production code simultaneously when adding new
+functionality. The cognitive load of holding both in mind at once leads to
+tests that are not independent specifications — they are just transcriptions
+of the code you just wrote.
+
+#### 2.8 Fixtures and helpers — shared vs. local
+
+| Scope | Mechanism | When to use |
+|---|---|---|
+| Single test method | Local variable | Default choice |
+| All methods in one test class | `setUp` | State shared by all cases in the class |
+| All tests in one file | Module-level helper function | Stub factories, `_make_*` helpers |
+| Across multiple test files | `conftest.py` fixture | Only when duplication is painful AND the fixture is stable |
+
+There is currently no `conftest.py` in this project. Do not create one
+until at least three test files share the same setup logic. Premature
+`conftest.py` entries become invisible dependencies that surprise readers.
+
+#### 2.9 Regression tests are permanent
+
+When a bug is fixed, the test that caught it stays forever. Never delete a
+regression test because "we fixed the bug." The test is now protection against
+the bug returning. If the test name makes the original bug clear
+(`test_run_zero_as_first_argument_is_treated_as_invalid_due_to_bug`), update
+the name when the fix is applied — but keep the test.
+
+#### 2.10 The confidence check
+
+Before committing, ask: "If I deleted this feature entirely, would at least
+one test fail?" If the answer is no, the feature is untested regardless of
+how many green tests exist. This is the simplest way to audit a test suite
+without coverage tooling.
