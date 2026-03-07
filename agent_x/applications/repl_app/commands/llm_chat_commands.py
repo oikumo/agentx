@@ -20,10 +20,10 @@ from agent_x.modules.llm.langchain.react_agents.router_agents.router_react_agent
     router_agent,
 )
 from agent_x.modules.llm.langchain.tools.simple_tool import simple_tool
+from agent_x.common.logger import log_warning
 
 
 class AIFunction(Command):
-    @abstractmethod
     def run(self, arguments: list[str]) -> None:
         function_call()
 
@@ -34,7 +34,7 @@ class AIChat(Command):
 
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
-            print("missing args")
+            log_warning("missing args")
             return
         simple_chat_prompt_template(
             llm=get_llama_cpp_llm(),
@@ -66,7 +66,7 @@ class AISearch(Command):
 class RagPDF(Command):
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
-            print("missing args")
+            log_warning("missing args")
             return
         rag_pdf(
             query=" ".join(arguments),

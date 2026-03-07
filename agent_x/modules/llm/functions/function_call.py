@@ -54,7 +54,9 @@ def function_call():
 
         print(f"Result: {result}")
 
-        messages.append({"role": response.message.role, "content": result})
+        # First append the assistant's tool-call message, then the tool result
+        messages.append(response.message.model_dump())
+        messages.append({"role": "tool", "content": result, "name": tool.function.name})
 
         final = chat(model, messages=messages)
         print("Response:", final.message.content)

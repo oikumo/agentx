@@ -1,4 +1,5 @@
 from agent_x.applications.repl_app.command_line_controller.command import Command
+from agent_x.common.logger import log_info, log_warning
 from agent_x.utils.utils import safe_int
 
 
@@ -11,8 +12,8 @@ class SumCommand(Command):
             case (x, y):
                 if safe_int(x) and safe_int(y):
                     result = str(int(x) + int(y))
-                    print(f"{result}")
+                    log_info(f"{result}")
                 else:
-                    print(f"invalid params for sum command")
+                    log_warning("invalid params for sum command")
             case _:
-                print("invalid command")
+                log_warning("invalid command")

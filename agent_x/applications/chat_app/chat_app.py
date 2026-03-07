@@ -34,6 +34,7 @@ def get_profile_picture(email):
     img = Image.open(BytesIO(response.content))
     return img
 
+
 class ChatApp:
     def run(self):
         log_warning("chat app: run it with command: $streamlit run chat.py")
@@ -84,26 +85,30 @@ class ChatApp:
             with st.spinner("Generating response..."):
                 generated_response = run_llm(
                     get_local_llm_qwen3(),
-                    query=prompt, chat_history=st.session_state["chat_history"]
+                    query=prompt,
+                    chat_history=st.session_state["chat_history"],
                 )
 
                 log_info(f"generated response: [{generated_response}]")
 
-                sources = set(doc.metadata["source"] for doc in generated_response["context"])
-                formatted_response = (
-                    f"{generated_response['answer']} \n\n {create_sources_string(sources)}"
+                sources = set(
+                    doc.metadata["source"]
+                    for doc in generated_response["source_documents"]
                 )
+                formatted_response = f"{generated_response['result']} \n\n {create_sources_string(sources)}"
 
                 st.session_state["user_prompt_history"].append(prompt)
                 st.session_state["chat_answers_history"].append(formatted_response)
                 st.session_state["chat_history"].append(("human", prompt))
-                st.session_state["chat_history"].append(("ai", generated_response["answer"]))
+                st.session_state["chat_history"].append(
+                    ("ai", generated_response["result"])
+                )
 
         # Display chat history
         if st.session_state["chat_answers_history"]:
             for generated_response, user_query in zip(
-                    st.session_state["chat_answers_history"],
-                    st.session_state["user_prompt_history"],
+                st.session_state["chat_answers_history"],
+                st.session_state["user_prompt_history"],
             ):
                 st.chat_message("user").write(user_query)
                 st.chat_message("assistant").write(generated_response)

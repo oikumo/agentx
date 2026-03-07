@@ -1,7 +1,12 @@
 from __future__ import annotations
-from agent_x.app.agent_x import AgentX
+
 from enum import Enum
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from agent_x.app.agent_x import AgentX
 
 
 class AppType(str, Enum):
@@ -24,12 +29,11 @@ class LLMModel(BaseModel):
 
 
 class AgentXConfiguration(BaseModel):
-    def __init__(self):
-        self.llm_models: list[LLMModel] = []
-        self.app: AppType = Field(default=AppType.REPL)
-        self.default_model: str = Field(default="gpt-4")
-        self.session_directory: str = Field(default="sessions")
-        self.debug: bool = Field(default=False)
+    llm_models: list[LLMModel] = Field(default_factory=list)
+    app: AppType = Field(default=AppType.REPL)
+    default_model: str = Field(default="gpt-4")
+    session_directory: str = Field(default="sessions")
+    debug: bool = Field(default=False)
 
     def add_model(
         self,
@@ -50,6 +54,6 @@ class AgentXConfiguration(BaseModel):
         return self.get_model(self.default_model)
 
 
-def configure_agentx(config: "AgentXConfiguration", agentx: "AgentX") -> bool:
+def configure_agentx(config: AgentXConfiguration, agentx: AgentX) -> bool:
     agentx.configuration = config
     return True

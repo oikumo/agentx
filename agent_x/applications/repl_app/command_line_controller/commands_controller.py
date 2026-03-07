@@ -3,10 +3,9 @@ from agent_x.applications.repl_app.controller import Controller
 
 
 class CommandsController(Controller):
-    commands: dict[str, Command] = {}
-
     def __init__(self):
         super().__init__()
+        self.commands: dict[str, Command] = {}
 
     def get_commands(self) -> list[Command]:
         return list(self.commands.values())

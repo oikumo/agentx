@@ -5,7 +5,7 @@ from pathlib import Path
 
 class Session:
     def __init__(self, name: str):
-        if not (name and name.strip):
+        if not (name and name.strip()):
             raise Exception()
 
         self.name = name

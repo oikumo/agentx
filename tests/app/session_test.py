@@ -14,8 +14,8 @@ class SessionTest(unittest.TestCase):
             Session("")
 
     def test_session_creation_with_whitespace_name(self):
-        session = Session("   ")
-        self.assertEqual(session.name, "   ")
+        with self.assertRaises(Exception):
+            Session("   ")
 
     def test_session_name_assignment(self):
         session = Session("my_session")

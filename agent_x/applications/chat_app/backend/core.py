@@ -1,43 +1,28 @@
 import multiprocessing
-from dotenv import load_dotenv
-from langchain_core.language_models import BaseChatModel
-
-load_dotenv()
+import time
 from typing import Any, Dict, List
 
+from dotenv import load_dotenv
+from langchain_classic import hub
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_classic.chains.history_aware_retriever import (
     create_history_aware_retriever,
 )
-from langchain_chroma import Chroma
-from langchain_ollama import OllamaEmbeddings
-
 from langchain_classic.chains.retrieval import create_retrieval_chain
-import time
+from langchain_chroma import Chroma
+from langchain_core.language_models import BaseChatModel
+from langchain_ollama import OllamaEmbeddings
 
 load_dotenv()
 
-from langchain_classic import hub
-from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 
-
-def run_llm(chat: BaseChatModel, query: str, chat_history: List[Dict[str, Any]] = []):
-    # embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    # docsearch = PineconeVectorStore(index_name=INDEX_NAME, embedding=embeddings)
-
-    """
-    #model_path = "/home/oikumo/.cache/llama.cpp/unsloth_Qwen3-1.7B-GGUF_Qwen3-1.7B-Q4_K_M.gguf"
-    model_path = "/home/oikumo/.cache/llama.cpp/Qwen_Qwen3-0.6B-GGUF_Qwen3-0.6B-Q8_0.gguf"
-    chat = ChatLlamaCpp(
-            temperature=0.5,
-            model_path=model_path,
-            n_ctx=10000,
-            n_batch=64,
-            max_tokens=1000,
-            n_threads=multiprocessing.cpu_count() - 1,
-            repeat_penalty=1.5,
-            top_p=0.5,
-            verbose=False)
-    """
+def run_llm(
+    chat: BaseChatModel,
+    query: str,
+    chat_history: List[Dict[str, Any]] | None = None,
+):
+    if chat_history is None:
+        chat_history = []
 
     embeddings = OllamaEmbeddings(model="nomic-embed-text", keep_alive=-1)
 
@@ -47,31 +32,24 @@ def run_llm(chat: BaseChatModel, query: str, chat_history: List[Dict[str, Any]] 
     )
 
     rephrase_prompt = hub.pull("langchain-ai/chat-langchain-rephrase")
-
     retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
 
-    print("CORE: create_stuff_documents_chain")
     stuff_documents_chain = create_stuff_documents_chain(chat, retrieval_qa_chat_prompt)
-
-    print("CORE: create_history_aware_retriever")
 
     history_aware_retriever = create_history_aware_retriever(
         llm=chat, retriever=docsearch.as_retriever(), prompt=rephrase_prompt
     )
 
-    print("CORE: create_retrieval_chain")
-
     qa = create_retrieval_chain(
         retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain
     )
 
-    print("CORE: qa.invoke start")
     start_time = time.perf_counter()
-
     result = qa.invoke(input={"input": query, "chat_history": chat_history})
+    elapsed = time.perf_counter() - start_time
 
-    print(f"CORE: qa.invoke end, elapsed: {time.perf_counter() - start_time} seconds")
-    print("CORE: result")
+    if "answer" not in result:
+        raise ValueError("Response does not contain expected answer key.")
 
     new_result = {
         "query": result["input"],
@@ -79,6 +57,4 @@ def run_llm(chat: BaseChatModel, query: str, chat_history: List[Dict[str, Any]] 
         "source_documents": result["context"],
     }
 
-    if "answer" not in result:
-        raise ValueError("Response does not contain expected answer key.")
     return new_result

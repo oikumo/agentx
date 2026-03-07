@@ -1,15 +1,36 @@
-from agent_x.applications.repl_app.commands.cli_commands import QuitCommand, ClearCommand, HelpCommand, \
-    ReadFile
-from agent_x.applications.repl_app.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, \
-    AIReactTools, AISearch, AIFunction, RagPDF
-from agent_x.applications.repl_app.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, AIGraphReflexion
+from agent_x.applications.repl_app.commands.cli_commands import (
+    QuitCommand,
+    ClearCommand,
+    HelpCommand,
+    ReadFile,
+)
+from agent_x.applications.repl_app.commands.llm_chat_commands import (
+    AIChat,
+    AITools,
+    AIRouterAgents,
+    AIReactTools,
+    AISearch,
+    AIFunction,
+    RagPDF,
+)
+from agent_x.applications.repl_app.commands.llm_graph_commands import (
+    AIGraphSimple,
+    AIGraphChains,
+    AIGraphReflexion,
+)
 from agent_x.applications.repl_app.commands.math_commands import SumCommand
-from agent_x.applications.repl_app.controlllers.main_controller.imain_controller import IMainController
-from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
+from agent_x.applications.repl_app.controllers.main_controller.imain_controller import (
+    IMainController,
+)
+from agent_x.applications.repl_app.command_line_controller.commands_controller import (
+    CommandsController,
+)
+from agent_x.common.logger import log_info
+
 
 class MainController(CommandsController, IMainController):
     def close(self) -> None:
-        print("CLOSE")
+        log_info("CLOSE")
 
     def __init__(self):
         super().__init__()
