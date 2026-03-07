@@ -91,3 +91,29 @@ class SessionTest(unittest.TestCase):
 
             # The absolute path string must contain the session name.
             self.assertIn("unique_project_name", str(session.directory))
+
+    def test_create_raises_exception_when_directory_not_found_after_mkdir(self):
+        # If mkdir succeeds but os.path.isdir still returns False on the
+        # post-creation check, create() must raise Exception("create directory
+        # error"). This guards against silent filesystem failures where mkdir
+        # does not actually produce a directory (e.g. permission issues on
+        # certain filesystems).
+        session = Session("failing_project")
+        fixed_dt = datetime.datetime(2026, 3, 7, 12, 0, 0)
+
+        with (
+            patch("agent_x.user_sessions.session.datetime") as mock_dt,
+            patch("agent_x.user_sessions.session.os.path.isdir") as mock_isdir,
+            patch.object(Path, "mkdir"),
+        ):
+            mock_dt.datetime.now.return_value = fixed_dt
+
+            # First call (pre-creation check): directory does not exist yet.
+            # Second call (post-creation check): still returns False — mkdir
+            # appeared to succeed but the directory is not there.
+            mock_isdir.side_effect = [False, False]
+
+            with self.assertRaises(Exception) as ctx:
+                session.create()
+
+            self.assertIn("create directory error", str(ctx.exception))
