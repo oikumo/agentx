@@ -18,26 +18,56 @@ python main.py
 ./.venv/bin/python main.py
 ```
 
+### Application Types
+
+Agent-X supports three application modes defined in `AppType`:
+
+| Type | Description |
+|------|-------------|
+| `REPL` | Interactive command-line interface (default) |
+| `CHAT` | Streamlit-based chat UI |
+| `WEB_INGESTION` | Web document ingestion pipeline |
+
+**Currently in `AgentX.run()`:** The app type is hardcoded to `ReplApp()`. To select different apps, configure `AgentXConfiguration` and update `run()`:
+
+```python
+# In agent_x/app/agent_x.py
+from agent_x.applications.repl_app.replapp import ReplApp
+from agent_x.applications.chat_app.chat_app import ChatApp
+from agent_x.applications.web_ingestion_app.web_ingestion_app import WebIngestionApp
+
+def run(self):
+    match self.configuration.app:
+        case AppType.REPL:
+            app = ReplApp()
+        case AppType.CHAT:
+            app = ChatApp()
+        case AppType.WEB_INGESTION:
+            # Requires vectorstore and tav setup
+            app = WebIngestionApp(vectorstore=..., tav=...)
+    app.run()
+```
+
 ### Testing
 
 ```bash
 # Run all tests
-pytest
+pytest tests/ -v
 
 # Run a single test file
-pytest tests/app/
+pytest tests/path/to/test_file.py -v
 
 # Run a single test function (specify file::function)
-pytest tests/app/test_file.py::test_function_name
+pytest tests/path/to/test_file.py::TestClass::test_function_name -v
 
 # Run tests matching a pattern
-pytest -k "test_pattern"
+pytest tests/ -k "test_pattern" -v
 
 # Run with verbose output
-pytest -v
+pytest tests/ -v
 
 # Run with coverage (if installed)
-pytest --cov=agent_x --cov-report=html
+pytest tests/ --cov=agent_x --cov-report=html
 ```
 
 ### Linting & Formatting
@@ -224,7 +254,8 @@ agent-x/
 ## Dependencies
 
 - Managed via `pyproject.toml`
-- Install dev dependencies: `pip install -e ".[dev]"` (if configured)
+- Install project in editable mode: `pip install -e .`
+- Install dev dependencies: `pip install -e ".[dev]"` (includes pytest)
 - Main deps: langchain, langgraph, langchain-community, streamlit, chromadb, pydantic
 
 ---
@@ -242,7 +273,7 @@ agent-x/
 > "The goal of testing is not to show that tests pass. The goal is to have tests
 > that give you the confidence to change the code." — Kent Beck
 
-This section captures concrete lessons learned while writing 114 unit tests for
+This section captures concrete lessons learned while writing 153 unit tests for
 the Agent-X REPL subsystem, and a forward strategy for the rest of the project.
 Read it before writing a new test. Read it again when a test feels hard to write —
 that difficulty is a design signal.
@@ -419,35 +450,42 @@ catch what nothing else does, but they are slow and brittle — keep them few.
 
 The following areas have no unit tests yet. Tackle them in this order:
 
-1. **`WebIngestionApp` pipeline** — `web_ingestion_app/` contains session
-   creation, document loading, and vector store ingestion. Each step is a
-   pure function or a class with injectable dependencies. High value, low risk.
+1. ✅ **`WebIngestionApp` pipeline** — DONE (39 tests covering helpers,
+   documents, tavily, and web_ingestion_app modules)
 
-2. **`Session.create()` error path** — The `raise Exception("create directory
-   error")` path (line 27 of `session.py`) is not yet covered. It requires
-   mocking `Path.mkdir` to succeed but `os.path.isdir` to return `False` on
-   the post-creation check.
+2. ✅ **`Session.create()` error path** — DONE (covers post-mkdir failure branch)
 
-3. **`CommandParser._tokenize_arguments()`** — Currently dead code (never
+3. ✅ **`AgentXConfiguration` edge cases** — DONE (get_default_model returns None
+   when model not added)
+
+4. ✅ **`configure_agentx()` failure paths** — DONE (None agentx raises
+   AttributeError, empty config returns True)
+
+5. ❌ **`CommandParser._tokenize_arguments()`** — Currently dead code (never
    called). Write a test that calls it directly to confirm its output, then
    decide whether to integrate or delete it.
-
-4. **`AgentXConfiguration` edge cases** — `get_default_model()` when
-   `default_model` names a model that was never added to `llm_models`. The
-   current implementation returns `None`; test and document it.
-
-5. **`configure_agentx()` failure paths** — What happens when `agentx` is
-   `None`? When `config` has no models? Specify the contract with tests.
 
 6. **LLM module integration tests** — Once a test fixture exists that can
    replay recorded LangChain responses (via `langsmith` or a cassette library),
    add integration tests for `AIChat`, `AITools`, and `RagPDF`. Do not write
    these as unit tests.
 
+7. **App type selection** — Document and test the `AgentX.run()` method's
+   ability to dispatch to different app types (REPL, CHAT, WEB_INGESTION)
+   based on `configuration.app`.
+
 #### 2.5 Test naming convention (canonical form)
 
 ```
 test_<method_or_behaviour>_<condition>_<expected_outcome>
+```
+
+Wrap tests in `<ClassName>Test` classes using `unittest.TestCase`:
+
+```python
+class SessionTest(unittest.TestCase):
+    def test_create_raises_exception_when_directory_not_found_after_mkdir(self):
+        ...
 ```
 
 Examples from this codebase:
