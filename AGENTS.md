@@ -52,22 +52,25 @@ def run(self):
 
 ```bash
 # Run all tests
-pytest tests/ -v
+uv run pytest tests/ -v
+
+# Run unit tests only
+uv run pytest tests/unit/ -v
+
+# Run integration tests only
+uv run pytest tests/integration/ -v
 
 # Run a single test file
-pytest tests/path/to/test_file.py -v
+uv run pytest tests/path/to/test_file.py -v
 
 # Run a single test function (specify file::function)
-pytest tests/path/to/test_file.py::TestClass::test_function_name -v
+uv run pytest tests/path/to/test_file.py::TestClass::test_function_name -v
 
 # Run tests matching a pattern
-pytest tests/ -k "test_pattern" -v
+uv run pytest tests/ -k "test_pattern" -v
 
-# Run with verbose output
-pytest tests/ -v
-
-# Run with coverage (if installed)
-pytest tests/ --cov=agent_x --cov-report=html
+# Run with coverage
+uv run pytest tests/ --cov=agent_x --cov-report=html
 ```
 
 ### Linting & Formatting
@@ -224,8 +227,14 @@ agent-x/
 │   ├── applications/         # App implementations
 │   │   ├── chat_app/         # Chat UI
 │   │   ├── repl_app/         # REPL interface
+│   │   │   ├── command_line_controller/  # Command parsing and dispatch
+│   │   │   ├── commands/                 # Command implementations
+│   │   │   └── tui/                      # Textual TUI implementation
+│   │   │       ├── app.py                # TextualReplApp main app
+│   │   │       ├── output_writer.py      # TuiOutputWriter callback
+│   │   │       └── widgets/              # CommandInput, OutputPane, StatusBar
 │   │   └── web_ingestion_app/# Web ingestion
-│   ├── common/               # Shared utilities
+│   ├── common/               # Shared utilities (incl. logger with handler indirection)
 │   ├── llm_models/           # LLM integrations
 │   ├── modules/              # Reusable modules
 │   │   ├── data_stores/      # Data storage
@@ -235,6 +244,8 @@ agent-x/
 │   ├── user_sessions/        # Session management
 │   └── utils/                # Utility functions
 ├── tests/                    # Test suite
+│   ├── unit/                 # 208 unit tests (all passing)
+│   └── integration/          # Integration tests
 ├── scripts/                  # Helper scripts
 ├── resources/                # Static resources
 ├── local/                    # Local development files
@@ -253,10 +264,35 @@ agent-x/
 
 ## Dependencies
 
-- Managed via `pyproject.toml`
-- Install project in editable mode: `pip install -e .`
-- Install dev dependencies: `pip install -e ".[dev]"` (includes pytest)
-- Main deps: langchain, langgraph, langchain-community, streamlit, chromadb, pydantic
+- Managed via `pyproject.toml` and `uv.lock`
+- Install dependencies: `uv sync`
+- Main deps: langchain, langgraph, langchain-community, textual, streamlit, chromadb, pydantic
+
+---
+
+## Textual TUI (REPL)
+
+The REPL application uses the [Textual](https://textual.textualize.io/) framework
+for a full-screen terminal UI. The implementation lives in
+`agent_x/applications/repl_app/tui/`.
+
+### Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `TextualReplApp` | `tui/app.py` | Main Textual app; orchestrates layout and worker threads |
+| `CommandInput` | `tui/widgets/command_input.py` | Input field with autocomplete and command history |
+| `OutputPane` | `tui/widgets/output_pane.py` | Scrollable RichLog for command output |
+| `StatusBar` | `tui/widgets/status_bar.py` | Displays current command status |
+| `TuiOutputWriter` | `tui/output_writer.py` | Callback that redirects logger output to the TUI |
+
+### Key design decisions
+
+- **Worker threads** — Commands run in Textual workers so the UI never blocks.
+- **Logger handler indirection** — `logger.py` exposes `get_handler()` /
+  `set_handler()` so the TUI can redirect output without monkey-patching.
+- **ASCII-only icons** — No emoji; all icons use ASCII characters for broad
+  terminal compatibility.
 
 ---
 
@@ -273,8 +309,8 @@ agent-x/
 > "The goal of testing is not to show that tests pass. The goal is to have tests
 > that give you the confidence to change the code." — Kent Beck
 
-This section captures concrete lessons learned while writing 153 unit tests for
-the Agent-X REPL subsystem, and a forward strategy for the rest of the project.
+This section captures concrete lessons learned while building the 208-test suite
+for Agent-X, and a forward strategy for the rest of the project.
 Read it before writing a new test. Read it again when a test feels hard to write —
 that difficulty is a design signal.
 
@@ -444,6 +480,7 @@ catch what nothing else does, but they are slow and brittle — keep them few.
 | Controller / dispatcher classes | 90%+ | Focus on dispatch table correctness |
 | LLM wrapper commands | 0% unit | Covered at integration level only |
 | UI / Streamlit | 0% unit | Snapshot/e2e only |
+| TUI / Textual widgets | 0% unit | Covered at integration/e2e level via Textual's pilot API |
 | Configuration system | 100% line | Already achieved; maintain it |
 
 #### 2.4 What to write next (priority order)
@@ -473,6 +510,13 @@ The following areas have no unit tests yet. Tackle them in this order:
 7. **App type selection** — Document and test the `AgentX.run()` method's
    ability to dispatch to different app types (REPL, CHAT, WEB_INGESTION)
    based on `configuration.app`.
+
+8. **TUI integration tests** — Use Textual's `App.run_test()` pilot API to
+   drive the TUI headlessly. Verify that typing a command produces expected
+   output in the OutputPane, and that autocomplete/history work.
+
+9. **TUI widget unit tests** — Lightweight tests for `CommandInput`,
+   `OutputPane`, `StatusBar` in isolation if complex logic is added to them.
 
 #### 2.5 Test naming convention (canonical form)
 
