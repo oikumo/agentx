@@ -31,6 +31,7 @@ dependencies = [
     "streamlit==1.54.0",
     "streamlit-chat>=0.1.1",
     "uv>=0.10.9",
+    "textual>=8.0.2",
 ]
 
 [dependency-groups]
