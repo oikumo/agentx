@@ -100,6 +100,20 @@ class TextualReplApp(App):
                 output.write(markup)
 
         self._writer.set_callback(_write_markup)
+
+        # Monkey-patch the logger module so all command output goes to our OutputPane
+        import agent_x.common.logger as logger_module
+
+        # Store original functions so we can restore them on shutdown (optional)
+        self._orig_log_info = logger_module.log_info
+        self._orig_log_warning = logger_module.log_warning
+        self._orig_log_error = logger_module.log_error
+
+        # Replace with TuiOutputWriter methods
+        logger_module.log_info = lambda msg: self._writer.info(msg)
+        logger_module.log_warning = lambda msg: self._writer.warning(msg)
+        logger_module.log_error = lambda msg: self._writer.error(msg)
+
         self._show_welcome()
         self.query_one(CommandInput).focus()
 
