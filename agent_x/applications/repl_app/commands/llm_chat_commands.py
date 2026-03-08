@@ -24,13 +24,16 @@ from agent_x.common.logger import log_warning
 
 
 class AIFunction(Command):
+    def __init__(self, key: str):
+        super().__init__(key, description="Run an AI function call demo")
+
     def run(self, arguments: list[str]) -> None:
         function_call()
 
 
 class AIChat(Command):
     def __init__(self, key: str):
-        super().__init__(key)
+        super().__init__(key, description="Start an AI chat session: chat <query>")
 
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
@@ -44,26 +47,41 @@ class AIChat(Command):
 
 
 class AITools(Command):
+    def __init__(self, key: str):
+        super().__init__(key, description="Run AI agent with tool use")
+
     def run(self, arguments: list[str]) -> None:
         simple_tool(llm=get_local_llm_qwen2_5())
 
 
 class AIRouterAgents(Command):
+    def __init__(self, key: str):
+        super().__init__(key, description="Run AI router agent")
+
     def run(self, arguments: list[str]) -> None:
         router_agent()
 
 
 class AIReactTools(Command):
+    def __init__(self, key: str):
+        super().__init__(key, description="Run AI ReAct agent with tools")
+
     def run(self, arguments: list[str]) -> None:
         react_tools(llm=get_local_llm_qwen2_5())
 
 
 class AISearch(Command):
+    def __init__(self, key: str):
+        super().__init__(key, description="Search the web with AI")
+
     def run(self, arguments: list[str]) -> None:
         search_agent(llm=get_local_llm_qwen2_5())
 
 
 class RagPDF(Command):
+    def __init__(self, key: str):
+        super().__init__(key, description="Query a PDF with RAG: rag <query>")
+
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
             log_warning("missing args")

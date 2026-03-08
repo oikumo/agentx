@@ -10,7 +10,7 @@ from agent_x.utils.utils import clear_console
 
 class QuitCommand(Command):
     def __init__(self, key: str, controller: IMainController):
-        super().__init__(key)
+        super().__init__(key, description="Exit Agent-X")
         self.controller = controller
 
     def run(self, arguments: list[str]):
@@ -21,19 +21,25 @@ class QuitCommand(Command):
 
 class ClearCommand(Command):
     def __init__(self, key: str):
-        super().__init__(key)
+        super().__init__(key, description="Clear the output screen")
 
     def run(self, arguments: list[str]):
         clear_console()
 
 
 class HelpCommand(ReplCommand):
+    def __init__(self, key: str, controller):
+        super().__init__(key, controller, description="Show available commands")
+
     def run(self, arguments: list[str]):
         for command in self.controller.get_commands():
             log_info(command.key)
 
 
 class ReadFile(Command):
+    def __init__(self, key: str):
+        super().__init__(key, description="Read and display a file: read <filename>")
+
     def run(self, arguments: list[str]):
         if not arguments:
             log_info("Usage: read <filename>")

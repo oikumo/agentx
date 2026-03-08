@@ -17,7 +17,6 @@ class CommandLine:
         self._show("")
         try:
             command_entry = input()
-
         except (EOFError, KeyboardInterrupt):
             exit(0)
             return
@@ -31,9 +30,19 @@ class CommandLine:
 
         command = self.commands_table.find_command(command_data.key)
         if not command:
+            self.notify_unknown_command(command_data.key)
             return
 
         command.run(command_data.arguments)
+
+    def notify_unknown_command(self, key: str) -> None:
+        """Called when the user types a key that is not registered.
+
+        The default implementation is a no-op so the legacy behaviour
+        (silent skip) is preserved. The Textual TUI overrides this to
+        display a styled error message in the output pane.
+        """
+        pass
 
     def _show(self, message: str):
         print(f"(agent-x)/{message}$ ", end="")

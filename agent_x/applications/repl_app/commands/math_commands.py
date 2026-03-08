@@ -5,12 +5,14 @@ from agent_x.utils.utils import safe_int
 
 class SumCommand(Command):
     def __init__(self, key: str):
-        super().__init__(key)
+        super().__init__(key, description="Add two integers: sum <a> <b>")
 
     def run(self, arguments: list[str]):
         match arguments:
             case (x, y):
-                if safe_int(x) and safe_int(y):
+                # Fixed: use `is not None` instead of truthiness check so
+                # that 0 is accepted as a valid operand (was a known bug).
+                if safe_int(x) is not None and safe_int(y) is not None:
                     result = str(int(x) + int(y))
                     log_info(f"{result}")
                 else:

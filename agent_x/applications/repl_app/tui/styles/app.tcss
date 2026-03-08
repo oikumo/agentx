@@ -1,0 +1,80 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   Agent-X TUI — main stylesheet
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Root layout ─────────────────────────────────────────────────────────────*/
+
+Screen {
+    background: $surface;
+    layers: base overlay;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────────*/
+
+Header {
+    background: $primary;
+    color: $text;
+    text-style: bold;
+    height: 1;
+    dock: top;
+}
+
+/* ── Output pane ─────────────────────────────────────────────────────────────*/
+
+OutputPane {
+    border: solid $primary-darken-2;
+    background: $surface-darken-1;
+    padding: 0 1;
+    scrollbar-gutter: stable;
+    /* Occupy all available vertical space between header and input */
+    height: 1fr;
+}
+
+/* ── Input row ───────────────────────────────────────────────────────────────*/
+
+#input-row {
+    height: 3;
+    layout: horizontal;
+    background: $surface;
+}
+
+#prompt-label {
+    width: auto;
+    padding: 1 1;
+    color: $accent;
+    text-style: bold;
+}
+
+CommandInput {
+    border: tall $accent;
+    background: $surface;
+    padding: 0 1;
+    width: 1fr;
+}
+
+CommandInput:focus {
+    border: tall $accent-lighten-1;
+}
+
+/* ── Status bar ──────────────────────────────────────────────────────────────*/
+
+StatusBar {
+    background: $primary-darken-2;
+    color: $text-muted;
+    height: 1;
+    padding: 0 1;
+    dock: bottom;
+}
+
+/* ── Autocomplete dropdown ───────────────────────────────────────────────────*/
+
+OptionList {
+    background: $surface-darken-1;
+    border: solid $accent;
+    color: $text;
+}
+
+OptionList > .option-list--option-highlighted {
+    background: $accent;
+    color: $text;
+}

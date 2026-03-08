@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 from agent_x.applications.repl_app.replapp import ReplApp
 
@@ -7,7 +7,7 @@ from agent_x.applications.repl_app.replapp import ReplApp
 # Patch targets – must match the import site in replapp.py
 _LOG_INFO = "agent_x.applications.repl_app.replapp.log_info"
 _MAIN_CONTROLLER = "agent_x.applications.repl_app.replapp.MainController"
-_COMMAND_LINE = "agent_x.applications.repl_app.replapp.CommandLine"
+_TEXTUAL_APP = "agent_x.applications.repl_app.replapp.TextualReplApp"
 
 
 class ReplAppTest(unittest.TestCase):
@@ -23,68 +23,57 @@ class ReplAppTest(unittest.TestCase):
         # run() must emit "App running" so operators can confirm the REPL
         # started successfully (e.g. in log files or monitoring).
         app = ReplApp()
-
-        # We break the infinite `while True` loop by making CommandLine.run()
-        # raise StopIteration after the first call.
-        mock_loop = MagicMock()
-        mock_loop.run.side_effect = StopIteration
+        mock_tui = MagicMock()
 
         with (
             patch(_LOG_INFO) as mock_info,
             patch(_MAIN_CONTROLLER),
-            patch(_COMMAND_LINE, return_value=mock_loop),
+            patch(_TEXTUAL_APP, return_value=mock_tui),
         ):
-            with self.assertRaises(StopIteration):
-                app.run()
+            app.run()
 
-        # Verify log_info was called with the expected message at some point.
         logged_args = [c.args[0] for c in mock_info.call_args_list]
         self.assertIn("App running", logged_args)
 
-    def test_run_creates_main_controller_and_command_line(self):
+    def test_run_creates_main_controller(self):
         # run() must construct exactly one MainController and pass it to
-        # CommandLine – this wires the command dispatch table to the input loop.
+        # TextualReplApp so the dispatch table is wired to the TUI.
         app = ReplApp()
-
-        mock_loop = MagicMock()
-        mock_loop.run.side_effect = StopIteration
+        mock_tui = MagicMock()
 
         with (
             patch(_LOG_INFO),
             patch(_MAIN_CONTROLLER) as mock_ctrl_cls,
-            patch(_COMMAND_LINE, return_value=mock_loop) as mock_cl_cls,
+            patch(_TEXTUAL_APP, return_value=mock_tui),
         ):
-            with self.assertRaises(StopIteration):
-                app.run()
+            app.run()
 
-        # MainController must be instantiated exactly once.
         mock_ctrl_cls.assert_called_once()
-        # CommandLine must be instantiated with the MainController instance.
-        mock_cl_cls.assert_called_once_with(mock_ctrl_cls.return_value)
 
-    def test_run_enters_loop_by_calling_command_line_run(self):
-        # The `while True` loop drives interaction; CommandLine.run() is the
-        # entry point for each iteration. Verify it gets called.
+    def test_run_creates_textual_app_with_controller(self):
+        # TextualReplApp must receive the controller instance.
         app = ReplApp()
+        mock_tui = MagicMock()
 
-        call_count = 0
+        with (
+            patch(_LOG_INFO),
+            patch(_MAIN_CONTROLLER) as mock_ctrl_cls,
+            patch(_TEXTUAL_APP, return_value=mock_tui) as mock_tui_cls,
+        ):
+            app.run()
 
-        def fake_run():
-            nonlocal call_count
-            call_count += 1
-            if call_count >= 3:
-                # Break the infinite loop after 3 iterations.
-                raise StopIteration
+        mock_tui_cls.assert_called_once_with(controller=mock_ctrl_cls.return_value)
 
-        mock_loop = MagicMock()
-        mock_loop.run.side_effect = fake_run
+    def test_run_calls_textual_app_run(self):
+        # ReplApp.run() must call TextualReplApp.run() to start the event loop.
+        app = ReplApp()
+        mock_tui = MagicMock()
 
         with (
             patch(_LOG_INFO),
             patch(_MAIN_CONTROLLER),
-            patch(_COMMAND_LINE, return_value=mock_loop),
+            patch(_TEXTUAL_APP, return_value=mock_tui),
         ):
-            with self.assertRaises(StopIteration):
-                app.run()
+            app.run()
 
-        self.assertEqual(call_count, 3)
+        mock_tui.run.assert_called_once()

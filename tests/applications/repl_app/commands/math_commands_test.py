@@ -68,23 +68,20 @@ class SumCommandTest(unittest.TestCase):
             self.cmd.run(["1", "2", "3"])
             mock_warn.assert_called_once()
 
-    # ── Known bug: zero as first operand is falsy ─────────────────────────────
+    # ── Zero operand regression (bug was: safe_int("0") falsy) ──────────────────
 
-    def test_run_zero_as_first_argument_is_treated_as_invalid_due_to_bug(self):
-        # BUG: safe_int("0") returns 0, which is falsy. The guard
-        #   `if safe_int(x) and safe_int(y)` therefore treats "0" as invalid
-        #   and emits a warning instead of computing 0 + 5 = 5.
-        # This test documents the existing behaviour. If the bug is fixed, the
-        # assertion must be updated to expect log_info("5").
-        with patch(_LOG_WARN) as mock_warn, patch(_LOG_INFO) as mock_info:
+    def test_run_zero_as_first_argument_computes_correct_sum(self):
+        # FIXED: guard changed from `if safe_int(x) and safe_int(y)` to
+        #   `if safe_int(x) is not None and safe_int(y) is not None` so that
+        #   "0" is accepted as a valid operand. 0 + 5 must produce "5".
+        with patch(_LOG_INFO) as mock_info, patch(_LOG_WARN) as mock_warn:
             self.cmd.run(["0", "5"])
-            # Currently warns (bug: treats 0 as invalid)
-            mock_warn.assert_called_once()
-            mock_info.assert_not_called()
+            mock_info.assert_called_once_with("5")
+            mock_warn.assert_not_called()
 
-    def test_run_zero_as_second_argument_is_treated_as_invalid_due_to_bug(self):
-        # Same bug: safe_int("0") == 0 → falsy → warning instead of result.
-        with patch(_LOG_WARN) as mock_warn, patch(_LOG_INFO) as mock_info:
+    def test_run_zero_as_second_argument_computes_correct_sum(self):
+        # FIXED: same guard fix; 5 + 0 must produce "5".
+        with patch(_LOG_INFO) as mock_info, patch(_LOG_WARN) as mock_warn:
             self.cmd.run(["5", "0"])
-            mock_warn.assert_called_once()
-            mock_info.assert_not_called()
+            mock_info.assert_called_once_with("5")
+            mock_warn.assert_not_called()

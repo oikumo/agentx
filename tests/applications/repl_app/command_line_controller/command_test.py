@@ -57,3 +57,20 @@ class CommandTest(unittest.TestCase):
         for key in ("q", "help me", "sum!!", "", "日本語"):
             cmd = FakeCommand(key)
             self.assertEqual(cmd.key, key)
+
+    def test_command_has_description_attribute_with_default(self):
+        # Commands should have a description attribute for help/autocomplete.
+        # Default should be empty string.
+        cmd = FakeCommand("test")
+        self.assertTrue(hasattr(cmd, "description"))
+        self.assertEqual(cmd.description, "")
+
+    def test_concrete_command_can_override_description(self):
+        # Concrete commands should be able to set their own description.
+        class DescribedCommand(Command):
+            def run(self, arguments: list[str]):
+                pass
+
+        cmd = DescribedCommand("test")
+        cmd.description = "This is a test command"
+        self.assertEqual(cmd.description, "This is a test command")

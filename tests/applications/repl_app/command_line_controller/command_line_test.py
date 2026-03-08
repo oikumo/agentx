@@ -128,3 +128,15 @@ class CommandLineTest(unittest.TestCase):
         with patch("builtins.print") as mock_print:
             cl._show("")
             mock_print.assert_called_once_with("(agent-x)/$ ", end="")
+
+    def test_run_notifies_on_unknown_command(self):
+        # When the user types an unrecognised command, CommandLine must call
+        # notify_unknown_command() so the UI layer can display an error message.
+        table = _make_table()  # no commands registered
+        cl = CommandLine(table)
+        cl.notify_unknown_command = MagicMock()
+
+        with patch("builtins.input", return_value="ghost"), patch("builtins.print"):
+            cl.run()
+
+        cl.notify_unknown_command.assert_called_once_with("ghost")

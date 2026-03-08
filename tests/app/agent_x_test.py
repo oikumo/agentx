@@ -142,25 +142,26 @@ class AgentXTest(unittest.TestCase):
     # ── Integration tests with real app classes ───────────────────────────────
 
     def test_run_with_repl_app_integration(self):
-        # Integration test: AgentX with a real ReplApp (mocked inner loop).
+        # Integration test: AgentX with a real ReplApp (TextualReplApp mocked).
+        # ReplApp.run() now delegates to TextualReplApp.run() instead of the
+        # old CommandLine while-loop.
         from agent_x.applications.repl_app.replapp import ReplApp
 
         agentx = AgentX()
         agentx.set_app(ReplApp())
 
-        with patch("agent_x.applications.repl_app.replapp.MainController"):
-            with patch("agent_x.applications.repl_app.replapp.CommandLine") as mock_cli:
-                mock_cli_instance = MagicMock()
-                mock_cli.return_value = mock_cli_instance
-                mock_cli_instance.run.side_effect = StopIteration
+        mock_tui = MagicMock()
+        with (
+            patch("agent_x.applications.repl_app.replapp.MainController"),
+            patch(
+                "agent_x.applications.repl_app.replapp.TextualReplApp",
+                return_value=mock_tui,
+            ) as mock_tui_cls,
+        ):
+            agentx.run()
 
-                try:
-                    agentx.run()
-                except StopIteration:
-                    pass
-
-                mock_cli.assert_called_once()
-                mock_cli_instance.run.assert_called()
+        mock_tui_cls.assert_called_once()
+        mock_tui.run.assert_called_once()
 
     def test_run_with_chat_app_integration(self):
         # Integration test: AgentX with ChatApp.

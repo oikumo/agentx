@@ -1,10 +1,8 @@
 from agent_x.common.logger import log_info
-from agent_x.applications.repl_app.command_line_controller.command_line import (
-    CommandLine,
-)
 from agent_x.applications.repl_app.controllers.main_controller.main_controller import (
     MainController,
 )
+from agent_x.applications.repl_app.tui.app import TextualReplApp
 
 
 class ReplApp:
@@ -14,7 +12,5 @@ class ReplApp:
     def run(self):
         log_info("App running")
         controller = MainController()
-        loop = CommandLine(controller)
-
-        while True:
-            loop.run()
+        tui = TextualReplApp(controller=controller)
+        tui.run()

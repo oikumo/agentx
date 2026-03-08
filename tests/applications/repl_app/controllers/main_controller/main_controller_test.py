@@ -21,15 +21,15 @@ _LOG_INFO = (
 # Update this set whenever new commands are added to MainController.
 EXPECTED_COMMAND_KEYS = {
     "sum",
-    "q",
-    "cls",
+    "quit",
+    "clear",
     "chat",
     "tools",
     "router",
     "react",
     "search",
     "read",
-    "f",
+    "function",
     "rag",
     "graph",
     "chains",
@@ -67,7 +67,7 @@ class MainControllerTest(unittest.TestCase):
 
     def test_find_known_command_returns_command_object(self):
         # spot-check a few specific commands that must always be present.
-        for key in ("sum", "q", "help", "cls", "read"):
+        for key in ("sum", "quit", "help", "clear", "read"):
             with self.subTest(key=key):
                 result = self.ctrl.find_command(key)
                 self.assertIsNotNone(
@@ -78,6 +78,22 @@ class MainControllerTest(unittest.TestCase):
     def test_find_unknown_command_returns_none(self):
         # Any key not explicitly registered must yield None, never raise.
         self.assertIsNone(self.ctrl.find_command("__nonexistent__"))
+
+    def test_all_commands_have_non_empty_description(self):
+        # Every registered command must expose a non-empty description string
+        # so that the help panel and autocomplete tooltips are useful.
+        for cmd in self.ctrl.get_commands():
+            with self.subTest(key=cmd.key):
+                self.assertTrue(
+                    hasattr(cmd, "description"),
+                    f"Command '{cmd.key}' missing description attribute",
+                )
+                self.assertIsInstance(cmd.description, str)
+                self.assertGreater(
+                    len(cmd.description.strip()),
+                    0,
+                    f"Command '{cmd.key}' has empty description",
+                )
 
     # ── close() ───────────────────────────────────────────────────────────────
 

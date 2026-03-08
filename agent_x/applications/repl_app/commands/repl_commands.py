@@ -1,10 +1,12 @@
 from abc import ABC
 
 from agent_x.applications.repl_app.command_line_controller.command import Command
-from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
+from agent_x.applications.repl_app.command_line_controller.commands_controller import (
+    CommandsController,
+)
 
 
 class ReplCommand(Command, ABC):
-    def __init__(self, key: str, controller: CommandsController):
-        super().__init__(key)
+    def __init__(self, key: str, controller: CommandsController, description: str = ""):
+        super().__init__(key, description=description)
         self.controller = controller
