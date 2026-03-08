@@ -39,31 +39,31 @@ class TuiOutputWriter:
 
     def info(self, message: str, color: str = "") -> None:
         """Write an informational (cyan) message."""
-        self._emit(f"[bold cyan]ℹ[/bold cyan]  {message}")
+        self._emit(f"[bold cyan]ℹ️ [/bold cyan] {message}")
 
     def success(self, message: str) -> None:
         """Write a success (green) message."""
-        self._emit(f"[bold green]✔[/bold green]  {message}")
+        self._emit(f"[bold green]✅ {message}")
 
     def warning(self, message: str) -> None:
         """Write a warning (yellow) message."""
-        self._emit(f"[bold yellow]⚠[/bold yellow]  {message}")
+        self._emit(f"[bold yellow]⚠️  {message}")
 
     def error(self, message: str) -> None:
         """Write an error (red) message."""
-        self._emit(f"[bold red]✗[/bold red]  {message}")
+        self._emit(f"[bold red]❌ {message}")
 
     def header(self, message: str) -> None:
         """Write a header/section separator."""
         self._emit(f"[bold magenta]{'=' * 40}[/bold magenta]")
-        self._emit(f"[bold magenta]  {message}[/bold magenta]")
+        self._emit(f"[bold magenta]🚀 {message}[/bold magenta]")
         self._emit(f"[bold magenta]{'=' * 40}[/bold magenta]")
 
     def unknown_command(self, key: str) -> None:
         """Write a styled 'unknown command' error for the given key."""
         self._emit(
-            f"[bold red]✗[/bold red]  Unknown command: [bold]{key}[/bold]"
-            "  — type [bold]help[/bold] to see available commands"
+            f"[bold red]❌[/bold red] Unknown command: [bold]{key}[/bold]"
+            " — type [bold]help[/bold] to see available commands"
         )
 
     def stream_token(self, token: str) -> None:
