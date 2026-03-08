@@ -81,6 +81,10 @@ class TextualReplApp(App):
 
     def on_mount(self) -> None:
         """Wire TuiOutputWriter → OutputPane and focus the input."""
+        import threading
+
+        import agent_x.common.logger as logger_module
+
         output = self.query_one(OutputPane)
 
         def _write_markup(markup: str) -> None:
@@ -88,9 +92,7 @@ class TextualReplApp(App):
             try:
                 # call_from_thread works when called from a worker thread.
                 # When called from the main app thread (e.g. during tests via
-                # the async Pilot), use app.call_later() instead.
-                import threading
-
+                # the async Pilot), use output.write() directly.
                 if threading.current_thread() is threading.main_thread():
                     output.write(markup)
                 else:
@@ -101,21 +103,24 @@ class TextualReplApp(App):
 
         self._writer.set_callback(_write_markup)
 
-        # Monkey-patch the logger module so all command output goes to our OutputPane
-        import agent_x.common.logger as logger_module
+        # Store the default handler so we can restore it on shutdown.
+        self._orig_handler = logger_module.get_handler()
 
-        # Store original functions so we can restore them on shutdown (optional)
-        self._orig_log_info = logger_module.log_info
-        self._orig_log_warning = logger_module.log_warning
-        self._orig_log_error = logger_module.log_error
-
-        # Replace with TuiOutputWriter methods
-        logger_module.log_info = lambda msg: self._writer.info(msg)
-        logger_module.log_warning = lambda msg: self._writer.warning(msg)
-        logger_module.log_error = lambda msg: self._writer.error(msg)
+        # Replace the logger handler with our TuiOutputWriter.  Every caller
+        # that imported log_info / log_warning / log_error holds a reference
+        # to those *functions*, which now delegate through _handler — so they
+        # all transparently route output to the OutputPane.
+        logger_module.set_handler(self._writer)
 
         self._show_welcome()
         self.query_one(CommandInput).focus()
+
+    def on_unmount(self) -> None:
+        """Restore the original logger handler when the app exits."""
+        import agent_x.common.logger as logger_module
+
+        if hasattr(self, "_orig_handler"):
+            logger_module.set_handler(self._orig_handler)
 
     # ── Input submission ──────────────────────────────────────────────────────
 
