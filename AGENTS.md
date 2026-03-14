@@ -4,6 +4,59 @@ This file documents build, lint, and test commands for agentic coding agents wor
 
 ---
 
+## Agent Operational Guidelines
+
+When working as an agentic coding agent in this repository, follow these operational guidelines:
+
+### General Behavior
+- Be concise, direct, and to the point in all communications
+- Minimize output tokens while maintaining helpfulness, quality, and accuracy
+- Only address the specific query or task at hand, avoiding tangential information
+- Answer in 1-3 sentences or short paragraphs when possible
+- Avoid unnecessary preamble or postamble in responses
+
+### Code Conventions
+- Mimic existing code style and conventions in the file you're editing
+- Use existing libraries and utilities; never assume a library is available unless already used in the codebase
+- Follow existing patterns for naming, typing, and structure
+- Never add comments unless explicitly asked
+- Follow security best practices: never expose or log secrets, never commit secrets to repository
+
+### Task Execution
+- Use search tools (Glob, Grep) extensively to understand the codebase before making changes
+- Implement solutions using all available tools
+- Verify solutions with tests when possible
+- After completing a task, run lint and typecheck commands (black --check ., isort --check ., pytest)
+- Never commit changes unless explicitly asked by the user
+- When editing files, preserve exact indentation and formatting style
+
+### Tool Usage
+- Prefer specialized file operations tools over bash commands:
+  - Use Glob for file search (not find or ls)
+  - Use Grep for content search (not grep or rg)
+  - Use Read for reading files (not cat/head/tail)
+  - Use Edit for file modifications (not sed/awk)
+  - Use Write for creating new files (only when explicitly required)
+- When issuing multiple independent bash commands, batch them in parallel
+- Avoid using cd <directory> && <command> patterns; use workdir parameter instead
+
+### Git and Committing
+- Only create commits when explicitly requested by the user
+- Follow Git Safety Protocol:
+  - Never update git config or run destructive commands unless explicitly requested
+  - Never skip hooks unless explicitly requested
+  - Avoid git commit --amend unless all specific conditions are met
+  - Never commit files that likely contain secrets (.env, credentials.json, etc.)
+  - Draft concise commit messages focusing on "why" rather than "what"
+- Do not push to remote repository unless explicitly asked
+
+### Communication
+- Output text directly to communicate with the user; don't use echo/printf for tool results
+- When file search or content search is needed, use the appropriate specialized tools
+- If uncertain about file paths, use Glob to look up filenames first
+
+---
+
 ## Build, Lint, and Test Commands
 
 - Install dependencies (local environment):
