@@ -9,7 +9,7 @@ def safe_int(value, default=None):
 
 
 def clear_console():
-    if os.name == 'nt':  # Windows
-        _ = os.system('cls')
+    if os.name == "nt":  # Windows
+        _ = os.system("cls")
     else:
-        _ = os.system('clear')
+        _ = os.system("clear")

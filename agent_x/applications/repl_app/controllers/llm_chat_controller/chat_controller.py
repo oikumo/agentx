@@ -1,7 +1,6 @@
+from agent_x.applications.repl_app.command_line_controller.commands_controller import \
+    CommandsController
 from agent_x.applications.repl_app.commands.llm_chat_commands import AIChat
-from agent_x.applications.repl_app.command_line_controller.commands_controller import (
-    CommandsController,
-)
 
 
 class ChatController(CommandsController):

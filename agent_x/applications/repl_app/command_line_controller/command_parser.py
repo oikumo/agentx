@@ -1,7 +1,8 @@
-from typing import List
 from dataclasses import dataclass
+from typing import List
 
-from agent_x.applications.repl_app.command_line_controller.command import Command
+from agent_x.applications.repl_app.command_line_controller.command import \
+    Command
 from agent_x.common.logger import log_warning
 
 

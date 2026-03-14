@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from agent_x.applications.repl_app.commands.math_commands import SumCommand
 
-
 # Patch targets – match the import site inside math_commands.py
 _LOG_INFO = "agent_x.applications.repl_app.commands.math_commands.log_info"
 _LOG_WARN = "agent_x.applications.repl_app.commands.math_commands.log_warning"

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 
 from agent_x.applications.repl_app.replapp import ReplApp
 
-
 # Patch targets – must match the import site in replapp.py
 _LOG_INFO = "agent_x.applications.repl_app.replapp.log_info"
 _MAIN_CONTROLLER = "agent_x.applications.repl_app.replapp.MainController"

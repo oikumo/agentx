@@ -1,7 +1,7 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from agent_x.utils.utils import safe_int, clear_console
+from agent_x.utils.utils import clear_console, safe_int
 
 
 class UtilsTest(unittest.TestCase):

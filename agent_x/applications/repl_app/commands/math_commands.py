@@ -1,4 +1,5 @@
-from agent_x.applications.repl_app.command_line_controller.command import Command
+from agent_x.applications.repl_app.command_line_controller.command import \
+    Command
 from agent_x.common.logger import log_info, log_warning
 from agent_x.utils.utils import safe_int
 

@@ -1,13 +1,10 @@
 import unittest
 
-from agent_x.app.configuration.configuration import (
-    AgentXConfiguration,
-    AppType,
-    LLMModel,
-    LLMProvider,
-    configure_agentx,
-)
 from agent_x.app.agent_x import AgentX
+from agent_x.app.configuration.configuration import (AgentXConfiguration,
+                                                     AppType, LLMModel,
+                                                     LLMProvider,
+                                                     configure_agentx)
 
 
 class AgentXConfigurationTest(unittest.TestCase):

@@ -1,8 +1,8 @@
-import unittest
-import os
 import datetime
-from unittest.mock import patch, MagicMock
+import os
+import unittest
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from agent_x.user_sessions.session import Session
 

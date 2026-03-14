@@ -10,8 +10,7 @@ def create_faiss(vectorstore_path: str, docs: List[Document], embeddings: Embedd
     vectorstore.save_local(vectorstore_path)
 
     new_vectorstore = FAISS.load_local(
-        vectorstore_path,
-        embeddings, allow_dangerous_deserialization=True
+        vectorstore_path, embeddings, allow_dangerous_deserialization=True
     )
 
     return new_vectorstore

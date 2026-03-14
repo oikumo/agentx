@@ -14,10 +14,10 @@ without a real terminal.
 import asyncio
 import unittest
 
+from agent_x.applications.repl_app.tui.widgets.command_input import \
+    CommandInput
 from agent_x.applications.repl_app.tui.widgets.output_pane import OutputPane
-from agent_x.applications.repl_app.tui.widgets.command_input import CommandInput
 from agent_x.applications.repl_app.tui.widgets.status_bar import StatusBar
-
 
 # ── OutputPane ────────────────────────────────────────────────────────────────
 

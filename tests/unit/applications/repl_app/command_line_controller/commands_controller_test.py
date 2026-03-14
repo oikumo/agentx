@@ -1,10 +1,9 @@
 import unittest
 
-from agent_x.applications.repl_app.command_line_controller.commands_controller import (
-    CommandsController,
-)
-from agent_x.applications.repl_app.command_line_controller.command import Command
-
+from agent_x.applications.repl_app.command_line_controller.command import \
+    Command
+from agent_x.applications.repl_app.command_line_controller.commands_controller import \
+    CommandsController
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

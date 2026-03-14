@@ -5,9 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from langchain_core.documents import Document
 
 from agent_x.applications.web_ingestion_app.documents import (
-    index_documents_async,
-    process_documents,
-)
+    index_documents_async, process_documents)
 
 
 class IndexDocumentsAsyncTest(unittest.TestCase):

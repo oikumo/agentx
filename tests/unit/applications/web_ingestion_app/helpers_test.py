@@ -6,10 +6,7 @@ import unittest
 from langchain_core.documents import Document
 
 from agent_x.applications.web_ingestion_app.helpers import (
-    chunk_urls,
-    load_docs_from_jsonl,
-    save_docs,
-)
+    chunk_urls, load_docs_from_jsonl, save_docs)
 
 
 class ChunkUrlsTest(unittest.TestCase):

@@ -28,14 +28,13 @@ from textual.binding import Binding
 from textual.widgets import Header, Static
 from textual.worker import Worker, get_current_worker
 
-from agent_x.applications.repl_app.command_line_controller.command_parser import (
-    CommandParser,
-)
-from agent_x.applications.repl_app.command_line_controller.commands_controller import (
-    CommandsController,
-)
+from agent_x.applications.repl_app.command_line_controller.command_parser import \
+    CommandParser
+from agent_x.applications.repl_app.command_line_controller.commands_controller import \
+    CommandsController
 from agent_x.applications.repl_app.tui.output_writer import TuiOutputWriter
-from agent_x.applications.repl_app.tui.widgets.command_input import CommandInput
+from agent_x.applications.repl_app.tui.widgets.command_input import \
+    CommandInput
 from agent_x.applications.repl_app.tui.widgets.output_pane import OutputPane
 from agent_x.applications.repl_app.tui.widgets.status_bar import StatusBar
 

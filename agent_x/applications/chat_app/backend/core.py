@@ -3,13 +3,13 @@ import time
 from typing import Any, Dict, List
 
 from dotenv import load_dotenv
-from langchain_classic import hub
-from langchain_classic.chains.combine_documents import create_stuff_documents_chain
-from langchain_classic.chains.history_aware_retriever import (
-    create_history_aware_retriever,
-)
-from langchain_classic.chains.retrieval import create_retrieval_chain
 from langchain_chroma import Chroma
+from langchain_classic import hub
+from langchain_classic.chains.combine_documents import \
+    create_stuff_documents_chain
+from langchain_classic.chains.history_aware_retriever import \
+    create_history_aware_retriever
+from langchain_classic.chains.retrieval import create_retrieval_chain
 from langchain_core.language_models import BaseChatModel
 from langchain_ollama import OllamaEmbeddings
 

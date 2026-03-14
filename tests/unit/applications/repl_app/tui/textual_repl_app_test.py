@@ -11,13 +11,13 @@ The Pilot API lets us:
 
 import unittest
 
+from agent_x.applications.repl_app.controllers.main_controller.main_controller import \
+    MainController
 from agent_x.applications.repl_app.tui.app import TextualReplApp
+from agent_x.applications.repl_app.tui.widgets.command_input import \
+    CommandInput
 from agent_x.applications.repl_app.tui.widgets.output_pane import OutputPane
-from agent_x.applications.repl_app.tui.widgets.command_input import CommandInput
 from agent_x.applications.repl_app.tui.widgets.status_bar import StatusBar
-from agent_x.applications.repl_app.controllers.main_controller.main_controller import (
-    MainController,
-)
 
 
 class TextualReplAppStructureTest(unittest.IsolatedAsyncioTestCase):

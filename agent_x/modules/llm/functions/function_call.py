@@ -1,7 +1,7 @@
 import json
 
-from rich import print
 from ollama import chat
+from rich import print
 
 model = "functiongemma:270m"
 

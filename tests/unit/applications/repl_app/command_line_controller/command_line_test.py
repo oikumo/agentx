@@ -1,14 +1,12 @@
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
-from agent_x.applications.repl_app.command_line_controller.command_line import (
-    CommandLine,
-)
-from agent_x.applications.repl_app.command_line_controller.commands_controller import (
-    CommandsController,
-)
-from agent_x.applications.repl_app.command_line_controller.command import Command
-
+from agent_x.applications.repl_app.command_line_controller.command import \
+    Command
+from agent_x.applications.repl_app.command_line_controller.command_line import \
+    CommandLine
+from agent_x.applications.repl_app.command_line_controller.commands_controller import \
+    CommandsController
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

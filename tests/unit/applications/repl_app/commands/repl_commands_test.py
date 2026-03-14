@@ -1,11 +1,9 @@
 import unittest
 from unittest.mock import MagicMock
 
+from agent_x.applications.repl_app.command_line_controller.commands_controller import \
+    CommandsController
 from agent_x.applications.repl_app.commands.repl_commands import ReplCommand
-from agent_x.applications.repl_app.command_line_controller.commands_controller import (
-    CommandsController,
-)
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -1,12 +1,10 @@
 import unittest
 from unittest.mock import patch
 
+from agent_x.applications.repl_app.command_line_controller.command import \
+    Command
 from agent_x.applications.repl_app.command_line_controller.command_parser import (
-    CommandData,
-    CommandParser,
-)
-from agent_x.applications.repl_app.command_line_controller.command import Command
-
+    CommandData, CommandParser)
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

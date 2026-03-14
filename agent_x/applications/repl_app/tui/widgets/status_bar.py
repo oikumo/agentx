@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from textual.widgets import Static
 from textual.reactive import reactive
+from textual.widgets import Static
 
 
 class StatusBar(Static):

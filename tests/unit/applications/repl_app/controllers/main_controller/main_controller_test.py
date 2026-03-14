@@ -1,16 +1,12 @@
 import unittest
 from unittest.mock import patch
 
-from agent_x.applications.repl_app.controllers.main_controller.main_controller import (
-    MainController,
-)
-from agent_x.applications.repl_app.command_line_controller.commands_controller import (
-    CommandsController,
-)
-from agent_x.applications.repl_app.controllers.main_controller.imain_controller import (
-    IMainController,
-)
-
+from agent_x.applications.repl_app.command_line_controller.commands_controller import \
+    CommandsController
+from agent_x.applications.repl_app.controllers.main_controller.imain_controller import \
+    IMainController
+from agent_x.applications.repl_app.controllers.main_controller.main_controller import \
+    MainController
 
 # Patch log_info so MainController.close() doesn't write to stdout during tests
 _LOG_INFO = (

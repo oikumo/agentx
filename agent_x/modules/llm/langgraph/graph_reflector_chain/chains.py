@@ -1,8 +1,6 @@
+from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
-
-
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -30,5 +28,3 @@ generation_prompt = ChatPromptTemplate.from_messages(
 llm = ChatOpenAI()
 generate_chain = generation_prompt | llm
 reflect_chain = reflection_prompt | llm
-
-

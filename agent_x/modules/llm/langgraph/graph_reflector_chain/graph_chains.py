@@ -1,15 +1,18 @@
-from typing import TypedDict, Annotated
+import pprint
+from typing import Annotated, TypedDict
+
 from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
-from agent_x.common.files.file_utils import save_to_output
-import pprint
 
-from agent_x.modules.llm.langgraph.graph_reflector_chain.chains import generate_chain, reflect_chain
+from agent_x.common.files.file_utils import save_to_output
+from agent_x.modules.llm.langgraph.graph_reflector_chain.chains import (
+    generate_chain, reflect_chain)
 
 
 def graph_chains():
-    print('graph_chains')
+    print("graph_chains")
+
     class MessageGraph(TypedDict):
         messages: Annotated[list[BaseMessage], add_messages]
 
@@ -33,7 +36,9 @@ def graph_chains():
             return END
         return REFLECT
 
-    builder.add_conditional_edges(GENERATE, should_continue, path_map={END:END,REFLECT:REFLECT})
+    builder.add_conditional_edges(
+        GENERATE, should_continue, path_map={END: END, REFLECT: REFLECT}
+    )
     builder.add_edge(REFLECT, GENERATE)
 
     graph = builder.compile()
@@ -41,10 +46,7 @@ def graph_chains():
     graph.get_graph().print_ascii()
 
     print("Hello LangGraph")
-    inputs = {
-        "messages": [
-            HumanMessage(
-                content="""Make this tweet better:"
+    inputs = {"messages": [HumanMessage(content="""Make this tweet better:"
                                     @LangChainAI
             — newly Tool Calling feature is seriously underrated.
 
@@ -52,10 +54,7 @@ def graph_chains():
 
             Made a video covering their newest blog post
 
-                                  """
-            )
-        ]
-    }
+                                  """)]}
     response = graph.invoke(inputs)
     print(response)
 

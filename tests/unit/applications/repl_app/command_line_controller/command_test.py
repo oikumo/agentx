@@ -1,8 +1,8 @@
 import unittest
 from abc import ABC
 
-from agent_x.applications.repl_app.command_line_controller.command import Command
-
+from agent_x.applications.repl_app.command_line_controller.command import \
+    Command
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

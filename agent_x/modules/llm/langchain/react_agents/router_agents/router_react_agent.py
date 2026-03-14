@@ -6,22 +6,25 @@ from langchain_classic.agents import AgentExecutor, create_react_agent
 from langchain_core.tools import Tool
 
 from agent_x.llm_models.local.llms import get_local_llm_qwen3
-from agent_x.modules.llm.langchain.react_agents.router_agents.agent_executors.csv_agent import create_csv_agent_executor
+from agent_x.modules.llm.langchain.react_agents.router_agents.agent_executors.csv_agent import \
+    create_csv_agent_executor
 from agent_x.modules.llm.langchain.react_agents.router_agents.agent_executors.qr_react_agent import \
     create_qr_react_agent_executor
 
 load_dotenv()
 
+
 def router_agent():
     print("router_agent start")
 
-    llm= get_local_llm_qwen3()
+    llm = get_local_llm_qwen3()
 
     python_agent_executor = create_qr_react_agent_executor(llm)
+
     def python_agent_executor_wrapper(original_prompt: str) -> dict[str, Any]:
         return python_agent_executor.invoke({"input": original_prompt})
 
-    csv_agent_executor =create_csv_agent_executor(llm, "resources/episode_info.csv")
+    csv_agent_executor = create_csv_agent_executor(llm, "resources/episode_info.csv")
 
     tools = [
         Tool(
@@ -51,6 +54,10 @@ def router_agent():
 
     print(grand_agent_executor.invoke({"input": "which season has the most episodes?"}))
 
-    print(grand_agent_executor.invoke({"input":
-        "Create a directory the 'udemy_qr' folder, 15 DIFFERENT qrcodes that point to `www.udemy.com/course/langchain"
-    }))
+    print(
+        grand_agent_executor.invoke(
+            {
+                "input": "Create a directory the 'udemy_qr' folder, 15 DIFFERENT qrcodes that point to `www.udemy.com/course/langchain"
+            }
+        )
+    )

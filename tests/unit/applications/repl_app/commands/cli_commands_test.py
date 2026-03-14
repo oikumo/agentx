@@ -1,22 +1,18 @@
-import unittest
-import tempfile
 import os
-from unittest.mock import MagicMock, patch, call
+import tempfile
+import unittest
+from unittest.mock import MagicMock, call, patch
 
-from agent_x.applications.repl_app.commands.cli_commands import (
-    QuitCommand,
-    ClearCommand,
-    HelpCommand,
-    ReadFile,
-)
-from agent_x.applications.repl_app.command_line_controller.commands_controller import (
-    CommandsController,
-)
-from agent_x.applications.repl_app.controllers.main_controller.imain_controller import (
-    IMainController,
-)
-from agent_x.applications.repl_app.command_line_controller.command import Command
-
+from agent_x.applications.repl_app.command_line_controller.command import \
+    Command
+from agent_x.applications.repl_app.command_line_controller.commands_controller import \
+    CommandsController
+from agent_x.applications.repl_app.commands.cli_commands import (ClearCommand,
+                                                                 HelpCommand,
+                                                                 QuitCommand,
+                                                                 ReadFile)
+from agent_x.applications.repl_app.controllers.main_controller.imain_controller import \
+    IMainController
 
 # Patch targets – must match the import site in cli_commands.py
 _LOG_INFO = "agent_x.applications.repl_app.commands.cli_commands.log_info"

@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from collections import deque
 
+from textual.suggester import SuggestFromList
 from textual.widgets import Input
 from textual.widgets.input import Selection
-from textual.suggester import SuggestFromList
 
 
 class CommandInput(Input):

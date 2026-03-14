@@ -1,8 +1,9 @@
 import unittest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from agent_x.app.agent_x import AgentX, IApp
-from agent_x.app.configuration.configuration import AgentXConfiguration, AppType
+from agent_x.app.configuration.configuration import (AgentXConfiguration,
+                                                     AppType)
 from agent_x.common.logger import log_info
 
 
@@ -176,10 +177,9 @@ class AgentXTest(unittest.TestCase):
     def test_run_with_web_ingestion_app_integration(self):
         # Integration test: AgentX with WebIngestionApp.
         # Uses mocks to avoid calling real TavilySearch.
-        from agent_x.applications.web_ingestion_app.web_ingestion_app import (
-            WebIngestionApp,
-        )
         from agent_x.applications.web_ingestion_app.tavily import WebExtract
+        from agent_x.applications.web_ingestion_app.web_ingestion_app import \
+            WebIngestionApp
 
         agentx = AgentX()
         mock_vs = MagicMock()
@@ -212,10 +212,9 @@ class AgentXTest(unittest.TestCase):
 
     def test_web_ingestion_app_implements_iapp_protocol(self):
         # WebIngestionApp must implement IApp protocol.
-        from agent_x.applications.web_ingestion_app.web_ingestion_app import (
-            WebIngestionApp,
-        )
         from agent_x.applications.web_ingestion_app.tavily import WebExtract
+        from agent_x.applications.web_ingestion_app.web_ingestion_app import \
+            WebIngestionApp
 
         mock_vs = MagicMock()
         mock_tav = MagicMock(spec=WebExtract)

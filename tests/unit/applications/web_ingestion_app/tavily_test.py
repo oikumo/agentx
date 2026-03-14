@@ -24,7 +24,8 @@ def _make_web_extract(max_depth=2, max_breadth=5, max_pages=10):
 class WebExtractInitTest(unittest.TestCase):
     def test_init_stores_depth_breadth_pages_on_tavily_map(self):
         with patch(_TAVILY_EXTRACT_PATH), patch(_TAVILY_MAP_PATH) as MockMap:
-            from agent_x.applications.web_ingestion_app.tavily import WebExtract
+            from agent_x.applications.web_ingestion_app.tavily import \
+                WebExtract
 
             WebExtract(max_depth=3, max_breadth=7, max_pages=20)
             MockMap.assert_called_once_with(max_depth=3, max_breadth=7, max_pages=20)
@@ -36,7 +37,8 @@ class ExtractBatchTest(unittest.TestCase):
 
     def test_extract_batch_returns_results_from_tavily(self):
         with patch(_TAVILY_EXTRACT_PATH) as MockExtract, patch(_TAVILY_MAP_PATH):
-            from agent_x.applications.web_ingestion_app.tavily import WebExtract
+            from agent_x.applications.web_ingestion_app.tavily import \
+                WebExtract
 
             mock_extract_instance = MagicMock()
             mock_extract_instance.ainvoke = AsyncMock(
@@ -57,7 +59,8 @@ class ExtractBatchTest(unittest.TestCase):
     def test_extract_batch_returns_empty_list_on_exception(self):
         # Any exception from ainvoke must be caught and [] returned.
         with patch(_TAVILY_EXTRACT_PATH) as MockExtract, patch(_TAVILY_MAP_PATH):
-            from agent_x.applications.web_ingestion_app.tavily import WebExtract
+            from agent_x.applications.web_ingestion_app.tavily import \
+                WebExtract
 
             mock_extract_instance = MagicMock()
             mock_extract_instance.ainvoke = AsyncMock(
@@ -78,7 +81,8 @@ class ExtractBatchTest(unittest.TestCase):
     def test_extract_batch_missing_results_key_returns_empty_list(self):
         # If the response has no "results" key, the default [] is returned.
         with patch(_TAVILY_EXTRACT_PATH) as MockExtract, patch(_TAVILY_MAP_PATH):
-            from agent_x.applications.web_ingestion_app.tavily import WebExtract
+            from agent_x.applications.web_ingestion_app.tavily import \
+                WebExtract
 
             mock_extract_instance = MagicMock()
             mock_extract_instance.ainvoke = AsyncMock(return_value={})
@@ -102,7 +106,8 @@ class AsyncExtractTest(unittest.TestCase):
         raw_page = {"raw_content": "page text", "url": "http://example.com/page"}
 
         with patch(_TAVILY_EXTRACT_PATH) as MockExtract, patch(_TAVILY_MAP_PATH):
-            from agent_x.applications.web_ingestion_app.tavily import WebExtract
+            from agent_x.applications.web_ingestion_app.tavily import \
+                WebExtract
 
             mock_extract_instance = MagicMock()
             mock_extract_instance.ainvoke = AsyncMock(
@@ -122,7 +127,8 @@ class AsyncExtractTest(unittest.TestCase):
 
     def test_async_extract_returns_empty_list_when_all_batches_fail(self):
         with patch(_TAVILY_EXTRACT_PATH) as MockExtract, patch(_TAVILY_MAP_PATH):
-            from agent_x.applications.web_ingestion_app.tavily import WebExtract
+            from agent_x.applications.web_ingestion_app.tavily import \
+                WebExtract
 
             mock_extract_instance = MagicMock()
             mock_extract_instance.ainvoke = AsyncMock(side_effect=RuntimeError("fail"))
@@ -152,7 +158,8 @@ class AsyncExtractTest(unittest.TestCase):
             return {"results": [page_b]}
 
         with patch(_TAVILY_EXTRACT_PATH) as MockExtract, patch(_TAVILY_MAP_PATH):
-            from agent_x.applications.web_ingestion_app.tavily import WebExtract
+            from agent_x.applications.web_ingestion_app.tavily import \
+                WebExtract
 
             mock_extract_instance = MagicMock()
             mock_extract_instance.ainvoke = fake_ainvoke

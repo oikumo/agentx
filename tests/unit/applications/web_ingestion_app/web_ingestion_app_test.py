@@ -1,6 +1,6 @@
 import asyncio
 import unittest
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from langchain_core.documents import Document
 
@@ -15,7 +15,8 @@ _MOD = "agent_x.applications.web_ingestion_app.web_ingestion_app"
 
 def _make_app(site_url: str = "http://site.com", result_path: str = "/tmp/out.jsonl"):
     """Build a WebIngestionApp with fully mocked collaborators."""
-    from agent_x.applications.web_ingestion_app.web_ingestion_app import WebIngestionApp
+    from agent_x.applications.web_ingestion_app.web_ingestion_app import \
+        WebIngestionApp
 
     vectorstore = MagicMock()
     tav = MagicMock()

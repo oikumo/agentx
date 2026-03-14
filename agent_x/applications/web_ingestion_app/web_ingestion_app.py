@@ -6,12 +6,11 @@ from dotenv import load_dotenv
 from langchain_core.vectorstores import VectorStore
 
 from agent_x.applications.web_ingestion_app.documents import (
-    index_documents_async,
-    process_documents,
-)
-from agent_x.applications.web_ingestion_app.helpers import chunk_urls, save_docs
+    index_documents_async, process_documents)
+from agent_x.applications.web_ingestion_app.helpers import (chunk_urls,
+                                                            save_docs)
 from agent_x.applications.web_ingestion_app.tavily import WebExtract
-from agent_x.common.logger import log_info, Colors, log_success
+from agent_x.common.logger import Colors, log_info, log_success
 
 load_dotenv()
 

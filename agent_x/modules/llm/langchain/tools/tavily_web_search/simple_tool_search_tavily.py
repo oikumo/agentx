@@ -1,8 +1,9 @@
+from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
+from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
-from langchain_classic.agents import create_tool_calling_agent, AgentExecutor
-from langchain_community.tools.tavily_search import TavilySearchResults
+
 
 @tool
 def multiply(x: float, y: float) -> float:

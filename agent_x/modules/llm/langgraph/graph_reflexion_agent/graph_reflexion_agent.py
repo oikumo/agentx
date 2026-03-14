@@ -2,28 +2,27 @@ import pprint
 from typing import Literal
 
 from langchain_core.messages import AIMessage, ToolMessage
-from langgraph.graph import END, START, StateGraph, MessagesState
+from langgraph.graph import END, START, MessagesState, StateGraph
 
 from agent_x.common.files.file_utils import save_to_output
-from agent_x.modules.llm.langgraph.graph_reflexion_agent.chains import first_responder, revisor
-from agent_x.modules.llm.langgraph.graph_reflexion_agent.tool_executor import execute_tools
+from agent_x.modules.llm.langgraph.graph_reflexion_agent.chains import (
+    first_responder, revisor)
+from agent_x.modules.llm.langgraph.graph_reflexion_agent.tool_executor import \
+    execute_tools
 
 
 def graph_reflexion_agent():
     MAX_ITERATIONS = 2
-
 
     def draft_node(state: MessagesState):
         """Draft the initial response."""
         response = first_responder.invoke({"messages": state["messages"]})
         return {"messages": [response]}
 
-
     def revise_node(state: MessagesState):
         """Revise the answer based on tool results."""
         response = revisor.invoke({"messages": state["messages"]})
         return {"messages": [response]}
-
 
     def event_loop(state: MessagesState) -> Literal["execute_tools", END]:
         """Determine whether to continue or end based on iteration count."""
@@ -34,7 +33,6 @@ def graph_reflexion_agent():
         if num_iterations > MAX_ITERATIONS:
             return END
         return "execute_tools"
-
 
     builder = StateGraph(MessagesState)
     builder.add_node("draft", draft_node)
@@ -47,8 +45,6 @@ def graph_reflexion_agent():
     graph = builder.compile()
 
     print(graph.get_graph().draw_mermaid())
-
-
 
     res = graph.invoke(
         {
@@ -66,4 +62,3 @@ def graph_reflexion_agent():
         print(last_message.tool_calls[0]["args"]["answer"])
     print(res)
     save_to_output(pprint.pformat(last_message))
-
