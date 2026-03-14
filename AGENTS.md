@@ -83,7 +83,7 @@ When working as an agentic coding agent in this repository, follow these operati
   - pytest tests/path/to/test_file.py::TestClass -q  # all tests in class
   - pytest tests/path/to/test_file.py -k "pattern" -q  # subset by name
 
-- Run unit tests only:  
+- Run unit tests only:
   - pytest tests/unit -q
 
 - Run integration tests only:
