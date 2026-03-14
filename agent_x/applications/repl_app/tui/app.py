@@ -14,32 +14,26 @@ Layout (top → bottom):
   └─────────────────────────────────────┘
 
 Command execution runs in a Textual worker (thread pool) so the UI never
-freezes while an LLM command is running.  The TuiOutputWriter callback uses
-call_from_thread() to safely post markup back to the OutputPane from the
-worker thread.
+freezes while an LLM command is running.  The logger integration writes
+markup directly to the OutputPane from any thread.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+from collections import deque
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.widgets import Header, Static
-from textual.worker import Worker, get_current_worker
+from textual.widgets import Header, Static, RichLog
 
-from agent_x.applications.repl_app.command_line_controller.command_parser import \
-    CommandParser
-from agent_x.applications.repl_app.command_line_controller.commands_controller import \
-    CommandsController
-from agent_x.applications.repl_app.tui.output_writer import TuiOutputWriter
-from agent_x.applications.repl_app.tui.widgets.command_input import \
-    CommandInput
-from agent_x.applications.repl_app.tui.widgets.output_pane import OutputPane
-from agent_x.applications.repl_app.tui.widgets.status_bar import StatusBar
-
-# Path to the companion CSS file
-_CSS_PATH = Path(__file__).parent / "styles" / "app.tcss"
+from agent_x.applications.repl_app.command_line_controller.command_parser import (
+    CommandParser,
+)
+from agent_x.applications.repl_app.command_line_controller.commands_controller import (
+    CommandsController,
+)
+from agent_x.applications.repl_app.tui.widgets.command_input import CommandInput
 
 
 class TextualReplApp(App):
@@ -51,18 +45,48 @@ class TextualReplApp(App):
     """
 
     TITLE = "Agent-X"
-    CSS_PATH = _CSS_PATH
-
     BINDINGS = [
         Binding("ctrl+c", "quit", "Quit", show=True, priority=True),
         Binding("ctrl+l", "clear_output", "Clear", show=True),
     ]
 
+    # Inline CSS - eliminates external stylesheet
+    CSS = """
+    Screen {
+        layout: vertical;
+    }
+    RichLog {
+        border: solid $primary-darken-2;
+        padding: 0 1;
+        scrollbar-gutter: stable;
+    }
+    CommandInput {
+        border: tall $accent;
+        padding: 0 1;
+        background: $surface;
+    }
+    CommandInput:focus {
+        border: tall $accent-lighten-1;
+    }
+    Static#status-bar {
+        background: $primary-darken-2;
+        color: $text;
+        height: 1;
+        padding: 0 1;
+        dock: bottom;
+    }
+    Static#prompt-label {
+        color: cyan;
+        text-style: bold;
+    }
+    """
+
     def __init__(self, controller: CommandsController, **kwargs) -> None:
         super().__init__(**kwargs)
         self._controller = controller
         self._parser = CommandParser()
-        self._writer = TuiOutputWriter()
+        self._command_history: deque[str] = deque(maxlen=100)
+        self._history_index: int = -1
 
     # ── Compose ───────────────────────────────────────────────────────────────
 
@@ -70,49 +94,31 @@ class TextualReplApp(App):
         suggestions = [cmd.key for cmd in self._controller.get_commands()]
 
         yield Header(show_clock=True)
-        yield OutputPane(id="output-pane")
+        yield RichLog(id="output-pane", markup=True, highlight=True, wrap=True)
         with Static(id="input-row"):
             yield Static("[bold cyan](agent-x) >[/bold cyan] ", id="prompt-label")
             yield CommandInput(suggestions=suggestions, id="command-input")
-        yield StatusBar(id="status-bar")
+        yield Static(id="status-bar")
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
     def on_mount(self) -> None:
-        """Wire TuiOutputWriter → OutputPane and focus the input."""
-        import threading
+        """Wire logger → OutputPane and focus the input."""
+        output = self.query_one("#output-pane", RichLog)
 
+        # Import and setup logger handler: delegate all log output to the RichLog
         import agent_x.common.logger as logger_module
 
-        output = self.query_one(OutputPane)
-
-        def _write_markup(markup: str) -> None:
-            """Write markup safely from any thread."""
-            try:
-                # call_from_thread works when called from a worker thread.
-                # When called from the main app thread (e.g. during tests via
-                # the async Pilot), use output.write() directly.
-                if threading.current_thread() is threading.main_thread():
-                    output.write(markup)
-                else:
-                    self.call_from_thread(output.write, markup)
-            except Exception:
-                # Last resort: direct write (always safe on main thread)
-                output.write(markup)
-
-        self._writer.set_callback(_write_markup)
-
-        # Store the default handler so we can restore it on shutdown.
         self._orig_handler = logger_module.get_handler()
+        logger_module.set_handler(lambda msg: output.write(msg))
 
-        # Replace the logger handler with our TuiOutputWriter.  Every caller
-        # that imported log_info / log_warning / log_error holds a reference
-        # to those *functions*, which now delegate through _handler — so they
-        # all transparently route output to the OutputPane.
-        logger_module.set_handler(self._writer)
+        # Set initial status to ready
+        self.query_one("#status-bar", Static).update(
+            "[bold]Ready[/bold]  │  [dim]ctrl+c quit  │  Tab autocomplete  │  ↑↓ history[/dim]"
+        )
 
         self._show_welcome()
-        self.query_one(CommandInput).focus()
+        self.query_one("#command-input").focus()
 
     def on_unmount(self) -> None:
         """Restore the original logger handler when the app exits."""
@@ -129,12 +135,13 @@ class TextualReplApp(App):
         if not raw:
             return
 
-        inp = self.query_one(CommandInput)
+        inp = self.query_one("#command-input", CommandInput)
+        # History management (delegated to the widget)
         inp.push_history(raw)
         inp.clear()
 
         # Echo the command into the output pane
-        output = self.query_one(OutputPane)
+        output = self.query_one("#output-pane", RichLog)
         output.write(f"[bold cyan]>[/bold cyan] {raw}")
 
         command_data = self._parser.parse(raw)
@@ -143,12 +150,18 @@ class TextualReplApp(App):
 
         command = self._controller.find_command(command_data.key)
         if not command:
-            self._writer.unknown_command(command_data.key)
-            self.query_one(StatusBar).set_status(f"Unknown command: {command_data.key}")
+            self.notify(f"Unknown command: {command_data.key}", severity="error")
+            self.query_one("#status-bar", Static).update(
+                f"[bold]Unknown command: {command_data.key}[/bold]  │  "
+                "[dim]ctrl+c quit  │  Tab autocomplete  │  ↑↓ history[/dim]"
+            )
             return
 
         # Run the command in a worker thread so the UI stays responsive
-        self.query_one(StatusBar).set_status(f"Running: {command_data.key}…")
+        self.query_one("#status-bar", Static).update(
+            f"[bold]Running: {command_data.key}…[/bold]  │  "
+            "[dim]ctrl+c quit  │  Tab autocomplete  │  ↑↓ history[/dim]"
+        )
         self.run_worker(
             lambda: self._run_command(command, command_data.arguments),
             thread=True,
@@ -160,21 +173,26 @@ class TextualReplApp(App):
         try:
             command.run(arguments)
         except Exception as exc:
-            self.call_from_thread(self._writer.error, str(exc))
+            self.call_from_thread(self.notify, f"Error: {exc}", severity="error")
         finally:
-            self.call_from_thread(self.query_one(StatusBar).set_status, "Ready")
+            self.call_from_thread(
+                self.query_one("#status-bar", Static).update,
+                "[bold]Ready[/bold]  │  [dim]ctrl+c quit  │  Tab autocomplete  │  ↑↓ history[/dim]",
+            )
 
     # ── Actions ───────────────────────────────────────────────────────────────
 
     def action_clear_output(self) -> None:
         """ctrl+l — clear the OutputPane."""
-        self.query_one(OutputPane).clear()
-        self.query_one(StatusBar).set_status("Ready")
+        self.query_one("#output-pane", RichLog).clear()
+        self.query_one("#status-bar", Static).update(
+            "[bold]Ready[/bold]  │  [dim]ctrl+c quit  │  Tab autocomplete  │  ↑↓ history[/dim]"
+        )
 
     # ── Welcome banner ────────────────────────────────────────────────────────
 
     def _show_welcome(self) -> None:
-        output = self.query_one(OutputPane)
+        output = self.query_one("#output-pane", RichLog)
         commands = self._controller.get_commands()
         output.write("[bold cyan]╔══════════════════════════════════════╗[/bold cyan]")
         output.write(

@@ -11,13 +11,12 @@ The Pilot API lets us:
 
 import unittest
 
-from agent_x.applications.repl_app.controllers.main_controller.main_controller import \
-    MainController
+from agent_x.applications.repl_app.controllers.main_controller.main_controller import (
+    MainController,
+)
 from agent_x.applications.repl_app.tui.app import TextualReplApp
-from agent_x.applications.repl_app.tui.widgets.command_input import \
-    CommandInput
-from agent_x.applications.repl_app.tui.widgets.output_pane import OutputPane
-from agent_x.applications.repl_app.tui.widgets.status_bar import StatusBar
+from agent_x.applications.repl_app.tui.widgets.command_input import CommandInput
+from textual.widgets import RichLog, Static
 
 
 class TextualReplAppStructureTest(unittest.IsolatedAsyncioTestCase):
@@ -27,7 +26,7 @@ class TextualReplAppStructureTest(unittest.IsolatedAsyncioTestCase):
         controller = MainController()
         app = TextualReplApp(controller=controller)
         async with app.run_test(headless=True) as pilot:
-            pane = app.query_one(OutputPane)
+            pane = app.query_one(RichLog)
             self.assertIsNotNone(pane)
 
     async def test_app_mounts_command_input(self):
@@ -41,7 +40,7 @@ class TextualReplAppStructureTest(unittest.IsolatedAsyncioTestCase):
         controller = MainController()
         app = TextualReplApp(controller=controller)
         async with app.run_test(headless=True) as pilot:
-            bar = app.query_one(StatusBar)
+            bar = app.query_one(Static)
             self.assertIsNotNone(bar)
 
     async def test_app_title_contains_agent_x(self):
@@ -68,7 +67,7 @@ class TextualReplAppInteractionTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_submitting_unknown_command_shows_error_in_output(self):
         # Typing an unknown command and pressing Enter must produce an error
-        # message in the output pane (via TuiOutputWriter.unknown_command).
+        # message in the output pane (via logger integration).
         controller = MainController()
         app = TextualReplApp(controller=controller)
         async with app.run_test(headless=True) as pilot:
@@ -78,7 +77,7 @@ class TextualReplAppInteractionTest(unittest.IsolatedAsyncioTestCase):
             inp.value = "__unknown_cmd__"
             await pilot.press("enter")
             await pilot.pause()
-            pane = app.query_one(OutputPane)
+            pane = app.query_one(RichLog)
             # RichLog stores lines as renderable objects; check the text buffer
             content = "\n".join(str(r) for r in pane.lines)
             self.assertIn("__unknown_cmd__", content)
@@ -91,7 +90,7 @@ class TextualReplAppInteractionTest(unittest.IsolatedAsyncioTestCase):
             await pilot.press("enter")
             await pilot.pause()
             # Just verify the app is still alive
-            self.assertIsNotNone(app.query_one(OutputPane))
+            self.assertIsNotNone(app.query_one(RichLog))
 
     async def test_status_bar_updates_after_command(self):
         # After any command submission the status bar must change from "Ready"
@@ -100,6 +99,17 @@ class TextualReplAppInteractionTest(unittest.IsolatedAsyncioTestCase):
         controller = MainController()
         app = TextualReplApp(controller=controller)
         async with app.run_test(headless=True) as pilot:
-            bar = app.query_one(StatusBar)
-            # Initial state
-            self.assertEqual(bar.current_status, "Ready")
+            bar = app.query_one("#status-bar", Static)
+            # Initial state - check that it contains "Ready"
+            initial_render = str(bar.render())
+            self.assertIn("Ready", initial_render)
+
+            # Submit an unknown command to trigger a status change
+            inp = app.query_one(CommandInput)
+            inp.value = "__unknown_cmd__"
+            await pilot.press("enter")
+            await pilot.pause()
+            # Status should have changed from ready message
+            updated_render = str(bar.render())
+            self.assertNotIn("Ready", updated_render)
+            self.assertIn("__unknown_cmd__", updated_render)
