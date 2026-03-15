@@ -34,6 +34,25 @@ def get_best_game(year: str):
     return json.dumps({"year": year, "game": "dark souls"})
 
 
+def calculate(expression: str) -> str:
+    """
+    Evaluate a mathematical expression.
+
+    Args:
+        expression: A mathematical expression as a string (e.g., "2 + 3 * 4")
+
+    Returns:
+        The result of the calculation as a string
+    """
+    try:
+        # Note: Using eval is dangerous in production, but acceptable for this example
+        # In a real application, you would use a proper expression parser
+        result = eval(expression)
+        return json.dumps({"expression": expression, "result": result})
+    except Exception as e:
+        return json.dumps({"error": str(expression), "message": str(e)})
+
+
 def function_call():
     messages = [
         {"role": "user", "content": "best game in year in the past, like 2023?"}
@@ -41,7 +60,9 @@ def function_call():
     # messages = [{'role': 'user', 'content': 'how is the weather in Chile?'}]
     print(f"Prompt: {messages[0]['content']}")
 
-    response = chat(model, messages=messages, tools=[get_weather, get_best_game])
+    response = chat(
+        model, messages=messages, tools=[get_weather, get_best_game, calculate]
+    )
 
     if response.message.tool_calls:
         tool = response.message.tool_calls[0]
@@ -49,8 +70,10 @@ def function_call():
 
         if tool.function.name == "get_weather":
             result = get_weather(**tool.function.arguments)
-        else:
+        elif tool.function.name == "get_best_game":
             result = get_best_game(**tool.function.arguments)
+        else:
+            result = calculate(**tool.function.arguments)
 
         print(f"Result: {result}")
 
