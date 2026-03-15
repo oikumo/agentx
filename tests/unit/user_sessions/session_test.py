@@ -12,7 +12,11 @@ class SessionTest(unittest.TestCase):
     session: Session = None
 
     def setUp(self):
-        session = None
+        self.session = None
+
+    def tearDown(self):
+        self.session.destroy()
+
 
     def test_session_object_creation_default_base_directory(self):
         session_name: Final[str] = "test_session"

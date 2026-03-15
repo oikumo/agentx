@@ -1,6 +1,10 @@
 import datetime
 import os
+import shutil
+import warnings
 from pathlib import Path
+
+from agent_x.constants import is_directory_allowed_to_deletion
 
 
 def create_directory_with_timestamp(name: str, base_directory) -> str | None:
@@ -29,3 +33,19 @@ def create_directory_with_timestamp(name: str, base_directory) -> str | None:
 
 def directory_exists(directory: str):
     return os.path.isdir(directory)
+
+def dangerous_delete_directory(directory_path: str) -> bool:
+    warnings.warn("This function dangerous_delete_directory() is potentially dangerous and should be used with caution, especially with untrusted input.",
+        UserWarning, stacklevel=2)
+
+    if not is_directory_allowed_to_deletion(directory_path):
+        return False
+
+    if not os.path.isdir(directory_path):
+        print(f"Directory not found or is not a directory: {directory_path}")
+        return False
+
+    shutil.rmtree(directory_path)
+    print(f"Permanently deleted directory: {directory_path}")
+
+    return True
