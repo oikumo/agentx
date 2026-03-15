@@ -1,9 +1,6 @@
 from agent_x.applications.repl_app.command_line_controller.commands_controller import \
     CommandsController
-from agent_x.applications.repl_app.commands.cli_commands import (ClearCommand,
-                                                                 HelpCommand,
-                                                                 QuitCommand,
-                                                                 ReadFile)
+from agent_x.applications.repl_app.commands.cli_commands import ClearCommand, HelpCommand, QuitCommand, ReadFile
 from agent_x.applications.repl_app.commands.llm_chat_commands import (
     AIChat, AIFunction, AIReactTools, AIRouterAgents, AISearch, AITools,
     RagPDF)
