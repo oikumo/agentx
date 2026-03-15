@@ -1,5 +1,6 @@
 chroma_db/
 local_sessions/
+test_sandbox/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
