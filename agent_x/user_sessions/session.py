@@ -1,6 +1,6 @@
 from typing import Final
 
-from agent_x.utils.file_utils import create_directory_with_timestamp
+from agent_x.utils.file_utils import create_directory_with_timestamp, directory_exists
 
 SESSION_DEFAULT_NAME: Final[str] = "DEFAULT"
 SESSION_DEFAULT_BASE_DIRECTORY: Final[str] = "sessions"
@@ -25,3 +25,10 @@ class Session:
         self.directory = new_directory
 
         return True
+
+    def is_created(self):
+        if not self.directory:
+            return False
+        return directory_exists(self.directory)
+
+

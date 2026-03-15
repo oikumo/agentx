@@ -26,3 +26,6 @@ def create_directory_with_timestamp(name: str, base_directory) -> str | None:
         return None
 
     return str(directory_path.absolute().resolve())
+
+def directory_exists(directory: str):
+    return os.path.isdir(directory)
