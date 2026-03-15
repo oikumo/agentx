@@ -1,29 +1,27 @@
-import datetime
-import os.path
-from pathlib import Path
+from typing import Final
+
+from agent_x.utils.file_utils import create_directory_with_timestamp
+
+SESSION_DEFAULT_NAME: Final[str] = "DEFAULT"
+SESSION_DEFAULT_BASE_DIRECTORY: Final[str] = "sessions"
 
 
 class Session:
-    def __init__(self, name: str):
+    def __init__(self, name: str, base_directory: str = SESSION_DEFAULT_BASE_DIRECTORY):
         if not (name and name.strip()):
-            raise Exception()
-
-        self.name = name
-        self.directory = ""
+            self.name = SESSION_DEFAULT_NAME
+        elif " " in name:
+            self.name = name.replace(" ", "_")
+        else:
+            self.name = name
+        self.base_directory = base_directory
+        self.directory: str | None = None
 
     def create(self):
-        now = datetime.datetime.now()
-        datetime_string = now.strftime("%Y-%m-%d-%H-%M-%S")
-        directory = f"{self.name}/{datetime_string}"
-        session_directory = f"sessions/web_ingestion/{directory}"
+        self.directory = None
+        new_directory = create_directory_with_timestamp(self.name, self.base_directory)
+        if not new_directory:
+            return False
+        self.directory = new_directory
 
-        if os.path.isdir(session_directory):
-            raise FileExistsError()
-
-        directory_path = Path(session_directory)
-        directory_path.mkdir(parents=True, exist_ok=True)
-
-        if not os.path.isdir(session_directory):
-            raise Exception("create directory error")
-
-        self.directory = directory_path.absolute()
+        return True

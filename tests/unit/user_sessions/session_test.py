@@ -1,21 +1,46 @@
 import datetime
-import os
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from typing import Final
 
-from agent_x.user_sessions.session import Session
+from streamlit import session_state
+
+from agent_x.user_sessions.session import Session, SESSION_DEFAULT_BASE_DIRECTORY, SESSION_DEFAULT_NAME
 
 
 class SessionTest(unittest.TestCase):
-    def test_session_creation_with_valid_name(self):
-        session = Session("test_session")
-        self.assertEqual(session.name, "test_session")
-        self.assertEqual(session.directory, "")
+    session: Session = None
 
-    def test_session_creation_with_empty_name_raises_exception(self):
-        with self.assertRaises(Exception):
-            Session("")
+    def setUp(self):
+        session = None
+
+    def test_session_object_creation_default_base_directory(self):
+        session_name: Final[str] = "test_session"
+        self.session = Session(session_name)
+        self.assertEqual(self.session.name, session_name)
+        self.assertEqual(self.session.base_directory, SESSION_DEFAULT_BASE_DIRECTORY)
+        self.assertEqual(self.session.directory, None)
+
+    def test_session_object_creation_default_name(self):
+        self.session = Session("")
+        self.assertEqual(self.session.name, SESSION_DEFAULT_NAME)
+        self.assertEqual(self.session.base_directory, SESSION_DEFAULT_BASE_DIRECTORY)
+        self.assertEqual(self.session.directory, None)
+
+        self.session = Session("  ")
+        self.assertEqual(self.session.name, SESSION_DEFAULT_NAME)
+        self.assertEqual(self.session.base_directory, SESSION_DEFAULT_BASE_DIRECTORY)
+        self.assertEqual(self.session.directory, None)
+
+        self.session = Session("x x")
+        self.assertEqual(self.session.name, "x_x")
+        self.assertEqual(self.session.base_directory, SESSION_DEFAULT_BASE_DIRECTORY)
+        self.assertEqual(self.session.directory, None)
+
+        self.session = Session(None)
+        self.assertEqual(self.session.name, SESSION_DEFAULT_NAME)
+        self.assertEqual(self.session.base_directory, SESSION_DEFAULT_BASE_DIRECTORY)
+        self.assertEqual(self.session.directory, None)
 
     def test_session_creation_with_whitespace_name(self):
         with self.assertRaises(Exception):
