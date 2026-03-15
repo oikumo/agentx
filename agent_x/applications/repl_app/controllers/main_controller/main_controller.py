@@ -10,12 +10,10 @@ from agent_x.applications.repl_app.commands.llm_chat_commands import (
 from agent_x.applications.repl_app.commands.llm_graph_commands import (
     AIGraphChains, AIGraphReflexion, AIGraphSimple)
 from agent_x.applications.repl_app.commands.math_commands import SumCommand
-from agent_x.applications.repl_app.controllers.main_controller.imain_controller import \
-    IMainController
 from agent_x.common.logger import log_info
 
 
-class MainController(CommandsController, IMainController):
+class MainController(CommandsController):
     def close(self) -> None:
         log_info("CLOSE")
 

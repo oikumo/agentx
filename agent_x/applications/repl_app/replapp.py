@@ -19,7 +19,6 @@ class ReplApp:
         while True:
             try:
                 user_input = input("(agent-x) > ").strip()
-
                 if not user_input:
                     continue
 
