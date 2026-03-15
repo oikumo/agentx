@@ -13,7 +13,10 @@ def is_directory_allowed_to_deletion(directory_path: str) -> bool:
     current_directory: Final[Path] = Path.cwd()
     candidate_directory_path: Final[Path] = Path(directory_path)
 
-    if not candidate_directory_path.is_relative_to(current_directory):
+    try:
+        candidate_directory_path.is_relative_to(current_directory)
+    except Exception as e:
+        print(e)
         raise PermissionError(f"trying to delete a directory when is out of current directory. Directory: {directory_path}")
 
     allowed_directories: List[Path] = []
@@ -23,7 +26,10 @@ def is_directory_allowed_to_deletion(directory_path: str) -> bool:
         allowed_directories.append(allowed_directory)
 
     for allowed_directory in allowed_directories:
-        if candidate_directory_path.relative_to(allowed_directory):
+        try:
+            candidate_directory_path.relative_to(allowed_directory)
             return True
+        except Exception:
+            pass
 
     raise PermissionError(f"trying to delete a directory not allowed for deletion. Directory: {directory_path}")
