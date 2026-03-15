@@ -4,7 +4,7 @@ import shutil
 import warnings
 from pathlib import Path
 
-from agent_x.security import is_directory_allowed_to_deletion
+from agent_x.security.security import is_directory_allowed_to_deletion
 
 
 def create_directory_with_timestamp(name: str, base_directory) -> str | None:
