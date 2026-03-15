@@ -3,7 +3,7 @@ import json
 from ollama import chat
 from rich import print
 
-model = "functiongemma:270m"
+model = "functiongemma:270m-it-fp16"
 
 
 def get_weather(city: str) -> str:
