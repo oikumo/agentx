@@ -1,7 +1,7 @@
 import asyncio
 
-from agent_x.applications.web_ingestion_app.tavily import WebExtract
-from agent_x.applications.web_ingestion_app.web_ingestion_app import \
+from agent_x.modules.web_ingestion_app import WebExtract
+from agent_x.modules.web_ingestion_app.web_ingestion_app import \
     WebIngestionApp
 from agent_x.llm_models.local.vectorstores.vectorstrore_chroma import \
     create_vectorstore_chroma

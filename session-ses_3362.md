@@ -5809,18 +5809,18 @@ from typing import List
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from agent_x.applications.web_ingestion_app.helpers import load_docs_from_jsonl
+from agent_x.modules.web_ingestion_app.helpers import load_docs_from_jsonl
 from agent_x.common.logger import log_info, log_success, log_error
 
 
 async def index_documents_async(
-    vectorstore, documents: List[Document], batch_size: int = 50
+        vectorstore, documents: List[Document], batch_size: int = 50
 ):
     log_info("VECTOR STORE PHASE")
     log_info(f"Documents to store: {len(documents)}")
 
     batches = [
-        documents[i : i + batch_size] for i in range(0, len(documents), batch_size)
+        documents[i: i + batch_size] for i in range(0, len(documents), batch_size)
     ]
 
     log_info(f"Splitted into {len(batches)} batches of size {batch_size}")
@@ -5940,9 +5940,9 @@ import certifi
 from dotenv import load_dotenv
 from langchain_core.vectorstores import VectorStore
 
-from agent_x.applications.web_ingestion_app.documents import index_documents_async, process_documents
-from agent_x.applications.web_ingestion_app.helpers import chunk_urls, save_docs
-from agent_x.applications.web_ingestion_app.tavily import WebExtract
+from agent_x.modules.web_ingestion_app import index_documents_async, process_documents
+from agent_x.modules.web_ingestion_app.helpers import chunk_urls, save_docs
+from agent_x.modules.web_ingestion_app import WebExtract
 from agent_x.common.logger import log_info, Colors, log_success
 
 load_dotenv()
@@ -5950,6 +5950,7 @@ load_dotenv()
 ssl_context = ssl.create_default_context(cafile=certifi.where())
 os.environ["SSL_CERT_FILE"] = certifi.where()
 os.environ["REQUEST_CA_BUNDLE"] = certifi.where()
+
 
 class WebIngestionApp:
     def __init__(self, vectorstore: VectorStore, tav: WebExtract):
