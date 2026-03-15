@@ -1,10 +1,6 @@
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
-
-if TYPE_CHECKING:
-    from langchain_core.vectorstores import VectorStore
+from typing import Any, Protocol, runtime_checkable
 
 from agent_x.app.configuration.configuration import AgentXConfiguration
-from agent_x.applications.web_ingestion_app.tavily import WebExtract
 
 
 @runtime_checkable

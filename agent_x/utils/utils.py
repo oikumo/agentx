@@ -1,11 +1,11 @@
 import os
 
 
-def safe_int(value, default=None):
+def safe_int(value: str) -> int | None:
     try:
         return int(value)
     except (ValueError, TypeError):
-        return default
+        return None
 
 
 def clear_console():
