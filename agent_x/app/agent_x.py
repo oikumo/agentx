@@ -1,12 +1,8 @@
 from typing import Any, Protocol, runtime_checkable
-
 from agent_x.app.configuration.configuration import AgentXConfiguration
-
 
 @runtime_checkable
 class IApp(Protocol):
-    """Protocol defining the interface for all AgentX applications."""
-
     def run(self) -> Any: ...
 
 
@@ -22,10 +18,6 @@ class AgentX:
 
     def configure(self):
         self.llms.append(str(len(self.llms)))
-
-    def set_app(self, app: IApp) -> "AgentX":
-        self._app = app
-        return self
 
     def run(self):
         if self._app is None:

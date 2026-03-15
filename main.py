@@ -1,11 +1,44 @@
 from dotenv import load_dotenv
 
 from agent_x.app.agent_x import AgentX
+from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
+from agent_x.applications.repl_app.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, HelpCommand
+from agent_x.applications.repl_app.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, AIReactTools, \
+    AISearch, AIFunction, RagPDF
+from agent_x.applications.repl_app.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, AIGraphReflexion
+from agent_x.applications.repl_app.commands.math_commands import SumCommand
+from agent_x.applications.repl_app.controllers.main_controller.main_controller import MainController, Actions
 from agent_x.applications.repl_app.replapp import ReplApp
 
 load_dotenv()
 
+def create_controller() -> CommandsController:
+    main_controller = MainController()
+    main_controller.add_command(SumCommand("sum"))
+    main_controller.add_command(QuitCommand("quit"))
+    main_controller.add_command(ClearCommand("clear"))
+    main_controller.add_command(AIChat("chat"))
+    main_controller.add_command(AITools("tools"))
+    main_controller.add_command(AIRouterAgents("router"))
+    main_controller.add_command(AIReactTools("react"))
+    main_controller.add_command(AISearch("search"))
+    main_controller.add_command(ReadFile("read"))
+    main_controller.add_command(AIFunction("function"))
+    main_controller.add_command(RagPDF("rag"))
+    main_controller.add_command(AIGraphSimple("graph"))
+    main_controller.add_command(AIGraphChains("chains"))
+    main_controller.add_command(AIGraphReflexion("reflex"))
+    main_controller.add_command(HelpCommand("help", main_controller))
+
+    return main_controller
+
 if __name__ == "__main__":
-    agent_x = AgentX()
-    agent_x.set_app(ReplApp())
+    controller = create_controller()
+
+    actions = Actions()
+    for command in controller.commands.values():
+        command.set_actions_controller(actions)
+
+
+    agent_x = AgentX(app = ReplApp(controller))
     agent_x.run()

@@ -1,8 +1,3 @@
-from __future__ import annotations
-import typing
-if typing.TYPE_CHECKING:
-    from agent_x.applications.repl_app.controllers.main_controller.main_controller import MainController
-
 from agent_x.applications.repl_app.command_line_controller.command import Command
 from agent_x.applications.repl_app.commands.repl_commands import ReplCommand
 from agent_x.common.logger import log_info
@@ -10,14 +5,12 @@ from agent_x.utils.utils import clear_console
 
 
 class QuitCommand(Command):
-    def __init__(self, key: str, controller: MainController):
+    def __init__(self, key: str):
         super().__init__(key, description="Exit Agent-X")
-        self.controller = controller
 
     def run(self, arguments: list[str]):
         log_info("QUIT COMMAND")
-        self.controller.close()
-        exit(0)
+        self.actions.close()
 
 
 class ClearCommand(Command):

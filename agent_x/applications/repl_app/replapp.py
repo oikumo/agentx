@@ -1,3 +1,4 @@
+from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
 from agent_x.applications.repl_app.controllers.main_controller.main_controller import (
     MainController,
 )
@@ -8,8 +9,8 @@ from agent_x.common.logger import log_info, log_warning, log_error
 
 
 class ReplApp:
-    def __init__(self):
-        self.controller = MainController()
+    def __init__(self, controller: CommandsController):
+        self.controller = controller
         self.parser = CommandParser()
 
     def run(self):
@@ -32,7 +33,10 @@ class ReplApp:
                     continue
 
                 try:
-                    command.run(command_data.arguments)
+                    result = command.run(command_data.arguments)
+                    if result:
+                        result.apply()
+
                 except Exception as e:
                     log_error(f"Command execution failed: {e}")
 

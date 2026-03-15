@@ -1,4 +1,7 @@
-from agent_x.applications.repl_app.command_line_controller.command import Command
+from __future__ import annotations
+import typing
+if typing.TYPE_CHECKING:
+    from agent_x.applications.repl_app.command_line_controller.command import Command
 from agent_x.applications.repl_app.controller import Controller
 
 
