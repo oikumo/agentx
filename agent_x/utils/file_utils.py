@@ -4,13 +4,13 @@ import shutil
 import warnings
 from pathlib import Path
 
-from agent_x.constants import is_directory_allowed_to_deletion
+from agent_x.security import is_directory_allowed_to_deletion
 
 
 def create_directory_with_timestamp(name: str, base_directory) -> str | None:
     now = datetime.datetime.now()
     datetime_string = now.strftime("%Y-%m-%d-%H-%M-%S")
-    directory = f"{name}/{datetime_string}"
+    directory = f"{name}_{datetime_string}"
     session_directory = f"{base_directory}/{directory}"
 
     if os.path.isdir(session_directory):

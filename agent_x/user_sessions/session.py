@@ -1,33 +1,48 @@
-from agent_x.constants import SESSION_DEFAULT_NAME, SESSION_DEFAULT_BASE_DIRECTORY
-from agent_x.utils.file_utils import create_directory_with_timestamp, directory_exists
+from agent_x.security import SESSION_DEFAULT_NAME, SESSION_DEFAULT_BASE_DIRECTORY
+from agent_x.utils.file_utils import create_directory_with_timestamp, directory_exists, dangerous_delete_directory
+
 
 class Session:
-    def __init__(self, name: str, sessions_directory: str = SESSION_DEFAULT_BASE_DIRECTORY):
+    __directory: str | None = None
+    __session_name: str = SESSION_DEFAULT_NAME
+
+    @property
+    def name(self):
+        return self.__session_name
+
+    @property
+    def directory(self):
+        return self.__directory
+
+    def __init__(self, name: str):
         if not (name and name.strip()):
-            self.name = SESSION_DEFAULT_NAME
+            self.__session_name = SESSION_DEFAULT_NAME
         elif " " in name:
-            self.name = name.replace(" ", "_")
+            self.__session_name = name.replace(" ", "_").lower()
         else:
-            self.name = name
-        self.directory: str | None = None
-        self.sessions_directory = sessions_directory
+            self.__session_name = name
 
     def create(self):
-        self.directory = None
-        new_directory = create_directory_with_timestamp(self.name, self.sessions_directory)
+        self.__directory = None
+        new_directory = create_directory_with_timestamp(self.__session_name, SESSION_DEFAULT_BASE_DIRECTORY)
         if not new_directory:
             return False
-        self.directory = new_directory
+        self.__directory = new_directory
 
         return True
 
     def is_created(self):
-        if not self.directory:
+        if not self.__directory:
             return False
-        return directory_exists(self.directory)
+        return directory_exists(self.__directory)
 
-    def destroy(self):
-        pass
+    def destroy(self) -> bool:
+        if not self.is_created():
+            return False
+
+        dangerous_delete_directory(self.__directory)
+
+        return True
 
 
 
