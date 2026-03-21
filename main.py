@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 
-from agent_x.app.agent_x import AgentX
 from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
 from agent_x.applications.repl_app.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, HelpCommand
 from agent_x.applications.repl_app.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, AIReactTools, \
@@ -39,6 +38,4 @@ if __name__ == "__main__":
     for command in controller.commands.values():
         command.set_actions_controller(actions)
 
-
-    agent_x = AgentX(app = ReplApp(controller))
-    agent_x.run()
+    ReplApp(controller).run()

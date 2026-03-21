@@ -8,9 +8,14 @@ from agent_x.app.configuration.configuration import (
     LLMProvider,
 )
 
+from ollama import chat
+
 
 def get_llm():
     """Get the LLM for function calling."""
+
+    return chat("functiongemma:270m-it-fp16")
+    """
     config = AgentXConfiguration()
     # Add functiongemma configuration if not present
     if config.get_llm_config("functiongemma:270m-it-fp16") is None:
@@ -24,6 +29,7 @@ def get_llm():
         )
     factory = LLMFactory(config)
     return factory.get_chat_model("functiongemma:270m-it-fp16")
+    """
 
 
 def get_weather(city: str) -> str:
@@ -81,18 +87,19 @@ def function_call():
     print(f"Prompt: {messages[0]['content']}")
 
     llm = get_llm()
-    response = llm.invoke(messages, tools=[get_weather, get_best_game, calculate])
+    response = llm..invoke(messages, tools=[get_weather, get_best_game, calculate])
 
     if response.tool_calls:
         tool = response.tool_calls[0]
-        print(f"Calling: {tool['function']['name']}({tool['function']['arguments']})")
+        print(f"Calling function: {tool['name']}")
+        print(f"Functions args: ({tool['args']})")
 
-        if tool["function"]["name"] == "get_weather":
-            result = get_weather(**tool["function"]["arguments"])
-        elif tool["function"]["name"] == "get_best_game":
-            result = get_best_game(**tool["function"]["arguments"])
+        if tool["name"] == "get_weather":
+            result = get_weather(**tool["args"])
+        elif tool["name"] == "get_best_game":
+            result = get_best_game(**tool["args"])
         else:
-            result = calculate(**tool["function"]["arguments"])
+            result = calculate(**tool["args"])
 
         print(f"Result: {result}")
 
