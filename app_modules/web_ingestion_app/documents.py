@@ -5,7 +5,7 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from modules.web_ingestion_app.helpers import load_docs_from_jsonl
-from app.repl.logger import Console
+from app.repl.console import Console
 
 
 async def index_documents_async(

@@ -1,7 +1,7 @@
 from rich import print
 from ollama import chat, ChatResponse
 
-from app.repl.logger import Console
+from app.repl.console import Console
 from app_modules.llm.functions.route import Route
 
 class QueryRouter:

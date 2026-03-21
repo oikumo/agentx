@@ -5,7 +5,7 @@ from app.repl.command import Command
 from app.configuration.configuration import (
     AgentXConfiguration,
 )
-from app.repl.logger import Console
+from app.repl.console import Console
 from app_modules.data_stores.rag_pdf import rag_pdf
 from app_modules.llm.functions.function_call import QueryRouter
 from app_modules.llm.functions.functions import get_weather, get_best_game, calculate

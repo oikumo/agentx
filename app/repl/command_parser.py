@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List
 
 from app.repl.command import Command
-from app.repl.logger import Console
+from app.repl.console import Console
 
 
 @dataclass

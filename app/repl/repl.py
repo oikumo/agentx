@@ -1,6 +1,6 @@
 from app.repl.command_parser import CommandParser
 from app.repl.controllers.main_controller import MainController
-from app.repl.logger import Console
+from app.repl.console import Console
 
 
 class ReplApp:
