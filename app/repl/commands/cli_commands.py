@@ -1,5 +1,5 @@
-from app.command_line_controller.command import Command
-from app.commands.repl_commands import ReplCommand
+from app.repl.command_line_controller.command import Command
+from app.repl.commands.repl_commands import ReplCommand
 
 from common.logger import log_info
 from utils.utils import clear_console

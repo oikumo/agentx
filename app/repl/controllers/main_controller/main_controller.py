@@ -1,4 +1,4 @@
-from app.command_line_controller.commands_controller import CommandsController
+from app.repl.command_line_controller.commands_controller import CommandsController
 from common.logger import log_info
 
 class Actions:

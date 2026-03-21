@@ -1,4 +1,4 @@
-from app.command_line_controller.command import \
+from app.repl.command_line_controller.command import \
     Command
 from modules.llm.langgraph.graph_reflector_chain.graph_chains import \
     graph_chains

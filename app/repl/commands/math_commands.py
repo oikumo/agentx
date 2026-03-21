@@ -1,4 +1,4 @@
-from app.command_line_controller.command import Command, CommandResult
+from app.repl.command_line_controller.command import Command, CommandResult
 from common.logger import log_info, log_warning
 from utils.utils import safe_int
 

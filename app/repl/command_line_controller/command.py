@@ -1,7 +1,7 @@
 
 from abc import ABC, abstractmethod
 
-from app.controllers.main_controller.main_controller import Actions
+from app.repl.controllers.main_controller.main_controller import Actions
 
 
 class CommandResult(ABC):

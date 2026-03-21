@@ -1,8 +1,8 @@
 from abc import ABC
 
-from app.command_line_controller.command import \
+from app.repl.command_line_controller.command import \
     Command
-from app.command_line_controller.commands_controller import \
+from app.repl.command_line_controller.commands_controller import \
     CommandsController
 
 

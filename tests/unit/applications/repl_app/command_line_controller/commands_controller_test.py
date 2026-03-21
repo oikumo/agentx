@@ -1,6 +1,6 @@
 import unittest
 from app import Command
-from app.command_line_controller.commands_controller import CommandsController
+from app.repl.command_line_controller.commands_controller import CommandsController
 
 class FakeCommand(Command):
     def run(self, arguments: list[str]):

@@ -1,6 +1,6 @@
-from app.command_line_controller.commands_controller import \
+from app.repl.command_line_controller.commands_controller import \
     CommandsController
-from app.commands.llm_chat_commands import AIChat
+from app.repl.commands.llm_chat_commands import AIChat
 
 
 class ChatController(CommandsController):

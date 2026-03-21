@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from app.command_line_controller.command import \
+from app.repl.command_line_controller.command import \
     Command
 from common.logger import log_warning
 

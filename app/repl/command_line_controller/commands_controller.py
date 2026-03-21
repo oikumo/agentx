@@ -1,10 +1,10 @@
 from __future__ import annotations
 import typing
 
-from app.controller import Controller
+from app.repl.controller import Controller
 
 if typing.TYPE_CHECKING:
-    from app.command_line_controller.command import Command
+    from app.repl.command_line_controller.command import Command
 
 
 
