@@ -1,5 +1,6 @@
 from langchain_classic import hub
 
+from app.repl.base.IMainController import IMainController
 from app.repl.command_line_controller.command import Command
 from app.repl.logger import log_warning
 from app.configuration.configuration import (
@@ -18,8 +19,8 @@ from app_modules.llm_models.llm_factory import LLMFactory
 
 
 class AIFunction(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Run an AI function call demo")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Run an AI function call demo")
 
     def run(self, arguments: list[str]) -> None:
         routes = [
@@ -32,8 +33,8 @@ class AIFunction(Command):
 
 
 class AIChat(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Start an AI chat session: chat <query>")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Start an AI chat session: chat <query>")
         # Initialize configuration and factory
         self.config = AgentXConfiguration()
         # Add default configurations if not present
@@ -63,8 +64,8 @@ class AIChat(Command):
 
 
 class AITools(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Run AI agent with tool use")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Run AI agent with tool use")
         # Initialize configuration and factory
         self.config = AgentXConfiguration()
         # Add default configurations if not present
@@ -87,16 +88,16 @@ class AITools(Command):
 
 
 class AIRouterAgents(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Run AI router agent")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Run AI router agent")
 
     def run(self, arguments: list[str]) -> None:
         router_agent()
 
 
 class AIReactTools(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Run AI ReAct agent with tools")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Run AI ReAct agent with tools")
         # Initialize configuration and factory
         self.config = AgentXConfiguration()
         # Add default configurations if not present
@@ -119,8 +120,8 @@ class AIReactTools(Command):
 
 
 class AISearch(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Search the web with AI")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Search the web with AI")
         # Initialize configuration and factory
         self.config = AgentXConfiguration()
         # Add default configurations if not present
@@ -143,8 +144,8 @@ class AISearch(Command):
 
 
 class RagPDF(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Query a PDF with RAG: rag <query>")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Query a PDF with RAG: rag <query>")
         # Initialize configuration and factory
         self.config = AgentXConfiguration()
         # Add default configurations if not present

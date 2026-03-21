@@ -1,13 +1,14 @@
+from __future__ import annotations
+from app.repl.base.IMainController import IMainController
 from app.repl.command_line_controller.command import Command
-from app.repl.commands.repl_commands import ReplCommand
 
 from app.repl.logger import log_info
 from app.common.utils.utils import clear_console
 
 
 class QuitCommand(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Exit Agent-X")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Exit Agent-X")
 
     def run(self, arguments: list[str]):
         log_info("QUIT COMMAND")
@@ -15,25 +16,26 @@ class QuitCommand(Command):
 
 
 class ClearCommand(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Clear the output screen")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Clear the output screen")
 
     def run(self, arguments: list[str]):
         clear_console()
 
 
-class HelpCommand(ReplCommand):
-    def __init__(self, key: str, controller):
+class HelpCommand(Command):
+    def __init__(self, key: str, controller: IMainController):
         super().__init__(key, controller, description="Show available commands")
 
     def run(self, arguments: list[str]):
-        for command in self.controller.get_commands():
-            log_info(command.key)
+        if self.actions:
+            for command in self.actions.get_commands():
+                log_info(command.key)
 
 
 class ReadFile(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Read and display a file: read <filename>")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Read and display a file: read <filename>")
 
     def run(self, arguments: list[str]):
         if not arguments:

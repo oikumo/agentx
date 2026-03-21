@@ -1,10 +1,10 @@
 from app.repl.command_line_controller.command_parser import CommandParser
-from app.repl.command_line_controller.commands_controller import CommandsController
+from app.repl.controllers.main_controller.main_controller import MainController
 from app.repl.logger import log_info, log_warning, log_error
 
 
 class ReplApp:
-    def __init__(self, controller: CommandsController):
+    def __init__(self, controller: MainController):
         self.controller = controller
         self.parser = CommandParser()
 

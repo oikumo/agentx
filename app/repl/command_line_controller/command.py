@@ -1,8 +1,9 @@
-
+from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
-from app.repl.controllers.main_controller.main_controller import Actions
-
+if TYPE_CHECKING:
+    from app.repl.base.IMainController import IMainController
 
 class CommandResult(ABC):
     @abstractmethod
@@ -10,14 +11,10 @@ class CommandResult(ABC):
         pass
 
 class Command(ABC):
-    def __init__(self, key: str, description: str = ""):
+    def __init__(self, key: str, controller: IMainController, description: str = ""):
         self.key = key
         self.description = description
-        self.actions: Actions | None = None
-
-    def set_actions_controller(self, actions: Actions):
-        self.actions = actions
-
+        self.controller = controller
     @abstractmethod
     def run(self, arguments: list[str]) -> CommandResult | None:
         pass

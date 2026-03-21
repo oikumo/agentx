@@ -1,11 +1,9 @@
-from agent_x.applications.repl_app import (
-    CommandData, CommandParser)
-from app.repl.command_line_controller.commands_controller import \
-    CommandsController
+from app.repl.command_line_controller.command_parser import CommandParser, CommandData
+from app.repl.controllers.main_controller.main_controller import MainController
 
 
 class CommandLine:
-    def __init__(self, commands_table: CommandsController):
+    def __init__(self, commands_table: MainController):
         self.info = ""
         self.commands_table = commands_table
         self.command_parser = CommandParser()

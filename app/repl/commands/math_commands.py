@@ -1,10 +1,11 @@
+from app.repl.base.IMainController import IMainController
 from app.repl.command_line_controller.command import Command, CommandResult
 from app.repl.logger import log_info, log_warning
 from app.common.utils.utils import safe_int
 
 class SumCommand(Command):
-    def __init__(self, key: str):
-        super().__init__(key, description="Add two integers: sum <a> <b>")
+    def __init__(self, key: str, controller: IMainController):
+        super().__init__(key, controller, description="Add two integers: sum <a> <b>")
 
     def run(self, arguments: list[str]):
         match arguments:
