@@ -13,11 +13,14 @@ class Colors:
 def log_info(message: str, color: str = Colors.CYAN) -> None:
     print(f"{color}ℹ️  {message}{Colors.END}")
 
-def log_success(message: str) -> None:
-    print(f"{Colors.GREEN}✅ {message}{Colors.END}")
+class Console:
+    @staticmethod
+    def log_success(message: str) -> None:
+        print(f"{Colors.GREEN}✅ {message}{Colors.END}")
 
-def log_error(message: str) -> None:
-    print(f"{Colors.RED}❌ {message}{Colors.END}")
+    @staticmethod
+    def log_error(message: str) -> None:
+        print(f"{Colors.RED}❌ {message}{Colors.END}")
 
 def log_warning(message: str) -> None:
     print(f"{Colors.YELLOW}⚠️  {message}{Colors.END}")

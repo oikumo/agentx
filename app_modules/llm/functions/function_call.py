@@ -1,9 +1,8 @@
 from rich import print
-from app.repl.logger import log_error
 from ollama import chat, ChatResponse
 
+from app.repl.logger import Console
 from app_modules.llm.functions.route import Route
-
 
 class QueryRouter:
     def __init__(self, routes: list[Route]):
@@ -11,7 +10,7 @@ class QueryRouter:
 
     def function_call(self, model = "functiongemma:270m-it-fp16"):
         messages = [{"role": "user", "content": "best game in year in the past, like 2023?"}]
-        print(f"Prompt: {messages[0]['content']}")
+        Console.log_success(f"Prompt: {messages[0]['content']}")
 
         routes_functions = [x.route for x in self._routes]
         response = chat(model, messages=messages, tools=routes_functions)
@@ -26,15 +25,15 @@ class QueryRouter:
                     print("Response:", "Invalid")
                     return
         except Exception as e:
-            log_error(str(e))
+            Console.log_error(str(e))
             return
 
         tool = tool_to_call.tool_calls[0]
         function_name = tool.function.name
         function_args = tool.function.arguments
 
-        print(f"Calling function: {function_name}")
-        print(f"Functions args: ({function_args})")
+        Console.log_success(f"Calling function: {function_name}")
+        Console.log_success(f"Functions args: ({function_args})")
 
         result: str = ""
         routes_lookup_table = { x.name: x.route for x in self._routes }
@@ -59,5 +58,5 @@ class QueryRouter:
         )
 
         final = chat(model, messages)
-        print("Response:", final.message.content)
+        Console.log_success(f"Response: {final.message.content}")
 

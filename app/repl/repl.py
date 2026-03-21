@@ -1,6 +1,6 @@
 from app.repl.command_line_controller.command_parser import CommandParser
 from app.repl.controllers.main_controller.main_controller import MainController
-from app.repl.logger import log_info, log_warning, log_error
+from app.repl.logger import log_info, log_warning, Console
 
 
 class ReplApp:
@@ -9,7 +9,7 @@ class ReplApp:
         self.parser = CommandParser()
 
     def run(self):
-        log_info("Agent-X")
+        Console.log_success("Agent-X")
         log_info("Type 'help' for commands, Ctrl+C to exit")
 
         while True:
