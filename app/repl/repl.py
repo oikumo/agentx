@@ -15,13 +15,13 @@ class ReplApp:
         Console.log_info("Type 'help' for commands, Ctrl+C to exit")
 
         session = Session("test_1")
-        if session.create() and session.is_created():
-            database = SessionDatabase()
-            database.run_query(session)
-            database.run_query(session)
-            database.run_query(session)
-        else:
+        if not session.create() or not session.is_created():
             raise Exception()
+
+        database = SessionDatabase()
+        database.run_query(session)
+        database.run_query(session)
+        database.run_query(session)
 
         while True:
             try:
