@@ -5,7 +5,7 @@ from app.repl.logger import log_warning
 from app.configuration.configuration import (
     AgentXConfiguration,
 )
-from app_modules.data_stores.faiss_rag.rag_pdf.rag_pdf import rag_pdf
+from app_modules.data_stores.rag_pdf import rag_pdf
 from app_modules.llm.functions.function_call import QueryRouter
 from app_modules.llm.functions.functions import get_weather, get_best_game, calculate
 from app_modules.llm.functions.route import Route
