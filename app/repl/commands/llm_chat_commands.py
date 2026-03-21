@@ -2,10 +2,10 @@ from langchain_classic import hub
 
 from app.repl.base.IMainController import IMainController
 from app.repl.command_line_controller.command import Command
-from app.repl.logger import log_warning
 from app.configuration.configuration import (
     AgentXConfiguration,
 )
+from app.repl.logger import Console
 from app_modules.data_stores.rag_pdf import rag_pdf
 from app_modules.llm.functions.function_call import QueryRouter
 from app_modules.llm.functions.functions import get_weather, get_best_game, calculate
@@ -54,7 +54,7 @@ class AIChat(Command):
 
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
-            log_warning("missing args")
+            Console.log_error("missing args")
             return
         simple_chat_prompt_template(
             llm=self.factory.get_chat_model("qwen3:1.7b"),
@@ -176,7 +176,7 @@ class RagPDF(Command):
 
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
-            log_warning("missing args")
+            Console.log_warning("missing args")
             return
         rag_pdf(
             query=" ".join(arguments),

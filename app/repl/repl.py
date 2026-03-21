@@ -1,6 +1,6 @@
 from app.repl.command_line_controller.command_parser import CommandParser
 from app.repl.controllers.main_controller.main_controller import MainController
-from app.repl.logger import log_info, log_warning, Console
+from app.repl.logger import log_info, Console
 
 
 class ReplApp:
@@ -24,7 +24,7 @@ class ReplApp:
 
                 command = self.controller.find_command(command_data.key)
                 if not command:
-                    log_warning(f"Unknown command: {command_data.key}")
+                    Console.log_error(f"Unknown command: {command_data.key}")
                     continue
 
                 try:
@@ -33,7 +33,7 @@ class ReplApp:
                         result.apply()
 
                 except Exception as e:
-                    log_error(f"Command execution failed: {e}")
+                    Console.log_error(f"Command execution failed: {e}")
 
             except KeyboardInterrupt:
                 log_info("\nReceived interrupt, exiting...")

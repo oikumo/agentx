@@ -1,6 +1,6 @@
 from app.repl.base.IMainController import IMainController
 from app.repl.command_line_controller.command import Command, CommandResult
-from app.repl.logger import log_info, log_warning
+from app.repl.logger import log_info, Console
 from app.common.utils.utils import safe_int
 
 class SumCommand(Command):
@@ -14,9 +14,9 @@ class SumCommand(Command):
                     result = str(int(x) + int(y))
                     return CommandResultPrint(result)
                 else:
-                    log_warning("invalid params for sum command")
+                    Console.log_warning("invalid params for sum command")
             case _:
-                log_warning("invalid command")
+                Console.log_warning("invalid command")
         return None
 
 

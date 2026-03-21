@@ -22,8 +22,9 @@ class Console:
     def log_error(message: str) -> None:
         print(f"{Colors.RED}❌ {message}{Colors.END}")
 
-def log_warning(message: str) -> None:
-    print(f"{Colors.YELLOW}⚠️  {message}{Colors.END}")
+    @staticmethod
+    def log_warning(message: str) -> None:
+        print(f"{Colors.YELLOW}⚠️  {message}{Colors.END}")
 
 def log_header(message: str) -> None:
     print(f"\n{Colors.BOLD}{Colors.PURPLE}{'=' * 60}{Colors.END}")

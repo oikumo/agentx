@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
-from app.repl.command_line_controller.command import \
-    Command
-from app.repl.logger import log_warning
+from app.repl.command_line_controller.command import Command
+from app.repl.logger import Console
 
 
 @dataclass
@@ -22,7 +21,7 @@ class CommandParser:
     def parse(self, text: str) -> CommandData | None:
         raw_command: CommandData | None = self._parse_text_command(text)
         if raw_command is None:
-            log_warning("command process INVALID COMMAND")
+            Console.log_error("command process INVALID COMMAND")
             return None
 
         return raw_command
@@ -39,4 +38,3 @@ class CommandParser:
 
     def _tokenize_arguments(self, arguments: List[str]):
         raw_arguments = [(a, type(a).__name__) for a in arguments]
-        log_warning(str(raw_arguments))
