@@ -1,7 +1,8 @@
 from __future__ import annotations
-from app.repl.base.base import IMainController
+
+from app.repl.base import IMainController
 from app.repl.command_line_controller.command import Command
-from app.repl.commands.math_commands import CommandResultPrint, CommandResultLogInfo
+from app.repl.commands.math_commands import CommandResultLogInfo
 
 from app.repl.logger import Console
 from app.common.utils.utils import clear_console
