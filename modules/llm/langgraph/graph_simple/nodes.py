@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from langgraph.graph import MessagesState
 from langgraph.prebuilt import ToolNode
 
-from llm_factory import LLMFactory
+from llm_models.llm_factory import LLMFactory
 from app.configuration.configuration import (
     AgentXConfiguration,
     LLMConfig,

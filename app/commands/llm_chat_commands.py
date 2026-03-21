@@ -2,7 +2,7 @@ from langchain_classic import hub
 
 from app.command_line_controller.command import Command
 from common.logger import log_warning
-from llm_factory import LLMFactory
+from llm_models.llm_factory import LLMFactory
 from app.configuration.configuration import (
     AgentXConfiguration,
 )

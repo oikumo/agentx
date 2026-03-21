@@ -6,7 +6,7 @@ from app.configuration.configuration import (
     LLMConfig,
     LLMProvider,
 )
-from llm_factory import LLMFactory
+from llm_models.llm_factory import LLMFactory
 
 
 class LLMFactoryTest(unittest.TestCase):
