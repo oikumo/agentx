@@ -39,6 +39,10 @@ class ReplApp:
                 except Exception as e:
                     Console.log_error(f"Command execution failed: {e}")
 
+                Console.log_header("History")
+                for entry in model.get_command_history():
+                    Console.log_info(entry.command)
+
             except KeyboardInterrupt:
                 Console.log_info("\nReceived interrupt, exiting...")
                 break

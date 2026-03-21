@@ -1,22 +1,9 @@
 from datetime import datetime, timezone
 import sqlite3
 from pathlib import Path
-
+from typing import Any
+from app.model.db.database_definition import TableHistory, TableUser
 from app.model.user_sessions.session import Session
-
-class TableUser:
-    TABLE_USER = "CREATE TABLE IF NOT EXISTS users ( id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
-    INSERT_USER = "INSERT INTO users (name, age) VALUES (?, ?)"
-
-class TableHistory:
-    TABLE_HISTORY = """
-    CREATE TABLE IF NOT EXISTS history (
-     id INTEGER PRIMARY KEY, 
-     command TEXT, 
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-    """
-    INSERT_HISTORY = "INSERT INTO history (command, created_at) VALUES (?, ?)"
-
 
 class SessionDatabase:
     def __init__(self, session: Session):
@@ -40,6 +27,12 @@ class SessionDatabase:
         now = datetime.now(timezone.utc)
         return self._insert(TableHistory.INSERT_HISTORY, [info, now])
 
+    def select_history_entry(self) -> list[TableHistory.History] | None:
+        rows = self._select_all(TableHistory.TABLE_NAME)
+        if not rows:
+            return None
+        return [TableHistory.History(*row) for row in rows]
+
     def _insert(self, query: str, parameters: list[str]) -> bool:
         db_path = self._get_session_path()
         try:
@@ -49,4 +42,21 @@ class SessionDatabase:
             return False
         except Exception as e:
             return True
+
+    def _select_all(self, table) -> list[Any] | None:
+        allowed_tables = { TableHistory.TABLE_NAME, TableUser.TABLE_NAME}
+
+        if table not in allowed_tables:
+            raise ValueError("Invalid table name")
+
+        db_path = self._get_session_path()
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(f"SELECT * FROM {table}")
+                rows = cursor.fetchall()
+                return rows
+        except Exception as e:
+            return None
+
 
