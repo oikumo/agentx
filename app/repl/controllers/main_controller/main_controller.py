@@ -1,5 +1,5 @@
 from app.repl.base import IMainController
-from app.repl.command_line_controller.command import Command
+from app.repl.command import Command
 
 class MainController(IMainController):
     def __init__(self):

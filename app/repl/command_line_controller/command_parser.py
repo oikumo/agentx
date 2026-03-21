@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from app.repl.command_line_controller.command import Command
+from app.repl.command import Command
 from app.repl.logger import Console
 
 

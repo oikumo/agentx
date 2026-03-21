@@ -1,7 +1,7 @@
 from langchain_classic import hub
 
 from app.repl.base import IMainController
-from app.repl.command_line_controller.command import Command
+from app.repl.command import Command
 from app.configuration.configuration import (
     AgentXConfiguration,
 )

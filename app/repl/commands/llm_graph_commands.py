@@ -1,5 +1,5 @@
 from app.repl.base import IMainController
-from app.repl.command_line_controller.command import \
+from app.repl.command import \
     Command
 from app_modules.llm.langgraph.graph_reflector_chain.graph_chains import graph_chains
 from app_modules.llm.langgraph.graph_reflexion_agent.graph_reflexion_agent import graph_reflexion_agent

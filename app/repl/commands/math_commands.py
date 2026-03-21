@@ -1,5 +1,5 @@
 from app.repl.base import IMainController
-from app.repl.command_line_controller.command import Command, CommandResult
+from app.repl.command import Command, CommandResult
 from app.repl.logger import Console
 from app.common.utils.utils import safe_int
 
