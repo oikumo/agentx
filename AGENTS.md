@@ -172,25 +172,8 @@ except APIError as e:
 - Rely on LangChain retry mechanisms where available.
 
 ### Testing Guidelines
+- Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM, requires explicit USER APPROVAL
 - Tests live under tests/ mirroring source layout.
-- Use pytest with descriptive names: test_<behavior>_<condition>_<outcome>.
-- Prefer fixtures for shared setup; avoid heavy per-test mocks.
-- Mock external calls; minimize test fragility.
-- Ensure tests are independent; avoid ordering dependencies.
-- **Unit vs Integration Test Separation**: 
-  - Unit tests focus on isolated logic with mocked dependencies (use unittest.mock or similar)
-  - Integration tests verify real component interactions (minimal mocking, real implementations where possible)
-  - Place unit tests in tests/unit/, integration tests in tests/integration/
-- **Effective Mocking Strategies**:
-  - Mock only external dependencies or collaborators, not the class under test
-  - Use spec=True or autospec=True when mocking to maintain interface fidelity
-  - Verify mock interactions when behavior validation is important (assert_called_with, etc.)
-  - Avoid over-mocking; test real behavior when it's fast and deterministic
-- **Test Quality Practices**:
-  - Test both positive and negative cases (valid inputs, edge cases, error conditions)
-  - Use descriptive test names that clearly indicate what is being tested and expected outcome
-  - Keep tests focused on a single behavior or concept
-  - Arrange-Act-Assert pattern for clear test structure
 
 ---
 
