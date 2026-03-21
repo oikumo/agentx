@@ -1,5 +1,4 @@
-from app.model.db.data_base import SessionDatabase
-from app.model.user_sessions.session import Session
+from app.model.model import Model, HistoryEntry
 from app.repl.command_parser import CommandParser
 from app.repl.controllers.main_controller import MainController
 from app.repl.console import Console
@@ -13,15 +12,7 @@ class ReplApp:
     def run(self):
         Console.log_success("Agent-X")
         Console.log_info("Type 'help' for commands, Ctrl+C to exit")
-
-        session = Session("test_1")
-        if not session.create() or not session.is_created():
-            raise Exception()
-
-        database = SessionDatabase()
-        database.run_query(session)
-        database.run_query(session)
-        database.run_query(session)
+        model = Model(session_name="test_2")
 
         while True:
             try:
@@ -37,6 +28,8 @@ class ReplApp:
                 if not command:
                     Console.log_error(f"Unknown command: {command_data.key}")
                     continue
+
+                model.log_command(HistoryEntry(command.key))
 
                 try:
                     result = command.run(command_data.arguments)

@@ -3,22 +3,42 @@ from pathlib import Path
 
 from app.model.user_sessions.session import Session
 
-SCHEMA = "CREATE TABLE IF NOT EXISTS users ( id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
-INSERT_USER = "INSERT INTO users (name, age) VALUES (?, ?)"
+SCHEMA_TABLE_USER = "CREATE TABLE IF NOT EXISTS users ( id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
+SCHEMA_TABLE_HISTORY = "CREATE TABLE IF NOT EXISTS history ( id INTEGER PRIMARY KEY, command TEXT)"
+
+
+class Insert:
+    HISTORY = "INSERT INTO history (command) VALUES (?)"
+    INSERT_USER = "INSERT INTO users (name, age) VALUES (?, ?)"
 
 class SessionDatabase:
-    def get_sesstion_path(self, session: Session):
-        db_directory = Path(session.directory)
-        db_filename = Path(f"{session.name}.db")
+    def __init__(self, session: Session):
+        self._session = session
+        self._create()
+
+    def _create(self):
+        db_path = self._get_session_path()
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(SCHEMA_TABLE_USER)
+            cursor.execute(SCHEMA_TABLE_HISTORY)
+
+    def _get_session_path(self):
+        db_directory = Path(self._session.directory)
+        db_filename = Path(f"{self._session.name}.db")
         db_path = db_directory / db_filename
         return db_path
 
-    def run_query(self, session: Session):
-        db_path = self.get_sesstion_path(session)
-        with sqlite3.connect(db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute(SCHEMA)
-            cursor.execute(INSERT_USER, ("Test", 33))
-            cursor.execute("SELECT * FROM users")
-            rows = cursor.fetchall()
-            print(rows)
+    def insert_history_entry(self, info: str) -> bool:
+        return self._insert(Insert.HISTORY, [info])
+
+    def _insert(self, query: str, parameters: list[str]) -> bool:
+        db_path = self._get_session_path()
+        try:
+            with sqlite3.connect(db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, parameters)
+            return False
+        except Exception as e:
+            return True
+
