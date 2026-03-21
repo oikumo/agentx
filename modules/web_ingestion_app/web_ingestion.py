@@ -5,7 +5,7 @@ from modules.web_ingestion_app.web_ingestion_app import \
     WebIngestionApp
 from llm_models import \
     create_vectorstore_chroma
-from user_sessions.session import Session
+from app.model.user_sessions.session import Session
 
 if __name__ == "__main__":
     # site_url= "https://developer.android.com/"
