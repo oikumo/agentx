@@ -4,12 +4,12 @@ This file documents build, lint, and test commands for agentic coding agents wor
 
 ---
 
-## Instructions
+## System Instructions
+- Git commit and push commands REQUIRES EXPLICIT USER APPROVAL.
+- Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM, REQUIRES EXPLICIT USER APPROVAL.
 
 ### Testing Guidelines
-- Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM, requires explicit USER APPROVAL
 - Tests live under tests/ mirroring source layout.
-
 
 ## Agent Operational Guidelines
 
