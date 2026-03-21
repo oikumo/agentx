@@ -1,12 +1,12 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from agent_x.app.configuration.configuration import (
+from app.configuration.configuration import (
     AgentXConfiguration,
     LLMConfig,
     LLMProvider,
 )
-from agent_x.llm_factory import LLMFactory
+from llm_factory import LLMFactory
 
 
 class LLMFactoryTest(unittest.TestCase):

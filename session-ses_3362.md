@@ -5809,8 +5809,8 @@ from typing import List
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from agent_x.modules.web_ingestion_app.helpers import load_docs_from_jsonl
-from agent_x.common.logger import log_info, log_success, log_error
+from modules.web_ingestion_app.helpers import load_docs_from_jsonl
+from common.logger import log_info, log_success, log_error
 
 
 async def index_documents_async(
@@ -5871,9 +5871,10 @@ from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_tavily import TavilyExtract, TavilyMap
 
-from agent_x.common.logger import log_info, Colors, log_error
+from common.logger import log_info, Colors, log_error
 
 load_dotenv()
+
 
 class WebExtract:
     def __init__(self, max_depth: int, max_breadth: int, max_pages: int):
@@ -5940,10 +5941,10 @@ import certifi
 from dotenv import load_dotenv
 from langchain_core.vectorstores import VectorStore
 
-from agent_x.modules.web_ingestion_app import index_documents_async, process_documents
-from agent_x.modules.web_ingestion_app.helpers import chunk_urls, save_docs
-from agent_x.modules.web_ingestion_app import WebExtract
-from agent_x.common.logger import log_info, Colors, log_success
+from modules import index_documents_async, process_documents
+from modules.web_ingestion_app.helpers import chunk_urls, save_docs
+from modules import WebExtract
+from common.logger import log_info, Colors, log_success
 
 load_dotenv()
 
@@ -6048,7 +6049,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
-    from agent_x.app.agent_x import AgentX
+    from app import AgentX
 
 
 class AppType(str, Enum):

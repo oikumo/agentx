@@ -1,11 +1,11 @@
 import asyncio
 
-from agent_x.modules.web_ingestion_app import WebExtract
-from agent_x.modules.web_ingestion_app.web_ingestion_app import \
+from modules import WebExtract
+from modules.web_ingestion_app.web_ingestion_app import \
     WebIngestionApp
-from agent_x.llm_models.local.vectorstores.vectorstrore_chroma import \
+from llm_models import \
     create_vectorstore_chroma
-from agent_x.user_sessions.session import Session
+from user_sessions.session import Session
 
 if __name__ == "__main__":
     # site_url= "https://developer.android.com/"

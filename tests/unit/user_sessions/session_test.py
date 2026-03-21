@@ -1,6 +1,6 @@
 import unittest
 from typing import Final
-from agent_x.user_sessions.session import Session
+from user_sessions.session import Session
 
 SESSION_TEST_NAME: Final[str] = "test_session_name"
 

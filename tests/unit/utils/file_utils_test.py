@@ -1,6 +1,6 @@
 import unittest
 
-from agent_x.utils.file_utils import create_directory_with_timestamp, directory_exists, dangerous_delete_directory
+from utils import create_directory_with_timestamp, directory_exists, dangerous_delete_directory
 from tests.framework_helpers import permanently_delete_test_framework_directories, \
     TEST_SANDBOX_FOLDER
 

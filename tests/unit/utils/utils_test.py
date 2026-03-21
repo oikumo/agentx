@@ -1,6 +1,6 @@
 import unittest
 
-from agent_x.utils.utils import safe_int
+from utils import safe_int
 
 
 class UtilsTest(unittest.TestCase):

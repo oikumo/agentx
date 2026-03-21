@@ -2,8 +2,8 @@ import unittest
 from io import StringIO
 from unittest.mock import patch
 
-from agent_x.common.logger import (Colors, log_error, log_header, log_info,
-                                   log_success, log_warning)
+from common.logger import (Colors, log_error, log_header, log_info,
+                           log_success, log_warning)
 
 
 class LoggerTest(unittest.TestCase):

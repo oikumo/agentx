@@ -1,6 +1,6 @@
 import unittest
 
-from agent_x.app.configuration.configuration import (
+from app.configuration.configuration import (
     AgentXConfiguration,
     LLMConfig,
     LLMProvider,
