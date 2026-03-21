@@ -1,6 +1,6 @@
 from app.repl.command_line_controller.command_parser import CommandParser
 from app.repl.controllers.main_controller.main_controller import MainController
-from app.repl.logger import log_info, Console
+from app.repl.logger import Console
 
 
 class ReplApp:
@@ -10,7 +10,7 @@ class ReplApp:
 
     def run(self):
         Console.log_success("Agent-X")
-        log_info("Type 'help' for commands, Ctrl+C to exit")
+        Console.log_info("Type 'help' for commands, Ctrl+C to exit")
 
         while True:
             try:
@@ -36,8 +36,8 @@ class ReplApp:
                     Console.log_error(f"Command execution failed: {e}")
 
             except KeyboardInterrupt:
-                log_info("\nReceived interrupt, exiting...")
+                Console.log_info("\nReceived interrupt, exiting...")
                 break
             except EOFError:
-                log_info("\nEOF received, exiting...")
+                Console.log_info("\nEOF received, exiting...")
                 break

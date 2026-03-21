@@ -1,6 +1,6 @@
 from app.repl.base.IMainController import IMainController
 from app.repl.command_line_controller.command import Command, CommandResult
-from app.repl.logger import log_info, Console
+from app.repl.logger import Console
 from app.common.utils.utils import safe_int
 
 class SumCommand(Command):
@@ -25,7 +25,7 @@ class CommandResultPrint(CommandResult):
         self._message = message
 
     def apply(self):
-        log_info(self._message)
+        Console.log_info(self._message)
 
 class CommandResultLogInfo(CommandResult):
     def __init__(self, messages: list[str]):
@@ -33,4 +33,4 @@ class CommandResultLogInfo(CommandResult):
 
     def apply(self):
         for message in self._messages:
-            log_info(message)
+            Console.log_info(message)

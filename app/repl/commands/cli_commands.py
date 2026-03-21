@@ -3,7 +3,7 @@ from app.repl.base.IMainController import IMainController
 from app.repl.command_line_controller.command import Command
 from app.repl.commands.math_commands import CommandResultPrint, CommandResultLogInfo
 
-from app.repl.logger import log_info
+from app.repl.logger import Console
 from app.common.utils.utils import clear_console
 
 
@@ -12,7 +12,7 @@ class QuitCommand(Command):
         super().__init__(key, controller, description="Exit Agent-X")
 
     def run(self, arguments: list[str]):
-        log_info("QUIT COMMAND")
+        Console.log_info("QUIT COMMAND")
         self.controller.close()
 
 
@@ -41,14 +41,14 @@ class ReadFile(Command):
 
     def run(self, arguments: list[str]):
         if not arguments:
-            log_info("Usage: read <filename>")
+            Console.log_info("Usage: read <filename>")
             return
         filename = arguments[0]
         try:
             with open(filename, "r") as file:
                 content = file.read()
-            log_info(content)
+            Console.log_info(content)
         except FileNotFoundError:
-            log_info(f"File not found: {filename}")
+            Console.log_info(f"File not found: {filename}")
         except OSError as e:
-            log_info(f"Error reading file: {e}")
+            Console.log_info(f"Error reading file: {e}")

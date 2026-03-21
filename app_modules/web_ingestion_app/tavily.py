@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_tavily import TavilyExtract, TavilyMap
 
-from app.repl.logger import Colors, log_error, log_info
+from app.repl.logger import Colors, Console
 
 load_dotenv()
 
@@ -23,38 +23,38 @@ class WebExtract:
     ) -> List[Dict[str, Any]]:
         """Extract documents from a batch of URLs."""
         try:
-            log_info(
+            Console.log_info(
                 f"🔄 Processing batch {batch_num} with {len(urls)} URLs", Colors.BLUE
             )
             docs = await self.tavily_extract.ainvoke(input={"urls": urls})
             results = docs.get("results", [])
-            log_info(
+            Console.log_info(
                 f"✅ Batch {batch_num} completed - extracted {len(results)} documents",
                 Colors.PURPLE,
             )
             return results
         except Exception as e:
-            log_error(f"❌ Batch {batch_num} failed: {e}", Colors.RED)
+            Console.log_error(f"❌ Batch {batch_num} failed: {e}", Colors.RED)
             return []
 
     async def async_extract(self, urls_batches: List[List[str]]):
-        log_info("DOCUMENT EXTRACTION")
-        log_info(f"Concurrent extraction of {len(urls_batches)}", Colors.GREEN)
+        Console.log_info("DOCUMENT EXTRACTION")
+        Console.log_info(f"Concurrent extraction of {len(urls_batches)}", Colors.GREEN)
 
         tasks = [
             self.extract_batch(batch, i + 1) for i, batch in enumerate(urls_batches)
         ]
 
-        log_info("EXTRACT BEGIN", Colors.GREEN)
+        Console.log_info("EXTRACT BEGIN", Colors.GREEN)
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        log_info("EXTRACT END", Colors.GREEN)
+        Console.log_info("EXTRACT END", Colors.GREEN)
 
         all_pages = []
         failed_batches = 0
 
         for result in results:
             if isinstance(result, Exception):
-                log_error("Error")
+                Console.log_error("Error")
                 failed_batches += 1
             else:
                 for extracted_page in result:

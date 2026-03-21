@@ -10,7 +10,7 @@ from modules.web_ingestion_app.documents import (
 from modules.web_ingestion_app.helpers import (chunk_urls,
                                                save_docs)
 from modules.web_ingestion_app.tavily import WebExtract
-from app.repl.logger import Colors, log_info, log_success
+from app.repl.logger import Colors, Console
 
 load_dotenv()
 
@@ -38,29 +38,29 @@ class WebIngestionApp:
         return self
 
     async def run(self):
-        log_info("INIT")
-        log_info(f"map and extract from: {self.site_url}", Colors.PURPLE)
-        log_info(f"generated document file path: {self.result_json_file_path}")
+        Console.log_info("INIT")
+        Console.log_info(f"map and extract from: {self.site_url}", Colors.PURPLE)
+        Console.log_info(f"generated document file path: {self.result_json_file_path}")
 
         all_docs = await self.data_ingestion(self.site_url)
 
-        log_info(f"SAVING DOCS")
+        Console.log_info(f"SAVING DOCS")
         save_docs(all_docs, self.result_json_file_path)
 
-        log_info("DOCUMENTS CHUNKING PHASE")
+        Console.log_info("DOCUMENTS CHUNKING PHASE")
         docs = process_documents(self.result_json_file_path)
 
-        log_info("DOCUMENTS INDEXING")
+        Console.log_info("DOCUMENTS INDEXING")
         await index_documents_async(self.vectorstore, docs, batch_size=500)
 
     async def data_ingestion(self, site_url: str):
-        log_info("site mapping")
+        Console.log_info("site mapping")
         site_map = self.tav.tavily_map.invoke(site_url)
-        log_info(f"results: {site_map}")
-        log_success(f"site map: {len(site_map['results'])}")
+        Console.log_info(f"results: {site_map}")
+        Console.log_success(f"site map: {len(site_map['results'])}")
 
         urls_batches = chunk_urls(site_map["results"], 3)
         all_docs = await self.tav.async_extract(urls_batches=urls_batches)
-        log_info(f"docs extracted: {len(all_docs)}")
+        Console.log_info(f"docs extracted: {len(all_docs)}")
 
         return all_docs
