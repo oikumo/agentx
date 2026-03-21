@@ -17,4 +17,8 @@ class MainController(IMainController):
     def add_command(self, command: Command):
         self.commands[command.key] = command
 
+    def close(self) -> None:
+        exit(0)
+
+
 

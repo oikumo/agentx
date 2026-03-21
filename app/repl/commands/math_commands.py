@@ -26,3 +26,11 @@ class CommandResultPrint(CommandResult):
 
     def apply(self):
         log_info(self._message)
+
+class CommandResultLogInfo(CommandResult):
+    def __init__(self, messages: list[str]):
+        self._messages = messages
+
+    def apply(self):
+        for message in self._messages:
+            log_info(message)

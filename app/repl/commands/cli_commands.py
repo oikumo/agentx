@@ -1,6 +1,7 @@
 from __future__ import annotations
 from app.repl.base.IMainController import IMainController
 from app.repl.command_line_controller.command import Command
+from app.repl.commands.math_commands import CommandResultPrint, CommandResultLogInfo
 
 from app.repl.logger import log_info
 from app.common.utils.utils import clear_console
@@ -12,7 +13,7 @@ class QuitCommand(Command):
 
     def run(self, arguments: list[str]):
         log_info("QUIT COMMAND")
-        self.actions.close()
+        self.controller.close()
 
 
 class ClearCommand(Command):
@@ -28,9 +29,10 @@ class HelpCommand(Command):
         super().__init__(key, controller, description="Show available commands")
 
     def run(self, arguments: list[str]):
-        if self.actions:
-            for command in self.actions.get_commands():
-                log_info(command.key)
+        commands: list[str] = []
+        for command in self.controller.get_commands():
+            commands.append(f"{command.key} - {command.description}")
+        return CommandResultLogInfo(commands)
 
 
 class ReadFile(Command):
