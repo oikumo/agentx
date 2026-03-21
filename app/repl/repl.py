@@ -1,5 +1,5 @@
-from app.repl.command_line_controller.command_parser import CommandParser
-from app.repl.controllers.main_controller.main_controller import MainController
+from app.repl.command_parser import CommandParser
+from app.repl.controllers.main_controller import MainController
 from app.repl.logger import Console
 
 

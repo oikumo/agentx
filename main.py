@@ -6,7 +6,7 @@ from app.repl.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, 
 from app.repl.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, AIReactTools, AISearch, AIFunction, RagPDF
 from app.repl.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, AIGraphReflexion
 from app.repl.commands.math_commands import SumCommand
-from app.repl.controllers.main_controller.main_controller import MainController
+from app.repl.controllers.main_controller import MainController
 from app.repl.repl import ReplApp
 
 load_dotenv()
