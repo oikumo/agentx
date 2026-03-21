@@ -10,7 +10,7 @@ from modules.web_ingestion_app.documents import (
 from modules.web_ingestion_app.helpers import (chunk_urls,
                                                save_docs)
 from modules.web_ingestion_app.tavily import WebExtract
-from common.logger import Colors, log_info, log_success
+from app.repl.logger import Colors, log_info, log_success
 
 load_dotenv()
 

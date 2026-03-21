@@ -2,8 +2,8 @@ import unittest
 from io import StringIO
 from unittest.mock import patch
 
-from common.logger import (Colors, log_error, log_header, log_info,
-                           log_success, log_warning)
+from app.repl.logger import (Colors, log_error, log_header, log_info,
+                             log_success, log_warning)
 
 
 class LoggerTest(unittest.TestCase):

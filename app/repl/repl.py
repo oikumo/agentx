@@ -1,6 +1,6 @@
 from app.repl.command_line_controller.command_parser import CommandParser
 from app.repl.command_line_controller.commands_controller import CommandsController
-from common.logger import log_info, log_warning, log_error
+from app.repl.logger import log_info, log_warning, log_error
 
 
 class ReplApp:

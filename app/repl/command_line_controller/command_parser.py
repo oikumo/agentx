@@ -3,7 +3,7 @@ from typing import List
 
 from app.repl.command_line_controller.command import \
     Command
-from common.logger import log_warning
+from app.repl.logger import log_warning
 
 
 @dataclass

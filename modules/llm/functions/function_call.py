@@ -1,5 +1,5 @@
 from rich import print
-from common.logger import log_error
+from app.repl.logger import log_error
 from ollama import chat, ChatResponse
 from modules.llm.functions.route import Route
 
