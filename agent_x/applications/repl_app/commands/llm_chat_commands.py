@@ -1,22 +1,26 @@
 from langchain_classic import hub
 from langchain_ollama import OllamaEmbeddings
 
-from agent_x.applications.repl_app.command_line_controller.command import \
-    Command
+from agent_x.applications.repl_app.command_line_controller.command import Command
 from agent_x.common.logger import log_warning
-from agent_x.llm_models.local.llms import (get_llama_cpp_llm,
-                                           get_local_llm_qwen2_5,
-                                           get_local_llm_qwen3)
+from agent_x.llm_factory import LLMFactory
+from agent_x.app.configuration.configuration import (
+    AgentXConfiguration,
+    LLMConfig,
+    LLMProvider,
+)
 from agent_x.modules.data_stores.faiss_rag.rag_pdf.rag_pdf import rag_pdf
 from agent_x.modules.llm.functions.function_call import function_call
-from agent_x.modules.llm.langchain.chat.simple_chat import \
-    simple_chat_prompt_template
-from agent_x.modules.llm.langchain.react_agents.react_agents_tools.react_tools import \
-    react_tools
-from agent_x.modules.llm.langchain.react_agents.react_search_agent.search_agent import \
-    search_agent
-from agent_x.modules.llm.langchain.react_agents.router_agents.router_react_agent import \
-    router_agent
+from agent_x.modules.llm.langchain.chat.simple_chat import simple_chat_prompt_template
+from agent_x.modules.llm.langchain.react_agents.react_agents_tools.react_tools import (
+    react_tools,
+)
+from agent_x.modules.llm.langchain.react_agents.react_search_agent.search_agent import (
+    search_agent,
+)
+from agent_x.modules.llm.langchain.react_agents.router_agents.router_react_agent import (
+    router_agent,
+)
 from agent_x.modules.llm.langchain.tools.simple_tool import simple_tool
 
 
@@ -31,13 +35,29 @@ class AIFunction(Command):
 class AIChat(Command):
     def __init__(self, key: str):
         super().__init__(key, description="Start an AI chat session: chat <query>")
+        # Initialize configuration and factory
+        self.config = AgentXConfiguration()
+        # Add default configurations if not present
+        if self.config.get_llm_config("qwen3:1.7b") is None:
+            from agent_x.app.configuration.configuration import LLMConfig, LLMProvider
+
+            self.config.add_llm_config(
+                LLMConfig(
+                    name="qwen3:1.7b",
+                    provider=LLMProvider.OLLAMA,
+                    model_name="qwen3:1.7b",
+                    temperature=0,
+                    extra_params={"reasoning": True},
+                )
+            )
+        self.factory = LLMFactory(self.config)
 
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
             log_warning("missing args")
             return
         simple_chat_prompt_template(
-            llm=get_llama_cpp_llm(),
+            llm=self.factory.get_chat_model("qwen3:1.7b"),
             query=" ".join(arguments),
             information="consider all games like dark souls",
         )
@@ -46,9 +66,25 @@ class AIChat(Command):
 class AITools(Command):
     def __init__(self, key: str):
         super().__init__(key, description="Run AI agent with tool use")
+        # Initialize configuration and factory
+        self.config = AgentXConfiguration()
+        # Add default configurations if not present
+        if self.config.get_llm_config("qwen2.5:1.5b") is None:
+            from agent_x.app.configuration.configuration import LLMConfig, LLMProvider
+
+            self.config.add_llm_config(
+                LLMConfig(
+                    name="qwen2.5:1.5b",
+                    provider=LLMProvider.OLLAMA,
+                    model_name="qwen2.5:1.5b",
+                    temperature=0,
+                    extra_params={"reasoning": False},
+                )
+            )
+        self.factory = LLMFactory(self.config)
 
     def run(self, arguments: list[str]) -> None:
-        simple_tool(llm=get_local_llm_qwen2_5())
+        simple_tool(llm=self.factory.get_chat_model("qwen2.5:1.5b"))
 
 
 class AIRouterAgents(Command):
@@ -62,22 +98,81 @@ class AIRouterAgents(Command):
 class AIReactTools(Command):
     def __init__(self, key: str):
         super().__init__(key, description="Run AI ReAct agent with tools")
+        # Initialize configuration and factory
+        self.config = AgentXConfiguration()
+        # Add default configurations if not present
+        if self.config.get_llm_config("qwen2.5:1.5b") is None:
+            from agent_x.app.configuration.configuration import LLMConfig, LLMProvider
+
+            self.config.add_llm_config(
+                LLMConfig(
+                    name="qwen2.5:1.5b",
+                    provider=LLMProvider.OLLAMA,
+                    model_name="qwen2.5:1.5b",
+                    temperature=0,
+                    extra_params={"reasoning": False},
+                )
+            )
+        self.factory = LLMFactory(self.config)
 
     def run(self, arguments: list[str]) -> None:
-        react_tools(llm=get_local_llm_qwen2_5())
+        react_tools(llm=self.factory.get_chat_model("qwen2.5:1.5b"))
 
 
 class AISearch(Command):
     def __init__(self, key: str):
         super().__init__(key, description="Search the web with AI")
+        # Initialize configuration and factory
+        self.config = AgentXConfiguration()
+        # Add default configurations if not present
+        if self.config.get_llm_config("qwen2.5:1.5b") is None:
+            from agent_x.app.configuration.configuration import LLMConfig, LLMProvider
+
+            self.config.add_llm_config(
+                LLMConfig(
+                    name="qwen2.5:1.5b",
+                    provider=LLMProvider.OLLAMA,
+                    model_name="qwen2.5:1.5b",
+                    temperature=0,
+                    extra_params={"reasoning": False},
+                )
+            )
+        self.factory = LLMFactory(self.config)
 
     def run(self, arguments: list[str]) -> None:
-        search_agent(llm=get_local_llm_qwen2_5())
+        search_agent(llm=self.factory.get_chat_model("qwen2.5:1.5b"))
 
 
 class RagPDF(Command):
     def __init__(self, key: str):
         super().__init__(key, description="Query a PDF with RAG: rag <query>")
+        # Initialize configuration and factory
+        self.config = AgentXConfiguration()
+        # Add default configurations if not present
+        if self.config.get_llm_config("qwen3:1.7b") is None:
+            from agent_x.app.configuration.configuration import LLMConfig, LLMProvider
+
+            self.config.add_llm_config(
+                LLMConfig(
+                    name="qwen3:1.7b",
+                    provider=LLMProvider.OLLAMA,
+                    model_name="qwen3:1.7b",
+                    temperature=0,
+                    extra_params={"reasoning": True},
+                )
+            )
+        if self.config.get_llm_config("nomic-embed-text") is None:
+            from agent_x.app.configuration.configuration import LLMConfig, LLMProvider
+
+            self.config.add_llm_config(
+                LLMConfig(
+                    name="nomic-embed-text",
+                    provider=LLMProvider.OLLAMA,
+                    model_name="nomic-embed-text",
+                    temperature=0,
+                )
+            )
+        self.factory = LLMFactory(self.config)
 
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
@@ -88,6 +183,6 @@ class RagPDF(Command):
             pdf_path="/resources/react.pdf",
             vectorstore_path="/local/faiss_index_react",
             retrieval_qa_chat_prompt=hub.pull("langchain-ai/retrieval-qa-chat"),
-            llm=get_local_llm_qwen3(),
-            embeddings=OllamaEmbeddings(model="nomic-embed-text"),
+            llm=self.factory.get_chat_model("qwen3:1.7b"),
+            embeddings=self.factory.get_embedding_model("nomic-embed-text"),
         )

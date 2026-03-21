@@ -1,9 +1,29 @@
 import json
-
-from ollama import chat
 from rich import print
 
-model = "functiongemma:270m-it-fp16"
+from agent_x.llm_factory import LLMFactory
+from agent_x.app.configuration.configuration import (
+    AgentXConfiguration,
+    LLMConfig,
+    LLMProvider,
+)
+
+
+def get_llm():
+    """Get the LLM for function calling."""
+    config = AgentXConfiguration()
+    # Add functiongemma configuration if not present
+    if config.get_llm_config("functiongemma:270m-it-fp16") is None:
+        config.add_llm_config(
+            LLMConfig(
+                name="functiongemma:270m-it-fp16",
+                provider=LLMProvider.OLLAMA,
+                model_name="functiongemma:270m-it-fp16",
+                temperature=0,
+            )
+        )
+    factory = LLMFactory(config)
+    return factory.get_chat_model("functiongemma:270m-it-fp16")
 
 
 def get_weather(city: str) -> str:
@@ -60,28 +80,29 @@ def function_call():
     # messages = [{'role': 'user', 'content': 'how is the weather in Chile?'}]
     print(f"Prompt: {messages[0]['content']}")
 
-    response = chat(
-        model, messages=messages, tools=[get_weather, get_best_game, calculate]
-    )
+    llm = get_llm()
+    response = llm.invoke(messages, tools=[get_weather, get_best_game, calculate])
 
-    if response.message.tool_calls:
-        tool = response.message.tool_calls[0]
-        print(f"Calling: {tool.function.name}({tool.function.arguments})")
+    if response.tool_calls:
+        tool = response.tool_calls[0]
+        print(f"Calling: {tool['function']['name']}({tool['function']['arguments']})")
 
-        if tool.function.name == "get_weather":
-            result = get_weather(**tool.function.arguments)
-        elif tool.function.name == "get_best_game":
-            result = get_best_game(**tool.function.arguments)
+        if tool["function"]["name"] == "get_weather":
+            result = get_weather(**tool["function"]["arguments"])
+        elif tool["function"]["name"] == "get_best_game":
+            result = get_best_game(**tool["function"]["arguments"])
         else:
-            result = calculate(**tool.function.arguments)
+            result = calculate(**tool["function"]["arguments"])
 
         print(f"Result: {result}")
 
         # First append the assistant's tool-call message, then the tool result
-        messages.append(response.message.model_dump())
-        messages.append({"role": "tool", "content": result, "name": tool.function.name})
+        messages.append(response)
+        messages.append(
+            {"role": "tool", "content": result, "name": tool["function"]["name"]}
+        )
 
-        final = chat(model, messages=messages)
-        print("Response:", final.message.content)
+        final = llm.invoke(messages)
+        print("Response:", final.content)
     else:
-        print("Response:", response.message.content)
+        print("Response:", response.content)

@@ -6,7 +6,9 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import END, MessagesState, StateGraph
 
 from agent_x.modules.llm.langgraph.graph_simple.nodes import (
-    run_agent_reasoning, tool_node)
+    run_agent_reasoning,
+    get_llm_and_tools,
+)
 
 load_dotenv()
 
@@ -16,15 +18,31 @@ LAST = -1
 
 
 def should_continue(state: MessagesState) -> str:
-    if not state["messages"][LAST].tool_calls:
-        return END
-    return ACT
+    last_message = state["messages"][LAST]
+    # Check if the last message has tool calls
+    if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+        return ACT
+    # Also check for tool_calls in additional_kwargs (common in some message types)
+    if (
+        hasattr(last_message, "additional_kwargs")
+        and "tool_calls" in last_message.additional_kwargs
+    ):
+        return ACT
+    return END
 
 
 def graph_simple():
     print(f"graph simple")
     print("Hello ReAct LangGraph with Function Calling")
     flow = StateGraph(MessagesState)
+
+    # Get LLM and tools
+    llm, tools = get_llm_and_tools()
+
+    # Update the tool_node with actual tools
+    from langgraph.prebuilt import ToolNode
+
+    tool_node = ToolNode(tools)
 
     flow.add_node(AGENT_REASON, run_agent_reasoning)
     flow.set_entry_point(AGENT_REASON)
