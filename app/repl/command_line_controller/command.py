@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.repl.base.IMainController import IMainController
+    from app.repl.base.base import IMainController
 
 class CommandResult(ABC):
     @abstractmethod
