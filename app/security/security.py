@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Final, List
 
-from security.security_constants import DIRECTORIES_DELETION_ALLOWED
+from app.security.security_constants import DIRECTORIES_DELETION_ALLOWED
 
 
 def is_directory_allowed_to_deletion(directory_path: str) -> bool:
