@@ -4,6 +4,13 @@ This file documents build, lint, and test commands for agentic coding agents wor
 
 ---
 
+## Instructions
+
+### Testing Guidelines
+- Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM, requires explicit USER APPROVAL
+- Tests live under tests/ mirroring source layout.
+
+
 ## Agent Operational Guidelines
 
 When working as an agentic coding agent in this repository, follow these operational guidelines:
@@ -171,9 +178,6 @@ except APIError as e:
 - Consider token and rate-limit handling; design for retries.
 - Rely on LangChain retry mechanisms where available.
 
-### Testing Guidelines
-- Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM, requires explicit USER APPROVAL
-- Tests live under tests/ mirroring source layout.
 
 ---
 
