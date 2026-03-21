@@ -5,11 +5,10 @@ from langchain_classic import hub
 from langchain_classic.agents import AgentExecutor, create_react_agent
 from langchain_core.tools import Tool
 
-from llm_models.local.llms import get_local_llm_qwen3
-from modules.llm.langchain.react_agents.router_agents.agent_executors.csv_agent import \
-    create_csv_agent_executor
-from modules.llm.langchain.react_agents.router_agents.agent_executors.qr_react_agent import \
+from app_modules.llm.langchain.react_agents.router_agents.agent_executors.csv_agent import create_csv_agent_executor
+from app_modules.llm.langchain.react_agents.router_agents.agent_executors.qr_react_agent import \
     create_qr_react_agent_executor
+from app_modules.llm_models.local.llms import get_local_llm_qwen3
 
 load_dotenv()
 

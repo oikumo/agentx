@@ -9,8 +9,7 @@ from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import PromptTemplate
 from langchain_core.tools import Tool, render_text_description
 
-from modules.llm.langchain.react_agents.react_agents_tools.callbacks import \
-    AgentCallbackHandler
+from app_modules.llm.langchain.react_agents.react_agents_tools.callbacks import AgentCallbackHandler
 
 
 @tool

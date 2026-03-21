@@ -9,8 +9,7 @@ from langchain_core.runnables import RunnableLambda
 from langchain_tavily import TavilySearch
 from pydantic import BaseModel, Field
 
-from modules.llm.langchain.react_agents.react_search_agent.prompt import \
-    REACT_PROMPT_WITH_FORMAT_INSTRUCTIONS
+from app_modules.llm.langchain.react_agents.react_search_agent.prompt import REACT_PROMPT_WITH_FORMAT_INSTRUCTIONS
 
 
 class Source(BaseModel):

@@ -2,12 +2,12 @@ from dotenv import load_dotenv
 from langchain_core.tools import tool
 from langchain_tavily import TavilySearch
 
-from llm_models.llm_factory import LLMFactory
 from app.configuration.configuration import (
     AgentXConfiguration,
     LLMConfig,
     LLMProvider,
 )
+from app_modules.llm_models.llm_factory import LLMFactory
 
 load_dotenv()
 

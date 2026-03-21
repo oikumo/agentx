@@ -4,10 +4,7 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, MessagesState, StateGraph
 
-from modules.llm.langgraph.graph_simple.nodes import (
-    run_agent_reasoning,
-    get_llm_and_tools,
-)
+from app_modules.llm.langgraph.graph_simple.nodes import get_llm_and_tools, run_agent_reasoning
 
 load_dotenv()
 

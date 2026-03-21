@@ -2,8 +2,8 @@ from langchain_classic.chains.combine_documents import \
     create_stuff_documents_chain
 from langchain_classic.chains.retrieval import create_retrieval_chain
 
-from modules.document_loaders.pdf.pdf_loader import pdf_loader
-from modules.vector_store.faiss.vector_store_faiss import create_faiss
+from app_modules.document_loaders.pdf.pdf_loader import pdf_loader
+from app_modules.vector_store.faiss.vector_store_faiss import create_faiss
 
 
 def rag_pdf(

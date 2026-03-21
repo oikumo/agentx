@@ -2,12 +2,13 @@ from dotenv import load_dotenv
 from langgraph.graph import MessagesState
 from langgraph.prebuilt import ToolNode
 
-from llm_models.llm_factory import LLMFactory
 from app.configuration.configuration import (
     AgentXConfiguration,
     LLMConfig,
     LLMProvider,
 )
+from app_modules.llm.langgraph.graph_simple.react import tools
+from app_modules.llm_models.llm_factory import LLMFactory
 
 load_dotenv()
 
@@ -18,7 +19,6 @@ You are a helpful assistant that can use tools to answer questions.
 
 def get_llm_and_tools():
     """Get LLM and tools for the graph."""
-    from modules.llm.langgraph.graph_simple.react import tools
 
     # Initialize LLM configuration and factory
     config = AgentXConfiguration()

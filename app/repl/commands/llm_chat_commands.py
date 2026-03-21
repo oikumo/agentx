@@ -2,25 +2,19 @@ from langchain_classic import hub
 
 from app.repl.command_line_controller.command import Command
 from app.repl.logger import log_warning
-from llm_models.llm_factory import LLMFactory
 from app.configuration.configuration import (
     AgentXConfiguration,
 )
-from modules.data_stores.faiss_rag.rag_pdf.rag_pdf import rag_pdf
-from modules.llm.functions.function_call import QueryRouter
-from modules.llm.functions.functions import calculate, get_best_game, get_weather
-from modules.llm.functions.route import Route
-from modules.llm.langchain.chat.simple_chat import simple_chat_prompt_template
-from modules.llm.langchain.react_agents.react_agents_tools.react_tools import (
-    react_tools,
-)
-from modules.llm.langchain.react_agents.react_search_agent.search_agent import (
-    search_agent,
-)
-from modules.llm.langchain.react_agents.router_agents.router_react_agent import (
-    router_agent,
-)
-from modules.llm.langchain.tools.simple_tool import simple_tool
+from app_modules.data_stores.faiss_rag.rag_pdf.rag_pdf import rag_pdf
+from app_modules.llm.functions.function_call import QueryRouter
+from app_modules.llm.functions.functions import get_weather, get_best_game, calculate
+from app_modules.llm.functions.route import Route
+from app_modules.llm.langchain.chat.simple_chat import simple_chat_prompt_template
+from app_modules.llm.langchain.react_agents.react_agents_tools.react_tools import react_tools
+from app_modules.llm.langchain.react_agents.react_search_agent.search_agent import search_agent
+from app_modules.llm.langchain.react_agents.router_agents.router_react_agent import router_agent
+from app_modules.llm.langchain.tools.simple_tool import simple_tool
+from app_modules.llm_models.llm_factory import LLMFactory
 
 
 class AIFunction(Command):

@@ -1,11 +1,8 @@
 from app.repl.command_line_controller.command import \
     Command
-from modules.llm.langgraph.graph_reflector_chain.graph_chains import \
-    graph_chains
-from modules.llm.langgraph.graph_reflexion_agent.graph_reflexion_agent import \
-    graph_reflexion_agent
-from modules.llm.langgraph.graph_simple.graph_simple import \
-    graph_simple
+from app_modules.llm.langgraph.graph_reflector_chain.graph_chains import graph_chains
+from app_modules.llm.langgraph.graph_reflexion_agent.graph_reflexion_agent import graph_reflexion_agent
+from app_modules.llm.langgraph.graph_simple.graph_simple import graph_simple
 
 
 class AIGraphSimple(Command):

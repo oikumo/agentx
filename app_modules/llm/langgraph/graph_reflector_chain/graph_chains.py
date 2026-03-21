@@ -6,8 +6,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 
 from app.common.files.file_utils import save_to_output
-from modules.llm.langgraph.graph_reflector_chain.chains import (
-    generate_chain, reflect_chain)
+from app_modules.llm.langgraph.graph_reflector_chain.chains import generate_chain, reflect_chain
 
 
 def graph_chains():

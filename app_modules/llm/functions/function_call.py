@@ -1,7 +1,9 @@
 from rich import print
 from app.repl.logger import log_error
 from ollama import chat, ChatResponse
-from modules.llm.functions.route import Route
+
+from app_modules.llm.functions.route import Route
+
 
 class QueryRouter:
     def __init__(self, routes: list[Route]):
