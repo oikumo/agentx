@@ -10,7 +10,9 @@ from agent_x.app.configuration.configuration import (
     LLMProvider,
 )
 from agent_x.modules.data_stores.faiss_rag.rag_pdf.rag_pdf import rag_pdf
-from agent_x.modules.llm.functions.function_call import function_call
+from agent_x.modules.llm.functions.function_call import QueryRouter
+from agent_x.modules.llm.functions.functions import calculate, get_best_game, get_weather
+from agent_x.modules.llm.functions.route import Route
 from agent_x.modules.llm.langchain.chat.simple_chat import simple_chat_prompt_template
 from agent_x.modules.llm.langchain.react_agents.react_agents_tools.react_tools import (
     react_tools,
@@ -29,7 +31,13 @@ class AIFunction(Command):
         super().__init__(key, description="Run an AI function call demo")
 
     def run(self, arguments: list[str]) -> None:
-        function_call()
+        routes = [
+            Route("get_weather", get_weather),
+            Route("get_best_game", get_best_game),
+            Route("calculate", calculate)
+        ]
+        router = QueryRouter(routes)
+        router.function_call()
 
 
 class AIChat(Command):
