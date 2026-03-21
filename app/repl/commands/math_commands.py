@@ -1,6 +1,6 @@
 from app.repl.command_line_controller.command import Command, CommandResult
 from app.repl.logger import log_info, log_warning
-from utils.utils import safe_int
+from app.common.utils.utils import safe_int
 
 class SumCommand(Command):
     def __init__(self, key: str):

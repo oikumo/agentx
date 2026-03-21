@@ -1,6 +1,6 @@
 import unittest
 
-from utils import safe_int
+from app.common.utils import safe_int
 
 
 class UtilsTest(unittest.TestCase):

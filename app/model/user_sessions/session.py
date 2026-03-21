@@ -1,5 +1,5 @@
 from app.security.security_constants import SESSION_DEFAULT_NAME, SESSION_DEFAULT_BASE_DIRECTORY
-from utils.file_utils import create_directory_with_timestamp, directory_exists, dangerous_delete_directory
+from app.common.utils.file_utils import create_directory_with_timestamp, directory_exists, dangerous_delete_directory
 
 
 class Session:

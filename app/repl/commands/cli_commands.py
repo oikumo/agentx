@@ -2,7 +2,7 @@ from app.repl.command_line_controller.command import Command
 from app.repl.commands.repl_commands import ReplCommand
 
 from app.repl.logger import log_info
-from utils.utils import clear_console
+from app.common.utils.utils import clear_console
 
 
 class QuitCommand(Command):
