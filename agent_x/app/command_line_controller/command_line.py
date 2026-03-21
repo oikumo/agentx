@@ -1,6 +1,6 @@
-from agent_x.applications.repl_app.command_line_controller.command_parser import (
+from agent_x.applications.repl_app import (
     CommandData, CommandParser)
-from agent_x.applications.repl_app.command_line_controller.commands_controller import \
+from agent_x.app.command_line_controller.commands_controller import \
     CommandsController
 
 

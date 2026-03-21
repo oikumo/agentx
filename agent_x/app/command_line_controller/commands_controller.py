@@ -1,8 +1,11 @@
 from __future__ import annotations
 import typing
+
+from agent_x.app.controller import Controller
+
 if typing.TYPE_CHECKING:
-    from agent_x.applications.repl_app.command_line_controller.command import Command
-from agent_x.applications.repl_app.controller import Controller
+    from agent_x.app.command_line_controller.command import Command
+
 
 
 class CommandsController(Controller):

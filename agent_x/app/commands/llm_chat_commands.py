@@ -1,13 +1,10 @@
 from langchain_classic import hub
-from langchain_ollama import OllamaEmbeddings
 
-from agent_x.applications.repl_app.command_line_controller.command import Command
+from agent_x.app.command_line_controller.command import Command
 from agent_x.common.logger import log_warning
 from agent_x.llm_factory import LLMFactory
 from agent_x.app.configuration.configuration import (
     AgentXConfiguration,
-    LLMConfig,
-    LLMProvider,
 )
 from agent_x.modules.data_stores.faiss_rag.rag_pdf.rag_pdf import rag_pdf
 from agent_x.modules.llm.functions.function_call import QueryRouter

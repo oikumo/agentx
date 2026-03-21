@@ -1,4 +1,4 @@
-from agent_x.applications.repl_app.command_line_controller.command import \
+from agent_x.app.command_line_controller.command import \
     Command
 from agent_x.modules.llm.langgraph.graph_reflector_chain.graph_chains import \
     graph_chains

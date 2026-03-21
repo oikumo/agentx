@@ -1,8 +1,8 @@
 from abc import ABC
 
-from agent_x.applications.repl_app.command_line_controller.command import \
+from agent_x.app.command_line_controller.command import \
     Command
-from agent_x.applications.repl_app.command_line_controller.commands_controller import \
+from agent_x.app.command_line_controller.commands_controller import \
     CommandsController
 
 

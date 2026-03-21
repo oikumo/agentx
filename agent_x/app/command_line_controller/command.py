@@ -1,5 +1,8 @@
-from agent_x.applications.repl_app.controllers.main_controller.main_controller import Actions
+
 from abc import ABC, abstractmethod
+
+from agent_x.app.controllers.main_controller.main_controller import Actions
+
 
 class CommandResult(ABC):
     @abstractmethod

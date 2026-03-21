@@ -1,13 +1,13 @@
 from dotenv import load_dotenv
 
-from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
-from agent_x.applications.repl_app.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, HelpCommand
-from agent_x.applications.repl_app.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, AIReactTools, \
+from agent_x.app.command_line_controller.commands_controller import CommandsController
+from agent_x.app.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, HelpCommand
+from agent_x.app.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, AIReactTools, \
     AISearch, AIFunction, RagPDF
-from agent_x.applications.repl_app.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, AIGraphReflexion
-from agent_x.applications.repl_app.commands.math_commands import SumCommand
-from agent_x.applications.repl_app.controllers.main_controller.main_controller import MainController, Actions
-from agent_x.applications.repl_app.replapp import ReplApp
+from agent_x.app.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, AIGraphReflexion
+from agent_x.app.commands.math_commands import SumCommand
+from agent_x.app.controllers.main_controller.main_controller import MainController, Actions
+from agent_x.app.replapp import ReplApp
 
 load_dotenv()
 

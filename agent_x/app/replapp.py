@@ -1,10 +1,5 @@
-from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
-from agent_x.applications.repl_app.controllers.main_controller.main_controller import (
-    MainController,
-)
-from agent_x.applications.repl_app.command_line_controller.command_parser import (
-    CommandParser,
-)
+from agent_x.app.command_line_controller.command_parser import CommandParser
+from agent_x.app.command_line_controller.commands_controller import CommandsController
 from agent_x.common.logger import log_info, log_warning, log_error
 
 

@@ -1,5 +1,6 @@
-from agent_x.applications.repl_app.command_line_controller.command import Command
-from agent_x.applications.repl_app.commands.repl_commands import ReplCommand
+from agent_x.app.command_line_controller.command import Command
+from agent_x.app.commands.repl_commands import ReplCommand
+
 from agent_x.common.logger import log_info
 from agent_x.utils.utils import clear_console
 

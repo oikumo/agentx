@@ -1,4 +1,4 @@
-from agent_x.applications.repl_app.command_line_controller.commands_controller import CommandsController
+from agent_x.app.command_line_controller.commands_controller import CommandsController
 from agent_x.common.logger import log_info
 
 class Actions:

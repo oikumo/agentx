@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
-from agent_x.applications.repl_app.command_line_controller.command import Command
-from agent_x.applications.repl_app.command_line_controller.command_parser import (
+from agent_x.app.command_line_controller.command import Command
+from agent_x.applications.repl_app import (
     CommandData, CommandParser)
 
 class FakeCommand(Command):

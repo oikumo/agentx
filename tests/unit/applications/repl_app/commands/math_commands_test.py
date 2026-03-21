@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from agent_x.applications.repl_app.commands.math_commands import SumCommand
+from agent_x.applications.repl_app import SumCommand
 
 MOCK_FUNCTION_LOG_INFO = "agent_x.applications.repl_app.commands.math_commands.log_info"
 
