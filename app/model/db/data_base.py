@@ -1,15 +1,22 @@
+from datetime import datetime, timezone
 import sqlite3
 from pathlib import Path
 
 from app.model.user_sessions.session import Session
 
-SCHEMA_TABLE_USER = "CREATE TABLE IF NOT EXISTS users ( id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
-SCHEMA_TABLE_HISTORY = "CREATE TABLE IF NOT EXISTS history ( id INTEGER PRIMARY KEY, command TEXT)"
-
-
-class Insert:
-    HISTORY = "INSERT INTO history (command) VALUES (?)"
+class TableUser:
+    TABLE_USER = "CREATE TABLE IF NOT EXISTS users ( id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
     INSERT_USER = "INSERT INTO users (name, age) VALUES (?, ?)"
+
+class TableHistory:
+    TABLE_HISTORY = """
+    CREATE TABLE IF NOT EXISTS history (
+     id INTEGER PRIMARY KEY, 
+     command TEXT, 
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+    """
+    INSERT_HISTORY = "INSERT INTO history (command, created_at) VALUES (?, ?)"
+
 
 class SessionDatabase:
     def __init__(self, session: Session):
@@ -20,8 +27,8 @@ class SessionDatabase:
         db_path = self._get_session_path()
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute(SCHEMA_TABLE_USER)
-            cursor.execute(SCHEMA_TABLE_HISTORY)
+            cursor.execute(TableUser.TABLE_USER)
+            cursor.execute(TableHistory.TABLE_HISTORY)
 
     def _get_session_path(self):
         db_directory = Path(self._session.directory)
@@ -30,7 +37,8 @@ class SessionDatabase:
         return db_path
 
     def insert_history_entry(self, info: str) -> bool:
-        return self._insert(Insert.HISTORY, [info])
+        now = datetime.now(timezone.utc)
+        return self._insert(TableHistory.INSERT_HISTORY, [info, now])
 
     def _insert(self, query: str, parameters: list[str]) -> bool:
         db_path = self._get_session_path()
