@@ -15,6 +15,7 @@ from app_modules.llm.langchain.react_agents.react_agents_tools.react_tools impor
 from app_modules.llm.langchain.react_agents.react_search_agent.search_agent import search_agent
 from app_modules.llm.langchain.react_agents.router_agents.router_react_agent import router_agent
 from app_modules.llm.langchain.tools.simple_tool import simple_tool
+from app_modules.llm_models.cloud.llms import get_remote_llm_google_gemini
 from app_modules.llm_models.llm_factory import LLMFactory
 
 
@@ -35,31 +36,16 @@ class AIFunction(Command):
 class AIChat(Command):
     def __init__(self, key: str, controller: IMainController):
         super().__init__(key, controller, description="Start an AI chat session: chat <query>")
-        # Initialize configuration and factory
-        self.config = AgentXConfiguration()
-        # Add default configurations if not present
-        if self.config.get_llm_config("qwen3:1.7b") is None:
-            from app.configuration.configuration import LLMConfig, LLMProvider
-
-            self.config.add_llm_config(
-                LLMConfig(
-                    name="qwen3:1.7b",
-                    provider=LLMProvider.OLLAMA,
-                    model_name="qwen3:1.7b",
-                    temperature=0,
-                    extra_params={"reasoning": True},
-                )
-            )
-        self.factory = LLMFactory(self.config)
 
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
             Console.log_error("missing args")
             return
+
         simple_chat_prompt_template(
-            llm=self.factory.get_chat_model("qwen3:1.7b"),
+            llm= get_remote_llm_google_gemini(),
             query=" ".join(arguments),
-            information="consider all games like dark souls",
+            information="",
         )
 
 

@@ -1,3 +1,4 @@
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 
 
@@ -7,3 +8,12 @@ def get_remote_llm_openai_gpt4():
 
 def get_remote_llm_openai_gpt3_5_turbo():
     return ChatOpenAI(model="gpt-3.5-turbo")
+
+def get_remote_llm_google_gemini():
+    return ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash-lite",
+        temperature=1.0,
+        max_tokens=None,
+        timeout=None,
+        max_retries=2,
+    )
