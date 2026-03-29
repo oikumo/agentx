@@ -29,23 +29,23 @@ def triple(num: float) -> float:
     return float(num) * 3
 
 class GraphReactWebSearch:
-    def __init__(self, llm: BaseChatModel):
+    def __init__(self, llm: BaseChatModel, max_search_results: int):
         self.llm = llm
-        self.tool_node = ToolNode([])  # Will be initialized properly in the graph
-        tools = [TavilySearch(max_results=1), triple]
-        self.llm_full = self.llm.bind_tools(tools)
+        self.tools = [
+            TavilySearch(max_results=max_search_results),
+            triple
+        ]
+
+        self.llm = self.llm.bind_tools(self.tools)
 
     def run_agent_reasoning(self, state: MessagesState) -> MessagesState:
         """
         Run the agent reasoning node.
         """
-        llm, tools = self.llm_full
-        response = llm.invoke(
+        response = self.llm.invoke(
             [{"role": "system", "content": SYSTEM_MESSAGE}, *state["messages"]]
         )
         return {"messages": [response]}
-
-
 
     def should_continue(self, state: MessagesState) -> str:
         last_message = state["messages"][LAST]
@@ -61,19 +61,12 @@ class GraphReactWebSearch:
         return END
 
 
-    def graph_simple(self):
+    def run(self):
         print(f"graph simple")
         print("Hello ReAct LangGraph with Function Calling")
 
         flow = StateGraph(MessagesState)
-
-        # Get LLM and tools
-        llm, tools = self.llm_full
-
-        # Update the tool_node with actual tools
-        from langgraph.prebuilt import ToolNode
-
-        tool_node = ToolNode(tools)
+        tool_node = ToolNode(self.tools)
 
         flow.add_node(AGENT_REASON, self.run_agent_reasoning)
         flow.set_entry_point(AGENT_REASON)
@@ -87,13 +80,13 @@ class GraphReactWebSearch:
         print(f"WWWWWWWWWWWWWWWW: {local_path}")
 
         app = flow.compile()
-        app.get_graph().draw_mermaid_png(output_file_path="local/flow.png")
+        app.get_graph().draw_mermaid_png(output_file_path="flow.png")
 
         res = app.invoke(
             {
                 "messages": [
                     HumanMessage(
-                        content="What is the temperature in Tokyo? List it and then triple it"
+                        content="What is the temperature in Santiago and Tokio? List it and then triple the Tokio one"
                     )
                 ]
             }
