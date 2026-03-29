@@ -15,8 +15,9 @@ from app_modules.llm.langchain.react_agents.react_agents_tools.react_tools impor
 from app_modules.llm.langchain.react_agents.react_search_agent.search_agent import search_agent
 from app_modules.llm.langchain.react_agents.router_agents.router_react_agent import router_agent
 from app_modules.llm.langchain.tools.simple_tool import simple_tool
-from app_modules.llm_models.cloud.llms import get_remote_llm_google_gemini
 from app_modules.llm_models.llm_factory import LLMFactory
+from llm_models.local.llama_cpp.llamacpp import LlamaCppConfig
+from llm_models.local.llama_cpp_factory import model_factory_llamacpp, LLAMA_CPP_MODEL_QWEN_2_5
 
 
 class AIFunction(Command):
@@ -42,8 +43,13 @@ class AIChat(Command):
             Console.log_error("missing args")
             return
 
+        config = LlamaCppConfig()
+        config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
+        config.context_size = 32768
+        model = model_factory_llamacpp.create_model_instance(config)
+
         simple_chat_prompt_template(
-            llm= get_remote_llm_google_gemini(),
+            llm= model,
             query=" ".join(arguments),
             information="",
         )
