@@ -8,7 +8,8 @@ from langchain_core.tools import Tool
 from app_modules.llm.langchain.react_agents.router_agents.agent_executors.csv_agent import create_csv_agent_executor
 from app_modules.llm.langchain.react_agents.router_agents.agent_executors.qr_react_agent import \
     create_qr_react_agent_executor
-from app_modules.llm_models.local.llms import get_local_llm_qwen3
+from llm_models.local.llama_cpp.llamacpp_config import LlamaCppConfig
+from llm_models.local.llama_cpp_factory import model_factory_llamacpp, LLAMA_CPP_MODEL_QWEN_2_5
 
 load_dotenv()
 
@@ -16,7 +17,10 @@ load_dotenv()
 def router_agent():
     print("router_agent start")
 
-    llm = get_local_llm_qwen3()
+    config = LlamaCppConfig()
+    config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
+    config.context_size = 32768
+    llm = model_factory_llamacpp.create_model_instance(config)
 
     python_agent_executor = create_qr_react_agent_executor(llm)
 

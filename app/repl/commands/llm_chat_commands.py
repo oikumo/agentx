@@ -1,10 +1,8 @@
 from langchain_classic import hub
+from ollama import embeddings
 
 from app.repl.base import IMainController
 from app.repl.command import Command
-from app.configuration.configuration import (
-    AgentXConfiguration,
-)
 from app.repl.console import Console
 from app_modules.data_stores.rag_pdf import rag_pdf
 from app_modules.llm.functions.function_call import QueryRouter
@@ -15,7 +13,6 @@ from app_modules.llm.langchain.react_agents.react_agents_tools.react_tools impor
 from app_modules.llm.langchain.react_agents.react_search_agent.search_agent import search_agent
 from app_modules.llm.langchain.react_agents.router_agents.router_react_agent import router_agent
 from app_modules.llm.langchain.tools.simple_tool import simple_tool
-from app_modules.llm_models.llm_factory import LLMFactory
 from llm_models.local.llama_cpp.llamacpp import LlamaCppConfig
 from llm_models.local.llama_cpp_factory import model_factory_llamacpp, LLAMA_CPP_MODEL_QWEN_2_5
 
@@ -55,29 +52,6 @@ class AIChat(Command):
         )
 
 
-class AITools(Command):
-    def __init__(self, key: str, controller: IMainController):
-        super().__init__(key, controller, description="Run AI agent with tool use")
-        # Initialize configuration and factory
-        self.config = AgentXConfiguration()
-        # Add default configurations if not present
-        if self.config.get_llm_config("qwen2.5:1.5b") is None:
-            from app.configuration.configuration import LLMConfig, LLMProvider
-
-            self.config.add_llm_config(
-                LLMConfig(
-                    name="qwen2.5:1.5b",
-                    provider=LLMProvider.OLLAMA,
-                    model_name="qwen2.5:1.5b",
-                    temperature=0,
-                    extra_params={"reasoning": False},
-                )
-            )
-        self.factory = LLMFactory(self.config)
-
-    def run(self, arguments: list[str]) -> None:
-        simple_tool(llm=self.factory.get_chat_model("qwen2.5:1.5b"))
-
 
 class AIRouterAgents(Command):
     def __init__(self, key: str, controller: IMainController):
@@ -90,91 +64,48 @@ class AIRouterAgents(Command):
 class AIReactTools(Command):
     def __init__(self, key: str, controller: IMainController):
         super().__init__(key, controller, description="Run AI ReAct agent with tools")
-        # Initialize configuration and factory
-        self.config = AgentXConfiguration()
-        # Add default configurations if not present
-        if self.config.get_llm_config("qwen2.5:1.5b") is None:
-            from app.configuration.configuration import LLMConfig, LLMProvider
-
-            self.config.add_llm_config(
-                LLMConfig(
-                    name="qwen2.5:1.5b",
-                    provider=LLMProvider.OLLAMA,
-                    model_name="qwen2.5:1.5b",
-                    temperature=0,
-                    extra_params={"reasoning": False},
-                )
-            )
-        self.factory = LLMFactory(self.config)
 
     def run(self, arguments: list[str]) -> None:
-        react_tools(llm=self.factory.get_chat_model("qwen2.5:1.5b"))
+        config = LlamaCppConfig()
+        config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
+        config.context_size = 32768
+        llm = model_factory_llamacpp.create_model_instance(config)
+        react_tools(llm=llm)
 
 
 class AISearch(Command):
     def __init__(self, key: str, controller: IMainController):
         super().__init__(key, controller, description="Search the web with AI")
-        # Initialize configuration and factory
-        self.config = AgentXConfiguration()
-        # Add default configurations if not present
-        if self.config.get_llm_config("qwen2.5:1.5b") is None:
-            from app.configuration.configuration import LLMConfig, LLMProvider
-
-            self.config.add_llm_config(
-                LLMConfig(
-                    name="qwen2.5:1.5b",
-                    provider=LLMProvider.OLLAMA,
-                    model_name="qwen2.5:1.5b",
-                    temperature=0,
-                    extra_params={"reasoning": False},
-                )
-            )
-        self.factory = LLMFactory(self.config)
 
     def run(self, arguments: list[str]) -> None:
-        search_agent(llm=self.factory.get_chat_model("qwen2.5:1.5b"))
-
+        config = LlamaCppConfig()
+        config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
+        config.context_size = 32768
+        llm = model_factory_llamacpp.create_model_instance(config)
+        search_agent(llm=llm)
 
 class RagPDF(Command):
     def __init__(self, key: str, controller: IMainController):
         super().__init__(key, controller, description="Query a PDF with RAG: rag <query>")
-        # Initialize configuration and factory
-        self.config = AgentXConfiguration()
-        # Add default configurations if not present
-        if self.config.get_llm_config("qwen3:1.7b") is None:
-            from app.configuration.configuration import LLMConfig, LLMProvider
-
-            self.config.add_llm_config(
-                LLMConfig(
-                    name="qwen3:1.7b",
-                    provider=LLMProvider.OLLAMA,
-                    model_name="qwen3:1.7b",
-                    temperature=0,
-                    extra_params={"reasoning": True},
-                )
-            )
-        if self.config.get_llm_config("nomic-embed-text") is None:
-            from app.configuration.configuration import LLMConfig, LLMProvider
-
-            self.config.add_llm_config(
-                LLMConfig(
-                    name="nomic-embed-text",
-                    provider=LLMProvider.OLLAMA,
-                    model_name="nomic-embed-text",
-                    temperature=0,
-                )
-            )
-        self.factory = LLMFactory(self.config)
 
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
             Console.log_warning("missing args")
             return
+
+        config = LlamaCppConfig()
+        config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
+        config.context_size = 32768
+        llm = model_factory_llamacpp.create_model_instance(config)
+
+        create_vectorstore_pinecone()
+        embeddings_llm =
+
         rag_pdf(
             query=" ".join(arguments),
             pdf_path="/resources/react.pdf",
             vectorstore_path="/local/faiss_index_react",
             retrieval_qa_chat_prompt=hub.pull("langchain-ai/retrieval-qa-chat"),
-            llm=self.factory.get_chat_model("qwen3:1.7b"),
-            embeddings=self.factory.get_embedding_model("nomic-embed-text"),
+            llm=llm,
+            embeddings=self.("nomic-embed-text"),
         )
