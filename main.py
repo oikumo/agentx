@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 from app.repl.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, HelpCommand
 
-from app.repl.commands.llm_chat_commands import AIChat, AITools, AIRouterAgents, AIReactTools, AISearch, AIFunction, RagPDF
+from app.repl.commands.llm_chat_commands import AIChat, AIRouterAgents, AIReactTools, AISearch, AIFunction, RagPDF
 from app.repl.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, AIGraphReflexion
 from app.repl.commands.math_commands import SumCommand
 from app.repl.controllers.main_controller import MainController
@@ -17,7 +17,6 @@ def create_controller() -> MainController:
     main_controller.add_command(QuitCommand("quit", main_controller))
     main_controller.add_command(ClearCommand("clear", main_controller))
     main_controller.add_command(AIChat("chat", main_controller))
-    main_controller.add_command(AITools("tools", main_controller))
     main_controller.add_command(AIRouterAgents("router", main_controller))
     main_controller.add_command(AIReactTools("react", main_controller))
     main_controller.add_command(AISearch("search", main_controller))

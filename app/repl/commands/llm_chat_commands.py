@@ -15,6 +15,7 @@ from app_modules.llm.langchain.react_agents.router_agents.router_react_agent imp
 from app_modules.llm.langchain.tools.simple_tool import simple_tool
 from llm_models.local.llama_cpp.llamacpp import LlamaCppConfig
 from llm_models.local.llama_cpp_factory import model_factory_llamacpp, LLAMA_CPP_MODEL_QWEN_2_5
+from llm_models.local.ollama.ollama_embeddings import create_embeddings_model
 
 
 class AIFunction(Command):
@@ -98,8 +99,7 @@ class RagPDF(Command):
         config.context_size = 32768
         llm = model_factory_llamacpp.create_model_instance(config)
 
-        create_vectorstore_pinecone()
-        embeddings_llm =
+        ollama_embeddings = create_embeddings_model()
 
         rag_pdf(
             query=" ".join(arguments),
@@ -107,5 +107,5 @@ class RagPDF(Command):
             vectorstore_path="/local/faiss_index_react",
             retrieval_qa_chat_prompt=hub.pull("langchain-ai/retrieval-qa-chat"),
             llm=llm,
-            embeddings=self.("nomic-embed-text"),
+            embeddings=ollama_embeddings,
         )
