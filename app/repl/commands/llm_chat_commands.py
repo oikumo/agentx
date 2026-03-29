@@ -1,21 +1,16 @@
-from langchain_classic import hub
-
 from agents.agent_rag_factory import create_agent_rag_local
-from app.common.utils.file_utils import create_directory_with_timestamp
 from app.repl.base import IMainController
 from app.repl.command import Command
 from app.repl.console import Console
-from agents.rag_pdf.agent_rag_pdf import AgentRagPdf
-from app_modules.llm.functions.function_call import QueryRouter
-from app_modules.llm.functions.functions import get_weather, get_best_game, calculate
-from app_modules.llm.functions.route import Route
+from agents.function_tool_router.function_call import QueryRouter
+from agents.function_tool_router.functions import get_weather, get_best_game, calculate
+from agents.function_tool_router.route import Route
 from app_modules.llm.langchain.chat.simple_chat import simple_chat_prompt_template
 from app_modules.llm.langchain.react_agents.react_agents_tools.react_tools import react_tools
 from app_modules.llm.langchain.react_agents.react_search_agent.search_agent import search_agent
 from app_modules.llm.langchain.react_agents.router_agents.router_react_agent import router_agent
 from llm_models.local.llama_cpp.llamacpp import LlamaCppConfig
 from llm_models.local.llama_cpp_factory import model_factory_llamacpp, LLAMA_CPP_MODEL_QWEN_2_5
-from llm_models.local.ollama.ollama_embeddings import create_embeddings_model
 
 
 class AIFunction(Command):
