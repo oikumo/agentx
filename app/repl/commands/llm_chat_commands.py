@@ -1,12 +1,9 @@
+from agents.agent_chat_factory import create_agent_chat_local
 from agents.agent_function_router_factory import create_agent_function_router_local
 from agents.agent_rag_factory import create_agent_rag_local
 from app.repl.base import IMainController
 from app.repl.command import Command
 from app.repl.console import Console
-from agents.function_tool_router.function_call import QueryRouter
-from agents.function_tool_router.functions import get_weather, get_best_game, calculate
-from agents.function_tool_router.route import Route
-from app_modules.llm.langchain.chat.simple_chat import simple_chat_prompt_template
 from app_modules.llm.langchain.react_agents.react_agents_tools.react_tools import react_tools
 from app_modules.llm.langchain.react_agents.react_search_agent.search_agent import search_agent
 from app_modules.llm.langchain.react_agents.router_agents.router_react_agent import router_agent
@@ -31,18 +28,7 @@ class AIChat(Command):
             Console.log_error("missing args")
             return
 
-        config = LlamaCppConfig()
-        config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
-        config.context_size = 32768
-        model = model_factory_llamacpp.create_model_instance(config)
-
-        simple_chat_prompt_template(
-            llm= model,
-            query=" ".join(arguments),
-            information="",
-        )
-
-
+        create_agent_chat_local().run(query=" ".join(arguments), information="")
 
 class AIRouterAgents(Command):
     def __init__(self, key: str, controller: IMainController):
