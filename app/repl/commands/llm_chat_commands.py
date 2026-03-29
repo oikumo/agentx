@@ -12,7 +12,7 @@ from llm_models.local.llama_cpp_factory import model_factory_llamacpp, LLAMA_CPP
 
 class AISearch(Command):
     def __init__(self, key: str, controller: IMainController):
-        super().__init__(key, controller, description="Search the web with AI")
+        super().__init__(key, controller, description="Search the web with an React Web Search Agent")
 
     def run(self, arguments: list[str]) -> None:
         create_agent_react_web_search_local().run()
