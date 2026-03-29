@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, MessagesState, StateGraph
 
-
 load_dotenv()
 
 AGENT_REASON = "agent_reason"
@@ -29,8 +28,7 @@ def should_continue(state: MessagesState) -> str:
 def graph_simple():
     print(f"graph simple")
     print("Hello ReAct LangGraph with Function Calling")
-    '''
-    
+
     flow = StateGraph(MessagesState)
 
     # Get LLM and tools
@@ -65,4 +63,4 @@ def graph_simple():
         }
     )
     print(res["messages"][LAST].content)
-    '''
+
