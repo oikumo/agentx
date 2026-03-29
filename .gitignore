@@ -1,5 +1,6 @@
 chroma_db/
 local_sessions/
+local_vector_databases/
 test_sandbox/
 
 # Byte-compiled / optimized / DLL files

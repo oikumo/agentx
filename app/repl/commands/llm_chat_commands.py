@@ -1,10 +1,11 @@
 from langchain_classic import hub
-from ollama import embeddings
 
+from agents.agent_rag_factory import create_agent_rag_local
+from app.common.utils.file_utils import create_directory_with_timestamp
 from app.repl.base import IMainController
 from app.repl.command import Command
 from app.repl.console import Console
-from app_modules.data_stores.rag_pdf import rag_pdf
+from agents.rag_pdf.agent_rag_pdf import AgentRagPdf
 from app_modules.llm.functions.function_call import QueryRouter
 from app_modules.llm.functions.functions import get_weather, get_best_game, calculate
 from app_modules.llm.functions.route import Route
@@ -12,7 +13,6 @@ from app_modules.llm.langchain.chat.simple_chat import simple_chat_prompt_templa
 from app_modules.llm.langchain.react_agents.react_agents_tools.react_tools import react_tools
 from app_modules.llm.langchain.react_agents.react_search_agent.search_agent import search_agent
 from app_modules.llm.langchain.react_agents.router_agents.router_react_agent import router_agent
-from app_modules.llm.langchain.tools.simple_tool import simple_tool
 from llm_models.local.llama_cpp.llamacpp import LlamaCppConfig
 from llm_models.local.llama_cpp_factory import model_factory_llamacpp, LLAMA_CPP_MODEL_QWEN_2_5
 from llm_models.local.ollama.ollama_embeddings import create_embeddings_model
@@ -94,18 +94,4 @@ class RagPDF(Command):
             Console.log_warning("missing args")
             return
 
-        config = LlamaCppConfig()
-        config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
-        config.context_size = 32768
-        llm = model_factory_llamacpp.create_model_instance(config)
-
-        ollama_embeddings = create_embeddings_model()
-
-        rag_pdf(
-            query=" ".join(arguments),
-            pdf_path="/resources/react.pdf",
-            vectorstore_path="/local/faiss_index_react",
-            retrieval_qa_chat_prompt=hub.pull("langchain-ai/retrieval-qa-chat"),
-            llm=llm,
-            embeddings=ollama_embeddings,
-        )
+        create_agent_rag_local().run(query=" ".join(arguments))
