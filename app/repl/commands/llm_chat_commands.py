@@ -1,3 +1,4 @@
+from agents.agent_function_router_factory import create_agent_function_router_local
 from agents.agent_rag_factory import create_agent_rag_local
 from app.repl.base import IMainController
 from app.repl.command import Command
@@ -18,13 +19,7 @@ class AIFunction(Command):
         super().__init__(key, controller, description="Run an AI function call demo")
 
     def run(self, arguments: list[str]) -> None:
-        routes = [
-            Route("get_weather", get_weather),
-            Route("get_best_game", get_best_game),
-            Route("calculate", calculate)
-        ]
-        router = QueryRouter(routes)
-        router.function_call()
+        create_agent_function_router_local().function_call()
 
 
 class AIChat(Command):
