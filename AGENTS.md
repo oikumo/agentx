@@ -20,6 +20,12 @@ AGENTS.md - Agent-X
 <ARGUMENTS></ARGUMENTS>
 <ACTION>List system instructions and user commands</ACTION>
 </USER_COMMAND>
+<USER_COMMANDS>
+<USER_COMMAND>
+<NAME>+task</NAME>
+<ARGUMENTS></ARGUMENTS>
+<ACTION>List system task, the current one and the past ones</ACTION>
+</USER_COMMAND>
 
 
 </USER_COMMANDS>
