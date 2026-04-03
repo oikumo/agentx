@@ -39,6 +39,13 @@ Commands names allways starts with the prefix: "+".
   <ACTION>List system task, the current one and the past ones</ACTION>
 </USER_COMMAND>
 
+<USER_COMMAND>
+  <NAME>+tree</NAME>
+  <ARGUMENTS></ARGUMENTS>
+  <ACTION>List all project routes using as reference [## Project Navigation]()</ACTION>
+</USER_COMMAND>
+
+
 </USER_COMMANDS>
 
 [## Project Navigation]()
