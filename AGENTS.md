@@ -43,7 +43,14 @@ Commands names allways starts with the prefix: "+".
 
 [## Project Navigation]()
 
+<PROJECT_NAVIGATION>
+<DESCRIPTION>
+MAP TO UNDERSTAND AND NAVIGATE QUICKLY THROUGH THE SOURCE CODE IS IN "/PROJECT_NAVIGATION_ROUTES.md" file
+</DESCRIPTION>
+<ACTION>
 Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md file
+</ACTION>
+</PROJECT_NAVIGATION>
 
 [## Tasks Types]()
 
