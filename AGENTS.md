@@ -1,7 +1,7 @@
-AGENTS.md - Agent-X
--------------------
+AGENTS.md - Agent-X RULES
+-------------------------
 
-System Agent coding entry point.
+System Agent coding entry point. ALWAYS FOLLOW THIS RULES
 
 [# Rules]()
 
