@@ -1,5 +1,4 @@
-from agents.graph_react_web_search_factory import create_graph_react_web_search_local, \
-    create_graph_react_web_search_cloud
+from llm_managers.graph_react_web_search_factory import create_graph_react_web_search_cloud
 from app.repl.base import IMainController
 from app.repl.command import Command
 from app_modules.llm.langgraph.graph_reflector_chain.graph_chains import graph_chains
