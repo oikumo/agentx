@@ -39,6 +39,14 @@ Commands names allways starts with the prefix: "+".
 * Commands list:
 
 [<USER_COMMANDS>]()
+
+<USER_COMMAND>
+  <NAME>+reload</NAME>
+  <ARGUMENTS></ARGUMENTS>
+  <ACTION>Check the last 10 commits and read again the file "AGENTS.md"</ACTION>
+</USER_COMMAND>
+
+
 <USER_COMMAND>
   <NAME>+fix</NAME>
   <ARGUMENTS>{bug information}</ARGUMENTS>
