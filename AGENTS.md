@@ -4,10 +4,25 @@ AGENTS.md - Agent-X
 # Rules
 
 ## System Instructions
-- Git commit and push commands REQUIRES EXPLICIT USER APPROVAL.
-- Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM, REQUIRES EXPLICIT USER APPROVAL.
-- Environment variables should live in .env and not be committed.
-- Dependency management via pyproject.toml and uv tooling; avoid pin drift.
+
+<INSTRUCTIONS>
+<INSTRUCTION>Git commit and push commands REQUIRES EXPLICIT USER APPROVAL</INSTRUCTION>
+<INSTRUCTION>Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM, REQUIRES EXPLICIT USER APPROVAL</INSTRUCTION>
+<INSTRUCTION>Environment variables should live in .env and not be committed</INSTRUCTION>
+<INSTRUCTION>Dependency management via pyproject.toml and uv tooling; avoid pin drift</INSTRUCTION>
+</INSTRUCTIONS>
+
+## Opencode editor User Commands
+
+<USER_COMMANDS>
+<USER_COMMAND>
+<NAME>+list</NAME>
+<ARGUMENTS></ARGUMENTS>
+<ACTION>List system instructions and user commands</ACTION>
+</USER_COMMAND>
+
+
+</USER_COMMANDS>
 
 ### Task Execution
 - Use search tools (Glob, Grep) extensively to understand the codebase before making changes
