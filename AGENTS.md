@@ -22,7 +22,7 @@ AGENTS.md - Agent-X
 </USER_COMMAND>
 <USER_COMMANDS>
 <USER_COMMAND>
-<NAME>+task</NAME>
+<NAME>+tasks</NAME>
 <ARGUMENTS></ARGUMENTS>
 <ACTION>List system task, the current one and the past ones</ACTION>
 </USER_COMMAND>
