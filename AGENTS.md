@@ -112,7 +112,7 @@ Commands names allways starts with the prefix: "+".
 <USER_COMMAND>
   <NAME>+</NAME>
   <ARGUMENTS></ARGUMENTS>
-  <ACTION>List all User Commands in [<USER_COMMANDS>]() and [## User Commands Extension](), include a description. Format it in a simple .MD table</ACTION>
+  <ACTION>List all User Commands in [<USER_COMMANDS>]() and [## User Commands Extension]() (file: "/USER_COMMAND_EXTENSION.md"), include a description. Format it in a simple .MD table</ACTION>
 </USER_COMMAND>
 
 <USER_COMMAND>
@@ -133,7 +133,7 @@ Commands names allways starts with the prefix: "+".
 
 <USER_COMMAND_EXTENSION>
 <DESCRIPTION>
-User Command extensión in file USER_COMMAND_EXTENSION.md
+User Command extensión in file "/USER_COMMAND_EXTENSION.md"
 </DESCRIPTION>
 </USER_COMMAND_EXTENSION>
 
