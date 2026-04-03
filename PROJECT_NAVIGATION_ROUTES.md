@@ -24,6 +24,7 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | [app_modules/](#app_modules) | 20 | LLM integrations, data stores, web ingestion |
 | [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
+| [tests_sandbox/](#tests_sandbox) | 5 | Feature and integration testing sandbox |
 
 ---
 
@@ -504,6 +505,34 @@ pytest tests/path/to/test_file.py::TestClass::test_function_name -q
 
 # Run tests matching pattern
 pytest tests/path/to/test_file.py -k "pattern" -q
+```
+
+---
+
+## tests_sandbox/
+
+**Path**: `tests_sandbox/`
+
+Feature and integration testing sandbox. Used for experimental tests during development.
+
+### Structure
+
+```
+tests_sandbox/
+├── tests_sandbox.md                   # Sandbox documentation
+├── features/                        # Feature-level tests
+│   └── test_controller.py           # MainController feature tests
+├── test_command_parser.py           # CommandParser unit tests
+└── test_commands.py                 # Command implementation tests
+```
+
+### Test Commands
+```bash
+# Run all sandbox tests
+uv run pytest tests_sandbox/ -v
+
+# Run feature tests only
+uv run pytest tests_sandbox/features/ -v
 ```
 
 ---

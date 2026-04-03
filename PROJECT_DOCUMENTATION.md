@@ -27,6 +27,7 @@ Agent-X is a Python-based LLM agent framework with a REPL interface. This file i
 | [doc/app_modules_web_ingestion.md](doc/app_modules_web_ingestion.md) | App Modules/Web Ingestion | Tavily extraction, document processing, vector store indexing pipeline |
 | [doc/llm_models.md](doc/llm_models.md) | LLM Models | Cloud providers (OpenAI, Google), local providers (LlamaCpp, Ollama), vector stores (Pinecone, Chroma) |
 | [doc/tests.md](doc/tests.md) | Tests | Unit test suite, test commands |
+| [tests_sandbox/README.md](tests_sandbox/README.md) | Tests Sandbox | Feature and integration testing sandbox documentation |
 | [doc/dependencies.md](doc/dependencies.md) | Configuration | Dependencies table, environment variables, quick start, code style |
 
 ---
@@ -69,7 +70,11 @@ agent-x/
 │   └── vectorstores/                # Vector store integrations
 │       ├── vectorstore_pinecone.py  # Pinecone wrapper
 │       └── vectorstore_chroma.py    # Chroma wrapper
-├── tests/                           # Unit and integration tests
+├── tests/                           # Unit and integration tests (read-only)
+├── tests_sandbox/                   # Feature and integration testing sandbox
+│   ├── features/                    # Feature-level tests (controllers, workflows)
+│   ├── test_command_parser.py       # Command parser unit tests
+│   └── test_commands.py             # Command implementation tests
 ├── _resources/                      # Sample data files
 └── doc/                             # Project documentation
 ```
