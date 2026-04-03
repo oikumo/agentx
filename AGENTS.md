@@ -6,6 +6,7 @@ AGENTS.md - Agent-X
 YOU MUST FOLLOW:
 <INSTRUCTIONS>: In ## System Instructions
 <USER_COMMANDS>: In ## System Instructions
+<PROJECT_NAVIGATION>: 
 
 [## System Instructions]()
 
@@ -30,9 +31,12 @@ YOU MUST FOLLOW:
 <ARGUMENTS></ARGUMENTS>
 <ACTION>List system task, the current one and the past ones</ACTION>
 </USER_COMMAND>
-
-
 </USER_COMMANDS>
+
+## Project Navigation
+
+Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md file
+
 
 ### Task Execution
 - Use search tools (Glob, Grep) extensively to understand the codebase before making changes
