@@ -106,6 +106,13 @@ Commands names allways starts with the prefix: "+".
   <ACTION>List all User Commands in [<USER_COMMANDS>](), include a description. Format it in a simple .MD table</ACTION>
 </USER_COMMAND>
 
+<USER_COMMAND>
+  <NAME>+test</NAME>
+  <ARGUMENTS></ARGUMENTS>
+  <ACTION>System run tests in folder "/tests_sandbox" only</ACTION>
+</USER_COMMAND>
+
+
 </USER_COMMANDS>
 
 [## Project Navigation]()
