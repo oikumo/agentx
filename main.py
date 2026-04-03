@@ -1,4 +1,8 @@
 from __future__ import annotations
+
+import getpass
+import os
+
 from dotenv import load_dotenv
 
 from app.repl.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, HelpCommand
@@ -10,6 +14,9 @@ from app.repl.controllers.main_controller import MainController
 from app.repl.repl import ReplApp
 
 load_dotenv()
+
+if not os.getenv("OPENROUTER_API_KEY"):
+    os.environ["OPENROUTER_API_KEY"] = getpass.getpass("Enter your OpenRouter API key: ")
 
 def create_controller() -> MainController:
     main_controller = MainController()

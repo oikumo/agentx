@@ -1,7 +1,14 @@
-from llm_managers.agent_chat_factory import create_agent_chat_local
-from llm_managers.agent_function_router_factory import create_agent_function_router_local
+from llm_managers.agent_chat_factory import (
+    create_agent_chat_local,
+    create_chat_loop_local,
+)
+from llm_managers.agent_function_router_factory import (
+    create_agent_function_router_local,
+)
 from llm_managers.agent_rag_factory import create_agent_rag_local
-from llm_managers.agent_react_web_search_factory import create_agent_react_web_search_local
+from llm_managers.agent_react_web_search_factory import (
+    create_agent_react_web_search_local,
+)
 from app.repl.base import IMainController
 from app.repl.command import Command
 from app.repl.console import Console
@@ -41,36 +48,24 @@ class AIChat(Command):
         super().__init__(
             key,
             controller,
-            description="Start an AI chat session: chat <query> or chat (multiline)",
+            description="Start an AI chat session: chat <query> or chat (interactive loop)",
         )
 
     def run(self, arguments: list[str]) -> None:
+        chat_loop = create_chat_loop_local()
         if arguments is None or not arguments:
-            query = self._read_multiline_input()
-            if query is None:
-                return
+            Console.log_info(
+                "Starting interactive chat (type 'quit' or 'exit' to end):"
+            )
+            chat_loop.start_interactive()
         else:
             query = " ".join(arguments)
-
-        create_agent_chat_local().run(query=query, information="")
-
-    def _read_multiline_input(self) -> str | None:
-        Console.log_info("Enter your message (type '--' on its own line to finish):")
-        lines: list[str] = []
-        try:
-            while True:
-                line = input("... ")
-                if line.strip() == "--":
-                    break
-                lines.append(line)
-        except EOFError:
-            pass
-
-        full_text = "\n".join(lines).strip()
-        if not full_text:
-            Console.log_warning("empty input")
-            return None
-        return full_text
+            try:
+                response = chat_loop.run(query)
+                if response is not None:
+                    print(response)
+            except Exception as e:
+                Console.log_error(f"Chat error: {e}")
 
 
 class RagPDF(Command):
