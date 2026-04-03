@@ -8,6 +8,7 @@ System Agent coding entry point. ALWAYS FOLLOW THIS RULES
 [RULES]
 <INSTRUCTIONS>: In [## System Instructions]().
 <USER_COMMANDS>: In [## Opencode editor User Commands]().
+<USER_COMMAND_EXTENSION>: In [## User Commands Extension]()
 <PROJECT_NAVIGATION>: In [## Project Navigation]().
 <PROJECT_DOCUMENTATION>: In [## Project Documentation]().
 <PROJECT_TESTING_SANDBOX_RULES>: In [## Project Testing Sandbox Rules]().
@@ -111,7 +112,7 @@ Commands names allways starts with the prefix: "+".
 <USER_COMMAND>
   <NAME>+</NAME>
   <ARGUMENTS></ARGUMENTS>
-  <ACTION>List all User Commands in [<USER_COMMANDS>](), include a description. Format it in a simple .MD table</ACTION>
+  <ACTION>List all User Commands in [<USER_COMMANDS>]() and [## User Commands Extension](), include a description. Format it in a simple .MD table</ACTION>
 </USER_COMMAND>
 
 <USER_COMMAND>
@@ -126,8 +127,16 @@ Commands names allways starts with the prefix: "+".
   <ACTION>System apply TDD given the scope in the User argument {implementation_test_scope} in folder "/tests_sandbox" only, following the RULES</ACTION>
 </USER_COMMAND>
 
-
 </USER_COMMANDS>
+
+[## User Commands Extension]()
+
+<USER_COMMAND_EXTENSION>
+<DESCRIPTION>
+User Command extensión in file USER_COMMAND_EXTENSION.md
+</DESCRIPTION>
+</USER_COMMAND_EXTENSION>
+
 
 [## Project Testing Sandbox Rules]()
 
