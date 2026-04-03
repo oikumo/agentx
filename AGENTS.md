@@ -100,7 +100,7 @@ Commands names allways starts with the prefix: "+".
 
 <USER_COMMANDS>
 <USER_COMMAND>
-  <NAME>+commands</NAME>
+  <NAME>+</NAME>
   <ARGUMENTS></ARGUMENTS>
   <ACTION>List all User Commands in [<USER_COMMANDS>](), include a description. Format it in a simple .MD table</ACTION>
 </USER_COMMAND>
