@@ -37,7 +37,7 @@ Commands names allways starts with the prefix: "+".
 <USER_COMMAND>
   <NAME>+fix</NAME>
   <ARGUMENTS>{bug information}</ARGUMENTS>
-  <ACTION>Fix the bug introduced by last changes, based on {bug information} User argument. Check the last 10 commits</ACTION>
+  <ACTION>Fix the bug introduced by last changes, based on {bug information} User argument. Check the last 10 commits and the ones that are in staging</ACTION>
 </USER_COMMAND>
 
 <USER_COMMANDS>
