@@ -1,18 +1,51 @@
 from agents.graph_react_web_search.graph_react_web_search import GraphReactWebSearch
-from llm_models.local.llama_cpp.llamacpp_config import LlamaCppConfig
-from llm_models.local.llama_cpp_factory import LLAMA_CPP_MODEL_QWEN_2_5, model_factory_llamacpp
-from llm_models.cloud.open_ai.open_ai_gpt import get_remote_llm_openai_gpt3_5_turbo
+from llm_managers.llm_provider import LLMProvider
+from llm_managers.providers.llamacpp_provider import LlamaCppProvider
+from llm_managers.providers.openai_provider import OpenAIProvider
 
 
-def create_graph_react_web_search_local() -> GraphReactWebSearch:
-    config = LlamaCppConfig()
-    config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
-    config.context_size = 32768
-    llm = model_factory_llamacpp.create_model_instance(config)
+def create_graph_react_web_search(
+    provider: LLMProvider | None = None,
+    max_search_results: int = 1,
+) -> GraphReactWebSearch:
+    """Create a GraphReactWebSearch instance with the specified LLM provider.
 
-    return GraphReactWebSearch(llm=llm, max_search_results=1)
+    Args:
+        provider: LLMProvider strategy implementation. Defaults to LlamaCppProvider.
+        max_search_results: Maximum number of search results to process.
 
-def create_graph_react_web_search_cloud() -> GraphReactWebSearch:
-    llm = get_remote_llm_openai_gpt3_5_turbo()
+    Returns:
+        Configured GraphReactWebSearch instance.
+    """
+    if provider is None:
+        provider = LlamaCppProvider()
+    llm = provider.create_llm()
+    return GraphReactWebSearch(llm=llm, max_search_results=max_search_results)
 
-    return GraphReactWebSearch(llm=llm, max_search_results=1)
+
+def create_graph_react_web_search_local(
+    max_search_results: int = 1,
+) -> GraphReactWebSearch:
+    """Create GraphReactWebSearch with local LLM provider.
+
+    Args:
+        max_search_results: Maximum number of search results to process.
+
+    Returns:
+        Configured GraphReactWebSearch instance.
+    """
+    return create_graph_react_web_search(LlamaCppProvider(), max_search_results)
+
+
+def create_graph_react_web_search_cloud(
+    max_search_results: int = 1,
+) -> GraphReactWebSearch:
+    """Create GraphReactWebSearch with cloud LLM provider.
+
+    Args:
+        max_search_results: Maximum number of search results to process.
+
+    Returns:
+        Configured GraphReactWebSearch instance.
+    """
+    return create_graph_react_web_search(OpenAIProvider(), max_search_results)

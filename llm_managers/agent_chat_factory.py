@@ -1,19 +1,21 @@
 from agents.chat.simple_chat import SimpleChat
-from llm_models.cloud.open_ai.open_ai_gpt import get_remote_llm_openai_gpt3_5_turbo
-from llm_models.local.llama_cpp.llamacpp_config import LlamaCppConfig
-from llm_models.local.llama_cpp_factory import model_factory_llamacpp, LLAMA_CPP_MODEL_QWEN_2_5
-from llm_models.local.ollama_factory import local_ollama_models
+from llm_managers.llm_provider import LLMProvider
+from llm_managers.providers.openai_provider import OpenAIProvider
 
 
-def create_agent_chat_local():
+def create_agent_chat(provider: LLMProvider | None = None) -> SimpleChat:
+    """Create a SimpleChat agent with the specified LLM provider.
+
+    Args:
+        provider: LLMProvider strategy implementation. Defaults to OpenAIProvider.
+
+    Returns:
+        Configured SimpleChat instance.
     """
-    config = LlamaCppConfig()
-    config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
-    config.context_size = 32768
-    llm = model_factory_llamacpp.create_model_instance(config)
-    """
-    #llm = local_ollama_models.get_think_model()
-
-    llm = get_remote_llm_openai_gpt3_5_turbo()
-
+    if provider is None:
+        provider = OpenAIProvider()
+    llm = provider.create_llm()
     return SimpleChat(llm=llm)
+
+
+create_agent_chat_local = create_agent_chat

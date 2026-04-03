@@ -1,12 +1,23 @@
 from agents.react_web_search.agent_react_web_search import AgentReactWebSearch
-from llm_models.local.llama_cpp.llamacpp_config import LlamaCppConfig
-from llm_models.local.llama_cpp_factory import LLAMA_CPP_MODEL_QWEN_2_5, model_factory_llamacpp
+from llm_managers.llm_provider import LLMProvider
+from llm_managers.providers.llamacpp_provider import LlamaCppProvider
 
 
-def create_agent_react_web_search_local() -> AgentReactWebSearch:
-    config = LlamaCppConfig()
-    config.model_filename = LLAMA_CPP_MODEL_QWEN_2_5
-    config.context_size = 32768
-    llm = model_factory_llamacpp.create_model_instance(config)
+def create_agent_react_web_search(
+    provider: LLMProvider | None = None,
+) -> AgentReactWebSearch:
+    """Create an AgentReactWebSearch instance with the specified LLM provider.
 
+    Args:
+        provider: LLMProvider strategy implementation. Defaults to LlamaCppProvider.
+
+    Returns:
+        Configured AgentReactWebSearch instance.
+    """
+    if provider is None:
+        provider = LlamaCppProvider()
+    llm = provider.create_llm()
     return AgentReactWebSearch(llm)
+
+
+create_agent_react_web_search_local = create_agent_react_web_search
