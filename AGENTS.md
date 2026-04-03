@@ -30,7 +30,7 @@ Commands names allways starts with the prefix: "+".
 <USER_COMMAND>
   <NAME>+list</NAME>
   <ARGUMENTS></ARGUMENTS>
-  <ACTION>List all [# Rules for coding]()</ACTION>
+  <ACTION>List all [# Rules for coding]() in TABLES in MD FORMAT</ACTION>
 </USER_COMMAND>
 
 <USER_COMMAND>
