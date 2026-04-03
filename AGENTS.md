@@ -8,7 +8,8 @@ System Agent coding entry point.
 <INSTRUCTIONS>: In [## System Instructions]()
 <USER_COMMANDS>: In [## Opencode editor User Commands]()
 <PROJECT_NAVIGATION>: In [## Project Navigation]()
-<TAKS>: In [## Tasks Types]()
+<TAKS_TYPES>: In [## Tasks Types]()
+<GENERAL_RULES>: In [## General Rules]()
 
 [## System Instructions]()
 
@@ -69,6 +70,9 @@ Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md fil
 </TASK_TYPE>
 </TASK_TYPES>
 
+[## General Rules]()
+
+<GENERAL_RULES>
 ### Tool Usage
 - Prefer specialized file operations tools over bash commands:
   - Use Glob for file search (not find or ls)
@@ -125,3 +129,5 @@ Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md fil
 - Constants: UPPER_SNAKE_CASE
 - Private members: _prefix
 - Modules/files: snake_case.py
+
+</GENERAL_RULES>
