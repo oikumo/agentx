@@ -77,7 +77,7 @@ Commands names allways starts with the prefix: "+".
 <USER_COMMAND>
   <NAME>+update</NAME>
   <ARGUMENTS></ARGUMENTS>
-  <ACTION>Update [## Project Navigation]() and derived files according the changes in the last 10 commits</ACTION>
+  <ACTION>Update [## Project Navigation]() and [## Project Documentation]() and derived files according the changes in the last 50 commits</ACTION>
 </USER_COMMAND>
 
 <USER_COMMANDS>

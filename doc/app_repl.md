@@ -113,10 +113,10 @@ Command registry mapping keys to `Command` instances.
 **Classes**:
 - `AISearch(Command)` - runs ReAct web search agent via `create_agent_react_web_search_local().run()`
 - `AIFunction(Command)` - runs function call demo via `create_agent_function_router_local().function_call()`
-- `AIChat(Command)` - starts AI chat with query. Supports two modes:
-  - Single-line: `chat <query>` - passes arguments directly
-  - Multiline: `chat` (no args) - enters multiline input mode, type `--` on its own line to finish
-  - Delegates to `create_agent_chat_local().run(query, information)`
+- `AIChat(Command)` - starts AI chat with query using `ChatLoop`. Supports two modes:
+  - Interactive REPL: `chat` (no args) - enters persistent conversation loop with `ChatLoop.start_interactive()`, prints LLM responses to stdout, exits on `quit` or `exit`
+  - Single-query: `chat <query>` - uses `ChatLoop.run(query)` for one-turn conversation
+  - Delegates to `create_chat_loop_local()` for local LLM instance
 - `RagPDF(Command)` - queries PDF with RAG via `create_agent_rag_local().run(query)`
 - `AIRouterAgents(Command)` - runs router agent via `router_agent()`
 - `AIReactTools(Command)` - runs ReAct agent with tools via `react_tools(llm)`

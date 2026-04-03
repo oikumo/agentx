@@ -48,11 +48,32 @@ Wraps a `BaseChatModel` with a prompt template chain for simple conversational i
 
 **Dependencies**: `langchain_core.language_models.BaseChatModel`, `langchain_core.prompts.PromptTemplate`
 
+### agents/chat/chat_loop.py
+
+**Class**: `ChatLoop`
+
+Persistent, conversational chat loop with message history support. Manages conversation state, supports both single-turn and interactive REPL modes.
+
+**Methods**:
+- `__init__(llm: BaseChatModel, system_prompt: str)` - initializes with LLM and system prompt (stored as first history message)
+- `add_user_message(content: str)` - appends HumanMessage to history
+- `add_assistant_message(content: str)` - appends AIMessage to history
+- `_extract_content(response)` - safely extracts text content from LLM response (handles None and list content)
+- `get_response() -> str` - invokes LLM with full history, extracts and stores response
+- `exit()` - sets `is_running` to False
+- `should_exit(user_input: str) -> bool` - checks if input is "quit" or "exit"
+- `run(user_input: str) -> str | None` - single-turn execution: adds message, gets response, handles errors with rollback
+- `start_interactive()` - interactive REPL loop: reads input, prints responses, exits on quit/exit
+- `_read_input() -> str` - reads user input via `input("> ")`
+
+**Dependencies**: `langchain_core.language_models.BaseChatModel`, `langchain_core.messages.HumanMessage`, `AIMessage`, `SystemMessage`
+
 ### agents/agent_chat_factory.py
 
-**Function**: `create_agent_chat_local() -> SimpleChat`
-
-Factory function that creates a `SimpleChat` with a local LlamaCpp Qwen 2.5 model (context size 32768).
+**Functions**:
+- `create_agent_chat_local() -> SimpleChat` - creates `SimpleChat` with local LlamaCpp Qwen 2.5 model (context size 32768)
+- `create_chat_loop() -> ChatLoop` - creates `ChatLoop` with OpenRouterProvider (default cloud provider)
+- `create_chat_loop_local() -> ChatLoop` - creates `ChatLoop` with local LlamaCpp Qwen 2.5 model (context size 32768)
 
 ---
 

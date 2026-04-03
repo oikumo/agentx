@@ -19,7 +19,8 @@ tests_sandbox/
 ├── features/                        # Feature-level tests
 │   └── test_controller.py           # MainController feature tests
 ├── test_command_parser.py           # CommandParser unit tests
-└── test_commands.py                 # Command implementation tests
+├── test_commands.py                 # Command implementation tests
+└── test_chat_loop.py                # ChatLoop TDD tests (23 tests)
 ```
 
 ## Rules
@@ -28,6 +29,29 @@ tests_sandbox/
 - All tests must pass before committing
 - Tests here are experimental and may change frequently
 - Mature tests should eventually migrate to `tests/`
+
+## ChatLoop Tests
+
+### tests_sandbox/test_chat_loop.py
+
+**Class**: `TestChatLoop`
+
+Comprehensive TDD test suite for the `ChatLoop` class (23 tests). Covers initialization, history management, response generation, exit conditions, single-turn execution, interactive loop behavior, and factory creation.
+
+**Test Categories**:
+- **Initialization**: Default system prompt, custom system prompt
+- **History Management**: Adding user/assistant messages, history grows correctly
+- **Response Generation**: Mock LLM response, content extraction (string, list, None), error rollback
+- **Exit Conditions**: quit, exit, case insensitive, normal input
+- **Single-Turn Execution**: `run()` with valid input, empty input, exit input
+- **Interactive Loop**: `start_interactive()` processes inputs and prints responses, exits on quit/exit
+- **Factory Creation**: `create_chat_loop_local()` returns ChatLoop instance
+
+**Mocking Strategy**:
+- Uses `unittest.mock.Mock` and `patch` to isolate `ChatLoop` from real LLM providers
+- Mocks `BaseChatModel.invoke()` to return predictable `AIMessage` responses
+- Mocks `input()` for interactive loop testing
+- Captures `print()` output via `StringIO` redirection
 
 ## Running Tests
 

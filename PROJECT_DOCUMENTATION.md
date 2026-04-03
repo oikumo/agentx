@@ -113,3 +113,12 @@ agent-x/
 
 ### Updated User Commands
 - Updated `USER_COMMMAND_EXTENDED.md` to a lean set of commands focused on refactoring, test generation, auditing, benchmarking and repository synchronization. Removed Git‑related, code‑generation and documentation commands to keep the command suite minimal and secure.
+
+### New: ChatLoop - Persistent Conversational Chat
+- `agents/chat/chat_loop.py`: New `ChatLoop` class with persistent message history, single-turn and interactive REPL modes
+- `llm_managers/agent_chat_factory.py`: Added `create_chat_loop()` and `create_chat_loop_local()` factory functions
+- `app/repl/commands/llm_chat_commands.py`: Updated `AIChat` command to use `ChatLoop` instead of `SimpleChat`
+- `tests_sandbox/test_chat_loop.py`: 23 TDD tests covering initialization, history, responses, exit conditions, interactive loop, and factory creation
+- Supports both `chat <message>` (single-query) and `chat` (interactive REPL) modes
+- Interactive mode prints LLM responses to stdout, exits cleanly on `quit` or `exit`
+- Robust error handling with history rollback on LLM invocation failures
