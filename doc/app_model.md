@@ -10,12 +10,15 @@ Data persistence layer: session management, SQLite database, command history.
 
 ```
 app/model/
+├── __init__.py                # Public API exports (Model, HistoryEntry)
 ├── model.py                   # Model facade
 ├── model_entities.py          # HistoryEntry dataclass
 ├── db/
+│   ├── __init__.py            # Public API exports (SessionDatabase, TableHistory, TableUser)
 │   ├── data_base.py           # SessionDatabase
 │   └── database_definition.py # Table schemas
 └── user_sessions/
+    ├── __init__.py            # Public API exports (Session)
     └── session.py             # Session lifecycle
 ```
 
@@ -30,13 +33,13 @@ app/model/
 Session + DB facade for logging and retrieving command history.
 
 **Methods**:
-- `__init__(session_name: str)` - creates `Session` and `SessionDatabase`, raises `Exception` if session creation fails
-- `log_command(entry: HistoryEntry)` - inserts history entry into DB
-- `get_command_history() -> list[HistoryEntry]` - retrieves all history entries
+- `__init__(session_name: str) -> None` - creates `Session` and `SessionDatabase`, raises `Exception` if session creation fails
+- `log_command(entry: HistoryEntry) -> bool` - inserts history entry into DB, returns success status
+- `get_command_history() -> list[HistoryEntry]` - retrieves all history entries with full metadata
 
 ### model_entities.py
 
-**Class**: `HistoryEntry(dataclass)` - `command: str`
+**Class**: `HistoryEntry(dataclass)` - `id: int`, `command: str`, `created_at: str`
 
 ---
 
@@ -50,11 +53,11 @@ Per-session SQLite database with `history` and `users` tables.
 
 **Methods**:
 - `__init__(session: Session)` - creates DB tables
-- `_create()` - creates tables via SQLite
+- `_create()` - creates tables via SQLite with explicit commit
 - `_get_session_path()` - constructs DB file path from session directory
 - `insert_history_entry(info: str) -> bool` - inserts a history row with UTC timestamp
 - `select_history_entry() -> list[TableHistory.History] | None` - retrieves all history rows
-- `_insert(query, parameters) -> bool` - generic insert (returns False on success, True on error)
+- `_insert(query, parameters: list[Any]) -> bool` - generic insert (returns True on success, False on error)
 - `_select_all(table) -> list[Any] | None` - generic select with table name validation against allowed tables
 
 ### db/database_definition.py
@@ -64,7 +67,7 @@ Per-session SQLite database with `history` and `users` tables.
   - `TABLE_NAME = "history"`
   - `TABLE_HISTORY` - CREATE SQL with `id`, `command`, `created_at`
   - `INSERT_HISTORY` - INSERT SQL
-  - `History(dataclass)` - `id: int`, `name: str`, `created_at: str`
+  - `History(dataclass)` - `id: int`, `command: str`, `created_at: str`
 - `TableUser` - constants and schema for users table
   - `TABLE_NAME = "users"`
   - `TABLE_USER` - CREATE SQL with `id`, `name`, `age`
@@ -84,12 +87,12 @@ CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER
 
 **Class**: `Session`
 
-Session lifecycle management (create/destroy session directories).
+Session lifecycle management (create/destroy session directories). All state is instance-scoped (no class-level mutable attributes).
 
 **Methods**:
-- `__init__(name: str)` - sanitizes session name (replaces spaces with underscores, lowercases)
-- `name` (property) - returns session name
-- `directory` (property) - returns session directory path
+- `__init__(name: str)` - initializes instance state, sanitizes session name (replaces spaces with underscores, lowercases)
+- `name` (property) -> `str` - returns session name
+- `directory` (property) -> `str | None` - returns session directory path
 - `create()` - creates timestamped directory, returns success boolean
 - `is_created()` - checks if directory exists
 - `destroy() -> bool` - deletes session directory with security validation
