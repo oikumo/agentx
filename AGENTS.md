@@ -1,12 +1,15 @@
 AGENTS.md - Agent-X
 -------------------
 
+System Agent coding entry point.
+
 [# Rules for coding]()
 
 YOU MUST FOLLOW:
 <INSTRUCTIONS>: In [## System Instructions]()
 <USER_COMMANDS>: In [## Opencode editor User Commands]()
 <PROJECT_NAVIGATION>: In [## Project Navigation]()
+<TAKS>: In [## Tasks Types]()
 
 [## System Instructions]()
 
@@ -25,30 +28,31 @@ Commands names allways starts with the prefix: "+".
 
 <USER_COMMANDS>
 <USER_COMMAND>
-<NAME>+list</NAME>
-<ARGUMENTS></ARGUMENTS>
-<ACTION>List system instructions and user commands</ACTION>
+  <NAME>+list</NAME>
+  <ARGUMENTS></ARGUMENTS>
+  <ACTION>List all [# Rules for coding]()</ACTION>
 </USER_COMMAND>
-<USER_COMMANDS>
+
 <USER_COMMAND>
-<NAME>+tasks</NAME>
-<ARGUMENTS></ARGUMENTS>
-<ACTION>List system task, the current one and the past ones</ACTION>
+  <NAME>+tasks</NAME>
+  <ARGUMENTS></ARGUMENTS>
+  <ACTION>List system task, the current one and the past ones</ACTION>
 </USER_COMMAND>
+
 </USER_COMMANDS>
 
 [## Project Navigation]()
 
 Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md file
 
+[## Tasks Types]()
 
-### Task Execution
-- Use search tools (Glob, Grep) extensively to understand the codebase before making changes
-- Implement solutions using all available tools
-- Verify solutions with tests when possible
-- After completing a task, run lint and typecheck commands (black --check ., isort --check ., pytest)
-- Never commit changes unless explicitly asked by the user
-- When editing files, preserve exact indentation and formatting style
+<TASK_TYPES>
+<TASK_TYPE>
+<NAME>BIG TASK<NAME>
+<DESCRIPTION>TASK REQUIRE BIG EFFORT AND TAKE TIME BECAUSE IS IMPORTANT. ANALYZE AND THINK CAREFULLY BEFORE GIVE AN ASWER</DESCRIPTION>
+</TASK_TYPE>
+</TASK_TYPES>
 
 ### Tool Usage
 - Prefer specialized file operations tools over bash commands:
@@ -59,6 +63,10 @@ Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md fil
   - Use Write for creating new files (only when explicitly required)
 - When issuing multiple independent bash commands, batch them in parallel
 - Avoid using cd <directory> && <command> patterns; use workdir parameter instead
+- Use search tools (Glob, Grep) extensively to understand the codebase before making changes
+- Implement solutions using all available tools
+- Verify solutions with tests when possible
+- When editing files, preserve exact indentation and formatting style
 
 ### Git and Committing
 - Only create commits when explicitly requested by the user
