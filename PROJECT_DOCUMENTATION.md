@@ -30,6 +30,8 @@ Agent-X is a Python-based LLM agent framework with a REPL interface. This file i
 | [tests_sandbox/tests_sandbox.md](tests_sandbox/tests_sandbox.md) | Tests Sandbox | Feature and integration testing sandbox documentation |
 | [PROJECT_TESTING_SANDBOX_RULES.md](PROJECT_TESTING_SANDBOX_RULES.md) | Testing Rules | TDD strategy and Kent Beck-style rules for AI agents |
 | [doc/dependencies.md](doc/dependencies.md) | Configuration | Dependencies table, environment variables, quick start, code style |
+| [USER_COMMMAND_EXTENDED.md](USER_COMMMAND_EXTENDED.md) | Commands | Simplified, powerful LLM‑agent command reference |
+
 
 ---
 
@@ -106,3 +108,6 @@ agent-x/
 - `SessionDatabase` for per-session SQLite persistence
 - `Session` for session lifecycle management
 - `Model` facade for command history logging/retrieval
+
+### New: Extended User Commands
+- Added `USER_COMMMAND_EXTENDED.md` with a concise, powerful command reference for LLM‑agent workflows (code generation, refactoring, testing, docs, linting, auditing, benchmarking, PR handling, script execution, repo sync).
