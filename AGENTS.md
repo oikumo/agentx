@@ -19,6 +19,10 @@ YOU MUST FOLLOW:
 
 [## Opencode editor User Commands]()
 
+Commands names allways starts with the prefix: "+".
+
+* Commands list:
+
 <USER_COMMANDS>
 <USER_COMMAND>
 <NAME>+list</NAME>
