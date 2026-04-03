@@ -19,12 +19,13 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 |--------|-------|-------------|
 | [Root](#root) | 2 | Entry point and project configuration |
 | [_resources/](#_resources) | 2 | Sample data files for demos |
-| [agents/](#agents) | 15 | Agent implementations and factories |
+| [agents/](#agents) | 16 | Agent implementations (SimpleChat, ChatLoop, RAG, ReAct, Graph) |
+| [llm_managers/](#llm_managers) | 8 | Agent factory functions + LLM provider strategy pattern |
 | [app/](#app) | 20 | Core application: REPL, models, DB, security |
 | [app_modules/](#app_modules) | 20 | LLM integrations, data stores, web ingestion |
 | [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
-| [tests_sandbox/](#tests_sandbox) | 5 | Feature and integration testing sandbox |
+| [tests_sandbox/](#tests_sandbox) | 6 | Feature and integration testing sandbox |
 
 ---
 
@@ -52,6 +53,43 @@ main.py → create_controller() → register commands → ReplApp(controller).ru
 
 ---
 
+## llm_managers/
+
+**Path**: `llm_managers/`
+
+Factory functions and LLM provider strategy pattern. Centralizes agent creation logic and model provider abstraction.
+
+### Sub-modules
+
+| Sub-module | Description |
+|------------|-------------|
+| [providers/](#llm_managersproviders) | LLM provider implementations (Strategy pattern) |
+
+### Factory Files
+
+| File | Description |
+|------|-------------|
+| `llm_provider.py` | `LLMProvider` ABC - strategy interface for LLM providers |
+| `agent_chat_factory.py` | Factories for SimpleChat and ChatLoop (`create_chat_loop`, `create_chat_loop_local`) |
+| `agent_function_router_factory.py` | Factory for QueryRouter |
+| `agent_rag_factory.py` | Factory for AgentRagPdf |
+| `agent_react_web_search_factory.py` | Factory for AgentReactWebSearch |
+| `graph_react_web_search_factory.py` | Factory for GraphReactWebSearch (local + cloud) |
+
+### llm_managers/providers/
+
+**Path**: `llm_managers/providers/`
+
+LLM provider implementations following the Strategy pattern.
+
+| File | Description |
+|------|-------------|
+| `llamacpp_provider.py` | `LlamaCppProvider` - local LLM via llama.cpp with Qwen 2.5 |
+| `openai_provider.py` | `OpenAIProvider` - cloud LLM via OpenAI API |
+| `openrouter_provider.py` | `OpenRouterProvider` - cloud LLM via OpenRouter (auto-routing) |
+
+---
+
 ## agents/
 
 **Path**: `agents/`  
@@ -73,7 +111,7 @@ Agent implementations and factory functions. Each agent represents a different L
 
 | File | Description |
 |------|-------------|
-| `agent_chat_factory.py` | Factory for SimpleChat |
+| `agent_chat_factory.py` | Factory for SimpleChat, ChatLoop (`create_chat_loop`, `create_chat_loop_local`) |
 | `agent_function_router_factory.py` | Factory for QueryRouter |
 | `agent_rag_factory.py` | Factory for AgentRagPdf |
 | `agent_react_web_search_factory.py` | Factory for AgentReactWebSearch |
@@ -95,6 +133,7 @@ Agent implementations and factory functions. Each agent represents a different L
 | File | Description |
 |------|-------------|
 | `simple_chat.py` | `SimpleChat` class - wraps `BaseChatModel` with a prompt template chain |
+| `chat_loop.py` | `ChatLoop` class - persistent conversational chat with message history, single-turn and interactive REPL modes |
 
 ---
 
@@ -523,7 +562,8 @@ tests_sandbox/
 ├── features/                        # Feature-level tests
 │   └── test_controller.py           # MainController feature tests
 ├── test_command_parser.py           # CommandParser unit tests
-└── test_commands.py                 # Command implementation tests
+├── test_commands.py                 # Command implementation tests
+└── test_chat_loop.py                # ChatLoop TDD tests (23 tests)
 ```
 
 ### Test Commands
@@ -542,7 +582,7 @@ uv run pytest tests_sandbox/features/ -v
 ### Core
 - **LangChain**: `langchain>=1.2.13`, `langchain-community`, `langchain-experimental`
 - **LangGraph**: `langgraph>=1.1.3`
-- **LLM Providers**: `langchain-openai`, `langchain-google-genai`, `langchain-ollama`
+- **LLM Providers**: `langchain-openai`, `langchain-google-genai`, `langchain-ollama`, `langchain-openrouter`
 - **Local Models**: `llama-cpp-python>=0.3.19`
 
 ### Vector Stores
