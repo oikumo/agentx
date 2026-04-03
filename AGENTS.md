@@ -33,7 +33,7 @@ Commands names allways starts with the prefix: "+".
 
 * Commands list:
 
-<USER_COMMANDS>
+[<USER_COMMANDS>]()
 <USER_COMMAND>
   <NAME>+fix</NAME>
   <ARGUMENTS>{bug information}</ARGUMENTS>
@@ -95,6 +95,13 @@ Commands names allways starts with the prefix: "+".
   <NAME>+big</NAME>
   <ARGUMENTS></ARGUMENTS>
   <ACTION>A new BIG_TASK BEGIN [<NAME>BIG TASK<NAME>]()</ACTION>
+</USER_COMMAND>
+
+<USER_COMMANDS>
+<USER_COMMAND>
+  <NAME>+commands</NAME>
+  <ARGUMENTS></ARGUMENTS>
+  <ACTION>List all User Commands in [<USER_COMMANDS>](), include a description. Format it in a simple .MD table</ACTION>
 </USER_COMMAND>
 
 </USER_COMMANDS>
