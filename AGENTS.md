@@ -35,6 +35,13 @@ Commands names allways starts with the prefix: "+".
 
 <USER_COMMANDS>
 <USER_COMMAND>
+  <NAME>+fix</NAME>
+  <ARGUMENTS>{bug information}</ARGUMENTS>
+  <ACTION>Fix the bug introduced by last changes, based on {bug information} User argument. Check the last 10 commits</ACTION>
+</USER_COMMAND>
+
+<USER_COMMANDS>
+<USER_COMMAND>
   <NAME>+doc</NAME>
   <ARGUMENTS></ARGUMENTS>
   <ACTION>Update the [## Project Documentation](), assume it is a BIG TASK [<NAME>BIG TASK<NAME>]()</ACTION>
