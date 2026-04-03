@@ -3,13 +3,15 @@ AGENTS.md - Agent-X
 
 System Agent coding entry point.
 
-[# Rules for coding]()
+[# Rules]()
 
-<INSTRUCTIONS>: In [## System Instructions]()
-<USER_COMMANDS>: In [## Opencode editor User Commands]()
-<PROJECT_NAVIGATION>: In [## Project Navigation]()
-<TAKS_TYPES>: In [## Tasks Types]()
-<GENERAL_RULES>: In [## General Rules]()
+[RULES]
+<INSTRUCTIONS>: In [## System Instructions]().
+<USER_COMMANDS>: In [## Opencode editor User Commands]().
+<PROJECT_NAVIGATION>: In [## Project Navigation]().
+<TAKS_TYPES>: In [## Tasks Types]().
+<GENERAL_RULES>: In [## General Rules]().
+[/RULES]
 
 [## System Instructions]()
 
@@ -32,7 +34,7 @@ Commands names allways starts with the prefix: "+".
 <USER_COMMAND>
   <NAME>+list</NAME>
   <ARGUMENTS></ARGUMENTS>
-  <ACTION>List all [# Rules for coding]() in TABLES in MD FORMAT</ACTION>
+  <ACTION>List all [# Rules]() in TABLES in MD FORMAT</ACTION>
 </USER_COMMAND>
 
 <USER_COMMAND>
