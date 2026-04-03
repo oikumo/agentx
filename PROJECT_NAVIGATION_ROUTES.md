@@ -18,8 +18,8 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | Module | Files | Description |
 |--------|-------|-------------|
 | [Root](#root) | 2 | Entry point and project configuration |
-| [agents/](#agents) | 19 | Agent implementations and factories |
-| [app/](#app) | 20 | Core application: REPL, models, DB, security |
+| [agents/](#agents) | 16 | Agent implementations and factories |
+| [app/](#app) | 23 | Core application: REPL, models, DB, security |
 | [app_modules/](#app_modules) | 22 | LLM integrations, data stores, web ingestion |
 | [llm_models/](#llm_models) | 11 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
@@ -158,7 +158,7 @@ Core application module containing the REPL system, data models, database layer,
 |------------|-------|-------------|
 | [common/](#appcommon) | 3 | Shared utilities (file ops, console helpers) |
 | [model/](#appmodel) | 5 | Data persistence, SQLite, session management |
-| [repl/](#apprepl) | 11 | REPL system (core interactive shell) |
+| [repl/](#apprepl) | 10 | REPL system (core interactive shell) |
 | [security/](#appsecurity) | 2 | Directory deletion safeguards |
 
 ---
@@ -266,8 +266,8 @@ Extended application modules containing LLM integrations, data stores, document 
 |------------|-------|-------------|
 | [data_stores/](#app_modulesdata_stores) | 1 | FAISS vector store creation and persistence |
 | [document_loaders/](#app_modulesdocument_loaders) | 1 | PDF loading and text chunking |
-| [llm/langchain/](#app_modulesllmlangchain) | 8 | LangChain ReAct agents, router agents, tools |
-| [llm/langgraph/](#app_modulesllmlanggraph) | 7 | LangGraph reflection and reflexion workflows |
+| [llm/langchain/](#app_modulesllmlangchain) | 7 | LangChain ReAct agents, router agents, tools |
+| [llm/langgraph/](#app_modulesllmlanggraph) | 6 | LangGraph reflection and reflexion workflows |
 | [web_ingestion_app/](#app_modulesweb_ingestion_app) | 5 | Web scraping pipeline (Tavily → chunk → index) |
 
 ---
@@ -375,6 +375,7 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 |------------|-------|-------------|
 | [cloud/open_ai/](#llm_modelscloudopen_ai) | 1 | OpenAI GPT models |
 | [cloud/google/](#llm_modelsgoogle) | 1 | Google Gemini models |
+| [local/](#llm_modelslocal) | 1 | Local model factory |
 | [local/llama_cpp/](#llm_modelslocalllama_cpp) | 2 | Local Llama.cpp GGUF models |
 | [local/ollama/](#llm_modelslocalollama) | 1 | Ollama embeddings |
 | [vectorstores/](#llm_modelsvectorstores) | 1 | Pinecone vector store |
@@ -412,6 +413,14 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 ---
 
+### llm_models/local/
+
+**Path**: `llm_models/local/`
+
+| File | Key Functions | Description |
+|------|---------------|-------------|
+| `llama_cpp_factory.py` | `model_factory_llamacpp` | Singleton-style factory instance |
+
 ### llm_models/local/llama_cpp/
 
 **Path**: `llm_models/local/llama_cpp/`
@@ -420,16 +429,6 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 |------|-------------|-------------|
 | `llamacpp.py` | `LlamaCpp` | Factory for creating local ChatLlamaCpp instances |
 | `llamacpp_config.py` | `LlamaCppConfig` | Pydantic config: model_filename, temperature, context_size, max_tokens, top_p, batch_size |
-
----
-
-### llm_models/local/llama_cpp_factory.py
-
-**Path**: `llm_models/local/`
-
-| File | Key Functions | Description |
-|------|---------------|-------------|
-| `llama_cpp_factory.py` | `model_factory_llamacpp` | Singleton-style factory instance |
 
 ---
 
@@ -450,6 +449,19 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 | File | Key Functions | Description |
 |------|---------------|-------------|
 | `vectorstore_pinecone.py` | `create_vectorstore_pinecone()` | PineconeVectorStore with OpenAI embeddings |
+
+---
+
+## _resources/
+
+**Path**: `_resources/`
+
+Sample data files used by agents and demos.
+
+| File | Description |
+|------|-------------|
+| `episode_info.csv` | CSV data for CSV agent demos |
+| `react.pdf` | PDF document for RAG agent demos |
 
 ---
 

@@ -9,6 +9,7 @@ System Agent coding entry point.
 <INSTRUCTIONS>: In [## System Instructions]().
 <USER_COMMANDS>: In [## Opencode editor User Commands]().
 <PROJECT_NAVIGATION>: In [## Project Navigation]().
+<PROJECT_DOCUMENTATION>: In [## Project Documentation]()
 <TAKS_TYPES>: In [## Tasks Types]().
 <GENERAL_RULES>: In [## General Rules]().
 [/RULES]
@@ -86,6 +87,17 @@ MAP TO UNDERSTAND AND NAVIGATE QUICKLY THROUGH THE SOURCE CODE IS IN "/PROJECT_N
 Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md file
 </ACTION>
 </PROJECT_NAVIGATION>
+
+[## Project Documentation]()
+
+<PROJECT_DOCUMENTATION>
+<DESCRIPTION>
+Project full documentation. Documentation maps folder content in "/PROJECT_DOCUMENTATION.md" file
+</DESCRIPTION>
+<ACTION>
+Check the documentation "/PROJECT_DOCUMENTATION.md" file to navigate in the project documentation, when you need more detailed information
+</ACTION>
+<PROJECT_DOCUMENTATION>
 
 [## Tasks Types]()
 
