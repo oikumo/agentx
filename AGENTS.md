@@ -49,6 +49,11 @@ Commands names allways starts with the prefix: "+".
   <ACTION>List all project routes using as reference [## Project Navigation]()</ACTION>
 </USER_COMMAND>
 
+<USER_COMMAND>
+  <NAME>+big</NAME>
+  <ARGUMENTS></ARGUMENTS>
+  <ACTION>A new BIG_TASK BEGIN [<NAME>BIG TASK<NAME>]()</ACTION>
+</USER_COMMAND>
 
 </USER_COMMANDS>
 
@@ -67,7 +72,7 @@ Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md fil
 
 <TASK_TYPES>
 <TASK_TYPE>
-<NAME>BIG TASK<NAME>
+[<NAME>BIG TASK<NAME>]()
 <DESCRIPTION>TASK REQUIRE BIG EFFORT AND TAKE TIME BECAUSE IS IMPORTANT. ANALYZE AND THINK CAREFULLY BEFORE GIVE AN ASWER</DESCRIPTION>
 </TASK_TYPE>
 </TASK_TYPES>
