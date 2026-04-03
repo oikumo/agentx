@@ -5,11 +5,13 @@
 > **Python**: >=3.14  
 > **Package Manager**: uv
 
-Agent-X is a Python-based LLM agent framework with a REPL interface. This file is a **map** to domain-specific documentation in the `doc/` folder.
+Agent-X is a Python‑based LLM agent framework with a REPL interface. This file serves as a **navigation map** to the detailed documentation stored in the `doc/` folder, and to auxiliary reference files such as command guides and testing rules.
 
 ---
 
 ## Documentation Index
+
+_This section lists the primary documentation files. Click a link to open the detailed markdown for that area._
 
 | File | Domain | Description |
 |------|--------|-------------|
@@ -109,5 +111,5 @@ agent-x/
 - `Session` for session lifecycle management
 - `Model` facade for command history logging/retrieval
 
-### New: Extended User Commands
-- Added `USER_COMMMAND_EXTENDED.md` with a concise, powerful command reference for LLM‑agent workflows (code generation, refactoring, testing, docs, linting, auditing, benchmarking, PR handling, script execution, repo sync).
+### Updated User Commands
+- Updated `USER_COMMMAND_EXTENDED.md` to a lean set of commands focused on refactoring, test generation, auditing, benchmarking and repository synchronization. Removed Git‑related, code‑generation and documentation commands to keep the command suite minimal and secure.
