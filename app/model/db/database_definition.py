@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 class TableHistory:
     TABLE_NAME = "history"
     TABLE_HISTORY = """
@@ -13,7 +14,7 @@ class TableHistory:
     @dataclass
     class History:
         id: int
-        name: str
+        command: str
         created_at: str
 
 
@@ -21,4 +22,3 @@ class TableUser:
     TABLE_NAME = "users"
     TABLE_USER = "CREATE TABLE IF NOT EXISTS users ( id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"
     INSERT_USER = "INSERT INTO users (name, age) VALUES (?, ?)"
-

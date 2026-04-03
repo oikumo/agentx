@@ -5,6 +5,7 @@ from typing import Any
 from app.model.db.database_definition import TableHistory, TableUser
 from app.model.user_sessions.session import Session
 
+
 class SessionDatabase:
     def __init__(self, session: Session):
         self._session = session
@@ -16,6 +17,7 @@ class SessionDatabase:
             cursor = conn.cursor()
             cursor.execute(TableUser.TABLE_USER)
             cursor.execute(TableHistory.TABLE_HISTORY)
+            conn.commit()
 
     def _get_session_path(self):
         db_directory = Path(self._session.directory)
@@ -33,18 +35,18 @@ class SessionDatabase:
             return None
         return [TableHistory.History(*row) for row in rows]
 
-    def _insert(self, query: str, parameters: list[str]) -> bool:
+    def _insert(self, query: str, parameters: list[Any]) -> bool:
         db_path = self._get_session_path()
         try:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute(query, parameters)
-            return False
-        except Exception as e:
             return True
+        except Exception:
+            return False
 
     def _select_all(self, table) -> list[Any] | None:
-        allowed_tables = { TableHistory.TABLE_NAME, TableUser.TABLE_NAME}
+        allowed_tables = {TableHistory.TABLE_NAME, TableUser.TABLE_NAME}
 
         if table not in allowed_tables:
             raise ValueError("Invalid table name")
@@ -58,5 +60,3 @@ class SessionDatabase:
                 return rows
         except Exception as e:
             return None
-
-
