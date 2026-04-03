@@ -23,7 +23,7 @@ System Agent coding entry point.
 <INSTRUCTION>NEVER SEE, INSPECT, COPY, STORE OR CHANGE .env FILE</INSTRUCTION>
 <INSTRUCTION>BEFORE ANY ACTION CHECK THE LAST COMMIT IN GIT</INSTRUCTION>
 <INSTRUCTION>Never commit files that likely contain secrets (.env, credentials.json, etc.)</INSTRUCTION>
-<INSTRUCTION>Git commit and push commands REQUIRES EXPLICIT USER APPROVAL</INSTRUCTION>
+<INSTRUCTION>NEVER EXECUTE git commit and push commands</INSTRUCTION>
 <INSTRUCTION>Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM</INSTRUCTION>
 <INSTRUCTION>Tests folder tests_sandbox/ can be used BY THE SYSTEM, but REQUIRES EXPLICIT USER APPROVAL. The test use unittest.TestCase class framework</INSTRUCTION>
 <INSTRUCTION>Tests folder tests_sandbox/ implementation must follow </INSTRUCTION>
