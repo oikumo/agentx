@@ -3,6 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class HistoryEntry:
-    id: int
     command: str
-    created_at: str
+    id: int = 0
+    created_at: str = ""

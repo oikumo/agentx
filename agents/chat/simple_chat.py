@@ -1,6 +1,7 @@
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import PromptTemplate
 
+
 class SimpleChat:
     def __init__(self, llm: BaseChatModel):
         self.llm = llm

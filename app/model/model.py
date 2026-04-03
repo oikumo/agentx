@@ -21,5 +21,8 @@ class Model:
             return []
 
         return [
-            HistoryEntry(entry.id, entry.command, entry.created_at) for entry in entries
+            HistoryEntry(
+                command=entry.command, id=entry.id, created_at=entry.created_at
+            )
+            for entry in entries
         ]

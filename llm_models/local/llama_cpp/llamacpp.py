@@ -1,7 +1,7 @@
+from langchain_community.chat_models import ChatLlamaCpp
 from langchain_core.language_models import BaseChatModel
 import multiprocessing
 from pathlib import Path
-from langchain_community.chat_models import ChatLlamaCpp
 from llm_models.local.llama_cpp.llamacpp_config import LlamaCppConfig
 
 
@@ -15,7 +15,7 @@ class LlamaCpp:
         model_path = str((base_dir / model_filename).resolve())
 
         if not Path.exists(Path(model_path)):
-            return None
+            raise FileNotFoundError(f"Model file not found: {model_path}")
 
         return ChatLlamaCpp(
             temperature=config.temperature,
