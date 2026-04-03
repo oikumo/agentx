@@ -1,9 +1,13 @@
 AGENTS.md - Agent-X
 -------------------
 
-# Rules
+[# Rules for coding]()
 
-## System Instructions
+YOU MUST FOLLOW:
+<INSTRUCTIONS>: In ## System Instructions
+<USER_COMMANDS>: In ## System Instructions
+
+[## System Instructions]()
 
 <INSTRUCTIONS>
 <INSTRUCTION>Git commit and push commands REQUIRES EXPLICIT USER APPROVAL</INSTRUCTION>
@@ -12,7 +16,7 @@ AGENTS.md - Agent-X
 <INSTRUCTION>Dependency management via pyproject.toml and uv tooling; avoid pin drift</INSTRUCTION>
 </INSTRUCTIONS>
 
-## Opencode editor User Commands
+[## Opencode editor User Commands]()
 
 <USER_COMMANDS>
 <USER_COMMAND>
