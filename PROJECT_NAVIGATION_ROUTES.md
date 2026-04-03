@@ -1,6 +1,6 @@
 # Project Navigation Routes - Agent-X
 
-> **Last Updated**: April 2026  
+> **Last Updated**: April 3, 2026  
 > **Version**: 0.1.0  
 > **Python**: 3.14+  
 > **Package Manager**: uv
@@ -18,10 +18,11 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | Module | Files | Description |
 |--------|-------|-------------|
 | [Root](#root) | 2 | Entry point and project configuration |
-| [agents/](#agents) | 16 | Agent implementations and factories |
-| [app/](#app) | 23 | Core application: REPL, models, DB, security |
-| [app_modules/](#app_modules) | 22 | LLM integrations, data stores, web ingestion |
-| [llm_models/](#llm_models) | 11 | LLM model providers (cloud + local) |
+| [_resources/](#_resources) | 2 | Sample data files for demos |
+| [agents/](#agents) | 15 | Agent implementations and factories |
+| [app/](#app) | 20 | Core application: REPL, models, DB, security |
+| [app_modules/](#app_modules) | 20 | LLM integrations, data stores, web ingestion |
+| [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
 
 ---
