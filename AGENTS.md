@@ -44,6 +44,12 @@ Commands names allways starts with the prefix: "+".
   <ACTION>Fix the bug introduced by last changes, based on {bug information} User argument. Check the last 10 commits and the ones that are in staging</ACTION>
 </USER_COMMAND>
 
+<USER_COMMAND>
+  <NAME>+?</NAME>
+  <ARGUMENTS>{question_about_the_project}</ARGUMENTS>
+  <ACTION>Question about the project, allways check the last 50 commits</ACTION>
+</USER_COMMAND>
+
 <USER_COMMANDS>
 <USER_COMMAND>
   <NAME>+doc</NAME>
