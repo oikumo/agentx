@@ -10,6 +10,7 @@ System Agent coding entry point.
 <USER_COMMANDS>: In [## Opencode editor User Commands]().
 <PROJECT_NAVIGATION>: In [## Project Navigation]().
 <PROJECT_DOCUMENTATION>: In [## Project Documentation]().
+<PROJECT_TESTING_SANDBOX_RULES>: In [## Project Testing Sandbox Rules]().
 <PROJECT_ROADMAP>: In [## Project Roadmap]().
 <TAKS_TYPES>: In [## Tasks Types]().
 <GENERAL_RULES>: In [## General Rules]().
@@ -25,6 +26,7 @@ System Agent coding entry point.
 <INSTRUCTION>Git commit and push commands REQUIRES EXPLICIT USER APPROVAL</INSTRUCTION>
 <INSTRUCTION>Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM</INSTRUCTION>
 <INSTRUCTION>Tests folder tests_sandbox/ can be used BY THE SYSTEM, but REQUIRES EXPLICIT USER APPROVAL. The test use unittest.TestCase class framework</INSTRUCTION>
+<INSTRUCTION>Tests folder tests_sandbox/ implementation must follow </INSTRUCTION>
 <INSTRUCTION>Environment variables should live in .env and not be committed</INSTRUCTION>
 <INSTRUCTION>Dependency management via pyproject.toml and uv tooling; avoid pin drift</INSTRUCTION>
 </INSTRUCTIONS>
@@ -114,6 +116,17 @@ Commands names allways starts with the prefix: "+".
 
 
 </USER_COMMANDS>
+
+[## Project Testing Sandbox Rules]()
+
+<PROJECT_TESTING_SANDBOX_RULES>
+<DESCRIPTION>
+Establish the rules to follow implement tests 
+</DESCRIPTION>
+<ACTION>
+Use for know how to implement test following the rules in "/PROJECT_TESTING_SANDBOX_RULES.md" file
+</ACTION>
+</PROJECT_TESTING_SANDBOX_RULES>
 
 [## Project Navigation]()
 
