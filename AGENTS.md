@@ -33,6 +33,13 @@ Commands names allways starts with the prefix: "+".
 
 <USER_COMMANDS>
 <USER_COMMAND>
+  <NAME>+update</NAME>
+  <ARGUMENTS></ARGUMENTS>
+  <ACTION>Update [## Project Navigation]() and derived files according the changes in the last 10 commits</ACTION>
+</USER_COMMAND>
+
+<USER_COMMANDS>
+<USER_COMMAND>
   <NAME>+list</NAME>
   <ARGUMENTS></ARGUMENTS>
   <ACTION>List all [# Rules]() in TABLES in MD FORMAT</ACTION>
