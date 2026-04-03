@@ -5,7 +5,6 @@ System Agent coding entry point.
 
 [# Rules for coding]()
 
-YOU MUST FOLLOW:
 <INSTRUCTIONS>: In [## System Instructions]()
 <USER_COMMANDS>: In [## Opencode editor User Commands]()
 <PROJECT_NAVIGATION>: In [## Project Navigation]()
@@ -14,6 +13,7 @@ YOU MUST FOLLOW:
 [## System Instructions]()
 
 <INSTRUCTIONS>
+<INSTRUCTION>BEFORE ANY ACTION CHECK THE LAST COMMIT IN GIT</INSTRUCTION>
 <INSTRUCTION>Git commit and push commands REQUIRES EXPLICIT USER APPROVAL</INSTRUCTION>
 <INSTRUCTION>Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM, REQUIRES EXPLICIT USER APPROVAL</INSTRUCTION>
 <INSTRUCTION>Environment variables should live in .env and not be committed</INSTRUCTION>
