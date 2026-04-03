@@ -18,10 +18,10 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | Module | Files | Description |
 |--------|-------|-------------|
 | [Root](#root) | 2 | Entry point and project configuration |
-| [agents/](#agents) | 22 | Agent implementations and factories |
-| [app/](#app) | 22 | Core application: REPL, models, DB, security |
-| [app_modules/](#app_modules) | 33 | LLM integrations, data stores, web ingestion |
-| [llm_models/](#llm_models) | 13 | LLM model providers (cloud + local) |
+| [agents/](#agents) | 19 | Agent implementations and factories |
+| [app/](#app) | 20 | Core application: REPL, models, DB, security |
+| [app_modules/](#app_modules) | 22 | LLM integrations, data stores, web ingestion |
+| [llm_models/](#llm_models) | 11 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
 
 ---
@@ -53,7 +53,7 @@ main.py → create_controller() → register commands → ReplApp(controller).ru
 ## agents/
 
 **Path**: `agents/`  
-**Module Doc**: [MODULE.md](agents/MODULE.md)
+**Module Doc**: [agents.md](agents/agents.md)
 
 Agent implementations and factory functions. Each agent represents a different LLM interaction pattern.
 
@@ -88,7 +88,7 @@ Agent implementations and factory functions. Each agent represents a different L
 ### agents/chat/
 
 **Path**: `agents/chat/`  
-**Module Doc**: [MODULE.md](agents/chat/MODULE.md)
+**Module Doc**: [chat.md](agents/chat/chat.md)
 
 | File | Description |
 |------|-------------|
@@ -99,7 +99,7 @@ Agent implementations and factory functions. Each agent represents a different L
 ### agents/function_tool_router/
 
 **Path**: `agents/function_tool_router/`  
-**Module Doc**: [MODULE.md](agents/function_tool_router/MODULE.md)
+**Module Doc**: [function_tool_router.md](agents/function_tool_router/function_tool_router.md)
 
 | File | Description |
 |------|-------------|
@@ -112,7 +112,7 @@ Agent implementations and factory functions. Each agent represents a different L
 ### agents/graph_react_web_search/
 
 **Path**: `agents/graph_react_web_search/`  
-**Module Doc**: [MODULE.md](agents/graph_react_web_search/MODULE.md)
+**Module Doc**: [graph_react_web_search.md](agents/graph_react_web_search/graph_react_web_search.md)
 
 | File | Description |
 |------|-------------|
@@ -123,7 +123,7 @@ Agent implementations and factory functions. Each agent represents a different L
 ### agents/rag_pdf/
 
 **Path**: `agents/rag_pdf/`  
-**Module Doc**: [MODULE.md](agents/rag_pdf/MODULE.md)
+**Module Doc**: [rag_pdf.md](agents/rag_pdf/rag_pdf.md)
 
 | File | Description |
 |------|-------------|
@@ -134,7 +134,7 @@ Agent implementations and factory functions. Each agent represents a different L
 ### agents/react_web_search/
 
 **Path**: `agents/react_web_search/`  
-**Module Doc**: [MODULE.md](agents/react_web_search/MODULE.md)
+**Module Doc**: [react_web_search.md](agents/react_web_search/react_web_search.md)
 
 | File | Description |
 |------|-------------|
@@ -148,7 +148,7 @@ Agent implementations and factory functions. Each agent represents a different L
 ## app/
 
 **Path**: `app/`  
-**Module Doc**: [MODULE.md](app/MODULE.md)
+**Module Doc**: [app.md](app/app.md)
 
 Core application module containing the REPL system, data models, database layer, security utilities, and common helpers.
 
@@ -166,7 +166,7 @@ Core application module containing the REPL system, data models, database layer,
 ### app/common/
 
 **Path**: `app/common/`  
-**Module Doc**: [MODULE.md](app/common/MODULE.md)
+**Module Doc**: [common.md](app/common/common.md)
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
@@ -179,7 +179,7 @@ Core application module containing the REPL system, data models, database layer,
 ### app/model/
 
 **Path**: `app/model/`  
-**Module Doc**: [MODULE.md](app/model/MODULE.md)
+**Module Doc**: [model.md](app/model/model.md)
 
 | File | Key Classes | Description |
 |------|-------------|-------------|
@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS users (id, name, age);
 ### app/repl/
 
 **Path**: `app/repl/`  
-**Module Doc**: [MODULE.md](app/repl/MODULE.md)
+**Module Doc**: [repl.md](app/repl/repl.md)
 
 The core interactive shell of Agent-X.
 
@@ -244,7 +244,7 @@ ReplApp.run()
 ### app/security/
 
 **Path**: `app/security/`  
-**Module Doc**: [MODULE.md](app/security/MODULE.md)
+**Module Doc**: [security.md](app/security/security.md)
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
@@ -256,7 +256,7 @@ ReplApp.run()
 ## app_modules/
 
 **Path**: `app_modules/`  
-**Module Doc**: [MODULE.md](app_modules/MODULE.md)
+**Module Doc**: [app_modules.md](app_modules/app_modules.md)
 
 Extended application modules containing LLM integrations, data stores, document loaders, and web ingestion pipelines.
 
@@ -274,7 +274,8 @@ Extended application modules containing LLM integrations, data stores, document 
 
 ### app_modules/data_stores/
 
-**Path**: `app_modules/data_stores/`
+**Path**: `app_modules/data_stores/`  
+**Module Doc**: [data_stores.md](app_modules/data_stores/data_stores.md)
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
@@ -284,7 +285,8 @@ Extended application modules containing LLM integrations, data stores, document 
 
 ### app_modules/document_loaders/
 
-**Path**: `app_modules/document_loaders/`
+**Path**: `app_modules/document_loaders/`  
+**Module Doc**: [document_loaders.md](app_modules/document_loaders/document_loaders.md)
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
@@ -295,7 +297,7 @@ Extended application modules containing LLM integrations, data stores, document 
 ### app_modules/llm/langchain/
 
 **Path**: `app_modules/llm/langchain/`  
-**Module Doc**: [MODULE.md](app_modules/llm/langchain/MODULE.md)
+**Module Doc**: [langchain.md](app_modules/llm/langchain/langchain.md)
 
 #### React Agents
 
@@ -311,7 +313,7 @@ Extended application modules containing LLM integrations, data stores, document 
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
-| `tools/simple_tool.py` | `simple_tool()` | Basic `multiply` tool with tool-calling agent |
+| `simple_tool.py` | `simple_tool()` | Basic `multiply` tool with tool-calling agent |
 | `tools/tavily_web_search/simple_tool_search_tavily.py` | `simple_tool_search_tavily()` | Tavily search + multiply tool agent |
 
 ---
@@ -319,7 +321,7 @@ Extended application modules containing LLM integrations, data stores, document 
 ### app_modules/llm/langgraph/
 
 **Path**: `app_modules/llm/langgraph/`  
-**Module Doc**: [MODULE.md](app_modules/llm/langgraph/MODULE.md)
+**Module Doc**: [langgraph.md](app_modules/llm/langgraph/langgraph.md)
 
 #### Graph Reflector Chain
 
@@ -342,7 +344,7 @@ Extended application modules containing LLM integrations, data stores, document 
 ### app_modules/web_ingestion_app/
 
 **Path**: `app_modules/web_ingestion_app/`  
-**Module Doc**: [MODULE.md](app_modules/web_ingestion_app/MODULE.md)
+**Module Doc**: [web_ingestion_app.md](app_modules/web_ingestion_app/web_ingestion_app.md)
 
 | File | Key Classes/Functions | Description |
 |------|-----------------------|-------------|
@@ -363,7 +365,7 @@ TavilyMap → chunk_urls → WebExtract.async_extract → save_docs (JSONL)
 ## llm_models/
 
 **Path**: `llm_models/`  
-**Module Doc**: [MODULE.md](llm_models/MODULE.md)
+**Module Doc**: [llm_models.md](llm_models/llm_models.md)
 
 LLM model providers and vector store integrations. Supports both cloud-hosted and locally-run models.
 
@@ -390,7 +392,8 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 ### llm_models/cloud/open_ai/
 
-**Path**: `llm_models/cloud/open_ai/`
+**Path**: `llm_models/cloud/open_ai/`  
+**Module Doc**: [open_ai.md](llm_models/cloud/open_ai/open_ai.md)
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
@@ -400,7 +403,8 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 ### llm_models/cloud/google/
 
-**Path**: `llm_models/cloud/google/`
+**Path**: `llm_models/cloud/google/`  
+**Module Doc**: [google.md](llm_models/cloud/google/google.md)
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
@@ -417,7 +421,15 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 | `llamacpp.py` | `LlamaCpp` | Factory for creating local ChatLlamaCpp instances |
 | `llamacpp_config.py` | `LlamaCppConfig` | Pydantic config: model_filename, temperature, context_size, max_tokens, top_p, batch_size |
 
-**Factory**: `llama_cpp_factory.py` - singleton-style `model_factory_llamacpp` instance
+---
+
+### llm_models/local/llama_cpp_factory.py
+
+**Path**: `llm_models/local/`
+
+| File | Key Functions | Description |
+|------|---------------|-------------|
+| `llama_cpp_factory.py` | `model_factory_llamacpp` | Singleton-style factory instance |
 
 ---
 
