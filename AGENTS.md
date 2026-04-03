@@ -9,7 +9,8 @@ System Agent coding entry point.
 <INSTRUCTIONS>: In [## System Instructions]().
 <USER_COMMANDS>: In [## Opencode editor User Commands]().
 <PROJECT_NAVIGATION>: In [## Project Navigation]().
-<PROJECT_DOCUMENTATION>: In [## Project Documentation]()
+<PROJECT_DOCUMENTATION>: In [## Project Documentation]().
+<PROJECT_ROADMAP>: In [## Project Roadmap]().
 <TAKS_TYPES>: In [## Tasks Types]().
 <GENERAL_RULES>: In [## General Rules]().
 [/RULES]
@@ -127,6 +128,17 @@ Project full documentation. Documentation maps folder content in "/PROJECT_DOCUM
 Check the documentation "/PROJECT_DOCUMENTATION.md" file to navigate in the project documentation, when you need more detailed information
 </ACTION>
 <PROJECT_DOCUMENTATION>
+
+[## Project Roadmap]()
+
+<PROJECT_ROADMAP>
+<DESCRIPTION>
+Project new features and improvements. Centralized in the "/PROJECT_ROADMAP.md" file
+</DESCRIPTION>
+<ACTION>
+Take information from here to implement new features or improvements of the project as a whole
+</ACTION>
+<PROJECT_ROADMAP>
 
 [## Tasks Types]()
 

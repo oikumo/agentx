@@ -25,6 +25,76 @@ Agent-X is a Python-based LLM agent framework with a REPL interface. This file i
 | [doc/app_modules_data_stores.md](doc/app_modules_data_stores.md) | App Modules/Data Stores | FAISS vector store creation and persistence |
 | [doc/app_modules_document_loaders.md](doc/app_modules_document_loaders.md) | App Modules/Loaders | PDF loading and text chunking |
 | [doc/app_modules_web_ingestion.md](doc/app_modules_web_ingestion.md) | App Modules/Web Ingestion | Tavily extraction, document processing, vector store indexing pipeline |
-| [doc/llm_models.md](doc/llm_models.md) | LLM Models | Cloud providers (OpenAI, Google), local providers (LlamaCpp, Ollama), Pinecone vector store |
+| [doc/llm_models.md](doc/llm_models.md) | LLM Models | Cloud providers (OpenAI, Google), local providers (LlamaCpp, Ollama), vector stores (Pinecone, Chroma) |
 | [doc/tests.md](doc/tests.md) | Tests | Unit test suite, test commands |
 | [doc/dependencies.md](doc/dependencies.md) | Configuration | Dependencies table, environment variables, quick start, code style |
+
+---
+
+## Module Structure
+
+```
+agent-x/
+├── main.py                          # Application entry point
+├── pyproject.toml                   # Project configuration, dependencies
+├── agents/                          # Agent implementations
+│   ├── chat/                        # Simple conversational agent
+│   ├── function_tool_router/        # Query routing with Ollama tool calling
+│   ├── graph_react_web_search/      # LangGraph-based ReAct web search
+│   ├── rag_pdf/                     # PDF RAG with FAISS + Ollama embeddings
+│   └── react_web_search/            # LangChain ReAct web search agent
+├── llm_managers/                    # Agent factory functions (moved from agents/)
+│   ├── agent_chat_factory.py        # Factory for SimpleChat
+│   ├── agent_function_router_factory.py  # Factory for QueryRouter
+│   ├── agent_rag_factory.py         # Factory for AgentRagPdf
+│   ├── agent_react_web_search_factory.py # Factory for AgentReactWebSearch
+│   └── graph_react_web_search_factory.py # Factory for GraphReactWebSearch
+├── app/                             # Core application
+│   ├── common/                      # Shared utilities
+│   ├── model/                       # Data persistence, sessions, SQLite
+│   ├── repl/                        # REPL system and commands
+│   └── security/                    # Directory deletion safeguards
+├── app_modules/                     # Extended application modules
+│   ├── data_stores/                 # FAISS vector store
+│   ├── document_loaders/            # PDF loading and chunking
+│   ├── llm/                         # LangChain and LangGraph integrations
+│   └── web_ingestion_app/           # Web scraping pipeline
+├── llm_models/                      # LLM model providers and vector stores
+│   ├── cloud/                       # Cloud providers (OpenAI, Google)
+│   ├── local/                       # Local providers (LlamaCpp, Ollama)
+│   │   ├── llama_cpp/               # Llama.cpp GGUF models
+│   │   ├── llama_cpp_factory.py     # Pre-configured factory
+│   │   ├── ollama/                  # Ollama chat models
+│   │   └── ollama_factory.py        # Ollama model manager
+│   └── vectorstores/                # Vector store integrations
+│       ├── vectorstore_pinecone.py  # Pinecone wrapper
+│       └── vectorstore_chroma.py    # Chroma wrapper
+├── tests/                           # Unit and integration tests
+├── _resources/                      # Sample data files
+└── doc/                             # Project documentation
+```
+
+---
+
+## Recent Changes
+
+### New: `llm_managers/` Module
+- Agent factory files moved from `agents/` to `llm_managers/`
+- Centralizes LLM agent creation logic
+- Factories: chat, function router, RAG, ReAct web search, graph ReAct web search
+
+### New: Ollama Integration
+- `llm_models/local/ollama/ollama.py`: Ollama chat model wrapper with lazy initialization
+- `llm_models/local/ollama_factory.py`: `LocalOllamaModelManager` with Qwen 3.5 model
+- Provides local think model via `qwen3.5:0.8b`
+
+### New: Chroma Vector Store
+- `llm_models/vectorstores/vectorstore_chroma.py`: Chroma wrapper with OpenAI embeddings
+- Uses `text-embedding-3-small` model with chunk_size=50
+- Alternative to FAISS and Pinecone for vector storage
+
+### Refactored: `app/model/`
+- Reorganized into submodules: `db/`, `user_sessions/`
+- `SessionDatabase` for per-session SQLite persistence
+- `Session` for session lifecycle management
+- `Model` facade for command history logging/retrieval
