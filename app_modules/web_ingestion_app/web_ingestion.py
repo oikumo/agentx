@@ -1,11 +1,9 @@
 import asyncio
 
-from modules import WebExtract
-from modules.web_ingestion_app.web_ingestion_app import \
-    WebIngestionApp
-from modules.llm_models import \
-    create_vectorstore_chroma
 from app.model.user_sessions.session import Session
+from app_modules.web_ingestion_app.tavily import WebExtract
+from app_modules.web_ingestion_app.web_ingestion_app import WebIngestionApp
+from llm_models.vectorstores.vectorstore_chroma import create_vectorstore_chroma
 
 if __name__ == "__main__":
     # site_url= "https://developer.android.com/"

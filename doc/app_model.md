@@ -1,0 +1,95 @@
+# App Model Module - Agent-X
+
+**Path**: `/app/model/`
+
+Data persistence layer: session management, SQLite database, command history.
+
+---
+
+## Module Structure
+
+```
+app/model/
+├── model.py                   # Model facade
+├── model_entities.py          # HistoryEntry dataclass
+├── db/
+│   ├── data_base.py           # SessionDatabase
+│   └── database_definition.py # Table schemas
+└── user_sessions/
+    └── session.py             # Session lifecycle
+```
+
+---
+
+## Model Facade
+
+### model.py
+
+**Class**: `Model`
+
+Session + DB facade for logging and retrieving command history.
+
+**Methods**:
+- `__init__(session_name: str)` - creates `Session` and `SessionDatabase`, raises `Exception` if session creation fails
+- `log_command(entry: HistoryEntry)` - inserts history entry into DB
+- `get_command_history() -> list[HistoryEntry]` - retrieves all history entries
+
+### model_entities.py
+
+**Class**: `HistoryEntry(dataclass)` - `command: str`
+
+---
+
+## Database Layer
+
+### db/data_base.py
+
+**Class**: `SessionDatabase`
+
+Per-session SQLite database with `history` and `users` tables.
+
+**Methods**:
+- `__init__(session: Session)` - creates DB tables
+- `_create()` - creates tables via SQLite
+- `_get_session_path()` - constructs DB file path from session directory
+- `insert_history_entry(info: str) -> bool` - inserts a history row with UTC timestamp
+- `select_history_entry() -> list[TableHistory.History] | None` - retrieves all history rows
+- `_insert(query, parameters) -> bool` - generic insert (returns False on success, True on error)
+- `_select_all(table) -> list[Any] | None` - generic select with table name validation against allowed tables
+
+### db/database_definition.py
+
+**Classes**:
+- `TableHistory` - constants and schema for history table
+  - `TABLE_NAME = "history"`
+  - `TABLE_HISTORY` - CREATE SQL with `id`, `command`, `created_at`
+  - `INSERT_HISTORY` - INSERT SQL
+  - `History(dataclass)` - `id: int`, `name: str`, `created_at: str`
+- `TableUser` - constants and schema for users table
+  - `TABLE_NAME = "users"`
+  - `TABLE_USER` - CREATE SQL with `id`, `name`, `age`
+  - `INSERT_USER` - INSERT SQL
+
+**Database Schema**:
+```sql
+CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY, command TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER);
+```
+
+---
+
+## Session Management
+
+### user_sessions/session.py
+
+**Class**: `Session`
+
+Session lifecycle management (create/destroy session directories).
+
+**Methods**:
+- `__init__(name: str)` - sanitizes session name (replaces spaces with underscores, lowercases)
+- `name` (property) - returns session name
+- `directory` (property) - returns session directory path
+- `create()` - creates timestamped directory, returns success boolean
+- `is_created()` - checks if directory exists
+- `destroy() -> bool` - deletes session directory with security validation
