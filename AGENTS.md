@@ -24,7 +24,7 @@ System Agent coding entry point.
 <INSTRUCTION>Never commit files that likely contain secrets (.env, credentials.json, etc.)</INSTRUCTION>
 <INSTRUCTION>Git commit and push commands REQUIRES EXPLICIT USER APPROVAL</INSTRUCTION>
 <INSTRUCTION>Tests folder tests/ NEVER CAN BE CHANGE BY THE SYSTEM</INSTRUCTION>
-<INSTRUCTION>Tests folder tests_sandbox/ can be used BY THE SYSTEM, but REQUIRES EXPLICIT USER APPROVAL</INSTRUCTION>
+<INSTRUCTION>Tests folder tests_sandbox/ can be used BY THE SYSTEM, but REQUIRES EXPLICIT USER APPROVAL. The test use unittest.TestCase class framework</INSTRUCTION>
 <INSTRUCTION>Environment variables should live in .env and not be committed</INSTRUCTION>
 <INSTRUCTION>Dependency management via pyproject.toml and uv tooling; avoid pin drift</INSTRUCTION>
 </INSTRUCTIONS>
