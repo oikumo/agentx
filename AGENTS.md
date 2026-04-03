@@ -38,6 +38,17 @@ Commands names allways starts with the prefix: "+".
   <ACTION>List all [# Rules]() in TABLES in MD FORMAT</ACTION>
 </USER_COMMAND>
 
+<USER_COMMANDS>
+<USER_COMMAND>
+  <NAME>+focus</NAME>
+  <ARGUMENTS>
+    <ARGUMENT>
+     <DESCRIPTION>FOCUS ON ONE MODULE OR TOPIC</DESCRIPTION>
+    </ARGUMENT>
+  </ARGUMENTS>
+  <ACTION>Focus your attention on ONE MODULE OR TOPIC, before anything use as reference [## Project Navigation]() </ACTION>
+</USER_COMMAND>
+
 <USER_COMMAND>
   <NAME>+tasks</NAME>
   <ARGUMENTS></ARGUMENTS>
