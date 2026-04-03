@@ -114,6 +114,12 @@ Commands names allways starts with the prefix: "+".
   <ACTION>System run tests in folder "/tests_sandbox" only</ACTION>
 </USER_COMMAND>
 
+<USER_COMMAND>
+  <NAME>+tdd</NAME>
+  <ARGUMENTS>{implementation_test_scope}</ARGUMENTS>
+  <ACTION>System apply TDD given the scope in the User argument {implementation_test_scope} in folder "/tests_sandbox" only, following the RULES</ACTION>
+</USER_COMMAND>
+
 
 </USER_COMMANDS>
 
