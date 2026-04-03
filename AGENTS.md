@@ -4,9 +4,9 @@ AGENTS.md - Agent-X
 [# Rules for coding]()
 
 YOU MUST FOLLOW:
-<INSTRUCTIONS>: In ## System Instructions
-<USER_COMMANDS>: In ## System Instructions
-<PROJECT_NAVIGATION>: 
+<INSTRUCTIONS>: In [## System Instructions]()
+<USER_COMMANDS>: In [## Opencode editor User Commands]()
+<PROJECT_NAVIGATION>: In [## Project Navigation]()
 
 [## System Instructions]()
 
@@ -33,7 +33,7 @@ YOU MUST FOLLOW:
 </USER_COMMAND>
 </USER_COMMANDS>
 
-## Project Navigation
+[## Project Navigation]()
 
 Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md file
 
