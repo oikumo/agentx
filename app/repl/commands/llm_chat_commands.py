@@ -57,13 +57,13 @@ class AIChat(Command):
             Console.log_info(
                 "Starting interactive chat (type 'quit' or 'exit' to end):"
             )
-            chat_loop.start_interactive()
+            chat_loop.start_interactive_streaming()
         else:
             query = " ".join(arguments)
             try:
-                response = chat_loop.run(query)
+                response = chat_loop.run_streaming(query)
                 if response is not None:
-                    print(response)
+                    print()
             except Exception as e:
                 Console.log_error(f"Chat error: {e}")
 

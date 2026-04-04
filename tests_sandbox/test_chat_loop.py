@@ -231,5 +231,180 @@ class TestChatLoopFactory(unittest.TestCase):
         self.assertIs(result.llm, mock_llm)
 
 
+class TestChatLoopStreaming(unittest.TestCase):
+    def _make_chunk(self, content):
+        chunk = MagicMock()
+        chunk.content = content
+        if content is None:
+            chunk.text = ""
+        elif isinstance(content, str):
+            chunk.text = content
+        else:
+            chunk.text = " ".join(str(item) for item in content if item is not None)
+        return chunk
+
+    def test_get_streaming_response_yields_chunks(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [
+            self._make_chunk("Hello"),
+            self._make_chunk(" world"),
+        ]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        chunks = list(chat_loop.get_streaming_response("test"))
+
+        self.assertEqual(chunks, ["Hello", " world"])
+
+    def test_get_streaming_response_passes_history_to_stream(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("response")]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        chat_loop.add_user_message("hello")
+        list(chat_loop.get_streaming_response("hello"))
+
+        call_args = mock_llm.stream.call_args[0][0]
+        self.assertEqual(len(call_args), 2)
+
+    def test_get_streaming_response_handles_none_content(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [
+            self._make_chunk("start"),
+            self._make_chunk(None),
+            self._make_chunk("end"),
+        ]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        chunks = list(chat_loop.get_streaming_response("test"))
+
+        self.assertEqual(chunks, ["start", "end"])
+
+    def test_get_streaming_response_handles_list_content(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk(["part1", "part2"])]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        chunks = list(chat_loop.get_streaming_response("test"))
+
+        self.assertEqual(chunks, ["part1 part2"])
+
+    def test_run_streaming_collects_full_response(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [
+            self._make_chunk("Hello"),
+            self._make_chunk(" world"),
+        ]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        result = chat_loop.run_streaming("hi")
+
+        self.assertEqual(result, "Hello world")
+
+    def test_run_streaming_appends_full_response_to_history(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [
+            self._make_chunk("Hi"),
+            self._make_chunk(" there"),
+        ]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        chat_loop.run_streaming("hello")
+
+        self.assertEqual(len(chat_loop.history), 3)
+        self.assertEqual(chat_loop.history[2].content, "Hi there")
+
+    def test_run_streaming_with_empty_input_returns_none(self):
+        mock_llm = MagicMock()
+        chat_loop = ChatLoop(llm=mock_llm)
+        result = chat_loop.run_streaming("")
+
+        self.assertIsNone(result)
+
+    def test_run_streaming_with_quit_returns_none(self):
+        mock_llm = MagicMock()
+        chat_loop = ChatLoop(llm=mock_llm)
+        result = chat_loop.run_streaming("quit")
+
+        self.assertIsNone(result)
+        self.assertEqual(len(chat_loop.history), 1)
+
+    def test_run_streaming_sets_running_flag_during_execution(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("response")]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        chat_loop.run_streaming("test")
+
+        self.assertFalse(chat_loop.is_running)
+
+    def test_run_streaming_rolls_back_on_error(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.side_effect = Exception("LLM error")
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        chat_loop.add_user_message("before")
+
+        with self.assertRaises(Exception):
+            chat_loop.run_streaming("fail")
+
+        self.assertEqual(len(chat_loop.history), 2)
+        self.assertEqual(chat_loop.history[1].content, "before")
+
+    def test_start_interactive_streaming_prints_chunks(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [
+            self._make_chunk("Hello"),
+            self._make_chunk(" world"),
+        ]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        import io
+        import sys
+
+        captured = io.StringIO()
+        sys.stdout = captured
+
+        with patch.object(chat_loop, "_read_input", side_effect=["hi", "quit"]):
+            chat_loop.start_interactive_streaming()
+
+        sys.stdout = sys.__stdout__
+        output = captured.getvalue()
+
+        self.assertIn("Hello", output)
+        self.assertIn(" world", output)
+
+    def test_start_interactive_streaming_exits_on_quit(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("response")]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        with patch.object(chat_loop, "_read_input", side_effect=["hello", "quit"]):
+            chat_loop.start_interactive_streaming()
+
+        self.assertFalse(chat_loop.is_running)
+
+    def test_start_interactive_streaming_exits_on_exit(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("response")]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        with patch.object(chat_loop, "_read_input", side_effect=["hello", "exit"]):
+            chat_loop.start_interactive_streaming()
+
+        self.assertFalse(chat_loop.is_running)
+
+    def test_start_interactive_streaming_skips_empty_input(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("response")]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        with patch.object(
+            chat_loop, "_read_input", side_effect=["", "  ", "hello", "quit"]
+        ):
+            chat_loop.start_interactive_streaming()
+
+        self.assertEqual(mock_llm.stream.call_count, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -23,6 +23,61 @@ class ChatLoop:
             return " ".join(str(item) for item in response.content if item is not None)
         return str(response.content)
 
+    def _extract_chunk_content(self, chunk) -> str:
+        if hasattr(chunk, "text"):
+            return str(chunk.text)
+        if chunk.content is None:
+            return ""
+        if isinstance(chunk.content, list):
+            return " ".join(str(item) for item in chunk.content if item is not None)
+        return str(chunk.content)
+
+    def get_streaming_response(self, user_input: str):
+        for chunk in self.llm.stream(self.history):
+            content = self._extract_chunk_content(chunk)
+            if content:
+                yield content
+
+    def run_streaming(self, user_input: str) -> str | None:
+        stripped = user_input.strip()
+        if not stripped:
+            return None
+        if self.should_exit(stripped):
+            self.exit()
+            return None
+        self.is_running = True
+        self.add_user_message(stripped)
+        try:
+            full_response = ""
+            for chunk_content in self.get_streaming_response(stripped):
+                full_response += chunk_content
+            self.add_assistant_message(full_response)
+        except Exception as e:
+            self.history.pop()
+            self.is_running = False
+            raise e
+        self.is_running = False
+        return full_response
+
+    def start_interactive_streaming(self) -> None:
+        self.is_running = True
+        while self.is_running:
+            user_input = self._read_input()
+            if self.should_exit(user_input):
+                self.exit()
+                break
+            stripped = user_input.strip()
+            if not stripped:
+                continue
+            self.add_user_message(stripped)
+            try:
+                for chunk_content in self.get_streaming_response(stripped):
+                    print(chunk_content, end="", flush=True)
+                print()
+            except Exception as e:
+                self.history.pop()
+                print(f"Error: {e}")
+
     def get_response(self) -> str:
         response = self.llm.invoke(self.history)
         content = self._extract_content(response)
