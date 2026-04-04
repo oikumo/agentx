@@ -75,13 +75,6 @@ Commands names allways starts with the prefix: "+".
 
 <USER_COMMANDS>
 <USER_COMMAND>
-  <NAME>+doc</NAME>
-  <ARGUMENTS></ARGUMENTS>
-  <ACTION>Update the [## Project Documentation](), assume it is a BIG TASK [<NAME>BIG TASK<NAME>]()</ACTION>
-</USER_COMMAND>
-
-<USER_COMMANDS>
-<USER_COMMAND>
   <NAME>+find</NAME>
   <ARGUMENTS>{module or topic}</ARGUMENTS>
   <ACTION>Find what the User say in the argument {module or topic}. Before anything use as reference [## Project Navigation]() </ACTION>
@@ -91,7 +84,7 @@ Commands names allways starts with the prefix: "+".
 <USER_COMMAND>
   <NAME>+update</NAME>
   <ARGUMENTS></ARGUMENTS>
-  <ACTION>Update [## Project Navigation](), [## Current Issue]() and [## Project Documentation]() and derived files according the changes in the last 50 commits</ACTION>
+  <ACTION>Update [## Project Navigation](), [## Current Issue]() and [## Project Documentation]() and derived files according the changes in the last 50 commits. assume it is a BIG TASK [<NAME>BIG TASK<NAME>]()</ACTION>
 </USER_COMMAND>
 
 <USER_COMMANDS>
