@@ -1,6 +1,7 @@
 from llm_managers.agent_chat_factory import (
     create_agent_chat_local,
     create_chat_loop_local,
+    create_chat_loop_with_model,
 )
 from llm_managers.agent_function_router_factory import (
     create_agent_function_router_local,
@@ -12,6 +13,7 @@ from llm_managers.agent_react_web_search_factory import (
 from app.repl.base import IMainController
 from app.repl.command import Command
 from app.repl.console import Console
+from app.repl.utils.argument_parser import parse_chat_arguments
 from app_modules.llm.langchain.react_agents.react_agents_tools.react_tools import (
     react_tools,
 )
@@ -48,22 +50,28 @@ class AIChat(Command):
         super().__init__(
             key,
             controller,
-            description="Start an AI chat session: chat <query> or chat (interactive loop)",
+            description="Start an AI chat session: chat <query>, chat --model <model> <query>, or chat (interactive loop)",
         )
 
     def run(self, arguments: list[str]) -> None:
-        chat_loop = create_chat_loop_local()
-        if arguments is None or not arguments:
+        model_name, query = parse_chat_arguments(arguments)
+
+        if model_name:
+            chat_loop = create_chat_loop_with_model(model_name)
+        else:
+            chat_loop = create_chat_loop_local()
+
+        if not query:
             Console.log_info(
                 "Starting interactive chat (type 'quit' or 'exit' to end):"
             )
             chat_loop.start_interactive_streaming()
         else:
-            query = " ".join(arguments)
             try:
-                response = chat_loop.run_streaming(query)
+                response, metrics = chat_loop.run_streaming_with_metrics(query)
                 if response is not None:
                     print()
+                    Console.log_info(metrics.format())
             except Exception as e:
                 Console.log_error(f"Chat error: {e}")
 

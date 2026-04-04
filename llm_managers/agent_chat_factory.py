@@ -34,7 +34,7 @@ def create_chat_loop(provider: LLMProvider | None = None) -> ChatLoop:
         Configured ChatLoop instance.
     """
     if provider is None:
-        #provider = OpenAIProvider()
+        # provider = OpenAIProvider()
         provider = OpenRouterProvider()
 
     llm = provider.create_llm()
@@ -42,3 +42,17 @@ def create_chat_loop(provider: LLMProvider | None = None) -> ChatLoop:
 
 
 create_chat_loop_local = create_chat_loop
+
+
+def create_chat_loop_with_model(model_name: str) -> ChatLoop:
+    """Create a ChatLoop agent with a specific model name.
+
+    Args:
+        model_name: The model identifier to use (e.g., "gpt-4", "claude-3").
+
+    Returns:
+        Configured ChatLoop instance with the specified model.
+    """
+    provider = OpenRouterProvider(model_name=model_name)
+    llm = provider.create_llm()
+    return ChatLoop(llm=llm)

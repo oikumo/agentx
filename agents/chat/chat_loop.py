@@ -1,6 +1,8 @@
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
+from app.common.utils.streaming_metrics import StreamingMetrics
+
 
 class ChatLoop:
     def __init__(
@@ -38,7 +40,9 @@ class ChatLoop:
             if content:
                 yield content
 
-    def run_streaming(self, user_input: str) -> str | None:
+    def run_streaming(
+        self, user_input: str, model_override: str | None = None
+    ) -> str | None:
         stripped = user_input.strip()
         if not stripped:
             return None
@@ -59,6 +63,32 @@ class ChatLoop:
         self.is_running = False
         return full_response
 
+    def run_streaming_with_metrics(
+        self, user_input: str
+    ) -> tuple[str | None, StreamingMetrics]:
+        metrics = StreamingMetrics()
+        stripped = user_input.strip()
+        if not stripped:
+            return None, metrics
+        if self.should_exit(stripped):
+            self.exit()
+            return None, metrics
+        self.is_running = True
+        self.add_user_message(stripped)
+        try:
+            full_response = ""
+            with metrics:
+                for chunk_content in self.get_streaming_response(stripped):
+                    metrics.add_text(chunk_content)
+                    full_response += chunk_content
+            self.add_assistant_message(full_response)
+        except Exception as e:
+            self.history.pop()
+            self.is_running = False
+            raise e
+        self.is_running = False
+        return full_response, metrics
+
     def start_interactive_streaming(self) -> None:
         self.is_running = True
         while self.is_running:
@@ -72,10 +102,14 @@ class ChatLoop:
             self.add_user_message(stripped)
             try:
                 full_response = ""
-                for chunk_content in self.get_streaming_response(stripped):
-                    print(chunk_content, end="", flush=True)
-                    full_response += chunk_content
+                metrics = StreamingMetrics()
+                with metrics:
+                    for chunk_content in self.get_streaming_response(stripped):
+                        print(chunk_content, end="", flush=True)
+                        metrics.add_text(chunk_content)
+                        full_response += chunk_content
                 print()
+                print(metrics.format())
                 self.add_assistant_message(full_response)
             except Exception as e:
                 self.history.pop()

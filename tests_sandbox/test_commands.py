@@ -131,26 +131,28 @@ class TestAIChatCommand(unittest.TestCase):
     @patch("app.repl.commands.llm_chat_commands.Console")
     def test_chat_single_query_uses_streaming(self, mock_console, mock_factory):
         mock_loop = MagicMock()
-        mock_loop.run_streaming.return_value = "Hello world"
+        mock_loop.run_streaming_with_metrics.return_value = ("Hello world", MagicMock())
         mock_factory.return_value = mock_loop
 
         controller = MagicMock()
         cmd = AIChat("chat", controller)
         cmd.run(["hello"])
 
-        mock_loop.run_streaming.assert_called_once_with("hello")
+        mock_loop.run_streaming_with_metrics.assert_called_once_with("hello")
         mock_loop.run.assert_not_called()
 
     @patch("app.repl.commands.llm_chat_commands.create_chat_loop_local")
     @patch("app.repl.commands.llm_chat_commands.Console")
     def test_chat_streaming_error_handling(self, mock_console, mock_factory):
         mock_loop = MagicMock()
-        mock_loop.run_streaming.side_effect = Exception("LLM error")
+        mock_loop.run_streaming_with_metrics.side_effect = Exception("LLM error")
         mock_factory.return_value = mock_loop
 
         controller = MagicMock()
         cmd = AIChat("chat", controller)
         cmd.run(["hello"])
+
+        mock_console.log_error.assert_called_once()
 
         mock_console.log_error.assert_called_once()
 

@@ -1,0 +1,101 @@
+import unittest
+from unittest.mock import MagicMock, patch
+
+from agents.chat.simple_chat import SimpleChat
+
+
+class TestSimpleChatStreaming(unittest.TestCase):
+    def _make_chunk(self, content):
+        chunk = MagicMock()
+        chunk.content = content
+        chunk.text = content if content else ""
+        return chunk
+
+    def test_simple_chat_has_stream_method(self):
+        mock_llm = MagicMock()
+        chat = SimpleChat(llm=mock_llm)
+        self.assertTrue(hasattr(chat, "run_streaming"))
+
+    def test_simple_chat_streaming_returns_response(self):
+        mock_llm = MagicMock()
+        mock_chain = MagicMock()
+        mock_chain.stream.return_value = [self._make_chunk("Hello")]
+        mock_llm.__or__ = MagicMock(return_value=mock_chain)
+
+        chat = SimpleChat(llm=mock_llm)
+
+        with patch("agents.chat.simple_chat.PromptTemplate") as mock_template_class:
+            mock_template = MagicMock()
+            mock_template.__or__ = MagicMock(return_value=mock_chain)
+            mock_template_class.return_value = mock_template
+
+            result = chat.run_streaming("test query")
+
+        self.assertEqual(result, "Hello")
+
+    def test_simple_chat_streaming_accumulates_chunks(self):
+        mock_llm = MagicMock()
+        mock_chain = MagicMock()
+        mock_chain.stream.return_value = [
+            self._make_chunk("Hello"),
+            self._make_chunk(" world"),
+        ]
+
+        chat = SimpleChat(llm=mock_llm)
+
+        with patch("agents.chat.simple_chat.PromptTemplate") as mock_template_class:
+            mock_template = MagicMock()
+            mock_template.__or__ = MagicMock(return_value=mock_chain)
+            mock_template_class.return_value = mock_template
+
+            result = chat.run_streaming("test query")
+
+        self.assertEqual(result, "Hello world")
+
+    def test_simple_chat_streaming_handles_none_content(self):
+        mock_llm = MagicMock()
+        mock_chain = MagicMock()
+        mock_chain.stream.return_value = [
+            self._make_chunk("start"),
+            self._make_chunk(None),
+            self._make_chunk("end"),
+        ]
+
+        chat = SimpleChat(llm=mock_llm)
+
+        with patch("agents.chat.simple_chat.PromptTemplate") as mock_template_class:
+            mock_template = MagicMock()
+            mock_template.__or__ = MagicMock(return_value=mock_chain)
+            mock_template_class.return_value = mock_template
+
+            result = chat.run_streaming("test")
+
+        self.assertEqual(result, "startend")
+
+
+class TestAgentReactWebSearchStreaming(unittest.TestCase):
+    def test_agent_react_web_search_has_streaming_method(self):
+        mock_llm = MagicMock()
+        from agents.react_web_search.agent_react_web_search import AgentReactWebSearch
+
+        agent = AgentReactWebSearch(llm=mock_llm)
+        self.assertTrue(hasattr(agent, "run_streaming"))
+
+
+class TestAgentRagPdfStreaming(unittest.TestCase):
+    def test_agent_rag_pdf_has_streaming_method(self):
+        mock_llm = MagicMock()
+        mock_embeddings = MagicMock()
+        from agents.rag_pdf.agent_rag_pdf import AgentRagPdf
+
+        agent = AgentRagPdf(
+            pdf_path="test.pdf",
+            vectorstore_path="/tmp/vs",
+            llm=mock_llm,
+            embeddings=mock_embeddings,
+        )
+        self.assertTrue(hasattr(agent, "run_streaming"))
+
+
+if __name__ == "__main__":
+    unittest.main()
