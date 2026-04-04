@@ -15,7 +15,7 @@ from app.common.utils.file_utils import create_directory_with_timestamp
 from llm_managers.llm_provider import LLMProvider
 from llm_managers.providers import local_llm_provider
 from llm_managers.providers.openai_provider import OpenAIProvider
-from llm_models.local.llama_cpp_factory import LLAMA_CPP_MODEL_NEMOTRON_3_NANO
+from llm_models.local.llama_cpp_factory import LLAMA_CPP_MODEL_NEMOTRON_3_NANO, LLAMA_CPP_MODEL_QWEN_3_5
 
 
 @dataclass
@@ -68,7 +68,7 @@ class AgentFactory:
         """
         if provider is None:
             provider = local_llm_provider(
-                model_filename=LLAMA_CPP_MODEL_NEMOTRON_3_NANO,
+                model_filename=LLAMA_CPP_MODEL_QWEN_3_5,
                 context_size=32768)
 
         llm = provider.create_llm()
