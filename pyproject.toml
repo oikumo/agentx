@@ -24,6 +24,7 @@ dependencies = [
     "langchain-google-genai==4.2.1",
     "langchain-core==1.2.26",
     "langchain-openrouter==0.2.1",
+    "openai==2.30.0",
 ]
 
 [dependency-groups]
