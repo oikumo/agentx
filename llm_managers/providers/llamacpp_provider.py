@@ -13,8 +13,8 @@ class LlamaCppProvider(LLMProvider):
 
     def __init__(
         self,
-        model_filename: str = LLAMA_CPP_MODEL_QWEN_2_5,
-        context_size: int = 32768,
+        model_filename: str,
+        context_size: int,
     ) -> None:
         self.model_filename = model_filename
         self.context_size = context_size
