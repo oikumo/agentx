@@ -41,6 +41,10 @@ Commands names allways starts with the prefix: "+".
 
 [<USER_COMMANDS>]()
 
+Use commands list.
+* RULE:
+ - Commands can be piped like: <USER_COMMAND_1> | <USER_COMMAND_2> | ... | <USER_COMMAND_N>. The pipe result has a proper semantic meaning, you must do an effort to interpret it
+
 <USER_COMMAND>
   <NAME>+reload</NAME>
   <ARGUMENTS></ARGUMENTS>
