@@ -33,7 +33,7 @@ class TestLlamaCppProvider(unittest.TestCase):
         mock_llm = MagicMock()
         mock_factory.create_model_instance.return_value = mock_llm
 
-        provider = LlamaCppProvider()
+        provider = LlamaCppProvider(model_filename="test.gguf", context_size=32768)
         result = provider.create_llm()
 
         mock_factory.create_model_instance.assert_called_once()

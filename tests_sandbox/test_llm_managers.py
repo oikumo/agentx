@@ -40,7 +40,12 @@ class TestAgentChatFactory(unittest.TestCase):
         mock_agent = MagicMock()
         mock_simple_chat.return_value = mock_agent
 
-        result = create_agent_chat(provider=LlamaCppProvider())
+        result = create_agent_chat(
+            provider=LlamaCppProvider(
+                model_filename="test.gguf",
+                context_size=32768,
+            )
+        )
 
         mock_create_llm.assert_called_once()
         mock_simple_chat.assert_called_once_with(llm=mock_llm)

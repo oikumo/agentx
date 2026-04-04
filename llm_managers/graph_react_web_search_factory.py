@@ -2,6 +2,7 @@ from agents.graph_react_web_search.graph_react_web_search import GraphReactWebSe
 from llm_managers.llm_provider import LLMProvider
 from llm_managers.providers.llamacpp_provider import LlamaCppProvider
 from llm_managers.providers.openai_provider import OpenAIProvider
+from llm_models.local.llama_cpp_factory import LLAMA_CPP_MODEL_QWEN_2_5
 
 
 def create_graph_react_web_search(
@@ -18,7 +19,10 @@ def create_graph_react_web_search(
         Configured GraphReactWebSearch instance.
     """
     if provider is None:
-        provider = LlamaCppProvider()
+        provider = LlamaCppProvider(
+            model_filename=LLAMA_CPP_MODEL_QWEN_2_5,
+            context_size=32768,
+        )
     llm = provider.create_llm()
     return GraphReactWebSearch(llm=llm, max_search_results=max_search_results)
 
@@ -34,7 +38,13 @@ def create_graph_react_web_search_local(
     Returns:
         Configured GraphReactWebSearch instance.
     """
-    return create_graph_react_web_search(LlamaCppProvider(), max_search_results)
+    return create_graph_react_web_search(
+        LlamaCppProvider(
+            model_filename=LLAMA_CPP_MODEL_QWEN_2_5,
+            context_size=32768,
+        ),
+        max_search_results,
+    )
 
 
 def create_graph_react_web_search_cloud(
