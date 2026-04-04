@@ -31,6 +31,7 @@ _This section lists the primary documentation files. Click a link to open the de
 | [doc/tests.md](doc/tests.md) | Tests | Unit test suite, test commands |
 | [tests_sandbox/tests_sandbox.md](tests_sandbox/tests_sandbox.md) | Tests Sandbox | Feature and integration testing sandbox documentation |
 | [PROJECT_TESTING_SANDBOX_RULES.md](PROJECT_TESTING_SANDBOX_RULES.md) | Testing Rules | TDD strategy and Kent Beck-style rules for AI agents |
+| [CURRENT_ISSUE.md](CURRENT_ISSUE.md) | Meta | Currently tracked issues and their status |
 | [doc/dependencies.md](doc/dependencies.md) | Configuration | Dependencies table, environment variables, quick start, code style |
 | [USER_COMMMAND_EXTENDED.md](USER_COMMAND_EXTENSION.md) | Commands | Simplified, powerful LLM‑agent command reference |
 

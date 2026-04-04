@@ -26,6 +26,7 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
 | [tests_sandbox/](#tests_sandbox) | 6 | Feature and integration testing sandbox |
+| [Meta](#meta) | 1 | Project meta files (issues, rules) |
 
 ---
 
@@ -574,6 +575,19 @@ uv run pytest tests_sandbox/ -v
 # Run feature tests only
 uv run pytest tests_sandbox/features/ -v
 ```
+
+---
+
+## Meta
+
+**Path**: `/`
+
+Project meta files for tracking current state and issues.
+
+| File | Description |
+|------|-------------|
+| `CURRENT_ISSUE.md` | Currently tracked issues, root cause analysis, and fix status |
+| `PROJECT_TESTING_SANDBOX_RULES.md` | TDD strategy and rules for AI agents |
 
 ---
 
