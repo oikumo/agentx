@@ -71,9 +71,12 @@ class ChatLoop:
                 continue
             self.add_user_message(stripped)
             try:
+                full_response = ""
                 for chunk_content in self.get_streaming_response(stripped):
                     print(chunk_content, end="", flush=True)
+                    full_response += chunk_content
                 print()
+                self.add_assistant_message(full_response)
             except Exception as e:
                 self.history.pop()
                 print(f"Error: {e}")

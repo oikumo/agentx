@@ -4,14 +4,13 @@ from llm_managers.llm_provider import LLMProvider
 
 
 class OpenRouterProvider(LLMProvider):
-    """Local LLM provider using LlamaCpp with Qwen 2.5."""
+    """Cloud LLM provider using OpenRouter with auto-routing."""
 
     def create_llm(self) -> BaseChatModel:
         return ChatOpenRouter(
-            model="openrouter/auto",
-            temperature=0,
-            max_tokens=1024,
+            model="anthropic/claude-3.5-haiku",
+            temperature=0.7,
+            max_tokens=2048,
             max_retries=2,
-            # other params...
+            frequency_penalty=0.5,
         )
-

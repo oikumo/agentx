@@ -405,6 +405,20 @@ class TestChatLoopStreaming(unittest.TestCase):
 
         self.assertEqual(mock_llm.stream.call_count, 1)
 
+    def test_start_interactive_streaming_adds_response_to_history(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [
+            self._make_chunk("Hello"),
+            self._make_chunk(" world"),
+        ]
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        with patch.object(chat_loop, "_read_input", side_effect=["hi", "quit"]):
+            chat_loop.start_interactive_streaming()
+
+        self.assertEqual(len(chat_loop.history), 3)
+        self.assertEqual(chat_loop.history[2].content, "Hello world")
+
 
 if __name__ == "__main__":
     unittest.main()
