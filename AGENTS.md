@@ -55,6 +55,12 @@ Commands names allways starts with the prefix: "+".
 </USER_COMMAND>
 
 <USER_COMMAND>
+  <NAME>+solve</NAME>
+  <ARGUMENTS></ARGUMENTS>
+  <ACTION>Solve the [## Current Issue](), is a BIG TASK [<NAME>BIG TASK<NAME>]()</ACTION>
+</USER_COMMAND>
+
+<USER_COMMAND>
   <NAME>+?</NAME>
   <ARGUMENTS>{question_about_the_project}</ARGUMENTS>
   <ACTION>Question about the project, allways check the last 50 commits</ACTION>
@@ -78,7 +84,7 @@ Commands names allways starts with the prefix: "+".
 <USER_COMMAND>
   <NAME>+update</NAME>
   <ARGUMENTS></ARGUMENTS>
-  <ACTION>Update [## Project Navigation]() and [## Project Documentation]() and derived files according the changes in the last 50 commits</ACTION>
+  <ACTION>Update [## Project Navigation](), [## Current Issue]() and [## Project Documentation]() and derived files according the changes in the last 50 commits</ACTION>
 </USER_COMMAND>
 
 <USER_COMMANDS>
