@@ -117,8 +117,11 @@ agent-x/
 ### New: ChatLoop - Persistent Conversational Chat
 - `agents/chat/chat_loop.py`: New `ChatLoop` class with persistent message history, single-turn and interactive REPL modes
 - `llm_managers/agent_chat_factory.py`: Added `create_chat_loop()` and `create_chat_loop_local()` factory functions
-- `app/repl/commands/llm_chat_commands.py`: Updated `AIChat` command to use `ChatLoop` instead of `SimpleChat`
-- `tests_sandbox/test_chat_loop.py`: 23 TDD tests covering initialization, history, responses, exit conditions, interactive loop, and factory creation
-- Supports both `chat <message>` (single-query) and `chat` (interactive REPL) modes
-- Interactive mode prints LLM responses to stdout, exits cleanly on `quit` or `exit`
+- `app/repl/commands/llm_chat_commands.py`: Updated `AIChat` command to use `ChatLoop` with streaming
+- `tests_sandbox/test_chat_loop.py`: 38 TDD tests covering initialization, history, responses, exit conditions, interactive loop, streaming, and factory creation
+- `llm_managers/providers/openrouter_provider.py`: Cloud LLM provider with Claude 3.5 Haiku, temperature 0.7, frequency penalty
+- Supports both `chat <message>` (single-query) and `chat` (interactive REPL) modes with streaming output
+- Streaming uses `llm.stream()` with chunk accumulation and live printing
+- Interactive mode prints LLM responses in real-time, exits cleanly on `quit` or `exit`
 - Robust error handling with history rollback on LLM invocation failures
+- Assistant responses are properly added to history for conversational context

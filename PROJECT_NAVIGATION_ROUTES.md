@@ -20,7 +20,7 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | [Root](#root) | 2 | Entry point and project configuration |
 | [_resources/](#_resources) | 2 | Sample data files for demos |
 | [agents/](#agents) | 16 | Agent implementations (SimpleChat, ChatLoop, RAG, ReAct, Graph) |
-| [llm_managers/](#llm_managers) | 8 | Agent factory functions + LLM provider strategy pattern |
+| [llm_managers/](#llm_managers) | 9 | Agent factory functions + LLM provider strategy pattern |
 | [app/](#app) | 20 | Core application: REPL, models, DB, security |
 | [app_modules/](#app_modules) | 20 | LLM integrations, data stores, web ingestion |
 | [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
@@ -82,11 +82,11 @@ Factory functions and LLM provider strategy pattern. Centralizes agent creation 
 
 LLM provider implementations following the Strategy pattern.
 
-| File | Description |
-|------|-------------|
+| File | Key Functions | Description |
+|------|---------------|-------------|
 | `llamacpp_provider.py` | `LlamaCppProvider` - local LLM via llama.cpp with Qwen 2.5 |
 | `openai_provider.py` | `OpenAIProvider` - cloud LLM via OpenAI API |
-| `openrouter_provider.py` | `OpenRouterProvider` - cloud LLM via OpenRouter (auto-routing) |
+| `openrouter_provider.py` | `OpenRouterProvider` - cloud LLM via OpenRouter (Claude 3.5 Haiku, streaming-enabled) |
 
 ---
 
@@ -563,7 +563,7 @@ tests_sandbox/
 │   └── test_controller.py           # MainController feature tests
 ├── test_command_parser.py           # CommandParser unit tests
 ├── test_commands.py                 # Command implementation tests
-└── test_chat_loop.py                # ChatLoop TDD tests (23 tests)
+└── test_chat_loop.py                # ChatLoop TDD tests (38 tests)
 ```
 
 ### Test Commands
