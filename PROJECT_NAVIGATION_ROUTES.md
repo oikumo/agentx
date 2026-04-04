@@ -26,7 +26,7 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
 | [tests_sandbox/](#tests_sandbox) | 6 | Feature and integration testing sandbox |
-| [Meta](#meta) | 1 | Project meta files (issues, rules) |
+| [Meta](#meta) | 2 | Project meta files (issues, roadmap, rules) |
 
 ---
 
@@ -83,8 +83,16 @@ Factory functions and LLM provider strategy pattern. Centralizes agent creation 
 
 LLM provider implementations following the Strategy pattern.
 
-| File | Key Functions | Description |
-|------|---------------|-------------|
+#### LLMProvider ABC Contract
+
+All providers must implement:
+- `create_llm() -> BaseChatModel` — Returns a LangChain `BaseChatModel` instance
+- The returned model must support `.invoke(history)` and `.stream(history)` methods
+- Providers should handle API key configuration from environment variables
+
+| File | Description |
+|------|-------------|
+| `llm_provider.py` | `LLMProvider` ABC — base class with `@abstractmethod create_llm()` |
 | `llamacpp_provider.py` | `LlamaCppProvider` - local LLM via llama.cpp with Qwen 2.5 |
 | `openai_provider.py` | `OpenAIProvider` - cloud LLM via OpenAI API |
 | `openrouter_provider.py` | `OpenRouterProvider` - cloud LLM via OpenRouter (Claude 3.5 Haiku, streaming-enabled) |
@@ -96,30 +104,19 @@ LLM provider implementations following the Strategy pattern.
 **Path**: `agents/`  
 **Module Doc**: [agents.md](agents/agents.md)
 
-Agent implementations and factory functions. Each agent represents a different LLM interaction pattern.
+Agent implementations. Factory functions moved to `llm_managers/`.
 
 ### Sub-modules
 
 | Sub-module | Description |
 |------------|-------------|
-| [chat/](#agentschat) | Simple conversational agent |
+| [chat/](#agentschat) | SimpleChat, ChatLoop (persistent conversation with streaming) |
 | [function_tool_router/](#agentsfunction_tool_router) | Query routing with Ollama tool calling |
 | [graph_react_web_search/](#agentsgraph_react_web_search) | LangGraph-based ReAct web search |
 | [rag_pdf/](#agentsrag_pdf) | PDF RAG with FAISS + Ollama embeddings |
 | [react_web_search/](#agentsreact_web_search) | LangChain ReAct web search agent |
 
-### Factory Files
-
-| File | Description |
-|------|-------------|
-| `agent_chat_factory.py` | Factory for SimpleChat, ChatLoop (`create_chat_loop`, `create_chat_loop_local`) |
-| `agent_function_router_factory.py` | Factory for QueryRouter |
-| `agent_rag_factory.py` | Factory for AgentRagPdf |
-| `agent_react_web_search_factory.py` | Factory for AgentReactWebSearch |
-| `graph_react_web_search_factory.py` | Factory for GraphReactWebSearch (local + cloud) |
-
 ### Design Patterns
-- **Factory**: All `agent_*_factory.py` files encapsulate agent creation
 - **Strategy**: Different agents implement different reasoning strategies
 - **State Machine**: `GraphReactWebSearch` uses LangGraph `StateGraph`
 - **RAG**: Standard pipeline: load → embed → store → retrieve → generate
@@ -587,6 +584,7 @@ Project meta files for tracking current state and issues.
 | File | Description |
 |------|-------------|
 | `CURRENT_ISSUE.md` | Currently tracked issues, root cause analysis, and fix status |
+| `PROJECT_ROADMAP.md` | Planned features, improvements, and completed items |
 | `PROJECT_TESTING_SANDBOX_RULES.md` | TDD strategy and rules for AI agents |
 
 ---

@@ -227,7 +227,7 @@ Prefer specialized file operations tools over bash commands:
 </COMMUNICATION>
 <CODING_STYLE_GIDELINES>
 <GENERAL>
-- Language: Python 3.13+; type hints preferred where beneficial.
+- Language: Python 3.14+; type hints preferred where beneficial.
 - Line length: 88 characters.
 - Docstrings: Google-style for public functions/classes.
 - Tests: mirror source structure; unit tests focus on pure logic; integration tests cover end-to-end flows.

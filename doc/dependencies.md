@@ -17,6 +17,7 @@
 | langchainhub | >=0.1.21 | LangChain Hub for prompts |
 | langchain-experimental | >=0.4.1 | Experimental features |
 | langchain-google-genai | >=4.2.1 | Google Gemini integration |
+| langchain-openrouter | - | OpenRouter API integration (auto-routing) |
 | langchain-chroma | >=1.1.0 | Chroma vector store |
 | langgraph | >=1.1.3 | Graph-based workflows |
 | llama-cpp-python | >=0.3.19 | Local LLM inference |

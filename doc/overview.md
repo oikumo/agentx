@@ -4,7 +4,8 @@
 
 Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop) interface. It enables users to interact with various language models through command-line commands, supporting multiple interaction patterns:
 
-- **Simple Chat**: Conversational interaction with local/cloud LLMs
+- **Simple Chat**: Conversational interaction with local/cloud LLMs (single-turn and persistent REPL with streaming)
+- **Chat Loop**: Persistent conversation with message history, streaming output, and context preservation
 - **Function Calling**: Ollama-based tool calling for function dispatch
 - **RAG (Retrieval-Augmented Generation)**: PDF Q&A with FAISS vector store and Ollama embeddings
 - **ReAct Web Search**: Web search agents using Tavily with structured output
@@ -41,7 +42,7 @@ main.py
 | `sum` | SumCommand | app.repl.commands.math_commands | Add two integers |
 | `quit` | QuitCommand | app.repl.commands.cli_commands | Exit the application |
 | `clear` | ClearCommand | app.repl.commands.cli_commands | Clear console screen |
-| `chat` | AIChat | app.repl.commands.llm_chat_commands | Start AI chat session |
+| `chat` | AIChat | app.repl.commands.llm_chat_commands | Start AI chat session (single-query or interactive REPL with streaming) |
 | `router` | AIRouterAgents | app.repl.commands.llm_chat_commands | Run router agent (CSV + QR) |
 | `react` | AIReactTools | app.repl.commands.llm_chat_commands | Run ReAct agent with tools |
 | `search` | AISearch | app.repl.commands.llm_chat_commands | ReAct web search agent |
