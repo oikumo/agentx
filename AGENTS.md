@@ -14,6 +14,7 @@ System Agent coding entry point. ALWAYS FOLLOW THIS RULES
 <PROJECT_TESTING_SANDBOX_RULES>: In [## Project Testing Sandbox Rules]().
 <PROJECT_ROADMAP>: In [## Project Roadmap]().
 <TAKS_TYPES>: In [## Tasks Types]().
+<CURRENT_ISSUE>: In [## Current Issue](). 
 <GENERAL_RULES>: In [## General Rules]().
 [/RULES]
 
@@ -198,6 +199,17 @@ Take information from here to implement new features or improvements of the proj
 <DESCRIPTION>TASK REQUIRE BIG EFFORT AND TAKE TIME BECAUSE IS IMPORTANT. ANALYZE AND THINK CAREFULLY BEFORE GIVE AN ASWER</DESCRIPTION>
 </TASK_TYPE>
 </TASK_TYPES>
+
+[## Current Issue]()
+
+<CURRENT_ISSUE>
+<DESCRIPTION>
+Describe the current issue, active and need to be solved in the "/CURRENT_ISSUE.md" file. If is not exists any issue "/CURRENT_ISSUE.md" file, must be set EMPTY 
+</DESCRIPTION>
+<ACTION>
+Put the current issue and current issue solving strategy in "/CURRENT_ISSUE.md" file. If is not exists any issue "/CURRENT_ISSUE.md" file, must be set EMPTY
+</ACTION>
+<CURRENT_ISSUE>
 
 [## General Rules]()
 

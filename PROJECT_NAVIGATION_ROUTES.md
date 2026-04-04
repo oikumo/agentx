@@ -1,6 +1,6 @@
 # Project Navigation Routes - Agent-X
 
-> **Last Updated**: April 3, 2026  
+> **Last Updated**: April 4, 2026  
 > **Version**: 0.1.0  
 > **Python**: 3.14+  
 > **Package Manager**: uv
@@ -25,7 +25,7 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | [app_modules/](#app_modules) | 20 | LLM integrations, data stores, web ingestion |
 | [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
-| [tests_sandbox/](#tests_sandbox) | 11 | Feature and integration testing sandbox |
+| [tests_sandbox/](#tests_sandbox) | 13 | Feature and integration testing sandbox |
 | [Meta](#meta) | 2 | Project meta files (issues, roadmap, rules) |
 
 ---
@@ -93,7 +93,7 @@ All providers must implement:
 | File | Description |
 |------|-------------|
 | `llm_provider.py` | `LLMProvider` ABC — base class with `@abstractmethod create_llm()` |
-| `llamacpp_provider.py` | `LlamaCppProvider` - local LLM via llama.cpp with Qwen 2.5 |
+| `llamacpp_provider.py` | `LlamaCppProvider` - local LLM via llama.cpp using ChatOpenAI client with Qwen 2.5/3 |
 | `openai_provider.py` | `OpenAIProvider` - cloud LLM via OpenAI API |
 | `openrouter_provider.py` | `OpenRouterProvider` - cloud LLM via OpenRouter, now accepts `model_name` parameter for runtime model selection |
 
@@ -427,7 +427,7 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 |----------|--------|---------------|
 | **OpenAI** | gpt-4-turbo, gpt-3.5-turbo | Hardcoded defaults |
 | **Google** | gemini-2.5-flash-lite | Hardcoded defaults |
-| **LlamaCpp** | Qwen 2.5, Qwen 3, Qwen 3.5 Opus | `LlamaCppConfig` Pydantic model |
+| **LlamaCpp** | Qwen 2.5, Qwen 3 | `LlamaCppConfig` Pydantic model |
 | **Ollama** | nomic-embed-text (embeddings) | Direct instantiation |
 
 ---
@@ -468,7 +468,7 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 | File | Key Classes | Description |
 |------|-------------|-------------|
-| `llamacpp.py` | `LlamaCpp` | Factory for creating local ChatLlamaCpp instances |
+| `llamacpp.py` | `LlamaCpp` | Factory for creating local ChatOpenAI instances via llama.cpp server |
 | `llamacpp_config.py` | `LlamaCppConfig` | Pydantic config: model_filename, temperature, context_size, max_tokens, top_p, batch_size |
 
 ---
@@ -568,7 +568,9 @@ tests_sandbox/
 ├── test_argument_parser.py          # --model flag argument parsing (14 tests)
 ├── test_model_selection.py          # Model selection + streaming metrics (8 tests)
 ├── test_chat_command.py             # AIChat command with --model flag (6 tests)
-└── test_agent_streaming.py          # Agent streaming methods (6 tests)
+├── test_agent_streaming.py          # Agent streaming methods (6 tests)
+├── test_llm_providers.py            # LLM provider tests
+└── test_llm_managers.py             # LLM manager tests
 ```
 
 ### Test Commands
