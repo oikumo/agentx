@@ -519,13 +519,8 @@ tests/
 ├── integration/
 │   └── __init__.py
 └── unit/
-    ├── app/
-    │   └── __init__.py
-    └── applications/
-        └── repl_app/
-            └── command_line_controller/
-                ├── command_parser_test.py
-                └── commands_controller_test.py
+    └── app/
+        └── __init__.py
 ```
 
 ### Test Commands
