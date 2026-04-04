@@ -44,14 +44,20 @@ _This section lists the primary documentation files. Click a link to open the de
 agent-x/
 ├── main.py                          # Application entry point
 ├── pyproject.toml                   # Project configuration, dependencies
+├── CURRENT_ISSUE.md                 # Currently tracked issues and fix status
 ├── agents/                          # Agent implementations
-│   ├── chat/                        # Simple conversational agent
+│   ├── chat/                        # SimpleChat, ChatLoop (persistent conversation)
 │   ├── function_tool_router/        # Query routing with Ollama tool calling
 │   ├── graph_react_web_search/      # LangGraph-based ReAct web search
 │   ├── rag_pdf/                     # PDF RAG with FAISS + Ollama embeddings
 │   └── react_web_search/            # LangChain ReAct web search agent
-├── llm_managers/                    # Agent factory functions (moved from agents/)
-│   ├── agent_chat_factory.py        # Factory for SimpleChat
+├── llm_managers/                    # Agent factory functions + LLM provider strategy
+│   ├── providers/                   # LLM provider implementations (Strategy pattern)
+│   │   ├── llamacpp_provider.py     # Local LLM via llama.cpp
+│   │   ├── openai_provider.py       # Cloud LLM via OpenAI API
+│   │   └── openrouter_provider.py   # Cloud LLM via OpenRouter (Claude 3.5 Haiku)
+│   ├── llm_provider.py              # LLMProvider ABC - strategy interface
+│   ├── agent_chat_factory.py        # Factories for SimpleChat and ChatLoop
 │   ├── agent_function_router_factory.py  # Factory for QueryRouter
 │   ├── agent_rag_factory.py         # Factory for AgentRagPdf
 │   ├── agent_react_web_search_factory.py # Factory for AgentReactWebSearch
@@ -81,7 +87,8 @@ agent-x/
 │   ├── tests_sandbox.md             # Sandbox documentation
 │   ├── features/                    # Feature-level tests (controllers, workflows)
 │   ├── test_command_parser.py       # Command parser unit tests
-│   └── test_commands.py             # Command implementation tests
+│   ├── test_commands.py             # Command implementation tests
+│   └── test_chat_loop.py            # ChatLoop TDD tests (38 tests)
 ├── PROJECT_TESTING_SANDBOX_RULES.md # TDD strategy and rules for AI agents
 ├── _resources/                      # Sample data files
 └── doc/                             # Project documentation
