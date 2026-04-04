@@ -21,11 +21,11 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | [_resources/](#_resources) | 2 | Sample data files for demos |
 | [agents/](#agents) | 16 | Agent implementations (SimpleChat, ChatLoop, RAG, ReAct, Graph) |
 | [llm_managers/](#llm_managers) | 9 | Agent factory functions + LLM provider strategy pattern |
-| [app/](#app) | 20 | Core application: REPL, models, DB, security |
+| [app/](#app) | 22 | Core application: REPL, models, DB, security, streaming metrics |
 | [app_modules/](#app_modules) | 20 | LLM integrations, data stores, web ingestion |
 | [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
-| [tests_sandbox/](#tests_sandbox) | 6 | Feature and integration testing sandbox |
+| [tests_sandbox/](#tests_sandbox) | 11 | Feature and integration testing sandbox |
 | [Meta](#meta) | 2 | Project meta files (issues, roadmap, rules) |
 
 ---
@@ -71,7 +71,7 @@ Factory functions and LLM provider strategy pattern. Centralizes agent creation 
 | File | Description |
 |------|-------------|
 | `llm_provider.py` | `LLMProvider` ABC - strategy interface for LLM providers |
-| `agent_chat_factory.py` | Factories for SimpleChat and ChatLoop (`create_chat_loop`, `create_chat_loop_local`) |
+| `agent_chat_factory.py` | Factories for SimpleChat and ChatLoop (`create_chat_loop`, `create_chat_loop_local`, `create_chat_loop_with_model`) |
 | `agent_function_router_factory.py` | Factory for QueryRouter |
 | `agent_rag_factory.py` | Factory for AgentRagPdf |
 | `agent_react_web_search_factory.py` | Factory for AgentReactWebSearch |
@@ -95,7 +95,7 @@ All providers must implement:
 | `llm_provider.py` | `LLMProvider` ABC — base class with `@abstractmethod create_llm()` |
 | `llamacpp_provider.py` | `LlamaCppProvider` - local LLM via llama.cpp with Qwen 2.5 |
 | `openai_provider.py` | `OpenAIProvider` - cloud LLM via OpenAI API |
-| `openrouter_provider.py` | `OpenRouterProvider` - cloud LLM via OpenRouter (Claude 3.5 Haiku, streaming-enabled) |
+| `openrouter_provider.py` | `OpenRouterProvider` - cloud LLM via OpenRouter, now accepts `model_name` parameter for runtime model selection |
 
 ---
 
@@ -130,8 +130,8 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 | File | Description |
 |------|-------------|
-| `simple_chat.py` | `SimpleChat` class - wraps `BaseChatModel` with a prompt template chain |
-| `chat_loop.py` | `ChatLoop` class - persistent conversational chat with message history, single-turn and interactive REPL modes |
+| `simple_chat.py` | `SimpleChat` class - wraps `BaseChatModel` with a prompt template chain, now with `run_streaming()` |
+| `chat_loop.py` | `ChatLoop` class - persistent conversational chat with message history, single-turn and interactive REPL modes, `run_streaming_with_metrics()`, tok/s display |
 
 ---
 
@@ -166,7 +166,7 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 | File | Description |
 |------|-------------|
-| `agent_rag_pdf.py` | `AgentRagPdf` - PDF ingestion → FAISS vector store → retrieval QA chain |
+| `agent_rag_pdf.py` | `AgentRagPdf` - PDF ingestion → FAISS vector store → retrieval QA chain, now with `run_streaming()` |
 
 ---
 
@@ -177,7 +177,7 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 | File | Description |
 |------|-------------|
-| `agent_react_web_search.py` | `AgentReactWebSearch` - thin wrapper delegating to `search_agent()` |
+| `agent_react_web_search.py` | `AgentReactWebSearch` - thin wrapper delegating to `search_agent()`, now with `run_streaming()` |
 | `prompt.py` | ReAct prompt template |
 | `schemas.py` | Pydantic models: `Source`, `AgentResponse` |
 | `search_agent.py` | `search_agent()` function - creates ReAct agent with Tavily |
@@ -211,6 +211,7 @@ Core application module containing the REPL system, data models, database layer,
 |------|---------------|-------------|
 | `utils/utils.py` | `safe_int()`, `clear_console()` | General utilities |
 | `utils/file_utils.py` | `create_directory_with_timestamp()`, `dangerous_delete_directory()` | Directory management |
+| `utils/streaming_metrics.py` | `StreamingMetrics` | Token-per-second tracking during streaming |
 | `files/file_utils.py` | `save_to_output()` | Writes text to `local/output.txt` |
 
 ---
@@ -253,6 +254,7 @@ The core interactive shell of Agent-X.
 | `console.py` | `Console`, `Colors` | Colored output utilities |
 | `base.py` | `IMainController` | Interface for command controllers |
 | `controllers/main_controller.py` | `MainController` | Command registry (`dict[str, Command]`) |
+| `utils/argument_parser.py` | `parse_chat_arguments()` | Extracts `--model` flag from command arguments |
 
 #### Commands
 
@@ -561,7 +563,12 @@ tests_sandbox/
 │   └── test_controller.py           # MainController feature tests
 ├── test_command_parser.py           # CommandParser unit tests
 ├── test_commands.py                 # Command implementation tests
-└── test_chat_loop.py                # ChatLoop TDD tests (38 tests)
+├── test_chat_loop.py                # ChatLoop TDD tests (38 tests)
+├── test_streaming_metrics.py        # StreamingMetrics tok/s tracking (14 tests)
+├── test_argument_parser.py          # --model flag argument parsing (14 tests)
+├── test_model_selection.py          # Model selection + streaming metrics (8 tests)
+├── test_chat_command.py             # AIChat command with --model flag (6 tests)
+└── test_agent_streaming.py          # Agent streaming methods (6 tests)
 ```
 
 ### Test Commands

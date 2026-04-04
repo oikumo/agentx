@@ -134,3 +134,19 @@ agent-x/
 - Interactive mode prints LLM responses in real-time, exits cleanly on `quit` or `exit`
 - Robust error handling with history rollback on LLM invocation failures
 - Assistant responses are properly added to history for conversational context
+
+### New: Streaming Enhancements
+- `app/common/utils/streaming_metrics.py`: New `StreamingMetrics` class with context manager support, tracks token count, elapsed time, and calculates tokens-per-second
+- `app/repl/utils/argument_parser.py`: New `parse_chat_arguments()` function extracts `--model <name>` flag from command arguments
+- `agents/chat/chat_loop.py`: Added `run_streaming_with_metrics()` method returning response + metrics tuple; `start_interactive_streaming()` now displays tok/s after each response
+- `agents/chat/simple_chat.py`: Added `run_streaming()` method for single-turn streaming via LangChain chain.stream()
+- `agents/react_web_search/agent_react_web_search.py`: Added `run_streaming(query)` method for ReAct web search with streaming
+- `agents/rag_pdf/agent_rag_pdf.py`: Added `run_streaming(query)` and `rag_pdf_streaming()` methods for RAG pipeline streaming
+- `llm_managers/providers/openrouter_provider.py`: Now accepts `model_name` parameter (defaults to `anthropic/claude-3.5-haiku`)
+- `llm_managers/agent_chat_factory.py`: Added `create_chat_loop_with_model(model_name)` factory for runtime model selection
+- `app/repl/commands/llm_chat_commands.py`: `AIChat` command now supports `--model <model>` flag for runtime model selection, displays streaming metrics (tokens, time, tok/s) after each response
+- `tests_sandbox/test_streaming_metrics.py`: 14 tests for StreamingMetrics (initialization, timing, token counting, calculation, context manager)
+- `tests_sandbox/test_argument_parser.py`: 14 tests for argument parsing (--model flag at various positions, edge cases)
+- `tests_sandbox/test_model_selection.py`: 8 tests for model selection (ChatLoop model override, factory with model name, streaming with metrics, OpenRouterProvider model_name)
+- `tests_sandbox/test_chat_command.py`: 6 tests for AIChat command (--model flag, metrics display, interactive mode, error handling)
+- `tests_sandbox/test_agent_streaming.py`: 6 tests for agent streaming (SimpleChat, AgentReactWebSearch, AgentRagPdf)
