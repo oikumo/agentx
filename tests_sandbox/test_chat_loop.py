@@ -216,7 +216,7 @@ class TestChatLoopInteractive(unittest.TestCase):
 
 
 class TestChatLoopFactory(unittest.TestCase):
-    @patch("llm_managers.agent_chat_factory.OpenRouterProvider")
+    @patch("llm_managers.agent_chat_factory.LlamaCppProvider")
     def test_create_chat_loop_local_returns_chat_loop(self, mock_provider_class):
         from llm_managers.agent_chat_factory import create_chat_loop_local
 

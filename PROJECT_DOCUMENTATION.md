@@ -1,6 +1,6 @@
 # Project Documentation - Agent-X
 
-> **Last Updated**: April 3, 2026  
+> **Last Updated**: April 4, 2026  
 > **Version**: 0.1.0  
 > **Python**: >=3.14  
 > **Package Manager**: uv
@@ -89,7 +89,14 @@ agent-x/
 │   ├── features/                    # Feature-level tests (controllers, workflows)
 │   ├── test_command_parser.py       # Command parser unit tests
 │   ├── test_commands.py             # Command implementation tests
-│   └── test_chat_loop.py            # ChatLoop TDD tests (38 tests)
+│   ├── test_chat_loop.py            # ChatLoop TDD tests (38 tests)
+│   ├── test_streaming_metrics.py    # StreamingMetrics tok/s tracking (14 tests)
+│   ├── test_argument_parser.py      # --model flag argument parsing (14 tests)
+│   ├── test_model_selection.py      # Model selection + streaming metrics (8 tests)
+│   ├── test_chat_command.py         # AIChat command with --model flag (6 tests)
+│   ├── test_agent_streaming.py      # Agent streaming methods (6 tests)
+│   ├── test_llm_providers.py        # LLM provider tests
+│   └── test_llm_managers.py         # LLM manager tests
 ├── PROJECT_TESTING_SANDBOX_RULES.md # TDD strategy and rules for AI agents
 ├── _resources/                      # Sample data files
 └── doc/                             # Project documentation
@@ -98,6 +105,21 @@ agent-x/
 ---
 
 ## Recent Changes
+
+### Fixed: llama.cpp Provider - Now Uses ChatOpenAI Client
+- `llm_models/local/llama_cpp/llamacpp.py`: Refactored to use `ChatOpenAI` with a local OpenAI-compatible client pointing to `http://localhost:8080/v1`
+- `llm_managers/providers/llamacpp_provider.py`: Simplified to pass `model_filename` and `context_size` to factory
+- `llm_managers/agent_chat_factory.py`: Simplified `create_chat_loop()` - removed redundant code, defaults to `LlamaCppProvider` with Qwen 2.5
+- `llm_models/local/llama_cpp_factory.py`: Cleaned up model constants (`LLAMA_CPP_MODEL_QWEN_2_5`, `LLAMA_CPP_MODEL_QWEN_3`)
+- Added `openai` dependency to `pyproject.toml`
+
+### New: USER_MANUAL.md
+- Comprehensive user manual added (320 lines)
+
+### Updated: AGENTS.md Rules
+- Enhanced system instructions and general rules
+- Improved tool usage guidelines
+- Updated coding style guidelines
 
 ### New: `llm_managers/` Module
 - Agent factory files moved from `agents/` to `llm_managers/`

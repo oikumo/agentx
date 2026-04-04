@@ -57,7 +57,7 @@ Commands names allways starts with the prefix: "+".
 <USER_COMMAND>
   <NAME>+solve</NAME>
   <ARGUMENTS></ARGUMENTS>
-  <ACTION>Solve the [## Current Issue](), is a BIG TASK [<NAME>BIG TASK<NAME>]()</ACTION>
+  <ACTION>Solve the [## Current Issue](), is a BIG TASK [<NAME>BIG TASK<NAME>](). If the issue is solved, APPLY THE RULES IN [## Current Issue]()</ACTION>
 </USER_COMMAND>
 
 <USER_COMMAND>
