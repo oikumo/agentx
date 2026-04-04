@@ -115,7 +115,7 @@ class TestCommandDescriptions(unittest.TestCase):
 
 
 class TestAIChatCommand(unittest.TestCase):
-    @patch("app.repl.commands.llm_chat_commands.create_chat_loop_local")
+    @patch("app.repl.commands.llm_chat_commands.AgentFactory.create_chat_loop")
     def test_chat_interactive_uses_streaming(self, mock_factory):
         mock_loop = MagicMock()
         mock_factory.return_value = mock_loop
@@ -127,7 +127,7 @@ class TestAIChatCommand(unittest.TestCase):
         mock_loop.start_interactive_streaming.assert_called_once()
         mock_loop.start_interactive.assert_not_called()
 
-    @patch("app.repl.commands.llm_chat_commands.create_chat_loop_local")
+    @patch("app.repl.commands.llm_chat_commands.AgentFactory.create_chat_loop")
     @patch("app.repl.commands.llm_chat_commands.Console")
     def test_chat_single_query_uses_streaming(self, mock_console, mock_factory):
         mock_loop = MagicMock()
@@ -141,7 +141,7 @@ class TestAIChatCommand(unittest.TestCase):
         mock_loop.run_streaming_with_metrics.assert_called_once_with("hello")
         mock_loop.run.assert_not_called()
 
-    @patch("app.repl.commands.llm_chat_commands.create_chat_loop_local")
+    @patch("app.repl.commands.llm_chat_commands.AgentFactory.create_chat_loop")
     @patch("app.repl.commands.llm_chat_commands.Console")
     def test_chat_streaming_error_handling(self, mock_console, mock_factory):
         mock_loop = MagicMock()
@@ -151,8 +151,6 @@ class TestAIChatCommand(unittest.TestCase):
         controller = MagicMock()
         cmd = AIChat("chat", controller)
         cmd.run(["hello"])
-
-        mock_console.log_error.assert_called_once()
 
         mock_console.log_error.assert_called_once()
 

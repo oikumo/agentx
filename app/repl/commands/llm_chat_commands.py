@@ -1,15 +1,5 @@
-from llm_managers.agent_chat_factory import (
-    create_agent_chat_local,
-    create_chat_loop_local,
-    create_chat_loop_with_model,
-)
-from llm_managers.agent_function_router_factory import (
-    create_agent_function_router_local,
-)
-from llm_managers.agent_rag_factory import create_agent_rag_local
-from llm_managers.agent_react_web_search_factory import (
-    create_agent_react_web_search_local,
-)
+from llm_managers.factory import AgentFactory, RagConfig
+from llm_managers.providers.openrouter_provider import OpenRouterProvider
 from app.repl.base import IMainController
 from app.repl.command import Command
 from app.repl.console import Console
@@ -34,7 +24,7 @@ class AISearch(Command):
         )
 
     def run(self, arguments: list[str]) -> None:
-        create_agent_react_web_search_local().run()
+        AgentFactory.create_react_web_search().run()
 
 
 class AIFunction(Command):
@@ -42,7 +32,7 @@ class AIFunction(Command):
         super().__init__(key, controller, description="Run an AI function call demo")
 
     def run(self, arguments: list[str]) -> None:
-        create_agent_function_router_local().function_call()
+        AgentFactory.create_function_router().function_call()
 
 
 class AIChat(Command):
@@ -57,9 +47,10 @@ class AIChat(Command):
         model_name, query = parse_chat_arguments(arguments)
 
         if model_name:
-            chat_loop = create_chat_loop_with_model(model_name)
+            provider = OpenRouterProvider(model_name=model_name)
+            chat_loop = AgentFactory.create_chat_loop(provider=provider)
         else:
-            chat_loop = create_chat_loop_local()
+            chat_loop = AgentFactory.create_chat_loop()
 
         if not query:
             Console.log_info(
@@ -87,7 +78,7 @@ class RagPDF(Command):
             Console.log_warning("missing args")
             return
 
-        create_agent_rag_local().run(query=" ".join(arguments))
+        AgentFactory.create_rag().run(query=" ".join(arguments))
 
 
 class AIRouterAgents(Command):

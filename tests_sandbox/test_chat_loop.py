@@ -216,16 +216,16 @@ class TestChatLoopInteractive(unittest.TestCase):
 
 
 class TestChatLoopFactory(unittest.TestCase):
-    @patch("llm_managers.agent_chat_factory.LlamaCppProvider")
-    def test_create_chat_loop_local_returns_chat_loop(self, mock_provider_class):
-        from llm_managers.agent_chat_factory import create_chat_loop_local
+    @patch("llm_managers.factory.local_llm_provider")
+    def test_create_chat_loop_local_returns_chat_loop(self, mock_local):
+        from llm_managers.factory import AgentFactory
 
         mock_provider = MagicMock()
         mock_llm = MagicMock()
         mock_provider.create_llm.return_value = mock_llm
-        mock_provider_class.return_value = mock_provider
+        mock_local.return_value = mock_provider
 
-        result = create_chat_loop_local()
+        result = AgentFactory.create_chat_loop()
 
         self.assertIsInstance(result, ChatLoop)
         self.assertIs(result.llm, mock_llm)

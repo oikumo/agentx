@@ -30,20 +30,18 @@ class TestChatLoopWithModelSelection(unittest.TestCase):
         self.assertEqual(result, "response")
 
     def test_chat_loop_factory_accepts_model_name(self):
-        with patch(
-            "llm_managers.agent_chat_factory.OpenRouterProvider"
-        ) as mock_provider_class:
-            mock_provider = MagicMock()
-            mock_llm = MagicMock()
-            mock_provider.create_llm.return_value = mock_llm
-            mock_provider_class.return_value = mock_provider
+        mock_provider = MagicMock()
+        mock_llm = MagicMock()
+        mock_provider.create_llm.return_value = mock_llm
 
-            from llm_managers.agent_chat_factory import create_chat_loop_with_model
+        from llm_managers.factory import AgentFactory
+        from llm_managers.providers.openrouter_provider import OpenRouterProvider
 
-            result = create_chat_loop_with_model("gpt-4")
+        with patch.object(OpenRouterProvider, "create_llm", return_value=mock_llm):
+            provider = OpenRouterProvider(model_name="gpt-4")
+            result = AgentFactory.create_chat_loop(provider=provider)
 
-            mock_provider_class.assert_called_once_with(model_name="gpt-4")
-            self.assertIsInstance(result, ChatLoop)
+        self.assertIsInstance(result, ChatLoop)
 
 
 class TestChatLoopStreamingWithMetrics(unittest.TestCase):
