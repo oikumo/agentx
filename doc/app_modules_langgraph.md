@@ -1,6 +1,6 @@
 # App Modules - LangGraph - Agent-X
 
-**Path**: `/app_modules/llm/langgraph/`
+**Path**: `src/app_modules/llm/langgraph/`
 
 LangGraph workflows: reflection chains and reflexion agents.
 
@@ -9,7 +9,7 @@ LangGraph workflows: reflection chains and reflexion agents.
 ## Module Structure
 
 ```
-app_modules/llm/langgraph/
+src/app_modules/llm/langgraph/
 ├── graph_reflector_chain/
 │   ├── chains.py          # generate/reflect chains
 │   └── graph_chains.py    # StateGraph

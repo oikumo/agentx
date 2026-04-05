@@ -1,6 +1,6 @@
 # App Modules - Web Ingestion - Agent-X
 
-**Path**: `/app_modules/web_ingestion_app/`
+**Path**: `src/app_modules/web_ingestion_app/`
 
 Web scraping pipeline: Tavily → chunk → index.
 
@@ -9,7 +9,7 @@ Web scraping pipeline: Tavily → chunk → index.
 ## Module Structure
 
 ```
-app_modules/web_ingestion_app/
+src/app_modules/web_ingestion_app/
 ├── documents.py               # document processing
 ├── helpers.py                 # JSONL helpers
 ├── tavily.py                  # WebExtract

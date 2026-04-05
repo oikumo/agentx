@@ -1,6 +1,6 @@
 # App Security Module - Agent-X
 
-**Path**: `/app/security/`
+**Path**: `src/app/security/`
 
 Security utilities for directory deletion safeguards.
 
@@ -9,7 +9,7 @@ Security utilities for directory deletion safeguards.
 ## Module Structure
 
 ```
-app/security/
+src/app/security/
 ├── security.py                # is_directory_allowed_to_deletion()
 └── security_constants.py      # deletion constants
 ```

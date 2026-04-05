@@ -19,8 +19,13 @@
 | langchain-google-genai | >=4.2.1 | Google Gemini integration |
 | langchain-openrouter | - | OpenRouter API integration (auto-routing) |
 | langchain-chroma | >=1.1.0 | Chroma vector store |
-| langgraph | >=1.1.3 | Graph-based workflows |
-| llama-cpp-python | >=0.3.19 | Local LLM inference |
+| langgraph | >=1.1.6 | Graph-based workflows |
+| llama-cpp-python | >=0.3.20 | Local LLM inference |
+| openai | >=2.30.0 | OpenAI client (used by llama.cpp provider) |
+| langchain-mcp-adapters | >=0.2.2 | MCP tool adapters |
+| mcp[cli] | >=1.27.0 | Model Context Protocol |
+| fastmcp | >=3.2.0 | Fast MCP server framework |
+| aiohttp | >=3.13.5 | Async HTTP client |
 
 ### Tools & Utilities
 
@@ -77,6 +82,9 @@
 # Install dependencies
 uv sync
 
+# Install in development mode
+uv pip install -e .
+
 # Run the application
 python main.py
 ```
@@ -97,6 +105,9 @@ Once running, use `help` to see all available commands:
 - Set `LLAMA_CPP_MODELS_CACHE_PATH` to directory containing GGUF model files
 - Install Ollama and pull `nomic-embed-text` for embeddings
 - Install Ollama and pull `functiongemma:270m-it-fp16` for function calling
+
+**OpenRouter**:
+- Set `OPENROUTER_API_KEY` in `.env` for OpenRouter models (default: `qwen/qwen3.6-plus:free`)
 
 ---
 

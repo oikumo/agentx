@@ -1,6 +1,6 @@
 # Tests - Agent-X
 
-**Path**: `/tests/`
+**Path**: `/tests/` (read-only) and `/tests_sandbox/` (writable)
 
 Unit tests using `unittest` framework.
 
@@ -13,53 +13,37 @@ tests/
 ├── integration/
 │   └── __init__.py
 └── unit/
-    ├── app/
-    │   └── __init__.py
-    └── applications/
-        └── repl_app/
-            └── command_line_controller/
-                ├── command_parser_test.py
-                └── commands_controller_test.py
+    └── app/
+        └── __init__.py
 ```
 
 ---
 
-## Command Parser Tests
+## Tests Sandbox
 
-### tests/unit/applications/repl_app/command_line_controller/command_parser_test.py
+**Path**: `/tests_sandbox/`
 
-**Classes**:
-- `CommandDataTest(unittest.TestCase)` - tests for `CommandData` dataclass:
-  - `test_creation_stores_key_and_arguments`
-  - `test_empty_arguments_list_is_valid`
-  - `test_equality_is_value_based`
-  - `test_inequality_on_different_key`
-- `CommandParserTest(unittest.TestCase)` - tests for `CommandParser`:
-  - `test_add_appends_command_to_list`
-  - `test_add_multiple_commands`
-  - `test_parse_single_word_returns_command_data`
-  - `test_parse_command_with_arguments`
-  - `test_parse_command_with_single_argument`
-  - `test_parse_empty_string_returns_none_and_warns`
-  - `test_parse_whitespace_only_returns_none_and_warns`
-  - `test_parse_extra_whitespace_between_tokens_is_normalised`
+Feature and integration testing sandbox. Uses `unittest.TestCase` framework.
 
----
+### Structure
 
-## Commands Controller Tests
-
-### tests/unit/applications/repl_app/command_line_controller/commands_controller_test.py
-
-**Class**: `CommandsControllerTest(unittest.TestCase)`
-
-Tests for command registration and lookup:
-- `test_empty_on_init`
-- `test_add_command_makes_it_findable`
-- `test_add_multiple_commands`
-- `test_find_command_returns_none_for_unknown_key`
-- `test_get_commands_returns_all_registered_commands`
-
-**Note**: Tests reference `CommandsController` which maps to `MainController` in the current codebase.
+```
+tests_sandbox/
+├── features/
+│   └── test_controller.py           # MainController feature tests (6 tests)
+├── test_agent_streaming.py          # Agent streaming methods (6 tests)
+├── test_argument_parser.py          # --model flag argument parsing (14 tests)
+├── test_benchmark_navigation.py     # AGENTS.md navigation benchmark (12 tests)
+├── test_chat_command.py             # AIChat command with --model flag (6 tests)
+├── test_chat_loop.py                # ChatLoop TDD tests (40+ tests)
+├── test_command_parser.py           # CommandParser unit tests
+├── test_commands.py                 # Command implementation tests
+├── test_factory_refactor.py         # AgentFactory unified API tests
+├── test_llm_managers.py             # LLM manager tests
+├── test_llm_providers.py            # LLM provider tests
+├── test_model_selection.py          # Model selection + streaming metrics (8 tests)
+└── test_streaming_metrics.py        # StreamingMetrics tok/s tracking (14 tests)
+```
 
 ---
 
@@ -67,17 +51,20 @@ Tests for command registration and lookup:
 
 ```bash
 # Run all tests
-pytest
+uv run pytest tests/ tests_sandbox/ -v
+
+# Run sandbox tests only
+uv run pytest tests_sandbox/ -v
 
 # Run unit tests only
-pytest tests/unit -q
+uv run pytest tests/unit -q
 
 # Run integration tests only
-pytest tests/integration -q
+uv run pytest tests/integration -q
 
 # Run specific test
-pytest tests/path/to/test_file.py::TestClass::test_function_name -q
+uv run pytest tests_sandbox/test_chat_loop.py::TestChatLoopInitialization -v
 
 # Run tests matching pattern
-pytest tests/path/to/test_file.py -k "pattern" -q
+uv run pytest tests_sandbox/ -k "streaming" -v
 ```

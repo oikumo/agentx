@@ -1,6 +1,6 @@
 # App Model Module - Agent-X
 
-**Path**: `/app/model/`
+**Path**: `src/app/model/`
 
 Data persistence layer: session management, SQLite database, command history.
 
@@ -9,7 +9,7 @@ Data persistence layer: session management, SQLite database, command history.
 ## Module Structure
 
 ```
-app/model/
+src/app/model/
 ├── __init__.py                # Public API exports (Model, HistoryEntry)
 ├── model.py                   # Model facade
 ├── model_entities.py          # HistoryEntry dataclass

@@ -1,6 +1,6 @@
 # App Modules - Data Stores - Agent-X
 
-**Path**: `/app_modules/data_stores/`
+**Path**: `src/app_modules/data_stores/`
 
 FAISS vector store creation and persistence.
 
@@ -9,7 +9,7 @@ FAISS vector store creation and persistence.
 ## Module Structure
 
 ```
-app_modules/data_stores/
+src/app_modules/data_stores/
 └── vector_store_faiss.py      # FAISS vector store
 ```
 

@@ -1,6 +1,6 @@
 # App Modules - LangChain - Agent-X
 
-**Path**: `/app_modules/llm/langchain/`
+**Path**: `src/app_modules/llm/langchain/`
 
 LangChain integrations: ReAct agents, router agents, tools.
 
@@ -9,7 +9,7 @@ LangChain integrations: ReAct agents, router agents, tools.
 ## Module Structure
 
 ```
-app_modules/llm/langchain/
+src/app_modules/llm/langchain/
 ├── tools/
 │   ├── simple_tool.py         # multiply tool
 │   └── tavily_web_search/

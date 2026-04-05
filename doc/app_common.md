@@ -1,6 +1,6 @@
 # App Common Module - Agent-X
 
-**Path**: `/app/common/`
+**Path**: `src/app/common/`
 
 Shared utilities: file operations, console helpers.
 
@@ -9,7 +9,7 @@ Shared utilities: file operations, console helpers.
 ## Module Structure
 
 ```
-app/common/
+src/app/common/
 ├── files/
 │   └── file_utils.py          # save_to_output()
 └── utils/

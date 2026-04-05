@@ -1,22 +1,18 @@
 # Agents Module - Agent-X
 
-**Path**: `/agents/`
+**Path**: `src/agents/`
 
-Agent implementations and factory functions. Each agent represents a different LLM interaction pattern.
+Agent implementations. Each agent represents a different LLM interaction pattern. Factory functions moved to `src/llm_managers/factory.py` (`AgentFactory`).
 
 ---
 
 ## Module Structure
 
 ```
-agents/
-├── agent_chat_factory.py              # Factory for SimpleChat
-├── agent_function_router_factory.py   # Factory for QueryRouter
-├── agent_rag_factory.py               # Factory for AgentRagPdf
-├── agent_react_web_search_factory.py  # Factory for AgentReactWebSearch
-├── graph_react_web_search_factory.py  # Factory for GraphReactWebSearch
+src/agents/
 ├── chat/
-│   └── simple_chat.py                # SimpleChat class
+│   ├── simple_chat.py                # SimpleChat class
+│   └── chat_loop.py                  # ChatLoop class (persistent conversation with streaming)
 ├── function_tool_router/
 │   ├── function_call.py              # QueryRouter class
 │   ├── functions.py                  # Tool functions
@@ -36,7 +32,7 @@ agents/
 
 ## Simple Chat Agent
 
-### agents/chat/simple_chat.py
+### src/agents/chat/simple_chat.py
 
 **Class**: `SimpleChat`
 
@@ -45,179 +41,84 @@ Wraps a `BaseChatModel` with a prompt template chain for simple conversational i
 **Methods**:
 - `__init__(llm: BaseChatModel)` - stores LLM instance
 - `run(query: str, information: str = "")` - creates prompt template chain and invokes LLM
+- `run_streaming(query: str, information: str = "")` - streaming variant using `llm.stream()`
 
-**Dependencies**: `langchain_core.language_models.BaseChatModel`, `langchain_core.prompts.PromptTemplate`
-
-### agents/chat/chat_loop.py
+### src/agents/chat/chat_loop.py
 
 **Class**: `ChatLoop`
 
-Persistent, conversational chat loop with message history support. Manages conversation state, supports both single-turn and interactive REPL modes.
+Persistent, conversational chat loop with message history support.
 
 **Methods**:
-- `__init__(llm: BaseChatModel, system_prompt: str)` - initializes with LLM and system prompt (stored as first history message)
-- `add_user_message(content: str)` - appends HumanMessage to history
-- `add_assistant_message(content: str)` - appends AIMessage to history
-- `_extract_content(response)` - safely extracts text content from LLM response (handles None and list content)
-- `get_response() -> str` - invokes LLM with full history, extracts and stores response
-- `exit()` - sets `is_running` to False
-- `should_exit(user_input: str) -> bool` - checks if input is "quit" or "exit"
-- `run(user_input: str) -> str | None` - single-turn execution: adds message, gets response, handles errors with rollback
-- `start_interactive()` - interactive REPL loop: reads input, prints responses, exits on quit/exit
-- `_read_input() -> str` - reads user input via `input("> ")`
-
-**Dependencies**: `langchain_core.language_models.BaseChatModel`, `langchain_core.messages.HumanMessage`, `AIMessage`, `SystemMessage`
-
-### agents/agent_chat_factory.py
-
-**Functions**:
-- `create_agent_chat_local() -> SimpleChat` - creates `SimpleChat` with local LlamaCpp Qwen 2.5 model (context size 32768)
-- `create_chat_loop() -> ChatLoop` - creates `ChatLoop` with OpenRouterProvider (default cloud provider)
-- `create_chat_loop_local() -> ChatLoop` - creates `ChatLoop` with local LlamaCpp Qwen 2.5 model (context size 32768)
+- `__init__(llm: BaseChatModel, system_prompt: str)` - initializes with LLM and system prompt
+- `add_user_message(content: str)` / `add_assistant_message(content: str)` - history management
+- `get_response() -> str` - invokes LLM with full history
+- `run(user_input: str) -> str | None` - single-turn with error rollback
+- `start_interactive()` - interactive REPL loop
+- `run_streaming_with_metrics()` - streaming with tok/s tracking via `StreamingMetrics`
 
 ---
 
 ## ReAct Web Search Agent
 
-### agents/react_web_search/search_agent.py
+### src/agents/react_web_search/search_agent.py
 
 **Function**: `search_agent(llm: BaseLanguageModel)`
 
-Creates a full ReAct agent with Tavily web search and structured output parsing via Pydantic.
+Creates a full ReAct agent with Tavily web search and structured output parsing.
 
-**Flow**:
-1. Creates `TavilySearch` tool
-2. Sets up `PydanticOutputParser` with `AgentResponse` schema
-3. Creates ReAct prompt with format instructions
-4. Builds chain: `agent_executor | extract_output | parse_output`
-5. Invokes with sample query about Chile news
+**Flow**: `agent_executor | extract_output | parse_output`
 
-**Classes**:
-- `Source(BaseModel)` - schema with `url: str`
-- `AgentResponse(BaseModel)` - schema with `answer: str` and `sources: List[Source]`
+### src/agents/react_web_search/agent_react_web_search.py
 
-### agents/react_web_search/agent_react_web_search.py
-
-**Class**: `AgentReactWebSearch`
-
-Thin wrapper delegating to `search_agent()`.
+**Class**: `AgentReactWebSearch` - thin wrapper delegating to `search_agent()`.
 
 **Methods**:
 - `__init__(llm: BaseChatModel)` - stores LLM
 - `run()` - delegates to `search_agent(llm=self.llm)`
-
-### agents/react_web_search/prompt.py
-
-**Constant**: `REACT_PROMPT_WITH_FORMAT_INSTRUCTIONS`
-
-ReAct prompt template with `{tools}`, `{tool_names}`, `{format_instructions}`, `{input}`, and `{agent_scratchpad}` placeholders.
-
-### agents/react_web_search/schemas.py
-
-Duplicate Pydantic models (`Source`, `AgentResponse`) for structured agent response.
-
-### agents/agent_react_web_search_factory.py
-
-**Function**: `create_agent_react_web_search_local() -> AgentReactWebSearch`
-
-Factory creating `AgentReactWebSearch` with local LlamaCpp Qwen 2.5 (context size 32768).
+- `run_streaming(query)` - streaming variant
 
 ---
 
 ## RAG PDF Agent
 
-### agents/rag_pdf/agent_rag_pdf.py
+### src/agents/rag_pdf/agent_rag_pdf.py
 
 **Class**: `AgentRagPdf`
 
 PDF ingestion → FAISS vector store → retrieval QA chain pipeline.
 
 **Methods**:
-- `__init__(pdf_path: str, vectorstore_path: str, llm: BaseChatModel, embeddings: Embeddings)` - stores configuration
-- `run(query: str)` - pulls retrieval QA prompt from LangChain Hub, calls `rag_pdf()`
-- `rag_pdf(query, pdf_path, vectorstore_path, retrieval_qa_chat_prompt, llm, embeddings)` - full RAG pipeline:
-  1. Load PDF via `pdf_loader()`
-  2. Create FAISS vector store via `create_faiss()`
-  3. Build stuff documents chain via `create_stuff_documents_chain()`
-  4. Build retrieval chain via `create_retrieval_chain()`
-  5. Invoke and print answer
+- `__init__(pdf_path, vectorstore_path, llm, embeddings)` - stores configuration
+- `run(query: str)` - full RAG pipeline
+- `run_streaming(query)` - streaming variant
 
-**Dependencies**: `langchain_classic.hub`, `langchain_classic.chains.*`, `app_modules.document_loaders.pdf_loader`, `app_modules.data_stores.vector_store_faiss`
-
-### agents/agent_rag_factory.py
-
-**Function**: `create_agent_rag_local() -> AgentRagPdf`
-
-Factory creating `AgentRagPdf` with:
-- Local LlamaCpp Qwen 2.5 (context size 32768)
-- Ollama embeddings (`nomic-embed-text`)
-- PDF path: `_resources/react.pdf`
-- Vector store path: timestamped directory under `local_vector_databases/`
+**Dependencies**: `app_modules.document_loaders.pdf_loader`, `app_modules.data_stores.vector_store_faiss`
 
 ---
 
 ## Function Tool Router Agent
 
-### agents/function_tool_router/function_call.py
+### src/agents/function_tool_router/function_call.py
 
 **Class**: `QueryRouter`
 
 Ollama tool calling to dispatch function calls based on user query.
 
-**Methods**:
-- `__init__(routes: list[Route])` - stores route definitions
-- `function_call(model="functiongemma:270m-it-fp16")` - sends prompt to Ollama with tools, matches response to function, executes, and sends result back to LLM for final response
-
-**Flow**:
-1. Sends user message to Ollama with tool definitions
-2. Parses response to identify tool call
-3. Looks up and executes the function
-4. Sends tool result back to Ollama
-5. Prints final response
-
-**Dependencies**: `rich`, `ollama`, `app.repl.console`
-
-### agents/function_tool_router/functions.py
-
-Tool functions available for the query router:
-
-- `get_weather(city: str) -> str` - returns mock weather data as JSON (22°C, sunny)
-- `get_best_game(year: str) -> str` - returns mock game data as JSON (Dark Souls)
-- `calculate(expression: str) -> str` - evaluates math expression via `eval()` (with safety warning)
-
-### agents/function_tool_router/route.py
-
-**Class**: `Route`
-
-Maps function name to callable for the router.
-
-**Methods**:
-- `__init__(function_name: str, route: Callable)` - stores name and callable
-- `run(args)` - executes the callable
-
-### agents/agent_function_router_factory.py
-
-**Function**: `create_agent_function_router_local() -> QueryRouter`
-
-Factory creating `QueryRouter` with routes for `get_weather`, `get_best_game`, and `calculate`.
+**Tool Functions** (`functions.py`):
+- `get_weather(city: str)` - mock weather data
+- `get_best_game(year: str)` - mock game data
+- `calculate(expression: str)` - evaluates math expression
 
 ---
 
 ## Graph ReAct Web Search Agent
 
-### agents/graph_react_web_search/graph_react_web_search.py
+### src/agents/graph_react_web_search/graph_react_web_search.py
 
 **Class**: `GraphReactWebSearch`
 
-LangGraph state machine with reasoning/act nodes for ReAct web search with function calling.
-
-**Methods**:
-- `__init__(llm: BaseChatModel, max_search_results: int)` - binds `TavilySearch` and `triple` tool to LLM
-- `run()` - builds `StateGraph` with `agent_reasoning` and `act` nodes, compiles and invokes with a query about temperature in Santiago and Tokyo
-- `run_agent_reasoning(state: MessagesState) -> MessagesState` - LLM reasoning node
-- `should_continue(state: MessagesState) -> str` - checks for tool calls to decide whether to continue to `ACT` node or `END`
-
-**Tool**: `@tool triple(num: float) -> float` - triples a number
+LangGraph state machine with reasoning/act nodes.
 
 **Graph Flow**:
 ```
@@ -226,10 +127,18 @@ ENTRY → agent_reasoning → should_continue?
   └── No tool calls → END
 ```
 
-**Dependencies**: `langchain_tavily.TavilySearch`, `langgraph.graph.*`, `langgraph.prebuilt.ToolNode`
+---
 
-### agents/graph_react_web_search_factory.py
+## Factory (in llm_managers/)
 
-**Functions**:
-- `create_graph_react_web_search_local() -> GraphReactWebSearch` - uses local LlamaCpp Qwen 2.5
-- `create_graph_react_web_search_cloud() -> GraphReactWebSearch` - uses OpenAI GPT-3.5-turbo
+All agents are created via `AgentFactory` in `src/llm_managers/factory.py`:
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `create_chat()` | `SimpleChat` | Simple conversational chat |
+| `create_chat_loop()` | `ChatLoop` | Persistent chat with history |
+| `create_chat_loop_rag()` | `ChatLoop` | RAG-enabled chat with PDF retriever |
+| `create_function_router()` | `QueryRouter` | Ollama-based tool calling |
+| `create_rag()` | `AgentRagPdf` | PDF RAG pipeline |
+| `create_react_web_search()` | `AgentReactWebSearch` | Tavily ReAct agent |
+| `create_graph_react_web_search()` | `GraphReactWebSearch` | LangGraph ReAct agent |

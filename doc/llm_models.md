@@ -1,6 +1,6 @@
 # LLM Models - Agent-X
 
-**Path**: `/llm_models/`
+**Path**: `src/llm_models/`
 
 LLM model providers and vector store integrations. Supports both cloud-hosted and locally-run models.
 
@@ -9,7 +9,7 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 ## Module Structure
 
 ```
-llm_models/
+src/llm_models/
 ├── cloud/
 │   ├── google/
 │   │   └── google_gemini.py     # Gemini wrapper

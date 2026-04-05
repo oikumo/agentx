@@ -1,6 +1,6 @@
 # App REPL Module - Agent-X
 
-**Path**: `/app/repl/`
+**Path**: `src/app/repl/`
 
 The core interactive shell of Agent-X.
 
@@ -9,7 +9,7 @@ The core interactive shell of Agent-X.
 ## Module Structure
 
 ```
-app/repl/
+src/app/repl/
 ├── base.py                    # IMainController interface
 ├── command.py                 # Command/CommandResult ABCs
 ├── command_parser.py          # CommandParser

@@ -1,6 +1,6 @@
 # App Modules - Document Loaders - Agent-X
 
-**Path**: `/app_modules/document_loaders/`
+**Path**: `src/app_modules/document_loaders/`
 
 PDF loading and text chunking.
 
@@ -9,7 +9,7 @@ PDF loading and text chunking.
 ## Module Structure
 
 ```
-app_modules/document_loaders/
+src/app_modules/document_loaders/
 └── pdf_loader.py              # PDF loading
 ```
 
