@@ -47,21 +47,6 @@ class AgentFactory:
     """
 
     @staticmethod
-    def create_chat(provider: LLMProvider | None = None) -> SimpleChat:
-        """Create a SimpleChat agent.
-
-        Args:
-            provider: LLMProvider strategy. Defaults to OpenAIProvider.
-
-        Returns:
-            Configured SimpleChat instance.
-        """
-        if provider is None:
-            provider = OpenAIProvider()
-        llm = provider.create_llm()
-        return SimpleChat(llm=llm)
-
-    @staticmethod
     def create_chat_loop(provider: LLMProvider | None = None) -> ChatLoop:
         """Create a ChatLoop agent.
 
