@@ -62,43 +62,45 @@ agent-x/
 │   ├── PROJECT_ROADMAP.md           # Planned features and improvements
 │   ├── PROJECT_TESTING_SANDBOX_RULES.md # TDD strategy and rules
 │   └── USER_COMMAND_EXTENSION.md    # Extended user commands
-├── agents/                          # Agent implementations
-│   ├── chat/                        # SimpleChat, ChatLoop (persistent conversation)
-│   ├── function_tool_router/        # Query routing with Ollama tool calling
-│   ├── graph_react_web_search/      # LangGraph-based ReAct web search
-│   ├── rag_pdf/                     # PDF RAG with FAISS + Ollama embeddings
-│   └── react_web_search/            # LangChain ReAct web search agent
-├── llm_managers/                    # Unified AgentFactory + LLM provider strategy
-│   ├── providers/                   # LLM provider implementations (Strategy pattern)
-│   │   ├── llamacpp_provider.py     # Local LLM via llama.cpp
-│   │   ├── openai_provider.py       # Cloud LLM via OpenAI API
-│   │   └── openrouter_provider.py   # Cloud LLM via OpenRouter
-│   ├── factory.py                   # Unified AgentFactory class
-│   └── llm_provider.py              # LLMProvider ABC - strategy interface
-├── local_mcp/                       # MCP (Model Context Protocol) servers
-│   ├── mcp_main.py                  # MCP server entry point
-│   └── servers_stdio/               # MCP servers using stdio transport
-│       └── math_server.py           # Math operations MCP server
-├── app/                             # Core application
-│   ├── common/                      # Shared utilities
-│   ├── model/                       # Data persistence, sessions, SQLite
-│   ├── repl/                        # REPL system and commands
-│   └── security/                    # Directory deletion safeguards
-├── app_modules/                     # Extended application modules
-│   ├── data_stores/                 # FAISS vector store
-│   ├── document_loaders/            # PDF loading and chunking
-│   ├── llm/                         # LangChain and LangGraph integrations
-│   └── web_ingestion_app/           # Web scraping pipeline
-├── llm_models/                      # LLM model providers and vector stores
-│   ├── cloud/                       # Cloud providers (OpenAI, Google)
-│   ├── local/                       # Local providers (LlamaCpp, Ollama)
-│   │   ├── llama_cpp/               # Llama.cpp GGUF models
-│   │   ├── llama_cpp_factory.py     # Pre-configured factory
-│   │   ├── ollama/                  # Ollama chat models
-│   │   └── ollama_factory.py        # Ollama model manager
-│   └── vectorstores/                # Vector store integrations
-│       ├── vectorstore_pinecone.py  # Pinecone wrapper
-│       └── vectorstore_chroma.py    # Chroma wrapper
+├── src/                             # All source code (installed as agent-x package)
+│   ├── agents/                      # Agent implementations
+│   │   ├── chat/                    # SimpleChat, ChatLoop (persistent conversation)
+│   │   ├── function_tool_router/    # Query routing with Ollama tool calling
+│   │   ├── graph_react_web_search/  # LangGraph-based ReAct web search
+│   │   ├── rag_pdf/                 # PDF RAG with FAISS + Ollama embeddings
+│   │   └── react_web_search/        # LangChain ReAct web search agent
+│   ├── llm_managers/                # Unified AgentFactory + LLM provider strategy
+│   │   ├── providers/               # LLM provider implementations (Strategy pattern)
+│   │   │   ├── llamacpp_provider.py # Local LLM via llama.cpp
+│   │   │   ├── openai_provider.py   # Cloud LLM via OpenAI API
+│   │   │   └── openrouter_provider.py # Cloud LLM via OpenRouter
+│   │   ├── factory.py               # Unified AgentFactory class
+│   │   └── llm_provider.py          # LLMProvider ABC - strategy interface
+│   ├── local_mcp/                   # MCP (Model Context Protocol) servers
+│   │   ├── mcp_main.py              # MCP server entry point
+│   │   └── servers_stdio/           # MCP servers using stdio transport
+│   │       └── math_server.py       # Math operations MCP server
+│   ├── app/                         # Core application
+│   │   ├── common/                  # Shared utilities
+│   │   ├── model/                   # Data persistence, sessions, SQLite
+│   │   ├── repl/                    # REPL system and commands
+│   │   └── security/                # Directory deletion safeguards
+│   ├── app_modules/                 # Extended application modules
+│   │   ├── data_stores/             # FAISS vector store
+│   │   ├── document_loaders/        # PDF loading and chunking
+│   │   ├── llm/                     # LangChain and LangGraph integrations
+│   │   └── web_ingestion_app/       # Web scraping pipeline
+│   ├── llm_models/                  # LLM model providers and vector stores
+│   │   ├── cloud/                   # Cloud providers (OpenAI, Google)
+│   │   ├── local/                   # Local providers (LlamaCpp, Ollama)
+│   │   │   ├── llama_cpp/           # Llama.cpp GGUF models
+│   │   │   ├── llama_cpp_factory.py # Pre-configured factory
+│   │   │   ├── ollama/              # Ollama chat models
+│   │   │   └── ollama_factory.py    # Ollama model manager
+│   │   └── vectorstores/            # Vector store integrations
+│   │       ├── vectorstore_pinecone.py # Pinecone wrapper
+│   │       └── vectorstore_chroma.py   # Chroma wrapper
+│   └── main.py                      # Application entry point
 ├── tests/                           # Unit and integration tests (read-only)
 ├── tests_sandbox/                   # Feature and integration testing sandbox
 ├── _resources/                      # Sample data files

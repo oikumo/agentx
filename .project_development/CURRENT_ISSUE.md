@@ -10,6 +10,18 @@
 
 ## Recently Completed
 
+### Moved Source Code to `src/` Folder ✅
+
+**Status**: COMPLETED
+
+**What was done**:
+- Moved all source code modules (`agents/`, `app/`, `app_modules/`, `llm_managers/`, `llm_models/`, `local_mcp/`, `main.py`) into `src/` folder
+- Installed package in development mode (`uv pip install -e .`) so imports resolve correctly
+- Updated `pyproject.toml` with `[tool.setuptools.packages.find]` where = ["src"]
+- Created wrapper `main.py` at root that delegates to `src/main.py`
+- Updated all documentation files to reflect new paths
+- All 12 benchmark tests pass ✅
+
 ### Refactored AGENTS.md — Lean Entry Point Pattern ✅
 
 **Status**: COMPLETED

@@ -35,3 +35,10 @@ dependencies = [
 dev = [
     "pytest>=9.0.2",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "tests_sandbox"]
+pythonpath = ["src"]

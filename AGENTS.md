@@ -55,8 +55,14 @@ All commands start with `+`. Pipe results using `|`.
 
 The agent should use `.project_development/PROJECT_NAVIGATION_ROUTES.md` as the primary map for understanding project structure.
 
-- **Entry Point**: `main.py`
-- **Core App**: `app/` (REPL, models, security)
-- **Agents**: `agents/` (chat, rag, react, graph)
-- **LLM Managers**: `llm_managers/` (factory, providers)
-- **Tests**: `tests_sandbox/` (feature & integration tests)
+**Source code lives in `src/`** — all modules are installed as the `agent-x` package.
+
+- **Entry Point**: `main.py` → `src/main.py`
+- **Core App**: `src/app/` (REPL, models, security)
+- **Agents**: `src/agents/` (chat, rag, react, graph)
+- **LLM Managers**: `src/llm_managers/` (factory, providers)
+- **LLM Models**: `src/llm_models/` (cloud, local, vectorstores)
+- **App Modules**: `src/app_modules/` (langchain, langgraph, data stores)
+- **MCP**: `src/local_mcp/` (Model Context Protocol servers)
+- **Tests**: `tests/` (read-only)
+- **Tests Sandbox**: `tests_sandbox/` (feature & integration tests)

@@ -38,6 +38,7 @@
 ---
 
 ## Completed
+- ✅ Moved source code to `src/` folder (standard Python package layout)
 - ✅ Refactored AGENTS.md — Lean Entry Point Pattern (77% size reduction)
 - ✅ Updated README.md with improved project overview
 - ✅ Reorganized meta files into `.project_development/` folder

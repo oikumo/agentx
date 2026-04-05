@@ -184,8 +184,8 @@ class TestAgentNavigationBenchmarkTrace(unittest.TestCase):
         self.assertIn("llm_managers", nav_content)
         print("  → Found: llm_managers in navigation map")
 
-        print("  → Checking path: llm_managers/providers/")
-        providers_path = self.PROJECT_ROOT / "llm_managers" / "providers"
+        print("  → Checking path: src/llm_managers/providers/")
+        providers_path = self.PROJECT_ROOT / "src" / "llm_managers" / "providers"
         self.assertTrue(providers_path.exists())
         print(f"  ✅ Directory exists: {providers_path}")
 
@@ -216,8 +216,8 @@ class TestAgentNavigationBenchmarkTrace(unittest.TestCase):
         self.assertIn("repl", nav_content.lower())
         print("  → Found: REPL in navigation map")
 
-        print("  → Checking path: app/repl/")
-        repl_path = self.PROJECT_ROOT / "app" / "repl"
+        print("  → Checking path: src/app/repl/")
+        repl_path = self.PROJECT_ROOT / "src" / "app" / "repl"
         self.assertTrue(repl_path.exists())
         print(f"  ✅ Directory exists: {repl_path}")
 

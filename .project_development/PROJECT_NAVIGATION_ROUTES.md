@@ -19,12 +19,13 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 |--------|-------|-------------|
 | [Root](#root) | 2 | Entry point and project configuration |
 | [_resources/](#_resources) | 2 | Sample data files for demos |
-| [agents/](#agents) | 16 | Agent implementations (SimpleChat, ChatLoop, RAG, ReAct, Graph) |
-| [llm_managers/](#llm_managers) | 4 | Unified AgentFactory + LLM provider strategy pattern |
-| [local_mcp/](#local_mcp) | 3 | MCP (Model Context Protocol) servers |
-| [app/](#app) | 22 | Core application: REPL, models, DB, security, streaming metrics |
-| [app_modules/](#app_modules) | 20 | LLM integrations, data stores, web ingestion |
-| [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
+| [src/](#src) | 7 | All source code modules |
+| [src/agents/](#srcagents) | 16 | Agent implementations (SimpleChat, ChatLoop, RAG, ReAct, Graph) |
+| [src/llm_managers/](#srcllm_managers) | 4 | Unified AgentFactory + LLM provider strategy pattern |
+| [src/local_mcp/](#srclocal_mcp) | 3 | MCP (Model Context Protocol) servers |
+| [src/app/](#srcapp) | 22 | Core application: REPL, models, DB, security, streaming metrics |
+| [src/app_modules/](#srcapp_modules) | 20 | LLM integrations, data stores, web ingestion |
+| [src/llm_models/](#srcllm_models) | 7 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
 | [tests_sandbox/](#tests_sandbox) | 14 | Feature and integration testing sandbox |
 | [Meta](#meta) | 2 | Project meta files (issues, roadmap, rules) |
@@ -39,12 +40,12 @@ Entry point for the application.
 
 | File | Description |
 |------|-------------|
-| `main.py` | Application entry point. Creates `MainController`, registers all commands, launches `ReplApp` |
+| `main.py` | Wrapper entry point. Delegates to `src/main.py` |
 | `pyproject.toml` | Project configuration, dependencies, metadata |
 
 **Application Flow**:
 ```
-main.py → create_controller() → register commands → ReplApp(controller).run()
+main.py → src/main.py → create_controller() → register commands → ReplApp(controller).run()
 ```
 
 **Registered Commands**:
@@ -55,9 +56,28 @@ main.py → create_controller() → register commands → ReplApp(controller).ru
 
 ---
 
-## llm_managers/
+## src/
 
-**Path**: `llm_managers/`
+**Path**: `src/`
+
+All source code modules. Installed as `agent-x` package in development mode.
+
+### Sub-modules
+
+| Sub-module | Description |
+|------------|-------------|
+| [agents/](#srcagents) | Agent implementations |
+| [llm_managers/](#srcllm_managers) | Unified AgentFactory + LLM provider strategy |
+| [local_mcp/](#srclocal_mcp) | MCP servers |
+| [app/](#srcapp) | Core application |
+| [app_modules/](#srcapp_modules) | Extended application modules |
+| [llm_models/](#srcllm_models) | LLM model providers |
+
+---
+
+## src/agents/
+
+**Path**: `src/agents/`
 
 Unified factory and LLM provider strategy pattern. Centralizes agent creation logic and model provider abstraction.
 
@@ -75,9 +95,9 @@ Unified factory and LLM provider strategy pattern. Centralizes agent creation lo
 | `llm_provider.py` | `LLMProvider` ABC - strategy interface for LLM providers |
 | `__init__.py` | Module public API |
 
-### llm_managers/providers/
+### src/llm_managers/providers/
 
-**Path**: `llm_managers/providers/`
+**Path**: `src/llm_managers/providers/`
 
 LLM provider implementations following the Strategy pattern.
 
@@ -104,9 +124,9 @@ All providers must implement:
 
 ---
 
-## local_mcp/
+## src/local_mcp/
 
-**Path**: `local_mcp/`
+**Path**: `src/local_mcp/`
 
 MCP (Model Context Protocol) servers for extending agent capabilities via stdio transport.
 
@@ -123,9 +143,9 @@ MCP (Model Context Protocol) servers for extending agent capabilities via stdio 
 | `__init__.py` | Module initialization |
 | `mcp_main.py` | MCP server entry point |
 
-### local_mcp/servers_stdio/
+### src/local_mcp/servers_stdio/
 
-**Path**: `local_mcp/servers_stdio/`
+**Path**: `src/local_mcp/servers_stdio/`
 
 MCP server implementations using stdio transport.
 
@@ -136,9 +156,9 @@ MCP server implementations using stdio transport.
 
 ---
 
-## agents/
+## src/agents/
 
-**Path**: `agents/`  
+**Path**: `src/agents/`  
 **Module Doc**: [agents.md](agents/agents.md)
 
 Agent implementations. Factory functions moved to `llm_managers/`.
@@ -160,9 +180,9 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 ---
 
-### agents/chat/
+### src/agents/chat/
 
-**Path**: `agents/chat/`  
+**Path**: `src/agents/chat/`  
 **Module Doc**: [chat.md](agents/chat/chat.md)
 
 | File | Description |
@@ -172,9 +192,9 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 ---
 
-### agents/function_tool_router/
+### src/agents/function_tool_router/
 
-**Path**: `agents/function_tool_router/`  
+**Path**: `src/agents/function_tool_router/`  
 **Module Doc**: [function_tool_router.md](agents/function_tool_router/function_tool_router.md)
 
 | File | Description |
@@ -185,9 +205,9 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 ---
 
-### agents/graph_react_web_search/
+### src/agents/graph_react_web_search/
 
-**Path**: `agents/graph_react_web_search/`  
+**Path**: `src/agents/graph_react_web_search/`  
 **Module Doc**: [graph_react_web_search.md](agents/graph_react_web_search/graph_react_web_search.md)
 
 | File | Description |
@@ -196,9 +216,9 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 ---
 
-### agents/rag_pdf/
+### src/agents/rag_pdf/
 
-**Path**: `agents/rag_pdf/`  
+**Path**: `src/agents/rag_pdf/`  
 **Module Doc**: [rag_pdf.md](agents/rag_pdf/rag_pdf.md)
 
 | File | Description |
@@ -207,9 +227,9 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 ---
 
-### agents/react_web_search/
+### src/agents/react_web_search/
 
-**Path**: `agents/react_web_search/`  
+**Path**: `src/agents/react_web_search/`  
 **Module Doc**: [react_web_search.md](agents/react_web_search/react_web_search.md)
 
 | File | Description |
@@ -221,9 +241,9 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 ---
 
-## app/
+## src/app/
 
-**Path**: `app/`  
+**Path**: `src/app/`  
 **Module Doc**: [app.md](app/app.md)
 
 Core application module containing the REPL system, data models, database layer, security utilities, and common helpers.
@@ -239,9 +259,9 @@ Core application module containing the REPL system, data models, database layer,
 
 ---
 
-### app/common/
+### src/app/common/
 
-**Path**: `app/common/`  
+**Path**: `src/app/common/`  
 **Module Doc**: [common.md](app/common/common.md)
 
 | File | Key Functions | Description |
@@ -253,9 +273,9 @@ Core application module containing the REPL system, data models, database layer,
 
 ---
 
-### app/model/
+### src/app/model/
 
-**Path**: `app/model/`  
+**Path**: `src/app/model/`  
 **Module Doc**: [model.md](app/model/model.md)
 
 | File | Key Classes | Description |
@@ -274,9 +294,9 @@ CREATE TABLE IF NOT EXISTS users (id, name, age);
 
 ---
 
-### app/repl/
+### src/app/repl/
 
-**Path**: `app/repl/`  
+**Path**: `src/app/repl/`  
 **Module Doc**: [repl.md](app/repl/repl.md)
 
 The core interactive shell of Agent-X.
@@ -319,9 +339,9 @@ ReplApp.run()
 
 ---
 
-### app/security/
+### src/app/security/
 
-**Path**: `app/security/`  
+**Path**: `src/app/security/`  
 **Module Doc**: [security.md](app/security/security.md)
 
 | File | Key Functions | Description |
@@ -331,9 +351,9 @@ ReplApp.run()
 
 ---
 
-## app_modules/
+## src/app_modules/
 
-**Path**: `app_modules/`  
+**Path**: `src/app_modules/`  
 **Module Doc**: [app_modules.md](app_modules/app_modules.md)
 
 Extended application modules containing LLM integrations, data stores, document loaders, and web ingestion pipelines.
@@ -350,9 +370,9 @@ Extended application modules containing LLM integrations, data stores, document 
 
 ---
 
-### app_modules/data_stores/
+### src/app_modules/data_stores/
 
-**Path**: `app_modules/data_stores/`  
+**Path**: `src/app_modules/data_stores/`  
 **Module Doc**: [data_stores.md](app_modules/data_stores/data_stores.md)
 
 | File | Key Functions | Description |
@@ -361,9 +381,9 @@ Extended application modules containing LLM integrations, data stores, document 
 
 ---
 
-### app_modules/document_loaders/
+### src/app_modules/document_loaders/
 
-**Path**: `app_modules/document_loaders/`  
+**Path**: `src/app_modules/document_loaders/`  
 **Module Doc**: [document_loaders.md](app_modules/document_loaders/document_loaders.md)
 
 | File | Key Functions | Description |
@@ -372,9 +392,9 @@ Extended application modules containing LLM integrations, data stores, document 
 
 ---
 
-### app_modules/llm/langchain/
+### src/app_modules/llm/langchain/
 
-**Path**: `app_modules/llm/langchain/`  
+**Path**: `src/app_modules/llm/langchain/`  
 **Module Doc**: [langchain.md](app_modules/llm/langchain/langchain.md)
 
 #### React Agents
@@ -396,9 +416,9 @@ Extended application modules containing LLM integrations, data stores, document 
 
 ---
 
-### app_modules/llm/langgraph/
+### src/app_modules/llm/langgraph/
 
-**Path**: `app_modules/llm/langgraph/`  
+**Path**: `src/app_modules/llm/langgraph/`  
 **Module Doc**: [langgraph.md](app_modules/llm/langgraph/langgraph.md)
 
 #### Graph Reflector Chain
@@ -419,9 +439,9 @@ Extended application modules containing LLM integrations, data stores, document 
 
 ---
 
-### app_modules/web_ingestion_app/
+### src/app_modules/web_ingestion_app/
 
-**Path**: `app_modules/web_ingestion_app/`  
+**Path**: `src/app_modules/web_ingestion_app/`  
 **Module Doc**: [web_ingestion_app.md](app_modules/web_ingestion_app/web_ingestion_app.md)
 
 | File | Key Classes/Functions | Description |
@@ -440,9 +460,9 @@ TavilyMap → chunk_urls → WebExtract.async_extract → save_docs (JSONL)
 
 ---
 
-## llm_models/
+## src/llm_models/
 
-**Path**: `llm_models/`  
+**Path**: `src/llm_models/`  
 **Module Doc**: [llm_models.md](llm_models/llm_models.md)
 
 LLM model providers and vector store integrations. Supports both cloud-hosted and locally-run models.
@@ -469,9 +489,9 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 ---
 
-### llm_models/cloud/open_ai/
+### src/llm_models/cloud/open_ai/
 
-**Path**: `llm_models/cloud/open_ai/`  
+**Path**: `src/llm_models/cloud/open_ai/`  
 **Module Doc**: [open_ai.md](llm_models/cloud/open_ai/open_ai.md)
 
 | File | Key Functions | Description |
@@ -480,9 +500,9 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 ---
 
-### llm_models/cloud/google/
+### src/llm_models/cloud/google/
 
-**Path**: `llm_models/cloud/google/`  
+**Path**: `src/llm_models/cloud/google/`  
 **Module Doc**: [google.md](llm_models/cloud/google/google.md)
 
 | File | Key Functions | Description |
@@ -491,17 +511,17 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 ---
 
-### llm_models/local/
+### src/llm_models/local/
 
-**Path**: `llm_models/local/`
+**Path**: `src/llm_models/local/`
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
 | `llama_cpp_factory.py` | `model_factory_llamacpp` | Singleton-style factory instance |
 
-### llm_models/local/llama_cpp/
+### src/llm_models/local/llama_cpp/
 
-**Path**: `llm_models/local/llama_cpp/`
+**Path**: `src/llm_models/local/llama_cpp/`
 
 | File | Key Classes | Description |
 |------|-------------|-------------|
@@ -510,9 +530,9 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 ---
 
-### llm_models/local/ollama/
+### src/llm_models/local/ollama/
 
-**Path**: `llm_models/local/ollama/`
+**Path**: `src/llm_models/local/ollama/`
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
@@ -520,9 +540,9 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 ---
 
-### llm_models/vectorstores/
+### src/llm_models/vectorstores/
 
-**Path**: `llm_models/vectorstores/`
+**Path**: `src/llm_models/vectorstores/`
 
 | File | Key Functions | Description |
 |------|---------------|-------------|
@@ -674,6 +694,9 @@ Project meta files for tracking current state and issues.
 ```bash
 # Install dependencies
 uv sync
+
+# Install in development mode
+uv pip install -e .
 
 # Run the application
 python main.py

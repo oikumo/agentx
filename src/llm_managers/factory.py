@@ -72,9 +72,7 @@ class AgentFactory:
             Configured ChatLoop instance.
         """
         if provider is None:
-            provider = local_llm_provider(
-                model_filename=LLAMA_CPP_MODEL_QWEN_3_5, context_size=32768
-            )
+            provider = openrouter_llm_provider()
 
         llm = provider.create_llm()
         return ChatLoop(llm=llm)

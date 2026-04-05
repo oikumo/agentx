@@ -1,42 +1,6 @@
-from __future__ import annotations
+"""Agent-X entry point. Delegates to src/main.py."""
 
-import getpass
-import os
-
-from dotenv import load_dotenv
-
-from app.repl.commands.cli_commands import QuitCommand, ClearCommand, ReadFile, HelpCommand
-
-from app.repl.commands.llm_chat_commands import AIChat, AIRouterAgents, AIReactTools, AISearch, AIFunction, RagPDF
-from app.repl.commands.llm_graph_commands import AIGraphSimple, AIGraphChains, AIGraphReflexion
-from app.repl.commands.math_commands import SumCommand
-from app.repl.controllers.main_controller import MainController
-from app.repl.repl import ReplApp
-
-load_dotenv()
-
-if not os.getenv("OPENROUTER_API_KEY"):
-    os.environ["OPENROUTER_API_KEY"] = getpass.getpass("Enter your OpenRouter API key: ")
-
-def create_controller() -> MainController:
-    main_controller = MainController()
-    main_controller.add_command(SumCommand("sum", main_controller))
-    main_controller.add_command(QuitCommand("quit", main_controller))
-    main_controller.add_command(ClearCommand("clear", main_controller))
-    main_controller.add_command(AIChat("chat", main_controller))
-    main_controller.add_command(AIRouterAgents("router", main_controller))
-    main_controller.add_command(AIReactTools("react", main_controller))
-    main_controller.add_command(AISearch("search", main_controller))
-    main_controller.add_command(ReadFile("read", main_controller))
-    main_controller.add_command(AIFunction("function", main_controller))
-    main_controller.add_command(RagPDF("rag", main_controller))
-    main_controller.add_command(AIGraphSimple("graph", main_controller))
-    main_controller.add_command(AIGraphChains("chains", main_controller))
-    main_controller.add_command(AIGraphReflexion("reflex", main_controller))
-    main_controller.add_command(HelpCommand("help", main_controller))
-
-    return main_controller
+from src.main import main
 
 if __name__ == "__main__":
-    controller = create_controller()
-    ReplApp(controller).run()
+    main()
