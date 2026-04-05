@@ -1,3 +1,7 @@
+from pathlib import Path
+
+from pathlib import Path
+
 from langchain_classic import hub
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_classic.chains.retrieval import create_retrieval_chain
@@ -20,13 +24,31 @@ class AgentRagPdf:
         self.vectorstore_path = vectorstore_path
         self.llm = llm
         self.embeddings = embeddings
+        self._vectorstore = None
 
-    def run(self, query: str):
+    def _get_or_create_vectorstore(self):
+        if self._vectorstore is not None:
+            return self._vectorstore
 
+        if Path(self.vectorstore_path).exists():
+            from langchain_community.vectorstores import FAISS
+
+            self._vectorstore = FAISS.load_local(
+                self.vectorstore_path,
+                self.embeddings,
+                allow_dangerous_deserialization=True,
+            )
+        else:
+            docs = pdf_loader(self.pdf_path)
+            self._vectorstore = create_faiss(
+                self.vectorstore_path, docs, self.embeddings
+            )
+        return self._vectorstore
+
+    def run(self, query: str) -> str:
         retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
-        print(retrieval_qa_chat_prompt)
 
-        self.rag_pdf(
+        return self.rag_pdf(
             query=query,
             pdf_path=self.pdf_path,
             vectorstore_path=self.vectorstore_path,
@@ -43,23 +65,16 @@ class AgentRagPdf:
         retrieval_qa_chat_prompt,
         llm,
         embeddings,
-    ):
-        print(f"rag_pdf query: {query}")
-        print(f"rag_pdf loading pdf")
+    ) -> str:
         input_data = {"input": query}
-        docs = pdf_loader(pdf_path)
-
-        print(f"rag_pdf creating vector store")
-        new_vectorstore = create_faiss(vectorstore_path, docs, embeddings)
+        vectorstore = self._get_or_create_vectorstore()
         combine_docs_chain = create_stuff_documents_chain(llm, retrieval_qa_chat_prompt)
         retrieval_chain = create_retrieval_chain(
-            new_vectorstore.as_retriever(), combine_docs_chain
+            vectorstore.as_retriever(), combine_docs_chain
         )
 
-        print(f"rag_pdf processing response")
-
         res = retrieval_chain.invoke(input_data)
-        print(res["answer"])
+        return res["answer"]
 
     def run_streaming(self, query: str) -> str:
         retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
@@ -83,17 +98,14 @@ class AgentRagPdf:
         embeddings,
     ) -> str:
         input_data = {"input": query}
-        docs = pdf_loader(pdf_path)
-
-        new_vectorstore = create_faiss(vectorstore_path, docs, embeddings)
+        vectorstore = self._get_or_create_vectorstore()
         combine_docs_chain = create_stuff_documents_chain(llm, retrieval_qa_chat_prompt)
         retrieval_chain = create_retrieval_chain(
-            new_vectorstore.as_retriever(), combine_docs_chain
+            vectorstore.as_retriever(), combine_docs_chain
         )
 
         full_response = ""
         for chunk in retrieval_chain.stream(input_data):
             if "answer" in chunk and chunk["answer"]:
                 full_response += chunk["answer"]
-        print(full_response)
         return full_response

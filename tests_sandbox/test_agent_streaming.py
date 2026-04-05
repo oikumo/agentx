@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from agents.chat.simple_chat import SimpleChat
+from agents.chat.chat_loop import ChatLoop
 
 
 class TestSimpleChatStreaming(unittest.TestCase):
@@ -13,62 +13,43 @@ class TestSimpleChatStreaming(unittest.TestCase):
 
     def test_simple_chat_has_stream_method(self):
         mock_llm = MagicMock()
-        chat = SimpleChat(llm=mock_llm)
+        chat = ChatLoop(llm=mock_llm)
         self.assertTrue(hasattr(chat, "run_streaming"))
 
     def test_simple_chat_streaming_returns_response(self):
         mock_llm = MagicMock()
-        mock_chain = MagicMock()
-        mock_chain.stream.return_value = [self._make_chunk("Hello")]
-        mock_llm.__or__ = MagicMock(return_value=mock_chain)
+        mock_llm.stream.return_value = [self._make_chunk("Hello")]
 
-        chat = SimpleChat(llm=mock_llm)
+        chat = ChatLoop(llm=mock_llm)
 
-        with patch("agents.chat.simple_chat.PromptTemplate") as mock_template_class:
-            mock_template = MagicMock()
-            mock_template.__or__ = MagicMock(return_value=mock_chain)
-            mock_template_class.return_value = mock_template
-
-            result = chat.run_streaming("test query")
+        result = chat.run_streaming("test query")
 
         self.assertEqual(result, "Hello")
 
     def test_simple_chat_streaming_accumulates_chunks(self):
         mock_llm = MagicMock()
-        mock_chain = MagicMock()
-        mock_chain.stream.return_value = [
+        mock_llm.stream.return_value = [
             self._make_chunk("Hello"),
             self._make_chunk(" world"),
         ]
 
-        chat = SimpleChat(llm=mock_llm)
+        chat = ChatLoop(llm=mock_llm)
 
-        with patch("agents.chat.simple_chat.PromptTemplate") as mock_template_class:
-            mock_template = MagicMock()
-            mock_template.__or__ = MagicMock(return_value=mock_chain)
-            mock_template_class.return_value = mock_template
-
-            result = chat.run_streaming("test query")
+        result = chat.run_streaming("test query")
 
         self.assertEqual(result, "Hello world")
 
     def test_simple_chat_streaming_handles_none_content(self):
         mock_llm = MagicMock()
-        mock_chain = MagicMock()
-        mock_chain.stream.return_value = [
+        mock_llm.stream.return_value = [
             self._make_chunk("start"),
             self._make_chunk(None),
             self._make_chunk("end"),
         ]
 
-        chat = SimpleChat(llm=mock_llm)
+        chat = ChatLoop(llm=mock_llm)
 
-        with patch("agents.chat.simple_chat.PromptTemplate") as mock_template_class:
-            mock_template = MagicMock()
-            mock_template.__or__ = MagicMock(return_value=mock_chain)
-            mock_template_class.return_value = mock_template
-
-            result = chat.run_streaming("test")
+        result = chat.run_streaming("test")
 
         self.assertEqual(result, "startend")
 

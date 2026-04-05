@@ -117,7 +117,14 @@ class ChatLoop:
             stripped = user_input.strip()
             if not stripped:
                 continue
-            self.add_user_message(stripped)
+            context = self._retrieve_context(stripped)
+            if context:
+                rag_message = (
+                    f"Context from documents:\n{context}\n\nQuestion: {stripped}"
+                )
+                self.add_user_message(rag_message)
+            else:
+                self.add_user_message(stripped)
             try:
                 full_response = ""
                 metrics = StreamingMetrics()
@@ -172,7 +179,12 @@ class ChatLoop:
             self.exit()
             return None
         self.is_running = True
-        self.add_user_message(stripped)
+        context = self._retrieve_context(stripped)
+        if context:
+            rag_message = f"Context from documents:\n{context}\n\nQuestion: {stripped}"
+            self.add_user_message(rag_message)
+        else:
+            self.add_user_message(stripped)
         try:
             response = self.get_response()
         except Exception as e:
@@ -192,7 +204,14 @@ class ChatLoop:
             stripped = user_input.strip()
             if not stripped:
                 continue
-            self.add_user_message(stripped)
+            context = self._retrieve_context(stripped)
+            if context:
+                rag_message = (
+                    f"Context from documents:\n{context}\n\nQuestion: {stripped}"
+                )
+                self.add_user_message(rag_message)
+            else:
+                self.add_user_message(stripped)
             try:
                 response = self.get_response()
                 print(response)

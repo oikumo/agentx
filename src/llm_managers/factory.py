@@ -17,6 +17,7 @@ from app_modules.document_loaders.pdf_loader import pdf_loader
 from llm_managers.llm_provider import LLMProvider
 from llm_managers.providers import local_llm_provider, openrouter_llm_provider
 
+
 @dataclass
 class RagConfig:
     """Configuration for RAG agent creation.
@@ -77,21 +78,20 @@ class AgentFactory:
 
         base_vector_databases_directory = "local_vector_databases"
         faiss_directory = "faiss_index_chat_rag"
-        directory = f"{base_vector_databases_directory}/{faiss_directory}"
-        vectorstore_path = str(Path(directory).resolve())
+        if vectorstore_path is None:
+            directory = f"{base_vector_databases_directory}/{faiss_directory}"
+            vectorstore_path = str(Path(directory).resolve())
 
-        if not Path.is_dir(Path(directory)):
-            if embeddings is None:
-                from llm_models.local.ollama.ollama_embeddings import (
-                    create_embeddings_model,
-                )
+        if embeddings is None:
+            from llm_models.local.ollama.ollama_embeddings import (
+                create_embeddings_model,
+            )
 
-                embeddings = create_embeddings_model()
+            embeddings = create_embeddings_model()
 
-
+        if not Path(vectorstore_path).is_dir():
             docs = pdf_loader(pdf_path)
             print(f"docs from pdf: {len(docs)}")
-
             print(f"load docs int vector store, path: {vectorstore_path}")
             vectorstore = FAISS.from_documents(docs, embeddings)
             vectorstore.save_local(vectorstore_path)
@@ -104,7 +104,6 @@ class AgentFactory:
             llm_provider = openrouter_llm_provider()
 
         llm = llm_provider.create_llm()
-
 
         print(f"docs loaded in vector store")
 
