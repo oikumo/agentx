@@ -109,6 +109,19 @@ agent-x/
 
 ## Recent Changes
 
+### Refactored AGENTS.md — Lean Entry Point Pattern
+- Extracted rules from monolithic AGENTS.md into focused files: `CORE_DIRECTIVES.md`, `TOOL_USAGE.md`, `CODING_STYLE.md`, `TASK_WORKFLOW.md`, `ENVIRONMENT.md`
+- AGENTS.md reduced from 269 lines (9.7KB) to 62 lines (2.5KB) — **77% smaller**
+- Added Quick Reference table linking to all rule files
+- Removed verbose XML-style tags in favor of Markdown (research-backed for better LLM comprehension)
+- Added benchmark suite: `test_benchmark_navigation.py`, `benchmark_navigation.md`, `benchmark_report.md`
+
+### Updated README.md
+- Major README rewrite with improved project overview, quick start, and documentation links
+
+### Removed: USER_MANUAL.md
+- Deleted outdated user manual (320 lines)
+
 ### Reorganized Meta Files into `.project_development/`
 - Moved `CURRENT_ISSUE.md`, `PROJECT_DOCUMENTATION.md`, `PROJECT_NAVIGATION_ROUTES.md`, `PROJECT_ROADMAP.md`, `PROJECT_TESTING_SANDBOX_RULES.md`, `USER_COMMAND_EXTENSION.md` to `.project_development/` folder
 - Updated all path references in `AGENTS.md` and `tests_sandbox/tests_sandbox.md`
@@ -146,10 +159,7 @@ agent-x/
 - `llm_models/local/llama_cpp_factory.py`: Cleaned up model constants (`LLAMA_CPP_MODEL_QWEN_2_5`, `LLAMA_CPP_MODEL_QWEN_3`)
 - Added `openai` dependency to `pyproject.toml`
 
-### New: USER_MANUAL.md
-- Comprehensive user manual added (320 lines)
-
-### Updated: AGENTS.md Rules
+### Updated: AGENTS.md Rules (Previous Iteration)
 - Enhanced system instructions and general rules
 - Improved tool usage guidelines
 - Updated coding style guidelines

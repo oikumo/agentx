@@ -38,6 +38,8 @@
 ---
 
 ## Completed
+- ✅ Refactored AGENTS.md — Lean Entry Point Pattern (77% size reduction)
+- ✅ Updated README.md with improved project overview
 - ✅ Reorganized meta files into `.project_development/` folder
 - ✅ Unified AgentFactory in llm_managers/ (replaced 5 factory files)
 - ✅ MCP (Model Context Protocol) server support

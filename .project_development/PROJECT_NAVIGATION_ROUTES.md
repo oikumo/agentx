@@ -591,6 +591,8 @@ Feature and integration testing sandbox. Used for experimental tests during deve
 ```
 tests_sandbox/
 ├── tests_sandbox.md                   # Sandbox documentation
+├── benchmark_navigation.md            # Benchmark task definitions
+├── benchmark_report.md                # Benchmark results report
 ├── features/                        # Feature-level tests
 │   └── test_controller.py           # MainController feature tests
 ├── test_command_parser.py           # CommandParser unit tests
@@ -603,7 +605,8 @@ tests_sandbox/
 ├── test_agent_streaming.py          # Agent streaming methods (6 tests)
 ├── test_llm_providers.py            # LLM provider tests
 ├── test_llm_managers.py             # LLM manager tests
-└── test_factory_refactor.py         # AgentFactory unified API tests
+├── test_factory_refactor.py         # AgentFactory unified API tests
+└── test_benchmark_navigation.py     # AGENTS.md navigation benchmark (12 tests)
 ```
 
 ### Test Commands

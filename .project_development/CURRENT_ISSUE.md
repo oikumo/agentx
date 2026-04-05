@@ -10,6 +10,32 @@
 
 ## Recently Completed
 
+### Refactored AGENTS.md — Lean Entry Point Pattern ✅
+
+**Status**: COMPLETED
+
+**What was done**:
+- Extracted rules from monolithic AGENTS.md into focused files: `CORE_DIRECTIVES.md`, `TOOL_USAGE.md`, `CODING_STYLE.md`, `TASK_WORKFLOW.md`, `ENVIRONMENT.md`
+- AGENTS.md reduced from 269 lines (9.7KB) to 62 lines (2.5KB) — 77% smaller
+- Added Quick Reference table linking to all rule files
+- Removed XML-style tags in favor of Markdown (research-backed for better LLM comprehension)
+- Added benchmark suite for navigation accuracy verification
+- All 12 benchmark tests pass ✅
+
+### Updated README.md ✅
+
+**Status**: COMPLETED
+
+**What was done**:
+- Major README rewrite with improved project overview, quick start, and documentation links
+
+### Removed: USER_MANUAL.md ✅
+
+**Status**: COMPLETED
+
+**What was done**:
+- Deleted outdated user manual (320 lines)
+
 ### Refactor `llm_managers/` — Simplify Module ✅
 
 **Status**: COMPLETED
