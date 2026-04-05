@@ -30,11 +30,11 @@ _This section lists the primary documentation files. Click a link to open the de
 | [doc/llm_models.md](doc/llm_models.md) | LLM Models | Cloud providers (OpenAI, Google), local providers (LlamaCpp, Ollama), vector stores (Pinecone, Chroma) |
 | [doc/tests.md](doc/tests.md) | Tests | Unit test suite, test commands |
 | [tests_sandbox/tests_sandbox.md](tests_sandbox/tests_sandbox.md) | Tests Sandbox | Feature and integration testing sandbox documentation |
-| [PROJECT_TESTING_SANDBOX_RULES.md](PROJECT_TESTING_SANDBOX_RULES.md) | Testing Rules | TDD strategy and Kent Beck-style rules for AI agents |
-| [CURRENT_ISSUE.md](CURRENT_ISSUE.md) | Meta | Currently tracked issues and their status |
-| [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md) | Roadmap | Planned features and improvements |
+| [_agent_rules/PROJECT_TESTING_SANDBOX_RULES.md](_agent_rules/PROJECT_TESTING_SANDBOX_RULES.md) | Testing Rules | TDD strategy and Kent Beck-style rules for AI agents |
+| [_agent_rules/CURRENT_ISSUE.md](_agent_rules/CURRENT_ISSUE.md) | Meta | Currently tracked issues and their status |
+| [_agent_rules/PROJECT_ROADMAP.md](_agent_rules/PROJECT_ROADMAP.md) | Roadmap | Planned features and improvements |
 | [doc/dependencies.md](doc/dependencies.md) | Configuration | Dependencies table, environment variables, quick start, code style |
-| [USER_COMMMAND_EXTENDED.md](USER_COMMAND_EXTENSION.md) | Commands | Simplified, powerful LLM‑agent command reference |
+| [_agent_rules/USER_COMMAND_EXTENSION.md](_agent_rules/USER_COMMAND_EXTENSION.md) | Commands | Simplified, powerful LLM‑agent command reference |
 
 
 ---
@@ -45,7 +45,13 @@ _This section lists the primary documentation files. Click a link to open the de
 agent-x/
 ├── main.py                          # Application entry point
 ├── pyproject.toml                   # Project configuration, dependencies
-├── CURRENT_ISSUE.md                 # Currently tracked issues and fix status
+├── _agent_rules/                    # Project meta and rules files
+│   ├── CURRENT_ISSUE.md             # Currently tracked issues and fix status
+│   ├── PROJECT_DOCUMENTATION.md     # This file - documentation map
+│   ├── PROJECT_NAVIGATION_ROUTES.md # Navigation routes
+│   ├── PROJECT_ROADMAP.md           # Planned features and improvements
+│   ├── PROJECT_TESTING_SANDBOX_RULES.md # TDD strategy and rules
+│   └── USER_COMMAND_EXTENSION.md    # Extended user commands
 ├── agents/                          # Agent implementations
 │   ├── chat/                        # SimpleChat, ChatLoop (persistent conversation)
 │   ├── function_tool_router/        # Query routing with Ollama tool calling
@@ -85,20 +91,6 @@ agent-x/
 │       └── vectorstore_chroma.py    # Chroma wrapper
 ├── tests/                           # Unit and integration tests (read-only)
 ├── tests_sandbox/                   # Feature and integration testing sandbox
-│   ├── tests_sandbox.md             # Sandbox documentation
-│   ├── features/                    # Feature-level tests (controllers, workflows)
-│   ├── test_command_parser.py       # Command parser unit tests
-│   ├── test_commands.py             # Command implementation tests
-│   ├── test_chat_loop.py            # ChatLoop TDD tests (38 tests)
-│   ├── test_streaming_metrics.py    # StreamingMetrics tok/s tracking (14 tests)
-│   ├── test_argument_parser.py      # --model flag argument parsing (14 tests)
-│   ├── test_model_selection.py      # Model selection + streaming metrics (8 tests)
-│   ├── test_chat_command.py         # AIChat command with --model flag (6 tests)
-│   ├── test_agent_streaming.py      # Agent streaming methods (6 tests)
-│   ├── test_llm_providers.py        # LLM provider tests
-│   ├── test_llm_managers.py         # LLM manager tests
-│   └── test_factory_refactor.py     # AgentFactory unified API tests
-├── PROJECT_TESTING_SANDBOX_RULES.md # TDD strategy and rules for AI agents
 ├── _resources/                      # Sample data files
 └── doc/                             # Project documentation
 ```
@@ -106,6 +98,11 @@ agent-x/
 ---
 
 ## Recent Changes
+
+### Reorganized Meta Files into `_agent_rules/`
+- Moved `CURRENT_ISSUE.md`, `PROJECT_DOCUMENTATION.md`, `PROJECT_NAVIGATION_ROUTES.md`, `PROJECT_ROADMAP.md`, `PROJECT_TESTING_SANDBOX_RULES.md`, `USER_COMMAND_EXTENSION.md` to `_agent_rules/` folder
+- Updated all path references in `AGENTS.md` and `tests_sandbox/tests_sandbox.md`
+- Cleaner project root directory
 
 ### [WIP] RAG Integration to Chat Loop
 - `agents/chat/chat_loop.py`: Added RAG support via `retriever` parameter

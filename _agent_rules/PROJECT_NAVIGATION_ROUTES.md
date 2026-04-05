@@ -619,7 +619,7 @@ uv run pytest tests_sandbox/features/ -v
 
 ## Meta
 
-**Path**: `/`
+**Path**: `/_agent_rules/`
 
 Project meta files for tracking current state and issues.
 
@@ -628,6 +628,9 @@ Project meta files for tracking current state and issues.
 | `CURRENT_ISSUE.md` | Currently tracked issues, root cause analysis, and fix status |
 | `PROJECT_ROADMAP.md` | Planned features, improvements, and completed items |
 | `PROJECT_TESTING_SANDBOX_RULES.md` | TDD strategy and rules for AI agents |
+| `PROJECT_DOCUMENTATION.md` | Full project documentation map |
+| `PROJECT_NAVIGATION_ROUTES.md` | This file - project navigation routes |
+| `USER_COMMAND_EXTENSION.md` | Extended user commands documentation |
 
 ---
 
