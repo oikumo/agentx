@@ -8,13 +8,13 @@ System Agent coding entry point. ALWAYS FOLLOW THIS RULES
 [RULES]
 <INSTRUCTIONS>: In [## System Instructions]().
 <USER_COMMANDS>: In [## Opencode editor User Commands]().
-<USER_COMMAND_EXTENSION>: In [## User Commands Extension]()
-<PROJECT_NAVIGATION>: In [## Project Navigation]().
-<PROJECT_DOCUMENTATION>: In [## Project Documentation]().
-<PROJECT_TESTING_SANDBOX_RULES>: In [## Project Testing Sandbox Rules]().
-<PROJECT_ROADMAP>: In [## Project Roadmap]().
+<USER_COMMAND_EXTENSION>: In [## User Commands Extension]() (file: "/_agent_rules/USER_COMMAND_EXTENSION.md")
+<PROJECT_NAVIGATION>: In [## Project Navigation]() (file: "/_agent_rules/PROJECT_NAVIGATION_ROUTES.md")
+<PROJECT_DOCUMENTATION>: In [## Project Documentation]() (file: "/_agent_rules/PROJECT_DOCUMENTATION.md")
+<PROJECT_TESTING_SANDBOX_RULES>: In [## Project Testing Sandbox Rules]() (file: "/_agent_rules/PROJECT_TESTING_SANDBOX_RULES.md")
+<PROJECT_ROADMAP>: In [## Project Roadmap]() (file: "/_agent_rules/PROJECT_ROADMAP.md")
 <TAKS_TYPES>: In [## Tasks Types]().
-<CURRENT_ISSUE>: In [## Current Issue](). 
+<CURRENT_ISSUE>: In [## Current Issue]() (file: "/_agent_rules/CURRENT_ISSUE.md")
 <GENERAL_RULES>: In [## General Rules]().
 [/RULES]
 
@@ -131,7 +131,7 @@ Use commands list.
 <USER_COMMAND>
   <NAME>+</NAME>
   <ARGUMENTS></ARGUMENTS>
-  <ACTION>List all User Commands in [<USER_COMMANDS>]() and [## User Commands Extension]() (file: "/USER_COMMAND_EXTENSION.md"), include a description. Format it in a simple .MD table</ACTION>
+  <ACTION>List all User Commands in [<USER_COMMANDS>]() and [## User Commands Extension]() (file: "/_agent_rules/USER_COMMAND_EXTENSION.md"), include a description. Format it in a simple .MD table</ACTION>
 </USER_COMMAND>
 
 <USER_COMMAND>
@@ -152,7 +152,7 @@ Use commands list.
 
 <USER_COMMAND_EXTENSION>
 <DESCRIPTION>
-User Command extensión in file "/USER_COMMAND_EXTENSION.md"
+User Command extensión in file "/_agent_rules/USER_COMMAND_EXTENSION.md"
 </DESCRIPTION>
 </USER_COMMAND_EXTENSION>
 
@@ -164,7 +164,7 @@ User Command extensión in file "/USER_COMMAND_EXTENSION.md"
 Establish the rules to follow implement tests 
 </DESCRIPTION>
 <ACTION>
-Use for know how to implement test following the rules in "/PROJECT_TESTING_SANDBOX_RULES.md" file
+Use for know how to implement test following the rules in "/_agent_rules/PROJECT_TESTING_SANDBOX_RULES.md" file
 </ACTION>
 </PROJECT_TESTING_SANDBOX_RULES>
 
@@ -172,10 +172,10 @@ Use for know how to implement test following the rules in "/PROJECT_TESTING_SAND
 
 <PROJECT_NAVIGATION>
 <DESCRIPTION>
-MAP TO UNDERSTAND AND NAVIGATE QUICKLY THROUGH THE SOURCE CODE IS IN "/PROJECT_NAVIGATION_ROUTES.md" file
+MAP TO UNDERSTAND AND NAVIGATE QUICKLY THROUGH THE SOURCE CODE IS IN "/_agent_rules/PROJECT_NAVIGATION_ROUTES.md" file
 </DESCRIPTION>
 <ACTION>
-Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md file
+Inspect and make changes but first look in the /_agent_rules/PROJECT_NAVIGATION_ROUTES.md file
 </ACTION>
 </PROJECT_NAVIGATION>
 
@@ -183,10 +183,10 @@ Inspect and make changes but first look in the /PROJECT_NAVIGATION_ROUTES.md fil
 
 <PROJECT_DOCUMENTATION>
 <DESCRIPTION>
-Project full documentation. Documentation maps folder content in "/PROJECT_DOCUMENTATION.md" file
+Project full documentation. Documentation maps folder content in "/_agent_rules/PROJECT_DOCUMENTATION.md" file
 </DESCRIPTION>
 <ACTION>
-Check the documentation "/PROJECT_DOCUMENTATION.md" file to navigate in the project documentation, when you need more detailed information
+Check the documentation "/_agent_rules/PROJECT_DOCUMENTATION.md" file to navigate in the project documentation, when you need more detailed information
 </ACTION>
 <PROJECT_DOCUMENTATION>
 
@@ -194,7 +194,7 @@ Check the documentation "/PROJECT_DOCUMENTATION.md" file to navigate in the proj
 
 <PROJECT_ROADMAP>
 <DESCRIPTION>
-Project new features and improvements. Centralized in the "/PROJECT_ROADMAP.md" file
+Project new features and improvements. Centralized in the "/_agent_rules/PROJECT_ROADMAP.md" file
 </DESCRIPTION>
 <ACTION>
 Take information from here to implement new features or improvements of the project as a whole
@@ -214,10 +214,10 @@ Take information from here to implement new features or improvements of the proj
 
 <CURRENT_ISSUE>
 <DESCRIPTION>
-Describe the current issue, active and need to be solved in the "/CURRENT_ISSUE.md" file. If is not exists any issue "/CURRENT_ISSUE.md" file, must be set EMPTY 
+Describe the current issue, active and need to be solved in the "/_agent_rules/CURRENT_ISSUE.md" file. If is not exists any issue "/_agent_rules/CURRENT_ISSUE.md" file, must be set EMPTY 
 </DESCRIPTION>
 <ACTION>
-Put the current issue and current issue solving strategy in "/CURRENT_ISSUE.md" file. If is not exists any issue "/CURRENT_ISSUE.md" file, must be set EMPTY
+Put the current issue and current issue solving strategy in "/_agent_rules/CURRENT_ISSUE.md" file. If is not exists any issue "/_agent_rules/CURRENT_ISSUE.md" file, must be set EMPTY
 </ACTION>
 <CURRENT_ISSUE>
 
