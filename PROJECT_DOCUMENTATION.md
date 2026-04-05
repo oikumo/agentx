@@ -52,17 +52,17 @@ agent-x/
 │   ├── graph_react_web_search/      # LangGraph-based ReAct web search
 │   ├── rag_pdf/                     # PDF RAG with FAISS + Ollama embeddings
 │   └── react_web_search/            # LangChain ReAct web search agent
-├── llm_managers/                    # Agent factory functions + LLM provider strategy
+├── llm_managers/                    # Unified AgentFactory + LLM provider strategy
 │   ├── providers/                   # LLM provider implementations (Strategy pattern)
 │   │   ├── llamacpp_provider.py     # Local LLM via llama.cpp
 │   │   ├── openai_provider.py       # Cloud LLM via OpenAI API
-│   │   └── openrouter_provider.py   # Cloud LLM via OpenRouter (Claude 3.5 Haiku)
-│   ├── llm_provider.py              # LLMProvider ABC - strategy interface
-│   ├── agent_chat_factory.py        # Factories for SimpleChat and ChatLoop
-│   ├── agent_function_router_factory.py  # Factory for QueryRouter
-│   ├── agent_rag_factory.py         # Factory for AgentRagPdf
-│   ├── agent_react_web_search_factory.py # Factory for AgentReactWebSearch
-│   └── graph_react_web_search_factory.py # Factory for GraphReactWebSearch
+│   │   └── openrouter_provider.py   # Cloud LLM via OpenRouter
+│   ├── factory.py                   # Unified AgentFactory class
+│   └── llm_provider.py              # LLMProvider ABC - strategy interface
+├── local_mcp/                       # MCP (Model Context Protocol) servers
+│   ├── mcp_main.py                  # MCP server entry point
+│   └── servers_stdio/               # MCP servers using stdio transport
+│       └── math_server.py           # Math operations MCP server
 ├── app/                             # Core application
 │   ├── common/                      # Shared utilities
 │   ├── model/                       # Data persistence, sessions, SQLite
@@ -96,7 +96,8 @@ agent-x/
 │   ├── test_chat_command.py         # AIChat command with --model flag (6 tests)
 │   ├── test_agent_streaming.py      # Agent streaming methods (6 tests)
 │   ├── test_llm_providers.py        # LLM provider tests
-│   └── test_llm_managers.py         # LLM manager tests
+│   ├── test_llm_managers.py         # LLM manager tests
+│   └── test_factory_refactor.py     # AgentFactory unified API tests
 ├── PROJECT_TESTING_SANDBOX_RULES.md # TDD strategy and rules for AI agents
 ├── _resources/                      # Sample data files
 └── doc/                             # Project documentation
@@ -105,6 +106,31 @@ agent-x/
 ---
 
 ## Recent Changes
+
+### [WIP] RAG Integration to Chat Loop
+- `agents/chat/chat_loop.py`: Added RAG support via `retriever` parameter
+- `llm_managers/factory.py`: New `create_chat_loop_rag()` factory method - PDF ingestion → FAISS → retriever → ChatLoop
+- `llm_managers/providers/__init__.py`: Updated helper functions
+- `llm_managers/providers/openrouter_provider.py`: Updated for RAG integration
+- `app/repl/commands/llm_chat_commands.py`: Updated to use RAG-enabled ChatLoop
+- `tests_sandbox/test_chat_loop.py`: Updated tests for RAG capabilities
+- `tests_sandbox/test_llm_providers.py`: Updated provider tests
+
+### Added MCP (Model Context Protocol) Support
+- `local_mcp/`: New module for MCP servers
+- `local_mcp/mcp_main.py`: MCP server entry point
+- `local_mcp/servers_stdio/`: MCP servers using stdio transport
+- `local_mcp/servers_stdio/math_server.py`: Math operations MCP server
+- Added `mcp` dependency to `pyproject.toml`
+
+### Refactored `llm_managers/` — Unified AgentFactory
+- Consolidated 5 factory files into single `AgentFactory` class in `factory.py`
+- Removed: `agent_chat_factory.py`, `agent_function_router_factory.py`, `agent_rag_factory.py`, `agent_react_web_search_factory.py`, `graph_react_web_search_factory.py`
+- New unified API: `create_chat()`, `create_chat_loop()`, `create_chat_loop_rag()`, `create_function_router()`, `create_rag()`, `create_react_web_search()`, `create_graph_react_web_search()`
+- `llm_managers/providers/__init__.py`: Helper functions `local_llm_provider()` and `openrouter_llm_provider()`
+- Updated consumers: `llm_chat_commands.py`, `llm_graph_commands.py`
+- `tests_sandbox/test_factory_refactor.py`: Tests for new unified API
+- Updated `llm_models/local/llama_cpp_factory.py`: Model constants updated (Qwen 3.5)
 
 ### Fixed: llama.cpp Provider - Now Uses ChatOpenAI Client
 - `llm_models/local/llama_cpp/llamacpp.py`: Refactored to use `ChatOpenAI` with a local OpenAI-compatible client pointing to `http://localhost:8080/v1`

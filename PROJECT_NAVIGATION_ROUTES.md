@@ -20,12 +20,13 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | [Root](#root) | 2 | Entry point and project configuration |
 | [_resources/](#_resources) | 2 | Sample data files for demos |
 | [agents/](#agents) | 16 | Agent implementations (SimpleChat, ChatLoop, RAG, ReAct, Graph) |
-| [llm_managers/](#llm_managers) | 9 | Agent factory functions + LLM provider strategy pattern |
+| [llm_managers/](#llm_managers) | 4 | Unified AgentFactory + LLM provider strategy pattern |
+| [local_mcp/](#local_mcp) | 3 | MCP (Model Context Protocol) servers |
 | [app/](#app) | 22 | Core application: REPL, models, DB, security, streaming metrics |
 | [app_modules/](#app_modules) | 20 | LLM integrations, data stores, web ingestion |
 | [llm_models/](#llm_models) | 7 | LLM model providers (cloud + local) |
 | [tests/](#tests) | 7 | Unit and integration tests |
-| [tests_sandbox/](#tests_sandbox) | 13 | Feature and integration testing sandbox |
+| [tests_sandbox/](#tests_sandbox) | 14 | Feature and integration testing sandbox |
 | [Meta](#meta) | 2 | Project meta files (issues, roadmap, rules) |
 
 ---
@@ -58,7 +59,7 @@ main.py → create_controller() → register commands → ReplApp(controller).ru
 
 **Path**: `llm_managers/`
 
-Factory functions and LLM provider strategy pattern. Centralizes agent creation logic and model provider abstraction.
+Unified factory and LLM provider strategy pattern. Centralizes agent creation logic and model provider abstraction.
 
 ### Sub-modules
 
@@ -66,16 +67,13 @@ Factory functions and LLM provider strategy pattern. Centralizes agent creation 
 |------------|-------------|
 | [providers/](#llm_managersproviders) | LLM provider implementations (Strategy pattern) |
 
-### Factory Files
+### Core Files
 
 | File | Description |
 |------|-------------|
+| `factory.py` | `AgentFactory` class - unified factory for all agent types (create_chat, create_chat_loop, create_chat_loop_rag, create_function_router, create_rag, create_react_web_search, create_graph_react_web_search) |
 | `llm_provider.py` | `LLMProvider` ABC - strategy interface for LLM providers |
-| `agent_chat_factory.py` | Factories for SimpleChat and ChatLoop (`create_chat_loop`, `create_chat_loop_local`, `create_chat_loop_with_model`) |
-| `agent_function_router_factory.py` | Factory for QueryRouter |
-| `agent_rag_factory.py` | Factory for AgentRagPdf |
-| `agent_react_web_search_factory.py` | Factory for AgentReactWebSearch |
-| `graph_react_web_search_factory.py` | Factory for GraphReactWebSearch (local + cloud) |
+| `__init__.py` | Module public API |
 
 ### llm_managers/providers/
 
@@ -93,9 +91,48 @@ All providers must implement:
 | File | Description |
 |------|-------------|
 | `llm_provider.py` | `LLMProvider` ABC — base class with `@abstractmethod create_llm()` |
-| `llamacpp_provider.py` | `LlamaCppProvider` - local LLM via llama.cpp using ChatOpenAI client with Qwen 2.5/3 |
+| `llamacpp_provider.py` | `LlamaCppProvider` - local LLM via llama.cpp using ChatOpenAI client with Qwen 2.5/3.5/3 |
 | `openai_provider.py` | `OpenAIProvider` - cloud LLM via OpenAI API |
 | `openrouter_provider.py` | `OpenRouterProvider` - cloud LLM via OpenRouter, now accepts `model_name` parameter for runtime model selection |
+
+### Helper Functions
+
+| Function | Description |
+|----------|-------------|
+| `local_llm_provider(model_filename, context_size)` | Creates LlamaCppProvider with specified model |
+| `openrouter_llm_provider(model_name)` | Creates OpenRouterProvider with specified model |
+
+---
+
+## local_mcp/
+
+**Path**: `local_mcp/`
+
+MCP (Model Context Protocol) servers for extending agent capabilities via stdio transport.
+
+### Sub-modules
+
+| Sub-module | Description |
+|------------|-------------|
+| [servers_stdio/](#local_mcpserver_stdio) | MCP servers using stdio transport |
+
+### Core Files
+
+| File | Description |
+|------|-------------|
+| `__init__.py` | Module initialization |
+| `mcp_main.py` | MCP server entry point |
+
+### local_mcp/servers_stdio/
+
+**Path**: `local_mcp/servers_stdio/`
+
+MCP server implementations using stdio transport.
+
+| File | Description |
+|------|-------------|
+| `__init__.py` | Module initialization |
+| `math_server.py` | Math operations MCP server |
 
 ---
 
@@ -558,14 +595,15 @@ tests_sandbox/
 │   └── test_controller.py           # MainController feature tests
 ├── test_command_parser.py           # CommandParser unit tests
 ├── test_commands.py                 # Command implementation tests
-├── test_chat_loop.py                # ChatLoop TDD tests (38 tests)
+├── test_chat_loop.py                # ChatLoop TDD tests (40+ tests)
 ├── test_streaming_metrics.py        # StreamingMetrics tok/s tracking (14 tests)
 ├── test_argument_parser.py          # --model flag argument parsing (14 tests)
 ├── test_model_selection.py          # Model selection + streaming metrics (8 tests)
 ├── test_chat_command.py             # AIChat command with --model flag (6 tests)
 ├── test_agent_streaming.py          # Agent streaming methods (6 tests)
 ├── test_llm_providers.py            # LLM provider tests
-└── test_llm_managers.py             # LLM manager tests
+├── test_llm_managers.py             # LLM manager tests
+└── test_factory_refactor.py         # AgentFactory unified API tests
 ```
 
 ### Test Commands
@@ -600,6 +638,7 @@ Project meta files for tracking current state and issues.
 - **LangGraph**: `langgraph>=1.1.3`
 - **LLM Providers**: `langchain-openai`, `langchain-google-genai`, `langchain-ollama`, `langchain-openrouter`
 - **Local Models**: `llama-cpp-python>=0.3.19`
+- **MCP**: `mcp`
 
 ### Vector Stores
 - **Chroma**: `chromadb`, `langchain-chroma`

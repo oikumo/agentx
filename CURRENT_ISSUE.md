@@ -2,34 +2,32 @@
 
 > **Last Updated**: April 4, 2026
 
-## Refactor `llm_managers/` — Simplify Module
+## No Active Issues
+
+**Status**: EMPTY
+
+---
+
+## Recently Completed
+
+### Refactor `llm_managers/` — Simplify Module ✅
+
+**Status**: COMPLETED
+
+**What was done**:
+- Consolidated 5 separate factory files into single `AgentFactory` class in `factory.py`
+- Created unified API with static methods: `create_chat`, `create_chat_loop`, `create_chat_loop_rag`, `create_function_router`, `create_rag`, `create_react_web_search`, `create_graph_react_web_search`
+- Centralized defaults in `providers/__init__.py` with helper functions `local_llm_provider()` and `openrouter_llm_provider()`
+- Updated consumers (`llm_chat_commands.py`, `llm_graph_commands.py`)
+- Removed old factory files (`agent_chat_factory.py`, `agent_function_router_factory.py`, `agent_rag_factory.py`, `agent_react_web_search_factory.py`, `graph_react_web_search_factory.py`)
+- Added `test_factory_refactor.py` for new unified API
+
+### [WIP] RAG Integration to Chat Loop
 
 **Status**: IN PROGRESS
 
-**Problem**:
-- 5 separate factory files with redundant patterns
-- `_local` aliases duplicated across files
-- Hardcoded LlamaCppProvider defaults scattered everywhere
-- Empty `__init__.py` — no public API surface
-- Inconsistent patterns (RagConfig dataclass vs simple params)
-
-**Plan**:
-1. Write TDD tests for new unified `AgentFactory` API
-2. Create single `factory.py` with `AgentFactory` class (static methods)
-3. Centralize defaults in `providers/__init__.py`
-4. Update consumers (`llm_chat_commands.py`, `llm_graph_commands.py`)
-5. Remove old factory files
-6. Expose public API in `__init__.py`
-7. Run all tests and verify
-
-**Target API**:
-```python
-from llm_managers.factory import AgentFactory
-
-AgentFactory.create_chat(provider=None)
-AgentFactory.create_chat_loop(provider=None)
-AgentFactory.create_function_router(routes=None)
-AgentFactory.create_rag(config=None)
-AgentFactory.create_react_web_search(provider=None)
-AgentFactory.create_graph_react_web_search(provider=None, max_search_results=1)
-```
+**What's being worked on**:
+- `ChatLoop` now supports RAG capabilities via `create_chat_loop_rag()` factory method
+- PDF ingestion → FAISS vector store → retriever integration with ChatLoop
+- Streaming metrics support for RAG-enhanced conversations
+- Updated tests in `test_chat_loop.py` and `test_llm_providers.py`

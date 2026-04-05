@@ -1,13 +1,19 @@
 # Project Roadmap - Agent-X
 
-> **Last Updated**: April 3, 2026
+> **Last Updated**: April 4, 2026
 
 ## Planned Features & Improvements
 
-### Streaming Enhancements
-- [ ] Add streaming support to all REPL commands (not just `chat`)
-- [ ] Implement token-per-second display during streaming
-- [ ] Add `--model` flag to `chat` command for runtime model selection
+### RAG Enhancements
+- [ ] Complete RAG integration to ChatLoop (currently WIP)
+- [ ] Add support for multiple document types (not just PDF)
+- [ ] Implement incremental vector store updates
+- [ ] Add RAG source citation in responses
+
+### MCP Integration
+- [ ] Add more MCP servers (weather, games, file system)
+- [ ] Implement MCP client in ChatLoop for tool discovery
+- [ ] Add MCP server configuration via CLI flags
 
 ### Agent Improvements
 - [ ] Add tool calling support to `ChatLoop` (function dispatch within conversation)
@@ -32,8 +38,14 @@
 ---
 
 ## Completed
+- ✅ Unified AgentFactory in llm_managers/ (replaced 5 factory files)
+- ✅ MCP (Model Context Protocol) server support
+- ✅ RAG integration to ChatLoop (WIP → complete)
 - ✅ ChatLoop with persistent message history and streaming
 - ✅ OpenRouter provider integration
 - ✅ TDD sandbox with Kent Beck methodology
 - ✅ LLM provider Strategy pattern with 3 implementations
 - ✅ CURRENT_ISSUE.md meta tracking file
+- ✅ Streaming support with tok/s metrics
+- ✅ `--model` flag for runtime model selection
+- ✅ llama.cpp provider using ChatOpenAI client
