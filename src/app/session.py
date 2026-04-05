@@ -2,8 +2,58 @@ from datetime import datetime, timezone
 import sqlite3
 from pathlib import Path
 from typing import Any
-from app.model.db.database_definition import TableHistory, TableUser
-from app.model.user_sessions.session import Session
+
+from app.security import SESSION_DEFAULT_NAME, SESSION_DEFAULT_BASE_DIRECTORY
+from app.utils import (
+    create_directory_with_timestamp,
+    directory_exists,
+    dangerous_delete_directory,
+)
+from app.models import TableHistory, TableUser
+
+
+class Session:
+    __directory: str | None
+    __session_name: str
+
+    @property
+    def name(self) -> str:
+        return self.__session_name
+
+    @property
+    def directory(self) -> str | None:
+        return self.__directory
+
+    def __init__(self, name: str):
+        self.__directory = None
+        self.__session_name = SESSION_DEFAULT_NAME
+        if not (name and name.strip()):
+            self.__session_name = SESSION_DEFAULT_NAME
+        elif " " in name:
+            self.__session_name = name.replace(" ", "_").lower()
+        else:
+            self.__session_name = name
+
+    def create(self):
+        self.__directory = None
+        new_directory = create_directory_with_timestamp(
+            self.__session_name, SESSION_DEFAULT_BASE_DIRECTORY
+        )
+        if not new_directory:
+            return False
+        self.__directory = new_directory
+        return True
+
+    def is_created(self):
+        if not self.__directory:
+            return False
+        return directory_exists(self.__directory)
+
+    def destroy(self) -> bool:
+        if not self.is_created():
+            return False
+        dangerous_delete_directory(self.__directory)
+        return True
 
 
 class SessionDatabase:
@@ -47,10 +97,8 @@ class SessionDatabase:
 
     def _select_all(self, table) -> list[Any] | None:
         allowed_tables = {TableHistory.TABLE_NAME, TableUser.TABLE_NAME}
-
         if table not in allowed_tables:
             raise ValueError("Invalid table name")
-
         db_path = self._get_session_path()
         try:
             with sqlite3.connect(db_path) as conn:

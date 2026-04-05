@@ -5,8 +5,11 @@ from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 
-from app.common.files.file_utils import save_to_output
-from app_modules.llm.langgraph.graph_reflector_chain.chains import generate_chain, reflect_chain
+from app.utils import save_to_output
+from app_modules.llm.langgraph.graph_reflector_chain.chains import (
+    generate_chain,
+    reflect_chain,
+)
 
 
 def graph_chains():
@@ -45,7 +48,10 @@ def graph_chains():
     graph.get_graph().print_ascii()
 
     print("Hello LangGraph")
-    inputs = {"messages": [HumanMessage(content="""Make this tweet better:"
+    inputs = {
+        "messages": [
+            HumanMessage(
+                content="""Make this tweet better:"
                                     @LangChainAI
             — newly Tool Calling feature is seriously underrated.
 
@@ -53,7 +59,10 @@ def graph_chains():
 
             Made a video covering their newest blog post
 
-                                  """)]}
+                                  """
+            )
+        ]
+    }
     response = graph.invoke(inputs)
     print(response)
 

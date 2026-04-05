@@ -5,29 +5,23 @@ import os
 
 from dotenv import load_dotenv
 
-from app.repl.commands.cli_commands import (
+from app.commands import (
     QuitCommand,
     ClearCommand,
     ReadFile,
     HelpCommand,
-)
-
-from app.repl.commands.llm_chat_commands import (
     AIChat,
     AIRouterAgents,
     AIReactTools,
     AISearch,
     AIFunction,
     RagPDF,
-)
-from app.repl.commands.llm_graph_commands import (
     AIGraphSimple,
     AIGraphChains,
     AIGraphReflexion,
+    SumCommand,
 )
-from app.repl.commands.math_commands import SumCommand
-from app.repl.controllers.main_controller import MainController
-from app.repl.repl import ReplApp
+from app.repl import IMainController, ReplApp
 
 load_dotenv()
 
@@ -37,8 +31,8 @@ if not os.getenv("OPENROUTER_API_KEY"):
     )
 
 
-def create_controller() -> MainController:
-    main_controller = MainController()
+def create_controller() -> IMainController:
+    main_controller = IMainController()
     main_controller.add_command(SumCommand("sum", main_controller))
     main_controller.add_command(QuitCommand("quit", main_controller))
     main_controller.add_command(ClearCommand("clear", main_controller))

@@ -10,6 +10,7 @@ class Colors:
     UNDERLINE = "\033[4m"
     END = "\033[0m"
 
+
 class Console:
     @staticmethod
     def log_info(message: str, color: str = Colors.CYAN) -> None:

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_tavily import TavilyExtract, TavilyMap
 
-from app.repl.console import Colors, Console
+from app.console import Colors, Console
 
 load_dotenv()
 

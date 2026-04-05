@@ -1,6 +1,6 @@
 import asyncio
 
-from app.model.user_sessions.session import Session
+from app.session import Session
 from app_modules.web_ingestion_app.tavily import WebExtract
 from app_modules.web_ingestion_app.web_ingestion_app import WebIngestionApp
 from llm_models.vectorstores.vectorstore_chroma import create_vectorstore_chroma

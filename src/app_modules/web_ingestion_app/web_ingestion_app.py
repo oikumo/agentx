@@ -5,12 +5,10 @@ import certifi
 from dotenv import load_dotenv
 from langchain_core.vectorstores import VectorStore
 
-from modules.web_ingestion_app.documents import (
-    index_documents_async, process_documents)
-from modules.web_ingestion_app.helpers import (chunk_urls,
-                                               save_docs)
+from modules.web_ingestion_app.documents import index_documents_async, process_documents
+from modules.web_ingestion_app.helpers import chunk_urls, save_docs
 from modules.web_ingestion_app.tavily import WebExtract
-from app.repl.console import Colors, Console
+from app.console import Colors, Console
 
 load_dotenv()
 
