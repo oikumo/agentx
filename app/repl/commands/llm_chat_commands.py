@@ -75,10 +75,22 @@ class RagPDF(Command):
 
     def run(self, arguments: list[str]) -> None:
         if arguments is None or not arguments:
-            Console.log_warning("missing args")
+            Console.log_info(
+                "Starting interactive RAG chat (type 'quit' or 'exit' to end):"
+            )
+            chat_loop = AgentFactory.create_chat_loop_rag()
+            chat_loop.start_interactive_streaming()
             return
 
-        AgentFactory.create_rag().run(query=" ".join(arguments))
+        chat_loop = AgentFactory.create_chat_loop_rag()
+        query = " ".join(arguments)
+        try:
+            response, metrics = chat_loop.run_streaming_with_metrics(query)
+            if response is not None:
+                print()
+                Console.log_info(metrics.format())
+        except Exception as e:
+            Console.log_error(f"RAG error: {e}")
 
 
 class AIRouterAgents(Command):

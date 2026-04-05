@@ -6,7 +6,7 @@ from llm_managers.llm_provider import LLMProvider
 class OpenRouterProvider(LLMProvider):
     """Cloud LLM provider using OpenRouter with auto-routing."""
 
-    def __init__(self, model_name: str = "anthropic/claude-3.5-haiku"):
+    def __init__(self, model_name: str = "qwen/qwen3.6-plus:free"):
         self._model_name = model_name
 
     def create_llm(self) -> BaseChatModel:

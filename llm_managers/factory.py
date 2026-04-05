@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
+from langchain_community.vectorstores import FAISS
 from langchain_core.embeddings import Embeddings
 
 from agents.chat.simple_chat import SimpleChat
@@ -12,10 +13,14 @@ from agents.rag_pdf.agent_rag_pdf import AgentRagPdf
 from agents.react_web_search.agent_react_web_search import AgentReactWebSearch
 from agents.graph_react_web_search.graph_react_web_search import GraphReactWebSearch
 from app.common.utils.file_utils import create_directory_with_timestamp
+from app_modules.document_loaders.pdf_loader import pdf_loader
 from llm_managers.llm_provider import LLMProvider
-from llm_managers.providers import local_llm_provider
+from llm_managers.providers import local_llm_provider, openrouter_llm_provider
 from llm_managers.providers.openai_provider import OpenAIProvider
-from llm_models.local.llama_cpp_factory import LLAMA_CPP_MODEL_NEMOTRON_3_NANO, LLAMA_CPP_MODEL_QWEN_3_5
+from llm_models.local.llama_cpp_factory import (
+    LLAMA_CPP_MODEL_NEMOTRON_3_NANO,
+    LLAMA_CPP_MODEL_QWEN_3_5,
+)
 
 
 @dataclass
@@ -68,11 +73,60 @@ class AgentFactory:
         """
         if provider is None:
             provider = local_llm_provider(
-                model_filename=LLAMA_CPP_MODEL_QWEN_3_5,
-                context_size=32768)
+                model_filename=LLAMA_CPP_MODEL_QWEN_3_5, context_size=32768
+            )
 
         llm = provider.create_llm()
         return ChatLoop(llm=llm)
+
+    @staticmethod
+    def create_chat_loop_rag(
+        pdf_path: str = "_resources/react.pdf",
+        vectorstore_path: Optional[str] = None,
+        llm_provider: Optional[LLMProvider] = None,
+        embeddings: Optional[Embeddings] = None,
+    ) -> ChatLoop:
+        """Create a ChatLoop agent with RAG capabilities.
+
+        Args:
+            pdf_path: Path to the PDF document.
+            vectorstore_path: Optional path for vectorstore persistence.
+            llm_provider: LLMProvider strategy. Defaults to local LlamaCpp.
+            embeddings: Embeddings model for vectorization.
+
+        Returns:
+            Configured ChatLoop instance with RAG retriever.
+        """
+        if vectorstore_path is None:
+            vectorstore_path = create_directory_with_timestamp(
+                "faiss_index_chat_rag", "local_vector_databases"
+            )
+
+        if embeddings is None:
+            from llm_models.local.ollama.ollama_embeddings import (
+                create_embeddings_model,
+            )
+
+            embeddings = create_embeddings_model()
+
+        if llm_provider is None:
+            llm_provider = openrouter_llm_provider()
+
+        llm = llm_provider.create_llm()
+
+        docs = pdf_loader(pdf_path)
+        print(f"docs from pdf: {len(docs)}")
+
+        vectorstore = FAISS.from_documents(docs, embeddings)
+        vectorstore.save_local(vectorstore_path)
+
+        loaded_vectorstore = FAISS.load_local(
+            vectorstore_path, embeddings, allow_dangerous_deserialization=True
+        )
+
+        retriever = loaded_vectorstore.as_retriever()
+
+        return ChatLoop(llm=llm, retriever=retriever)
 
     @staticmethod
     def create_function_router(routes: list[Route] | None = None) -> QueryRouter:

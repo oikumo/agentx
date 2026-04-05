@@ -571,5 +571,69 @@ class TestChatLoopRag(unittest.TestCase):
         return chunk
 
 
+class TestChatLoopRagFactory(unittest.TestCase):
+    @patch("llm_managers.factory.FAISS")
+    @patch("llm_managers.factory.local_llm_provider")
+    @patch("llm_models.local.ollama.ollama_embeddings.create_embeddings_model")
+    @patch("llm_managers.factory.pdf_loader")
+    def test_create_chat_loop_rag_returns_chat_loop_with_retriever(
+        self, mock_pdf_loader, mock_create_embeddings, mock_local_llm, mock_faiss
+    ):
+        from llm_managers.factory import AgentFactory
+
+        mock_llm = MagicMock()
+        mock_local_llm.return_value.create_llm.return_value = mock_llm
+
+        mock_vectorstore = MagicMock()
+        mock_retriever = MagicMock()
+        mock_vectorstore.as_retriever.return_value = mock_retriever
+        mock_faiss.from_documents.return_value = mock_vectorstore
+        mock_faiss.load_local.return_value = mock_vectorstore
+
+        mock_pdf_loader.return_value = [MagicMock()]
+        mock_create_embeddings.return_value = MagicMock()
+
+        result = AgentFactory.create_chat_loop_rag(
+            pdf_path="_resources/react.pdf",
+            vectorstore_path="/tmp/test_faiss",
+        )
+
+        self.assertIsInstance(result, ChatLoop)
+        self.assertIs(result.llm, mock_llm)
+        self.assertIsNotNone(result.retriever)
+
+    @patch("llm_managers.factory.FAISS")
+    @patch("llm_managers.factory.local_llm_provider")
+    @patch("llm_models.local.ollama.ollama_embeddings.create_embeddings_model")
+    @patch("llm_managers.factory.pdf_loader")
+    def test_create_chat_loop_rag_uses_custom_provider(
+        self, mock_pdf_loader, mock_create_embeddings, mock_local_llm, mock_faiss
+    ):
+        from llm_managers.factory import AgentFactory
+
+        mock_provider = MagicMock()
+        mock_llm = MagicMock()
+        mock_provider.create_llm.return_value = mock_llm
+
+        mock_vectorstore = MagicMock()
+        mock_retriever = MagicMock()
+        mock_vectorstore.as_retriever.return_value = mock_retriever
+        mock_faiss.from_documents.return_value = mock_vectorstore
+        mock_faiss.load_local.return_value = mock_vectorstore
+
+        mock_pdf_loader.return_value = [MagicMock()]
+        mock_create_embeddings.return_value = MagicMock()
+
+        result = AgentFactory.create_chat_loop_rag(
+            pdf_path="_resources/react.pdf",
+            vectorstore_path="/tmp/test_faiss",
+            llm_provider=mock_provider,
+        )
+
+        mock_provider.create_llm.assert_called_once()
+        mock_local_llm.assert_not_called()
+        self.assertIsInstance(result, ChatLoop)
+
+
 if __name__ == "__main__":
     unittest.main()
