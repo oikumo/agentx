@@ -619,7 +619,7 @@ uv run pytest tests_sandbox/features/ -v
 
 ## Meta
 
-**Path**: `/_agent_rules/`
+**Path**: `/.project_development/`
 
 Project meta files for tracking current state and issues.
 

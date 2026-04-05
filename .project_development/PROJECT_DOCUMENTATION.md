@@ -30,11 +30,11 @@ _This section lists the primary documentation files. Click a link to open the de
 | [doc/llm_models.md](doc/llm_models.md) | LLM Models | Cloud providers (OpenAI, Google), local providers (LlamaCpp, Ollama), vector stores (Pinecone, Chroma) |
 | [doc/tests.md](doc/tests.md) | Tests | Unit test suite, test commands |
 | [tests_sandbox/tests_sandbox.md](tests_sandbox/tests_sandbox.md) | Tests Sandbox | Feature and integration testing sandbox documentation |
-| [_agent_rules/PROJECT_TESTING_SANDBOX_RULES.md](_agent_rules/PROJECT_TESTING_SANDBOX_RULES.md) | Testing Rules | TDD strategy and Kent Beck-style rules for AI agents |
-| [_agent_rules/CURRENT_ISSUE.md](_agent_rules/CURRENT_ISSUE.md) | Meta | Currently tracked issues and their status |
-| [_agent_rules/PROJECT_ROADMAP.md](_agent_rules/PROJECT_ROADMAP.md) | Roadmap | Planned features and improvements |
+| [.project_development/PROJECT_TESTING_SANDBOX_RULES.md](.project_development/PROJECT_TESTING_SANDBOX_RULES.md) | Testing Rules | TDD strategy and Kent Beck-style rules for AI agents |
+| [.project_development/CURRENT_ISSUE.md](.project_development/CURRENT_ISSUE.md) | Meta | Currently tracked issues and their status |
+| [.project_development/PROJECT_ROADMAP.md](.project_development/PROJECT_ROADMAP.md) | Roadmap | Planned features and improvements |
 | [doc/dependencies.md](doc/dependencies.md) | Configuration | Dependencies table, environment variables, quick start, code style |
-| [_agent_rules/USER_COMMAND_EXTENSION.md](_agent_rules/USER_COMMAND_EXTENSION.md) | Commands | Simplified, powerful LLM‑agent command reference |
+| [.project_development/USER_COMMAND_EXTENSION.md](.project_development/USER_COMMAND_EXTENSION.md) | Commands | Simplified, powerful LLM‑agent command reference |
 
 
 ---
@@ -45,7 +45,7 @@ _This section lists the primary documentation files. Click a link to open the de
 agent-x/
 ├── main.py                          # Application entry point
 ├── pyproject.toml                   # Project configuration, dependencies
-├── _agent_rules/                    # Project meta and rules files
+├── .project_development/          # Project meta and rules files
 │   ├── CURRENT_ISSUE.md             # Currently tracked issues and fix status
 │   ├── PROJECT_DOCUMENTATION.md     # This file - documentation map
 │   ├── PROJECT_NAVIGATION_ROUTES.md # Navigation routes
@@ -99,8 +99,8 @@ agent-x/
 
 ## Recent Changes
 
-### Reorganized Meta Files into `_agent_rules/`
-- Moved `CURRENT_ISSUE.md`, `PROJECT_DOCUMENTATION.md`, `PROJECT_NAVIGATION_ROUTES.md`, `PROJECT_ROADMAP.md`, `PROJECT_TESTING_SANDBOX_RULES.md`, `USER_COMMAND_EXTENSION.md` to `_agent_rules/` folder
+### Reorganized Meta Files into `.project_development/`
+- Moved `CURRENT_ISSUE.md`, `PROJECT_DOCUMENTATION.md`, `PROJECT_NAVIGATION_ROUTES.md`, `PROJECT_ROADMAP.md`, `PROJECT_TESTING_SANDBOX_RULES.md`, `USER_COMMAND_EXTENSION.md` to `.project_development/` folder
 - Updated all path references in `AGENTS.md` and `tests_sandbox/tests_sandbox.md`
 - Cleaner project root directory
 

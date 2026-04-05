@@ -71,5 +71,5 @@ uv run pytest tests_sandbox/test_commands.py::TestSumCommand -v
 
 ## Integration Points
 
-- **Project Navigation**: See [_agent_rules/PROJECT_NAVIGATION_ROUTES.md](../_agent_rules/PROJECT_NAVIGATION_ROUTES.md) for module structure
-- **Project Documentation**: See [_agent_rules/PROJECT_DOCUMENTATION.md](../_agent_rules/PROJECT_DOCUMENTATION.md) for full documentation map
+- **Project Navigation**: See [_agent_rules/PROJECT_NAVIGATION_ROUTES.md](../.project_development/PROJECT_NAVIGATION_ROUTES.md) for module structure
+- **Project Documentation**: See [_agent_rules/PROJECT_DOCUMENTATION.md](../.project_development/PROJECT_DOCUMENTATION.md) for full documentation map

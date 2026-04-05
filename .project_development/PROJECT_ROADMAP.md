@@ -38,7 +38,7 @@
 ---
 
 ## Completed
-- ✅ Reorganized meta files into `_agent_rules/` folder
+- ✅ Reorganized meta files into `.project_development/` folder
 - ✅ Unified AgentFactory in llm_managers/ (replaced 5 factory files)
 - ✅ MCP (Model Context Protocol) server support
 - ✅ RAG integration to ChatLoop (WIP → complete)
