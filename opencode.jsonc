@@ -1,5 +1,9 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "docs/development-standards.md",
+    "test/testing-guidelines.md"
+  ],
   "agent": {
     "code-reviewer": {
       "description": "Reviews code for best practices and potential issues",
@@ -12,10 +16,25 @@
       }
     }
   },
+  "permission": {
+    "edit": "ask",
+    "bash": "ask",
+    "webfetch": "deny",
+    "grep": "allow",
+    "glob": "allow",
+    "list": "allow",
+    "lsp": "allow",
+    "skill": "allow"
+  },
   "mcp": {
     "langchain": {
       "type": "remote",
       "url": "https://docs.langchain.com/mcp",
+      "enabled": true
+    },
+    "products": {
+      "type": "local",
+      "command": ["uv", "run", "/home/oikumo/develop/projects/mcp-server-x/server.py"],
       "enabled": true
     }
   }
