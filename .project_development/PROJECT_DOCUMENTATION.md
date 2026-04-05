@@ -30,6 +30,11 @@ _This section lists the primary documentation files. Click a link to open the de
 | [doc/llm_models.md](doc/llm_models.md) | LLM Models | Cloud providers (OpenAI, Google), local providers (LlamaCpp, Ollama), vector stores (Pinecone, Chroma) |
 | [doc/tests.md](doc/tests.md) | Tests | Unit test suite, test commands |
 | [tests_sandbox/tests_sandbox.md](tests_sandbox/tests_sandbox.md) | Tests Sandbox | Feature and integration testing sandbox documentation |
+| [.project_development/CORE_DIRECTIVES.md](.project_development/CORE_DIRECTIVES.md) | Core Rules | Non-negotiable system agent rules |
+| [.project_development/TOOL_USAGE.md](.project_development/TOOL_USAGE.md) | Tool Usage | Tool selection & usage guidelines |
+| [.project_development/CODING_STYLE.md](.project_development/CODING_STYLE.md) | Coding Style | Code conventions & naming |
+| [.project_development/TASK_WORKFLOW.md](.project_development/TASK_WORKFLOW.md) | Task Workflow | Step-by-step task process |
+| [.project_development/ENVIRONMENT.md](.project_development/ENVIRONMENT.md) | Environment | Runtime & operational notes |
 | [.project_development/PROJECT_TESTING_SANDBOX_RULES.md](.project_development/PROJECT_TESTING_SANDBOX_RULES.md) | Testing Rules | TDD strategy and Kent Beck-style rules for AI agents |
 | [.project_development/CURRENT_ISSUE.md](.project_development/CURRENT_ISSUE.md) | Meta | Currently tracked issues and their status |
 | [.project_development/PROJECT_ROADMAP.md](.project_development/PROJECT_ROADMAP.md) | Roadmap | Planned features and improvements |
@@ -46,6 +51,11 @@ agent-x/
 ├── main.py                          # Application entry point
 ├── pyproject.toml                   # Project configuration, dependencies
 ├── .project_development/          # Project meta and rules files
+│   ├── CORE_DIRECTIVES.md           # Non-negotiable system agent rules
+│   ├── TOOL_USAGE.md                # Tool selection & usage guidelines
+│   ├── CODING_STYLE.md              # Code conventions & naming
+│   ├── TASK_WORKFLOW.md             # Step-by-step task process
+│   ├── ENVIRONMENT.md               # Runtime & operational notes
 │   ├── CURRENT_ISSUE.md             # Currently tracked issues and fix status
 │   ├── PROJECT_DOCUMENTATION.md     # This file - documentation map
 │   ├── PROJECT_NAVIGATION_ROUTES.md # Navigation routes

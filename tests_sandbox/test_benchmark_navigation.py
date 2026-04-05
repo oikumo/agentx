@@ -263,27 +263,39 @@ class TestAgentNavigationBenchmarkTrace(unittest.TestCase):
         print("  ✅ No old _agent_rules/ references found")
 
     def test_12_coding_style_rules(self):
-        """Task 12: Verify coding style rules are documented."""
+        """Task 12: Verify coding style rules are referenced and exist."""
         print("\n[TASK 12] Verifying coding style rules...")
         print("  → Reading AGENTS.md...")
         content = self.AGENTS_MD.read_text()
 
+        print("  → Checking for CODING_STYLE.md reference...")
+        self.assertIn("CODING_STYLE.md", content)
+        print("  ✅ AGENTS.md references CODING_STYLE.md")
+
+        print("  → Checking CODING_STYLE.md exists...")
+        style_path = self.PROJECT_ROOT / ".project_development" / "CODING_STYLE.md"
+        self.assertTrue(style_path.exists())
+        print(f"  ✅ File exists: {style_path}")
+
+        print("  → Reading coding style rules...")
+        style_content = style_path.read_text()
+
         print("  → Checking line length limit...")
-        self.assertIn("88", content)
+        self.assertIn("88", style_content)
         print("  ✅ Line length: 88 characters")
 
         print("  → Checking naming conventions...")
-        self.assertIn("snake_case", content)
+        self.assertIn("snake_case", style_content)
         print("  ✅ Functions/variables: snake_case")
 
-        self.assertIn("PascalCase", content)
+        self.assertIn("PascalCase", style_content)
         print("  ✅ Classes: PascalCase")
 
-        self.assertIn("UPPER_SNAKE_CASE", content)
+        self.assertIn("UPPER_SNAKE_CASE", style_content)
         print("  ✅ Constants: UPPER_SNAKE_CASE")
 
         print("  → Checking docstring style...")
-        self.assertIn("Google-style", content)
+        self.assertIn("Google-style", style_content)
         print("  ✅ Docstrings: Google-style")
 
 

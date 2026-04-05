@@ -625,6 +625,11 @@ Project meta files for tracking current state and issues.
 
 | File | Description |
 |------|-------------|
+| `CORE_DIRECTIVES.md` | Non-negotiable system agent rules |
+| `TOOL_USAGE.md` | Tool selection & usage guidelines |
+| `CODING_STYLE.md` | Code conventions & naming |
+| `TASK_WORKFLOW.md` | Step-by-step task process |
+| `ENVIRONMENT.md` | Runtime & operational notes |
 | `CURRENT_ISSUE.md` | Currently tracked issues, root cause analysis, and fix status |
 | `PROJECT_ROADMAP.md` | Planned features, improvements, and completed items |
 | `PROJECT_TESTING_SANDBOX_RULES.md` | TDD strategy and rules for AI agents |
