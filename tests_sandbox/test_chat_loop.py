@@ -420,5 +420,156 @@ class TestChatLoopStreaming(unittest.TestCase):
         self.assertEqual(chat_loop.history[2].content, "Hello world")
 
 
+class TestChatLoopRag(unittest.TestCase):
+    def test_chat_loop_without_retriever_has_none(self):
+        mock_llm = MagicMock()
+        chat_loop = ChatLoop(llm=mock_llm)
+        self.assertIsNone(chat_loop.retriever)
+
+    def test_chat_loop_with_retriever_stores_it(self):
+        mock_llm = MagicMock()
+        mock_retriever = MagicMock()
+        chat_loop = ChatLoop(llm=mock_llm, retriever=mock_retriever)
+        self.assertIs(chat_loop.retriever, mock_retriever)
+
+    def test_set_retriever_assigns_retriever(self):
+        mock_llm = MagicMock()
+        mock_retriever = MagicMock()
+        chat_loop = ChatLoop(llm=mock_llm)
+        chat_loop.set_retriever(mock_retriever)
+        self.assertIs(chat_loop.retriever, mock_retriever)
+
+    def test_clear_retriever_removes_retriever(self):
+        mock_llm = MagicMock()
+        mock_retriever = MagicMock()
+        chat_loop = ChatLoop(llm=mock_llm, retriever=mock_retriever)
+        chat_loop.clear_retriever()
+        self.assertIsNone(chat_loop.retriever)
+
+    def test_has_retriever_returns_false_when_none(self):
+        mock_llm = MagicMock()
+        chat_loop = ChatLoop(llm=mock_llm)
+        self.assertFalse(chat_loop.has_retriever())
+
+    def test_has_retriever_returns_true_when_set(self):
+        mock_llm = MagicMock()
+        mock_retriever = MagicMock()
+        chat_loop = ChatLoop(llm=mock_llm, retriever=mock_retriever)
+        self.assertTrue(chat_loop.has_retriever())
+
+    def test_run_streaming_without_retriever_does_not_call_retriever(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("response")]
+        mock_retriever = MagicMock()
+
+        chat_loop = ChatLoop(llm=mock_llm)
+        chat_loop.run_streaming("hello")
+
+        mock_retriever.invoke.assert_not_called()
+
+    def test_run_streaming_with_retriever_includes_context_in_history(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("answer based on docs")]
+
+        mock_retriever = MagicMock()
+        mock_doc = MagicMock()
+        mock_doc.page_content = "This is relevant context from the document."
+        mock_retriever.invoke.return_value = [mock_doc]
+
+        chat_loop = ChatLoop(llm=mock_llm, retriever=mock_retriever)
+        chat_loop.run_streaming("What is this about?")
+
+        mock_retriever.invoke.assert_called_once()
+        self.assertEqual(len(chat_loop.history), 3)
+        self.assertIn("relevant context", chat_loop.history[1].content.lower())
+
+    def test_run_streaming_with_retriever_formats_context_prompt(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("answer")]
+
+        mock_retriever = MagicMock()
+        mock_doc1 = MagicMock()
+        mock_doc1.page_content = "Context one."
+        mock_doc2 = MagicMock()
+        mock_doc2.page_content = "Context two."
+        mock_retriever.invoke.return_value = [mock_doc1, mock_doc2]
+
+        chat_loop = ChatLoop(llm=mock_llm, retriever=mock_retriever)
+        chat_loop.run_streaming("Test query")
+
+        call_args = mock_llm.stream.call_args[0][0]
+        user_message = call_args[1]
+        self.assertIn("Context one.", user_message.content)
+        self.assertIn("Context two.", user_message.content)
+
+    def test_run_streaming_with_retriever_handles_empty_results(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("no docs found")]
+
+        mock_retriever = MagicMock()
+        mock_retriever.invoke.return_value = []
+
+        chat_loop = ChatLoop(llm=mock_llm, retriever=mock_retriever)
+        result = chat_loop.run_streaming("query with no results")
+
+        self.assertEqual(result, "no docs found")
+        self.assertEqual(len(chat_loop.history), 3)
+
+    def test_run_streaming_with_retriever_handles_retriever_error(self):
+        mock_llm = MagicMock()
+        mock_retriever = MagicMock()
+        mock_retriever.invoke.side_effect = Exception("Retrieval error")
+
+        chat_loop = ChatLoop(llm=mock_llm, retriever=mock_retriever)
+
+        with self.assertRaises(Exception):
+            chat_loop.run_streaming("query that fails retrieval")
+
+    def test_run_streaming_with_metrics_with_retriever(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.return_value = [self._make_chunk("rag answer")]
+
+        mock_retriever = MagicMock()
+        mock_doc = MagicMock()
+        mock_doc.page_content = "RAG context."
+        mock_retriever.invoke.return_value = [mock_doc]
+
+        chat_loop = ChatLoop(llm=mock_llm, retriever=mock_retriever)
+        result, metrics = chat_loop.run_streaming_with_metrics("RAG query")
+
+        self.assertEqual(result, "rag answer")
+        mock_retriever.invoke.assert_called_once()
+
+    def test_run_streaming_with_retriever_rolls_back_on_llm_error(self):
+        mock_llm = MagicMock()
+        mock_llm.stream.side_effect = Exception("LLM error")
+
+        mock_retriever = MagicMock()
+        mock_doc = MagicMock()
+        mock_doc.page_content = "Context."
+        mock_retriever.invoke.return_value = [mock_doc]
+
+        chat_loop = ChatLoop(llm=mock_llm, retriever=mock_retriever)
+        chat_loop.add_user_message("before")
+
+        with self.assertRaises(Exception):
+            chat_loop.run_streaming("fail query")
+
+        self.assertEqual(len(chat_loop.history), 2)
+        self.assertEqual(chat_loop.history[1].content, "before")
+
+    @staticmethod
+    def _make_chunk(content):
+        chunk = MagicMock()
+        chunk.content = content
+        if content is None:
+            chunk.text = ""
+        elif isinstance(content, str):
+            chunk.text = content
+        else:
+            chunk.text = " ".join(str(item) for item in content if item is not None)
+        return chunk
+
+
 if __name__ == "__main__":
     unittest.main()

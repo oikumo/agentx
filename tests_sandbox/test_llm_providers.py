@@ -15,15 +15,15 @@ class TestLLMProviderInterface(unittest.TestCase):
 
 
 class TestOpenAIProvider(unittest.TestCase):
-    @patch("llm_managers.providers.openai_provider.get_remote_llm_openai_gpt3_5_turbo")
-    def test_create_llm_returns_chat_model(self, mock_get_llm):
+    @patch("llm_managers.providers.openai_provider.ChatOpenAI")
+    def test_create_llm_returns_chat_model(self, mock_chat_openai):
         mock_llm = MagicMock()
-        mock_get_llm.return_value = mock_llm
+        mock_chat_openai.return_value = mock_llm
 
         provider = OpenAIProvider()
         result = provider.create_llm()
 
-        mock_get_llm.assert_called_once()
+        mock_chat_openai.assert_called_once_with(model="gpt-3.5-turbo")
         self.assertIs(result, mock_llm)
 
 
@@ -54,7 +54,7 @@ class TestLlamaCppProvider(unittest.TestCase):
 
 class TestProviderHelpers(unittest.TestCase):
     def test_local_llm_provider_returns_llamacpp(self):
-        provider = local_llm_provider()
+        provider = local_llm_provider(model_filename="test.gguf", context_size=32768)
         self.assertIsInstance(provider, LlamaCppProvider)
 
     def test_cloud_llm_provider_returns_openai(self):

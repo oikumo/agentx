@@ -6,11 +6,15 @@ from app.common.utils.streaming_metrics import StreamingMetrics
 
 class ChatLoop:
     def __init__(
-        self, llm: BaseChatModel, system_prompt: str = "You are a helpful assistant."
+        self,
+        llm: BaseChatModel,
+        system_prompt: str = "You are a helpful assistant.",
+        retriever=None,
     ):
         self.llm = llm
         self.history: list = [SystemMessage(content=system_prompt)]
         self.is_running = False
+        self.retriever = retriever
 
     def add_user_message(self, content: str) -> None:
         self.history.append(HumanMessage(content=content))
@@ -50,8 +54,15 @@ class ChatLoop:
             self.exit()
             return None
         self.is_running = True
-        self.add_user_message(stripped)
         try:
+            context = self._retrieve_context(stripped)
+            if context:
+                rag_message = (
+                    f"Context from documents:\n{context}\n\nQuestion: {stripped}"
+                )
+                self.add_user_message(rag_message)
+            else:
+                self.add_user_message(stripped)
             full_response = ""
             for chunk_content in self.get_streaming_response(stripped):
                 full_response += chunk_content
@@ -74,8 +85,15 @@ class ChatLoop:
             self.exit()
             return None, metrics
         self.is_running = True
-        self.add_user_message(stripped)
         try:
+            context = self._retrieve_context(stripped)
+            if context:
+                rag_message = (
+                    f"Context from documents:\n{context}\n\nQuestion: {stripped}"
+                )
+                self.add_user_message(rag_message)
+            else:
+                self.add_user_message(stripped)
             full_response = ""
             with metrics:
                 for chunk_content in self.get_streaming_response(stripped):
@@ -126,6 +144,23 @@ class ChatLoop:
 
     def should_exit(self, user_input: str) -> bool:
         return user_input.strip().lower() in ("quit", "exit")
+
+    def set_retriever(self, retriever) -> None:
+        self.retriever = retriever
+
+    def clear_retriever(self) -> None:
+        self.retriever = None
+
+    def has_retriever(self) -> bool:
+        return self.retriever is not None
+
+    def _retrieve_context(self, query: str) -> str:
+        if not self.has_retriever():
+            return ""
+        docs = self.retriever.invoke(query)
+        if not docs:
+            return ""
+        return "\n\n".join(doc.page_content for doc in docs)
 
     def run(self, user_input: str) -> str | None:
         stripped = user_input.strip()
