@@ -158,6 +158,8 @@ class ChatLoop:
         if not self.has_retriever():
             return ""
         docs = self.retriever.invoke(query)
+        print(f"---------------------------------------------{docs}")
+
         if not docs:
             return ""
         return "\n\n".join(doc.page_content for doc in docs)

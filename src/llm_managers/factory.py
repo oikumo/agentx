@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.embeddings import Embeddings
 
-from agents.chat.simple_chat import SimpleChat
 from agents.chat.chat_loop import ChatLoop
 from agents.function_tool_router.function_call import QueryRouter
 from agents.function_tool_router.functions import get_weather, get_best_game
@@ -16,12 +16,6 @@ from app.utils import create_directory_with_timestamp
 from app_modules.document_loaders.pdf_loader import pdf_loader
 from llm_managers.llm_provider import LLMProvider
 from llm_managers.providers import local_llm_provider, openrouter_llm_provider
-from llm_managers.providers.openai_provider import OpenAIProvider
-from llm_models.local.llama_cpp_factory import (
-    LLAMA_CPP_MODEL_NEMOTRON_3_NANO,
-    LLAMA_CPP_MODEL_QWEN_3_5,
-)
-
 
 @dataclass
 class RagConfig:
@@ -80,32 +74,39 @@ class AgentFactory:
         Returns:
             Configured ChatLoop instance with RAG retriever.
         """
-        if vectorstore_path is None:
-            vectorstore_path = create_directory_with_timestamp(
-                "faiss_index_chat_rag", "local_vector_databases"
-            )
 
-        if embeddings is None:
-            from llm_models.local.ollama.ollama_embeddings import (
-                create_embeddings_model,
-            )
+        base_vector_databases_directory = "local_vector_databases"
+        faiss_directory = "faiss_index_chat_rag"
+        directory = f"{base_vector_databases_directory}/{faiss_directory}"
+        vectorstore_path = str(Path(directory).resolve())
 
-            embeddings = create_embeddings_model()
+        if not Path.is_dir(Path(directory)):
+            if embeddings is None:
+                from llm_models.local.ollama.ollama_embeddings import (
+                    create_embeddings_model,
+                )
+
+                embeddings = create_embeddings_model()
+
+
+            docs = pdf_loader(pdf_path)
+            print(f"docs from pdf: {len(docs)}")
+
+            print(f"load docs int vector store, path: {vectorstore_path}")
+            vectorstore = FAISS.from_documents(docs, embeddings)
+            vectorstore.save_local(vectorstore_path)
+
+        loaded_vectorstore = FAISS.load_local(
+            vectorstore_path, embeddings, allow_dangerous_deserialization=True
+        )
 
         if llm_provider is None:
             llm_provider = openrouter_llm_provider()
 
         llm = llm_provider.create_llm()
 
-        docs = pdf_loader(pdf_path)
-        print(f"docs from pdf: {len(docs)}")
 
-        vectorstore = FAISS.from_documents(docs, embeddings)
-        vectorstore.save_local(vectorstore_path)
-
-        loaded_vectorstore = FAISS.load_local(
-            vectorstore_path, embeddings, allow_dangerous_deserialization=True
-        )
+        print(f"docs loaded in vector store")
 
         retriever = loaded_vectorstore.as_retriever()
 

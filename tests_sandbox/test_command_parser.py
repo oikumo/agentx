@@ -1,5 +1,5 @@
 import unittest
-from app.repl.command_parser import CommandParser
+from app.repl import CommandParser
 
 
 class TestCommandParser(unittest.TestCase):

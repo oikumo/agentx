@@ -1,16 +1,19 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from app.repl.commands.math_commands import SumCommand, CommandResultPrint
-from app.repl.commands.cli_commands import HelpCommand, ClearCommand, ReadFile
-from app.repl.commands.llm_chat_commands import (
+from app.commands import (
+    SumCommand,
+    CommandResultPrint,
+    HelpCommand,
+    ClearCommand,
+    ReadFile,
+)
+from app.commands import (
     AIChat,
     AIRouterAgents,
     AIReactTools,
     AISearch,
     AIFunction,
     RagPDF,
-)
-from app.repl.commands.llm_graph_commands import (
     AIGraphSimple,
     AIGraphChains,
     AIGraphReflexion,
@@ -71,7 +74,7 @@ class TestClearCommand(unittest.TestCase):
         self.controller = MagicMock()
         self.command = ClearCommand("clear", self.controller)
 
-    @patch("app.repl.commands.cli_commands.clear_console")
+    @patch("app.commands.clear_console")
     def test_clear_calls_clear_console(self, mock_clear):
         self.command.run([])
         mock_clear.assert_called_once()
@@ -115,7 +118,7 @@ class TestCommandDescriptions(unittest.TestCase):
 
 
 class TestAIChatCommand(unittest.TestCase):
-    @patch("app.repl.commands.llm_chat_commands.AgentFactory.create_chat_loop")
+    @patch("llm_managers.factory.AgentFactory.create_chat_loop")
     def test_chat_interactive_uses_streaming(self, mock_factory):
         mock_loop = MagicMock()
         mock_factory.return_value = mock_loop
@@ -127,8 +130,8 @@ class TestAIChatCommand(unittest.TestCase):
         mock_loop.start_interactive_streaming.assert_called_once()
         mock_loop.start_interactive.assert_not_called()
 
-    @patch("app.repl.commands.llm_chat_commands.AgentFactory.create_chat_loop")
-    @patch("app.repl.commands.llm_chat_commands.Console")
+    @patch("llm_managers.factory.AgentFactory.create_chat_loop")
+    @patch("app.commands.Console")
     def test_chat_single_query_uses_streaming(self, mock_console, mock_factory):
         mock_loop = MagicMock()
         mock_loop.run_streaming_with_metrics.return_value = ("Hello world", MagicMock())
@@ -141,8 +144,8 @@ class TestAIChatCommand(unittest.TestCase):
         mock_loop.run_streaming_with_metrics.assert_called_once_with("hello")
         mock_loop.run.assert_not_called()
 
-    @patch("app.repl.commands.llm_chat_commands.AgentFactory.create_chat_loop")
-    @patch("app.repl.commands.llm_chat_commands.Console")
+    @patch("llm_managers.factory.AgentFactory.create_chat_loop")
+    @patch("app.commands.Console")
     def test_chat_streaming_error_handling(self, mock_console, mock_factory):
         mock_loop = MagicMock()
         mock_loop.run_streaming_with_metrics.side_effect = Exception("LLM error")

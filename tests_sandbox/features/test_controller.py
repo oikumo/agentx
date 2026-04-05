@@ -1,17 +1,11 @@
 import unittest
-from app.repl.controllers.main_controller import MainController
-from app.repl.commands.math_commands import SumCommand
-from app.repl.commands.cli_commands import (
-    QuitCommand,
-    ClearCommand,
-    HelpCommand,
-    ReadFile,
-)
+from app.repl import IMainController
+from app.commands import SumCommand, QuitCommand, ClearCommand, HelpCommand, ReadFile
 
 
 class TestMainController(unittest.TestCase):
     def setUp(self):
-        self.controller = MainController()
+        self.controller = IMainController()
 
     def test_empty_controller(self):
         self.assertEqual(len(self.controller.get_commands()), 0)

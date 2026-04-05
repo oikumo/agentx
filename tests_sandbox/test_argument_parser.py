@@ -1,5 +1,5 @@
 import unittest
-from app.repl.utils.argument_parser import parse_chat_arguments
+from app.commands import parse_chat_arguments
 
 
 class TestParseChatArgumentsBasic(unittest.TestCase):

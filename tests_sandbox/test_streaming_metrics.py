@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 
-from app.common.utils.streaming_metrics import StreamingMetrics
+from app.utils import StreamingMetrics
 
 
 class TestStreamingMetricsInitialization(unittest.TestCase):

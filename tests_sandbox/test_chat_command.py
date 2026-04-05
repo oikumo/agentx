@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from app.repl.commands import llm_chat_commands
-from app.repl.commands.llm_chat_commands import AIChat
+import app.commands as app_commands
+from app.commands import AIChat
 
 
 class TestAIChatCommandWithModelFlag(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestAIChatCommandWithModelFlag(unittest.TestCase):
         )
 
         with patch.object(
-            llm_chat_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
+            app_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
         ) as mock_factory:
             controller = MagicMock()
             cmd = AIChat("chat", controller)
@@ -32,7 +32,7 @@ class TestAIChatCommandWithModelFlag(unittest.TestCase):
         mock_loop.run_streaming_with_metrics.return_value = ("Hello", mock_metrics)
 
         with patch.object(
-            llm_chat_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
+            app_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
         ) as mock_factory:
             controller = MagicMock()
             cmd = AIChat("chat", controller)
@@ -51,9 +51,9 @@ class TestAIChatCommandWithModelFlag(unittest.TestCase):
         )
 
         with patch.object(
-            llm_chat_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
+            app_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
         ):
-            with patch("app.repl.commands.llm_chat_commands.Console") as mock_console:
+            with patch("app.commands.Console") as mock_console:
                 controller = MagicMock()
                 cmd = AIChat("chat", controller)
                 cmd.run(["--model", "gpt-4", "hi"])
@@ -66,7 +66,7 @@ class TestAIChatCommandWithModelFlag(unittest.TestCase):
         mock_loop = MagicMock()
 
         with patch.object(
-            llm_chat_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
+            app_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
         ) as mock_factory:
             controller = MagicMock()
             cmd = AIChat("chat", controller)
@@ -81,7 +81,7 @@ class TestAIChatCommandWithModelFlag(unittest.TestCase):
         mock_loop = MagicMock()
 
         with patch.object(
-            llm_chat_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
+            app_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
         ) as mock_factory:
             controller = MagicMock()
             cmd = AIChat("chat", controller)
@@ -95,9 +95,9 @@ class TestAIChatCommandWithModelFlag(unittest.TestCase):
         mock_loop.run_streaming_with_metrics.side_effect = Exception("LLM error")
 
         with patch.object(
-            llm_chat_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
+            app_commands.AgentFactory, "create_chat_loop", return_value=mock_loop
         ):
-            with patch("app.repl.commands.llm_chat_commands.Console") as mock_console:
+            with patch("app.commands.Console") as mock_console:
                 controller = MagicMock()
                 cmd = AIChat("chat", controller)
                 cmd.run(["--model", "gpt-4", "hello"])
