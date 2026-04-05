@@ -23,7 +23,7 @@ class Command(ABC):
         pass
 
 
-class IMainController:
+class MainController:
     def __init__(self):
         self.commands: dict[str, Command] = {}
 
@@ -76,7 +76,7 @@ class CommandParser:
 
 
 class ReplApp:
-    def __init__(self, controller: IMainController):
+    def __init__(self, controller: MainController):
         self.controller = controller
         self.parser = CommandParser()
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.repl import Command, CommandResult, IMainController
+from app.repl import Command, CommandResult, MainController
 from app.console import Console
 from app.utils import clear_console, safe_int
 
@@ -23,7 +23,7 @@ class CommandResultPrint(CommandResult):
 
 
 class QuitCommand(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Exit Agent-X")
         self.controller = controller
 
@@ -33,7 +33,7 @@ class QuitCommand(Command):
 
 
 class ClearCommand(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Clear the output screen")
         self.controller = controller
 
@@ -42,7 +42,7 @@ class ClearCommand(Command):
 
 
 class HelpCommand(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Show available commands")
         self.controller = controller
 
@@ -54,7 +54,7 @@ class HelpCommand(Command):
 
 
 class ReadFile(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Read and display a file: read <filename>")
         self.controller = controller
 
@@ -74,7 +74,7 @@ class ReadFile(Command):
 
 
 class SumCommand(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Add two integers: sum <a> <b>")
         self.controller = controller
 
@@ -110,7 +110,7 @@ def parse_chat_arguments(arguments: list[str]) -> tuple[str | None, str]:
 
 
 class AISearch(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(
             key, description="Search the web with an React Web Search Agent"
         )
@@ -123,7 +123,7 @@ class AISearch(Command):
 
 
 class AIFunction(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Run an AI function call demo")
         self.controller = controller
 
@@ -134,7 +134,7 @@ class AIFunction(Command):
 
 
 class AIChat(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(
             key,
             description="Start an AI chat session: chat <query>, chat --model <model> <query>, or chat (interactive loop)",
@@ -169,7 +169,7 @@ class AIChat(Command):
 
 
 class RagPDF(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Query a PDF with RAG: rag <query>")
         self.controller = controller
 
@@ -196,7 +196,7 @@ class RagPDF(Command):
 
 
 class AIRouterAgents(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Run AI router agent")
         self.controller = controller
 
@@ -209,7 +209,7 @@ class AIRouterAgents(Command):
 
 
 class AIReactTools(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Run AI ReAct agent with tools")
         self.controller = controller
 
@@ -231,7 +231,7 @@ class AIReactTools(Command):
 
 
 class AIGraphSimple(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Run a simple LangGraph workflow")
         self.controller = controller
 
@@ -243,7 +243,7 @@ class AIGraphSimple(Command):
 
 
 class AIGraphChains(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Run a LangGraph reflector chains graph")
         self.controller = controller
 
@@ -256,7 +256,7 @@ class AIGraphChains(Command):
 
 
 class AIGraphReflexion(Command):
-    def __init__(self, key: str, controller: IMainController):
+    def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Run a LangGraph reflexion agent")
         self.controller = controller
 

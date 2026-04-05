@@ -21,7 +21,7 @@ from app.commands import (
     AIGraphReflexion,
     SumCommand,
 )
-from app.repl import IMainController, ReplApp
+from app.repl import MainController, ReplApp
 
 load_dotenv()
 
@@ -31,8 +31,8 @@ if not os.getenv("OPENROUTER_API_KEY"):
     )
 
 
-def create_controller() -> IMainController:
-    main_controller = IMainController()
+def create_controller() -> MainController:
+    main_controller = MainController()
     main_controller.add_command(SumCommand("sum", main_controller))
     main_controller.add_command(QuitCommand("quit", main_controller))
     main_controller.add_command(ClearCommand("clear", main_controller))
