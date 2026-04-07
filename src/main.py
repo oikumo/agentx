@@ -5,7 +5,7 @@ import os
 
 from dotenv import load_dotenv
 
-from app.commands import (
+from controllers.main_controller.commands import (
     QuitCommand,
     ClearCommand,
     HelpCommand,
