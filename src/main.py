@@ -8,17 +8,8 @@ from dotenv import load_dotenv
 from app.commands import (
     QuitCommand,
     ClearCommand,
-    ReadFile,
     HelpCommand,
     AIChat,
-    AIRouterAgents,
-    AIReactTools,
-    AISearch,
-    AIFunction,
-    RagPDF,
-    AIGraphSimple,
-    AIGraphChains,
-    AIGraphReflexion,
     SumCommand,
 )
 from app.repl import MainController, ReplApp
@@ -37,15 +28,6 @@ def create_controller() -> MainController:
     main_controller.add_command(QuitCommand("quit", main_controller))
     main_controller.add_command(ClearCommand("clear", main_controller))
     main_controller.add_command(AIChat("chat", main_controller))
-    main_controller.add_command(AIRouterAgents("router", main_controller))
-    main_controller.add_command(AIReactTools("react", main_controller))
-    main_controller.add_command(AISearch("search", main_controller))
-    main_controller.add_command(ReadFile("read", main_controller))
-    main_controller.add_command(AIFunction("function", main_controller))
-    main_controller.add_command(RagPDF("rag", main_controller))
-    main_controller.add_command(AIGraphSimple("graph", main_controller))
-    main_controller.add_command(AIGraphChains("chains", main_controller))
-    main_controller.add_command(AIGraphReflexion("reflex", main_controller))
     main_controller.add_command(HelpCommand("help", main_controller))
 
     return main_controller
