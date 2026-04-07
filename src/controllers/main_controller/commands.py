@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.repl import Command, CommandResult, MainController
+from controllers.main_controller.repl import Command, CommandResult, MainController
 from common.utils import clear_console, safe_int
 from views.common.console import Console
 from model.ai.providers import OpenRouterProvider

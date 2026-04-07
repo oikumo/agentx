@@ -12,7 +12,7 @@ from controllers.main_controller.commands import (
     AIChat,
     SumCommand,
 )
-from app.repl import MainController, ReplApp
+from controllers.main_controller.repl import MainController, ReplApp
 
 load_dotenv()
 
