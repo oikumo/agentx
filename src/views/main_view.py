@@ -1,7 +1,7 @@
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
-from app.utils import StreamingMetrics
+from utils.utils import StreamingMetrics
 
 
 class ChatLoop:

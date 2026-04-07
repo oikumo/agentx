@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from app.security import SESSION_DEFAULT_NAME, SESSION_DEFAULT_BASE_DIRECTORY
-from app.utils import (
+from utils.utils import (
     create_directory_with_timestamp,
     directory_exists,
     dangerous_delete_directory,
