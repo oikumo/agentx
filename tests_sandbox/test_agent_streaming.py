@@ -1,7 +1,7 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from agents.chat.main_view import ChatLoop
+from views.main_view import ChatLoop
 
 
 class TestSimpleChatStreaming(unittest.TestCase):

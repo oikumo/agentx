@@ -1,11 +1,11 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.embeddings import Embeddings
 
-from agents.chat.main_view import ChatLoop
+from views.main_view import ChatLoop
 from agents.function_tool_router.function_call import QueryRouter
 from agents.function_tool_router.functions import get_weather, get_best_game
 from agents.function_tool_router.route import Route

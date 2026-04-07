@@ -1,8 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from agents.chat.main_view import ChatLoop
-from llm_managers.providers.openai_provider import OpenAIProvider
+from views.main_view import ChatLoop
 
 
 class TestChatLoopInitialization(unittest.TestCase):

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from agents.chat.main_view import ChatLoop
+from views.main_view import ChatLoop
 
 
 class TestChatLoopWithModelSelection(unittest.TestCase):
