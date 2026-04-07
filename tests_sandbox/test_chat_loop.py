@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from agents.chat.chat_loop import ChatLoop
+from agents.chat.main_view import ChatLoop
 from llm_managers.providers.openai_provider import OpenAIProvider
 
 
