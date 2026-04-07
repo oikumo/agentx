@@ -55,7 +55,7 @@ def save_to_output(text: str):
 
 
 def is_directory_allowed_to_deletion(directory_path: str) -> bool:
-    from app.security import DIRECTORIES_DELETION_ALLOWED
+    from common.security import DIRECTORIES_DELETION_ALLOWED
 
     if not DIRECTORIES_DELETION_ALLOWED:
         raise PermissionError(
