@@ -3,7 +3,7 @@ from __future__ import annotations
 from app.repl import Command, CommandResult, MainController
 from app.console import Console
 from app.utils import clear_console, safe_int
-from llm_managers.providers import OpenRouterProvider
+from llm_models.providers import OpenRouterProvider
 
 
 class CommandResultLogInfo(CommandResult):
@@ -99,7 +99,7 @@ class AIChat(Command):
         self.controller = controller
 
     def run(self, arguments: list[str]) -> None:
-        from llm_managers.providers import AgentFactory
+        from llm_models.providers import AgentFactory
 
         model_name, query = parse_chat_arguments(arguments)
 
