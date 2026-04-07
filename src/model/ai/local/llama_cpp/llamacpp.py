@@ -1,7 +1,8 @@
 import openai
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
-from llm_models.local.llama_cpp.llamacpp_config import LlamaCppConfig
+
+from model.ai.local.llama_cpp.llamacpp_config import LlamaCppConfig
 
 
 class LlamaCpp:

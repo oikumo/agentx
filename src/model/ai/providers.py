@@ -7,8 +7,8 @@ from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 from langchain_openrouter import ChatOpenRouter
 
-from llm_models.local.llama_cpp.llamacpp_config import LlamaCppConfig
-from llm_models.local.llama_cpp_factory import model_factory_llamacpp
+from model.ai.local.llama_cpp.llamacpp_config import LlamaCppConfig
+from model.ai.local.llama_cpp_factory import model_factory_llamacpp
 from views.main_view import ChatLoop
 
 class LLMProvider(ABC):
