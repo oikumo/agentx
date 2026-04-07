@@ -56,8 +56,7 @@ class CommandParser:
     def parse(self, text: str) -> CommandData | None:
         raw_command = self._parse_text_command(text)
         if raw_command is None:
-            from app.console import Console
-            from app.console import Colors
+            from views.common.console import Console
 
             Console.log_error("command process INVALID COMMAND")
             return None
@@ -81,9 +80,8 @@ class ReplApp:
         self.parser = CommandParser()
 
     def run(self):
-        from app.console import Console
+        from views.common.console import Console
         from app.session import Session
-        from app.models import HistoryEntry
         from app.session import SessionDatabase
 
         Console.log_success("Agent-X")
