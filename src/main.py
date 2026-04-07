@@ -12,7 +12,8 @@ from controllers.main_controller.commands import (
     AIChat,
     SumCommand,
 )
-from controllers.main_controller.repl import MainController, ReplApp
+from controllers.main_controller.main_controller import MainController
+from controllers.main_controller.repl import ReplApp
 
 load_dotenv()
 
