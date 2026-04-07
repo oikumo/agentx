@@ -81,8 +81,8 @@ class ReplApp:
 
     def run(self):
         from views.common.console import Console
-        from app.session import Session
-        from app.session import SessionDatabase
+        from model.session.session import Session
+        from model.session.session import SessionDatabase
 
         Console.log_success("Agent-X")
         Console.log_info("Type 'help' for commands, Ctrl+C to exit")

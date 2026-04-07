@@ -9,7 +9,7 @@ from app.utils import (
     directory_exists,
     dangerous_delete_directory,
 )
-from app.models import TableHistory, TableUser
+from model.session.session_db import TableHistory, TableUser
 
 
 class Session:
