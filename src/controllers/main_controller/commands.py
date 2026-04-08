@@ -3,9 +3,9 @@ from __future__ import annotations
 from controllers.main_controller.main_controller import MainController
 from controllers.main_controller.repl import Command, CommandResult
 from common.utils import clear_console, safe_int
+from services.ai.services import openrouter_llm_provider
 from views.common.console import Console
-from services.ai.providers import OpenRouterProvider
-from services.ai.providers import AgentFactory
+from views.main_view.main_view import ChatLoop
 
 
 class CommandResultLogInfo(CommandResult):
@@ -103,11 +103,11 @@ class AIChat(Command):
     def run(self, arguments: list[str]) -> None:
         model_name, query = parse_chat_arguments(arguments)
 
-        if model_name:
-            provider = OpenRouterProvider(model_name=model_name)
-            chat_loop = AgentFactory.create_chat_loop(provider=provider)
-        else:
-            chat_loop = AgentFactory.create_chat_loop()
+
+        # TODO Refactor: Move
+        provider = openrouter_llm_provider()
+        llm = provider.create_llm()
+        chat_loop = ChatLoop(llm=llm)
 
         if not query:
             Console.log_info(
