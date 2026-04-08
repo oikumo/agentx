@@ -10,7 +10,7 @@ from controllers.main_controller.commands import (
     ClearCommand,
     HelpCommand,
     AIChat,
-    SumCommand,
+    SumCommand, HistoryCommand,
 )
 from controllers.main_controller.main_controller import MainController
 
@@ -28,8 +28,9 @@ def create_controller() -> MainController:
     main_controller.add_command(SumCommand("sum", main_controller))
     main_controller.add_command(QuitCommand("quit", main_controller))
     main_controller.add_command(ClearCommand("clear", main_controller))
-    main_controller.add_command(AIChat("chat", main_controller))
     main_controller.add_command(HelpCommand("help", main_controller))
+    main_controller.add_command(HistoryCommand("history", main_controller))
+    main_controller.add_command(AIChat("chat", main_controller))
 
     return main_controller
 

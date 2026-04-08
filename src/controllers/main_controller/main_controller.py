@@ -1,10 +1,24 @@
-from controllers.main_controller.repl import Command, CommandParser
+from controllers.main_controller.repl import Command, CommandParser, IMainViewPartner
+from views.main_view.main_view import MainView
+from model.session.session import Session
+from model.session.session import SessionDatabase
 
 
-class MainController:
+class MainController(IMainViewPartner):
     def __init__(self):
         self.commands: dict[str, Command] = {}
         self.parser = CommandParser()
+        self.view = MainView(self)
+        self.session = Session("test_2")
+        if not self.session.create() or not self.session.is_created():
+            raise Exception()
+        self.database = SessionDatabase(self.session)
+
+    def run(self):
+        self.view.show()
+
+        while True:
+            self.view.capture_input()
 
     def get_commands(self) -> list[Command]:
         return list(self.commands.values())
@@ -15,56 +29,40 @@ class MainController:
     def add_command(self, command: Command):
         self.commands[command.key] = command
 
+    def commands_history(self) -> list[str]:
+        history: list[str] = []
+
+        entries = self.database.select_history_entry()
+        if entries:
+            for entry in entries:
+                history.append(entry.command)
+        return history
+
+
     def close(self):
         exit(0)
 
-    def run(self):
-        from views.common.console import Console
-        from model.session.session import Session
-        from model.session.session import SessionDatabase
+    def error(self):
+        pass
 
-        Console.log_success("Agent-X")
-        Console.log_info("Type 'help' for commands, Ctrl+C to exit")
-        session = Session("test_2")
-        if not session.create() or not session.is_created():
-            raise Exception()
-        database = SessionDatabase(session)
+    def run_command(self, user_input: str):
+        command_data = self.parser.parse(user_input)
+        if not command_data:
+            return
 
-        while True:
-            try:
-                user_input = input("(agent-x) > ").strip()
-                if not user_input:
-                    continue
+        command = self.find_command(command_data.key)
+        if not command:
+            self.view.print_response_error(f"Unknown command: {command_data.key}")
+            return
 
-                command_data = self.parser.parse(user_input)
-                if not command_data:
-                    continue
+        self.database.insert_history_entry(command_data.key)
 
-                command = self.find_command(command_data.key)
-                if not command:
-                    Console.log_error(f"Unknown command: {command_data.key}")
-                    continue
+        try:
+            result = command.run(command_data.arguments)
+            if result:
+                result.apply()
 
-                database.insert_history_entry(command_data.key)
+        except Exception as e:
+            self.view.print_response_error(f"Command execution failed")
 
-                try:
-                    result = command.run(command_data.arguments)
-                    if result:
-                        result.apply()
-
-                except Exception as e:
-                    Console.log_error(f"Command execution failed: {e}")
-
-                Console.log_header("History")
-                entries = database.select_history_entry()
-                if entries:
-                    for entry in entries:
-                        Console.log_info(entry.command)
-
-            except KeyboardInterrupt:
-                Console.log_info("\nReceived interrupt, exiting...")
-                break
-            except EOFError:
-                Console.log_info("\nEOF received, exiting...")
-                break
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from controllers.main_controller.main_controller import MainController
 from controllers.main_controller.repl import Command, CommandResult
 from common.utils import clear_console, safe_int
-from services.ai.services import openrouter_llm_provider
+from services.ai.services import openrouter_llm_provider, cloud_llm_provider
 from views.common.console import Console
 from views.chat_view.chat_view import ChatLoop
 
@@ -43,6 +43,16 @@ class ClearCommand(Command):
     def run(self, arguments: list[str]):
         clear_console()
 
+class HistoryCommand(Command):
+    def __init__(self, key: str, controller: MainController):
+        super().__init__(key, description="Show commands history")
+        self.controller = controller
+
+    def run(self, arguments: list[str]):
+        commands: list[str] = []
+        for command in self.controller.commands_history()[:-1]:
+            commands.append(f"{command}")
+        return CommandResultLogInfo(commands)
 
 class HelpCommand(Command):
     def __init__(self, key: str, controller: MainController):
@@ -105,7 +115,7 @@ class AIChat(Command):
 
 
         # TODO Refactor: Move
-        provider = openrouter_llm_provider()
+        provider = cloud_llm_provider()
         llm = provider.create_llm()
         chat_loop = ChatLoop(llm=llm)
 
