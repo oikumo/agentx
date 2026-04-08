@@ -13,7 +13,7 @@ from controllers.main_controller.commands import (
     SumCommand,
 )
 from controllers.main_controller.main_controller import MainController
-from controllers.main_controller.repl import ReplApp
+
 
 load_dotenv()
 
@@ -35,8 +35,8 @@ def create_controller() -> MainController:
 
 
 def main():
-    controller = create_controller()
-    ReplApp(controller).run()
+    main_controller = create_controller()
+    main_controller.run()
 
 
 if __name__ == "__main__":
