@@ -1,11 +1,11 @@
 # Project Documentation - Agent-X
 
-> **Last Updated**: April 4, 2026  
-> **Version**: 0.1.0  
-> **Python**: >=3.14  
+> **Last Updated**: April 8, 2026
+> **Version**: 0.2.0
+> **Python**: >=3.14
 > **Package Manager**: uv
 
-Agent-X is a Python‑based LLM agent framework with a REPL interface. This file serves as a **navigation map** to the detailed documentation stored in the `doc/` folder, and to auxiliary reference files such as command guides and testing rules.
+Agent-X is a Python‑based LLM application framework with an MVC architecture. This file serves as a **navigation map** to the detailed documentation stored in the `doc/` folder, and to auxiliary reference files such as command guides and testing rules.
 
 ---
 
@@ -15,19 +15,13 @@ _This section lists the primary documentation files. Click a link to open the de
 
 | File | Domain | Description |
 |------|--------|-------------|
-| [doc/overview.md](doc/overview.md) | Project | Overview, architecture, application flow, command registry, design patterns, key decisions |
+| [doc/overview.md](doc/overview.md) | Project | Overview, architecture, application flow, design patterns, key decisions |
 | [doc/root_module.md](doc/root_module.md) | Root | `main.py`, `pyproject.toml`, `README.md` |
-| [doc/agents.md](doc/agents.md) | Agents | All agent implementations: chat, RAG, function router, ReAct search, graph search |
-| [doc/app_repl.md](doc/app_repl.md) | App/REPL | REPL system, command pattern, controllers, all command classes |
-| [doc/app_model.md](doc/app_model.md) | App/Model | Data persistence, sessions, SQLite database, command history |
-| [doc/app_security.md](doc/app_security.md) | App/Security | Directory deletion safeguards, allowed paths |
-| [doc/app_common.md](doc/app_common.md) | App/Common | Shared utilities: file ops, console helpers |
-| [doc/app_modules_langchain.md](doc/app_modules_langchain.md) | App Modules/LangChain | ReAct agents, router agents, tools, callbacks |
-| [doc/app_modules_langgraph.md](doc/app_modules_langgraph.md) | App Modules/LangGraph | Reflection chains, reflexion agent workflows |
-| [doc/app_modules_data_stores.md](doc/app_modules_data_stores.md) | App Modules/Data Stores | FAISS vector store creation and persistence |
-| [doc/app_modules_document_loaders.md](doc/app_modules_document_loaders.md) | App Modules/Loaders | PDF loading and text chunking |
-| [doc/app_modules_web_ingestion.md](doc/app_modules_web_ingestion.md) | App Modules/Web Ingestion | Tavily extraction, document processing, vector store indexing pipeline |
-| [doc/llm_models.md](doc/llm_models.md) | LLM Models | Cloud providers (OpenAI, Google), local providers (LlamaCpp, Ollama), vector stores (Pinecone, Chroma) |
+| [doc/model.md](doc/model.md) | Model | Data persistence, sessions, SQLite database, command history |
+| [doc/views.md](doc/views.md) | Views | View layer: chat interface, main application view |
+| [doc/controllers.md](doc/controllers.md) | Controllers | Business logic and command routing |
+| [doc/services.md](doc/services.md) | Services | Service layer: AI/LLM services |
+| [doc/common.md](doc/common.md) | Common | Shared utilities across the application |
 | [doc/tests.md](doc/tests.md) | Tests | Unit test suite, test commands |
 | [tests_sandbox/tests_sandbox.md](tests_sandbox/tests_sandbox.md) | Tests Sandbox | Feature and integration testing sandbox documentation |
 | [.project_development/CORE_DIRECTIVES.md](.project_development/CORE_DIRECTIVES.md) | Core Rules | Non-negotiable system agent rules |
@@ -46,6 +40,39 @@ _This section lists the primary documentation files. Click a link to open the de
 
 ## Module Structure
 
+```
+agent-x/
+├── main.py # Application entry point
+├── pyproject.toml # Project configuration, dependencies
+├── .project_development/ # Project meta and rules files
+│ ├── CORE_DIRECTIVES.md # Non-negotiable system agent rules
+│ ├── TOOL_USAGE.md # Tool selection & usage guidelines
+│ ├── CODING_STYLE.md # Code conventions & naming
+│ ├── TASK_WORKFLOW.md # Step-by-step task process
+│ ├── ENVIRONMENT.md # Runtime & operational notes
+│ ├── CURRENT_ISSUE.md # Currently tracked issues and fix status
+│ ├── PROJECT_DOCUMENTATION.md # This file - documentation map
+│ ├── PROJECT_NAVIGATION_ROUTES.md # Navigation routes
+│ ├── PROJECT_ROADMAP.md # Planned features and improvements
+│ ├── PROJECT_TESTING_SANDBOX_RULES.md # TDD strategy and rules
+│ └── USER_COMMAND_EXTENSION.md # Extended user commands
+├── src/ # All source code (installed as agent-x package)
+│ ├── common/ # Shared utilities and helpers
+│ ├── controllers/ # Application controllers (business logic)
+│ ├── model/ # Data persistence, SQLite, session management
+│ │ ├── db/ # Database layer
+│ │ └── session/ # Session lifecycle
+│ ├── services/ # Service layer (AI/LLM services)
+│ │ └── ai/ # AI service implementations
+│ ├── views/ # View layer (user interface)
+│ │ ├── chat_view/ # Chat interface
+│ │ ├── main_view/ # Main application view
+│ │ └── common/ # Shared view utilities
+│ └── main.py # Application entry point
+├── tests/ # Unit and integration tests (read-only)
+├── tests_sandbox/ # Feature and integration testing sandbox
+├── _resources/ # Sample data files
+└── doc/ # Project documentation
 ```
 agent-x/
 ├── main.py                          # Application entry point
@@ -111,12 +138,22 @@ agent-x/
 
 ## Recent Changes
 
+### Major Architecture Refactor — MVC Pattern (v0.2.0)
+- **Date**: April 8, 2026
+- **What changed**: Complete architectural reorganization from agent-centric to MVC pattern
+- **New structure**:
+  - `src/common/` — Shared utilities
+  - `src/controllers/` — Business logic and command routing
+  - `src/model/` — Data persistence, sessions, SQLite
+  - `src/services/` — AI/LLM service layer
+  - `src/views/` — User interface layer
+- **Removed**: `agents/`, `llm_managers/`, `local_mcp/`, `app/`, `app_modules/`, `llm_models/`
+- **Rationale**: Improved maintainability, testability, and adherence to standard application architecture patterns
+
 ### Refactored AGENTS.md — Lean Entry Point Pattern
 - Extracted rules from monolithic AGENTS.md into focused files: `CORE_DIRECTIVES.md`, `TOOL_USAGE.md`, `CODING_STYLE.md`, `TASK_WORKFLOW.md`, `ENVIRONMENT.md`
 - AGENTS.md reduced from 269 lines (9.7KB) to 62 lines (2.5KB) — **77% smaller**
-- Added Quick Reference table linking to all rule files
-- Removed verbose XML-style tags in favor of Markdown (research-backed for better LLM comprehension)
-- Added benchmark suite: `test_benchmark_navigation.py`, `benchmark_navigation.md`, `benchmark_report.md`
+- Added Quick Reference table
 
 ### Updated README.md
 - Major README rewrite with improved project overview, quick start, and documentation links

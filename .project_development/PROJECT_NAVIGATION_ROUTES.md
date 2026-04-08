@@ -1,8 +1,8 @@
 # Project Navigation Routes - Agent-X
 
-> **Last Updated**: April 4, 2026  
-> **Version**: 0.1.0  
-> **Python**: 3.14+  
+> **Last Updated**: April 8, 2026
+> **Version**: 0.2.0
+> **Python**: 3.14+
 > **Package Manager**: uv
 
 ---
@@ -19,13 +19,12 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 |--------|-------|-------------|
 | [Root](#root) | 2 | Entry point and project configuration |
 | [_resources/](#_resources) | 2 | Sample data files for demos |
-| [src/](#src) | 7 | All source code modules |
-| [src/agents/](#srcagents) | 16 | Agent implementations (SimpleChat, ChatLoop, RAG, ReAct, Graph) |
-| [src/llm_managers/](#srcllm_managers) | 4 | Unified AgentFactory + LLM provider strategy pattern |
-| [src/local_mcp/](#srclocal_mcp) | 3 | MCP (Model Context Protocol) servers |
-| [src/app/](#srcapp) | 22 | Core application: REPL, models, DB, security, streaming metrics |
-| [src/app_modules/](#srcapp_modules) | 20 | LLM integrations, data stores, web ingestion |
-| [src/llm_models/](#srcllm_models) | 7 | LLM model providers (cloud + local) |
+| [src/](#src) | 6 | All source code modules |
+| [src/common/](#srccommon) | 2 | Shared utilities and helpers |
+| [src/controllers/](#srccontrollers) | 2 | Application controllers |
+| [src/model/](#srcmodel) | 5 | Data persistence, SQLite, session management |
+| [src/services/](#srcservices) | 2 | Service layer (AI services) |
+| [src/views/](#srcviews) | 6 | View layer (chat, main views) |
 | [tests/](#tests) | 7 | Unit and integration tests |
 | [tests_sandbox/](#tests_sandbox) | 14 | Feature and integration testing sandbox |
 | [Meta](#meta) | 2 | Project meta files (issues, roadmap, rules) |
@@ -45,14 +44,15 @@ Entry point for the application.
 
 **Application Flow**:
 ```
-main.py → src/main.py → create_controller() → register commands → ReplApp(controller).run()
+main.py → src/main.py → Application initialization → View/Controller execution
 ```
 
-**Registered Commands**:
-- **CLI**: `quit`, `clear`, `help`, `read`
-- **Math**: `sum`
-- **LLM Chat**: `chat`, `router`, `react`, `search`, `function`, `rag`
-- **LLM Graph**: `graph`, `chains`, `reflex`
+**Architecture**: MVC (Model-View-Controller) pattern
+- **Models**: Data persistence and session management
+- **Views**: User interface and interaction handling
+- **Controllers**: Business logic and command routing
+- **Services**: AI/LLM service layer
+- **Common**: Shared utilities across the application
 
 ---
 
@@ -66,12 +66,74 @@ All source code modules. Installed as `agent-x` package in development mode.
 
 | Sub-module | Description |
 |------------|-------------|
-| [agents/](#srcagents) | Agent implementations |
-| [llm_managers/](#srcllm_managers) | Unified AgentFactory + LLM provider strategy |
-| [local_mcp/](#srclocal_mcp) | MCP servers |
-| [app/](#srcapp) | Core application |
-| [app_modules/](#srcapp_modules) | Extended application modules |
-| [llm_models/](#srcllm_models) | LLM model providers |
+| [common/](#srccommon) | Shared utilities and helpers |
+| [controllers/](#srccontrollers) | Application controllers |
+| [model/](#srcmodel) | Data persistence, SQLite, session management |
+| [services/](#srcservices) | Service layer (AI services) |
+| [views/](#srcviews) | View layer (chat, main views) |
+
+---
+
+## src/common/
+
+**Path**: `src/common/`
+
+Shared utilities and helper functions used across the application.
+
+| File | Description |
+|------|-------------|
+| `__init__.py` | Module initialization |
+
+---
+
+## src/controllers/
+
+**Path**: `src/controllers/`
+
+Application controllers that handle business logic and command routing.
+
+| File | Description |
+|------|-------------|
+| `__init__.py` | Module initialization |
+
+---
+
+## src/model/
+
+**Path**: `src/model/`
+
+Data persistence layer with SQLite database and session management.
+
+| File | Description |
+|------|-------------|
+| `db/` | Database layer with SQLite |
+| `session/` | Session lifecycle management |
+
+---
+
+## src/services/
+
+**Path**: `src/services/`
+
+Service layer providing AI/LLM services to the application.
+
+| File | Description |
+|------|-------------|
+| `ai/` | AI service implementations |
+
+---
+
+## src/views/
+
+**Path**: `src/views/`
+
+View layer handling user interface and interaction.
+
+| File | Description |
+|------|-------------|
+| `chat_view/` | Chat interface view |
+| `main_view/` | Main application view |
+| `common/` | Shared view utilities |
 
 ---
 
@@ -241,23 +303,7 @@ Agent implementations. Factory functions moved to `llm_managers/`.
 
 ---
 
-## src/app/
 
-**Path**: `src/app/`  
-**Module Doc**: [app.md](app/app.md)
-
-Core application module containing the REPL system, data models, database layer, security utilities, and common helpers.
-
-### Sub-modules
-
-| Sub-module | Files | Description |
-|------------|-------|-------------|
-| [common/](#appcommon) | 3 | Shared utilities (file ops, console helpers) |
-| [model/](#appmodel) | 5 | Data persistence, SQLite, session management |
-| [repl/](#apprepl) | 10 | REPL system (core interactive shell) |
-| [security/](#appsecurity) | 2 | Directory deletion safeguards |
-
----
 
 ### src/app/common/
 
@@ -659,6 +705,27 @@ Project meta files for tracking current state and issues.
 | `PROJECT_DOCUMENTATION.md` | Full project documentation map |
 | `PROJECT_NAVIGATION_ROUTES.md` | This file - project navigation routes |
 | `USER_COMMAND_EXTENSION.md` | Extended user commands documentation |
+
+---
+
+## Architecture Evolution
+
+**Note**: As of April 2026, Agent-X has transitioned from an agent-centric architecture to an MVC (Model-View-Controller) pattern:
+
+### Previous Architecture (v0.1.x)
+- Agent-focused: `agents/`, `llm_managers/`, `llm_models/`, `app/`, `app_modules/`
+- Multiple agent types: SimpleChat, ChatLoop, RAG, ReAct, Graph-based agents
+- LLM provider strategy pattern with multiple cloud/local providers
+
+### Current Architecture (v0.2.x)
+- **MVC Pattern**: Clean separation of concerns
+  - **Model**: Data persistence, sessions, SQLite (`src/model/`)
+  - **View**: User interfaces for chat and main application (`src/views/`)
+  - **Controller**: Business logic and command routing (`src/controllers/`)
+  - **Services**: AI/LLM service layer (`src/services/`)
+  - **Common**: Shared utilities (`src/common/`)
+
+This refactoring improves maintainability, testability, and follows standard application architecture patterns.
 
 ---
 
