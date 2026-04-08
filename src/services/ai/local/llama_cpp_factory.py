@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-from model.ai.local.llama_cpp.llamacpp import LlamaCpp
+from services.ai.local.llama_cpp.llamacpp import LlamaCpp
 
 load_dotenv()
 

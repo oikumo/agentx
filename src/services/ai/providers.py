@@ -7,8 +7,8 @@ from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 from langchain_openrouter import ChatOpenRouter
 
-from model.ai.local.llama_cpp.llamacpp_config import LlamaCppConfig
-from model.ai.local.llama_cpp_factory import model_factory_llamacpp
+from services.ai.local.llama_cpp.llamacpp_config import LlamaCppConfig
+from services.ai.local.llama_cpp_factory import model_factory_llamacpp
 from views.main_view.main_view import ChatLoop
 
 

@@ -4,7 +4,8 @@ from controllers.main_controller.main_controller import MainController
 from controllers.main_controller.repl import Command, CommandResult
 from common.utils import clear_console, safe_int
 from views.common.console import Console
-from model.ai.providers import OpenRouterProvider
+from services.ai.providers import OpenRouterProvider
+from services.ai.providers import AgentFactory
 
 
 class CommandResultLogInfo(CommandResult):
@@ -100,8 +101,6 @@ class AIChat(Command):
         self.controller = controller
 
     def run(self, arguments: list[str]) -> None:
-        from model.ai.providers import AgentFactory
-
         model_name, query = parse_chat_arguments(arguments)
 
         if model_name:
