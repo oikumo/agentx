@@ -5,7 +5,7 @@ from controllers.main_controller.repl import Command, CommandResult
 from common.utils import clear_console, safe_int
 from services.ai.services import openrouter_llm_provider
 from views.common.console import Console
-from views.main_view.main_view import ChatLoop
+from views.chat_view.main_view import ChatLoop
 
 
 class CommandResultLogInfo(CommandResult):
