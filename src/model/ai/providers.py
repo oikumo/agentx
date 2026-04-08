@@ -9,7 +9,8 @@ from langchain_openrouter import ChatOpenRouter
 
 from model.ai.local.llama_cpp.llamacpp_config import LlamaCppConfig
 from model.ai.local.llama_cpp_factory import model_factory_llamacpp
-from views.main_view import ChatLoop
+from views.main_view.main_view import ChatLoop
+
 
 class LLMProvider(ABC):
     """Strategy interface for LLM model providers."""
@@ -68,7 +69,7 @@ class OpenAIProvider(LLMProvider):
 class OpenRouterProvider(LLMProvider):
     """Cloud LLM provider using OpenRouter with auto-routing."""
 
-    def __init__(self, model_name: str = "qwen/qwen3.6-plus:free"):
+    def __init__(self, model_name: str = "stepfun/step-3.5-flash:free"):
         self._model_name = model_name
 
     def create_llm(self) -> BaseChatModel:
