@@ -6,11 +6,6 @@ from typing import TYPE_CHECKING, List
 if TYPE_CHECKING:
     pass
 
-class IMainViewPartner:
-    def run_command(self, user_input: str):
-        pass
-    def error(self):
-        pass
 
 class CommandResult(ABC):
     @abstractmethod

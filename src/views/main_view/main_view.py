@@ -1,5 +1,10 @@
-from controllers.main_controller.repl import IMainViewPartner
 from views.common.console import Console
+
+class IMainViewPartner:
+    def run_command(self, user_input: str):
+        pass
+    def error(self):
+        pass
 
 
 class MainView:

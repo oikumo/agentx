@@ -1,5 +1,5 @@
-from controllers.main_controller.repl import Command, CommandParser, IMainViewPartner
-from views.main_view.main_view import MainView
+from controllers.main_controller.repl import Command, CommandParser
+from views.main_view.main_view import MainView, IMainViewPartner
 from model.session.session import Session
 from model.session.session import SessionDatabase
 
