@@ -21,10 +21,10 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 | [_resources/](#_resources) | 2 | Sample data files for demos |
 | [src/](#src) | 6 | All source code modules |
 | [src/common/](#srccommon) | 2 | Shared utilities and helpers |
-| [src/controllers/](#srccontrollers) | 2 | Application controllers |
+| [src/controllers/](#srccontrollers) | 2 | Application controllers (business logic) |
 | [src/model/](#srcmodel) | 5 | Data persistence, SQLite, session management |
-| [src/services/](#srcservices) | 2 | Service layer (AI services) |
-| [src/views/](#srcviews) | 6 | View layer (chat, main views) |
+| [src/services/](#srcservices) | 2 | Service layer (AI/LLM services) |
+| [src/views/](#srcviews) | 6 | View layer (user interface) |
 | [tests/](#tests) | 7 | Unit and integration tests |
 | [tests_sandbox/](#tests_sandbox) | 14 | Feature and integration testing sandbox |
 | [Meta](#meta) | 2 | Project meta files (issues, roadmap, rules) |
@@ -60,17 +60,28 @@ main.py → src/main.py → Application initialization → View/Controller execu
 
 **Path**: `src/`
 
-All source code modules. Installed as `agent-x` package in development mode.
+All source code modules organized in MVC (Model-View-Controller) architecture. Installed as `agent-x` package in development mode.
+
+### Architecture
+
+```
+src/
+├── common/         # Shared utilities
+├── controllers/    # Business logic & command routing
+├── model/          # Data persistence, sessions, SQLite
+├── services/       # AI/LLM service layer
+└── views/          # User interface layer
+```
 
 ### Sub-modules
 
 | Sub-module | Description |
 |------------|-------------|
 | [common/](#srccommon) | Shared utilities and helpers |
-| [controllers/](#srccontrollers) | Application controllers |
+| [controllers/](#srccontrollers) | Application controllers (business logic) |
 | [model/](#srcmodel) | Data persistence, SQLite, session management |
-| [services/](#srcservices) | Service layer (AI services) |
-| [views/](#srcviews) | View layer (chat, main views) |
+| [services/](#srcservices) | Service layer (AI/LLM services) |
+| [views/](#srcviews) | View layer (user interface) |
 
 ---
 
@@ -117,9 +128,19 @@ Data persistence layer with SQLite database and session management.
 
 Service layer providing AI/LLM services to the application.
 
-| File | Description |
-|------|-------------|
-| `ai/` | AI service implementations |
+### Structure
+
+```
+services/
+├── ai/               # AI service implementations
+│   ├── cloud/        # Cloud providers (OpenAI, Google)
+│   └── local/        # Local providers (LlamaCpp, Ollama)
+└── __init__.py
+```
+
+| Module | Description |
+|--------|-------------|
+| [ai/](#servicesai) | AI/LLM service implementations |
 
 ---
 
@@ -134,172 +155,6 @@ View layer handling user interface and interaction.
 | `chat_view/` | Chat interface view |
 | `main_view/` | Main application view |
 | `common/` | Shared view utilities |
-
----
-
-## src/agents/
-
-**Path**: `src/agents/`
-
-Unified factory and LLM provider strategy pattern. Centralizes agent creation logic and model provider abstraction.
-
-### Sub-modules
-
-| Sub-module | Description |
-|------------|-------------|
-| [providers/](#llm_managersproviders) | LLM provider implementations (Strategy pattern) |
-
-### Core Files
-
-| File | Description |
-|------|-------------|
-| `factory.py` | `AgentFactory` class - unified factory for all agent types (create_chat, create_chat_loop, create_chat_loop_rag, create_function_router, create_rag, create_react_web_search, create_graph_react_web_search) |
-| `llm_provider.py` | `LLMProvider` ABC - strategy interface for LLM providers |
-| `__init__.py` | Module public API |
-
-### src/llm_managers/providers/
-
-**Path**: `src/llm_managers/providers/`
-
-LLM provider implementations following the Strategy pattern.
-
-#### LLMProvider ABC Contract
-
-All providers must implement:
-- `create_llm() -> BaseChatModel` — Returns a LangChain `BaseChatModel` instance
-- The returned model must support `.invoke(history)` and `.stream(history)` methods
-- Providers should handle API key configuration from environment variables
-
-| File | Description |
-|------|-------------|
-| `llm_provider.py` | `LLMProvider` ABC — base class with `@abstractmethod create_llm()` |
-| `llamacpp_provider.py` | `LlamaCppProvider` - local LLM via llama.cpp using ChatOpenAI client with Qwen 2.5/3.5/3 |
-| `openai_provider.py` | `OpenAIProvider` - cloud LLM via OpenAI API |
-| `openrouter_provider.py` | `OpenRouterProvider` - cloud LLM via OpenRouter, now accepts `model_name` parameter for runtime model selection |
-
-### Helper Functions
-
-| Function | Description |
-|----------|-------------|
-| `local_llm_provider(model_filename, context_size)` | Creates LlamaCppProvider with specified model |
-| `openrouter_llm_provider(model_name)` | Creates OpenRouterProvider with specified model |
-
----
-
-## src/local_mcp/
-
-**Path**: `src/local_mcp/`
-
-MCP (Model Context Protocol) servers for extending agent capabilities via stdio transport.
-
-### Sub-modules
-
-| Sub-module | Description |
-|------------|-------------|
-| [servers_stdio/](#local_mcpserver_stdio) | MCP servers using stdio transport |
-
-### Core Files
-
-| File | Description |
-|------|-------------|
-| `__init__.py` | Module initialization |
-| `mcp_main.py` | MCP server entry point |
-
-### src/local_mcp/servers_stdio/
-
-**Path**: `src/local_mcp/servers_stdio/`
-
-MCP server implementations using stdio transport.
-
-| File | Description |
-|------|-------------|
-| `__init__.py` | Module initialization |
-| `math_server.py` | Math operations MCP server |
-
----
-
-## src/agents/
-
-**Path**: `src/agents/`  
-**Module Doc**: [agents.md](agents/agents.md)
-
-Agent implementations. Factory functions moved to `llm_managers/`.
-
-### Sub-modules
-
-| Sub-module | Description |
-|------------|-------------|
-| [chat/](#agentschat) | SimpleChat, ChatLoop (persistent conversation with streaming) |
-| [function_tool_router/](#agentsfunction_tool_router) | Query routing with Ollama tool calling |
-| [graph_react_web_search/](#agentsgraph_react_web_search) | LangGraph-based ReAct web search |
-| [rag_pdf/](#agentsrag_pdf) | PDF RAG with FAISS + Ollama embeddings |
-| [react_web_search/](#agentsreact_web_search) | LangChain ReAct web search agent |
-
-### Design Patterns
-- **Strategy**: Different agents implement different reasoning strategies
-- **State Machine**: `GraphReactWebSearch` uses LangGraph `StateGraph`
-- **RAG**: Standard pipeline: load → embed → store → retrieve → generate
-
----
-
-### src/agents/chat/
-
-**Path**: `src/agents/chat/`  
-**Module Doc**: [chat.md](agents/chat/chat.md)
-
-| File | Description |
-|------|-------------|
-| `simple_chat.py` | `SimpleChat` class - wraps `BaseChatModel` with a prompt template chain, now with `run_streaming()` |
-| `chat_loop.py` | `ChatLoop` class - persistent conversational chat with message history, single-turn and interactive REPL modes, `run_streaming_with_metrics()`, tok/s display |
-
----
-
-### src/agents/function_tool_router/
-
-**Path**: `src/agents/function_tool_router/`  
-**Module Doc**: [function_tool_router.md](agents/function_tool_router/function_tool_router.md)
-
-| File | Description |
-|------|-------------|
-| `function_call.py` | `QueryRouter` class - Ollama tool calling to dispatch function calls |
-| `functions.py` | Tool functions: `get_weather_info()`, `get_game_recommend()`, `calculate()` |
-| `route.py` | `Route` class - maps function name to callable |
-
----
-
-### src/agents/graph_react_web_search/
-
-**Path**: `src/agents/graph_react_web_search/`  
-**Module Doc**: [graph_react_web_search.md](agents/graph_react_web_search/graph_react_web_search.md)
-
-| File | Description |
-|------|-------------|
-| `graph_react_web_search.py` | `GraphReactWebSearch` - LangGraph state machine with reasoning/act nodes |
-
----
-
-### src/agents/rag_pdf/
-
-**Path**: `src/agents/rag_pdf/`  
-**Module Doc**: [rag_pdf.md](agents/rag_pdf/rag_pdf.md)
-
-| File | Description |
-|------|-------------|
-| `agent_rag_pdf.py` | `AgentRagPdf` - PDF ingestion → FAISS vector store → retrieval QA chain, now with `run_streaming()` |
-
----
-
-### src/agents/react_web_search/
-
-**Path**: `src/agents/react_web_search/`  
-**Module Doc**: [react_web_search.md](agents/react_web_search/react_web_search.md)
-
-| File | Description |
-|------|-------------|
-| `agent_react_web_search.py` | `AgentReactWebSearch` - thin wrapper delegating to `search_agent()`, now with `run_streaming()` |
-| `prompt.py` | ReAct prompt template |
-| `schemas.py` | Pydantic models: `Source`, `AgentResponse` |
-| `search_agent.py` | `search_agent()` function - creates ReAct agent with Tavily |
 
 ---
 
@@ -600,12 +455,12 @@ LLM model providers and vector store integrations. Supports both cloud-hosted an
 
 **Path**: `_resources/`
 
-Sample data files used by agents and demos.
+Sample data files used for demos and testing.
 
 | File | Description |
 |------|-------------|
-| `episode_info.csv` | CSV data for CSV agent demos |
-| `react.pdf` | PDF document for RAG agent demos |
+| `episode_info.csv` | Sample CSV data for testing |
+| `react.pdf` | Sample PDF document for RAG testing |
 
 ---
 
@@ -613,10 +468,41 @@ Sample data files used by agents and demos.
 
 **Path**: `tests/`
 
-Unit and integration tests.
+Unit and integration tests (read-only).
 
-### Structure
+### Test Commands
+```bash
+# Run all tests
+pytest
 
+# Run unit tests only
+pytest tests/unit -q
+
+# Run integration tests only
+pytest tests/integration -q
+
+# Run specific test
+pytest tests/path/to/test_file.py::TestClass::test_function_name -q
+
+# Run tests matching pattern
+pytest tests/path/to/test_file.py -k "pattern" -q
+```
+
+---
+
+## tests_sandbox/
+
+**Path**: `tests_sandbox/`
+
+Feature and integration testing sandbox for experimental development.
+
+### Test Commands
+```bash
+# Run all sandbox tests
+uv run pytest tests_sandbox/ -v
+
+# Run feature tests only
+uv run pytest tests_sandbox/features/ -v
 ```
 tests/
 ├── integration/
@@ -708,24 +594,19 @@ Project meta files for tracking current state and issues.
 
 ---
 
-## Architecture Evolution
+## Architecture
 
-**Note**: As of April 2026, Agent-X has transitioned from an agent-centric architecture to an MVC (Model-View-Controller) pattern:
+**Current Version**: v0.2.0 - MVC Architecture (April 2026)
 
-### Previous Architecture (v0.1.x)
-- Agent-focused: `agents/`, `llm_managers/`, `llm_models/`, `app/`, `app_modules/`
-- Multiple agent types: SimpleChat, ChatLoop, RAG, ReAct, Graph-based agents
-- LLM provider strategy pattern with multiple cloud/local providers
+Agent-X follows the **MVC (Model-View-Controller)** pattern for clean separation of concerns:
 
-### Current Architecture (v0.2.x)
-- **MVC Pattern**: Clean separation of concerns
-  - **Model**: Data persistence, sessions, SQLite (`src/model/`)
-  - **View**: User interfaces for chat and main application (`src/views/`)
-  - **Controller**: Business logic and command routing (`src/controllers/`)
-  - **Services**: AI/LLM service layer (`src/services/`)
-  - **Common**: Shared utilities (`src/common/`)
+- **Model** (`src/model/`): Data persistence, SQLite database, session management
+- **View** (`src/views/`): User interface components (chat view, main view)
+- **Controller** (`src/controllers/`): Business logic and command routing
+- **Services** (`src/services/`): AI/LLM service layer with cloud and local providers
+- **Common** (`src/common/`): Shared utilities across the application
 
-This refactoring improves maintainability, testability, and follows standard application architecture patterns.
+This architecture improves maintainability, testability, and follows standard Python application patterns.
 
 ---
 

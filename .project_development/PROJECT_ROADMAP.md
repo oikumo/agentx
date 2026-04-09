@@ -4,52 +4,47 @@
 
 ## Planned Features & Improvements
 
-### RAG Enhancements
-- [ ] Complete RAG integration to ChatLoop (currently WIP)
-- [ ] Add support for multiple document types (not just PDF)
-- [ ] Implement incremental vector store updates
-- [ ] Add RAG source citation in responses
-
-### MCP Integration
-- [ ] Add more MCP servers (weather, games, file system)
-- [ ] Implement MCP client in ChatLoop for tool discovery
-- [ ] Add MCP server configuration via CLI flags
-
-### Agent Improvements
-- [ ] Add tool calling support to `ChatLoop` (function dispatch within conversation)
-- [ ] Implement conversation summarization to prevent context window overflow
-- [ ] Add configurable system prompts per session
-
-### Provider Expansion
-- [ ] Add `OllamaProvider` to `llm_managers/providers/` for local Ollama chat
-- [ ] Add `GeminiProvider` to `llm_managers/providers/` for Google models
-- [ ] Implement provider health check / fallback chain
+### MVC Architecture Enhancements
+- [ ] Complete service layer documentation
+- [ ] Add controller test suite
+- [ ] Implement view model patterns for better separation
 
 ### Testing & Quality
 - [ ] Migrate mature `tests_sandbox/` tests to `tests/`
 - [ ] Add integration tests with real LLM providers (gated by env var)
 - [ ] Add linting and type checking to CI pipeline
+- [ ] Increase test coverage to 80%
 
 ### Documentation
 - [ ] Add API reference documentation for public classes
-- [ ] Document agent configuration patterns
-- [ ] Add troubleshooting guide for common LLM provider issues
+- [ ] Document controller patterns
+- [ ] Add troubleshooting guide
+
+### Future Considerations
+- [ ] Evaluate MCP (Model Context Protocol) integration for extended capabilities
+- [ ] Consider provider health check / fallback chain
+- [ ] Evaluate conversation summarization for context window management
 
 ---
 
 ## Completed
-- ✅ Moved source code to `src/` folder (standard Python package layout)
+
+### Architecture (v0.2.0 - April 2026)
+- ✅ MVC architecture migration complete
+- ✅ Reorganized into: `common/`, `controllers/`, `model/`, `services/`, `views/`
+- ✅ Clean separation of concerns following Python best practices
+
+### Documentation
 - ✅ Refactored AGENTS.md — Lean Entry Point Pattern (77% size reduction)
 - ✅ Updated README.md with improved project overview
 - ✅ Reorganized meta files into `.project_development/` folder
-- ✅ Unified AgentFactory in llm_managers/ (replaced 5 factory files)
-- ✅ MCP (Model Context Protocol) server support
-- ✅ RAG integration to ChatLoop (WIP → complete)
+- ✅ Updated PROJECT_NAVIGATION_ROUTES.md and PROJECT_DOCUMENTATION.md
+
+### Core Features
 - ✅ ChatLoop with persistent message history and streaming
-- ✅ OpenRouter provider integration
-- ✅ TDD sandbox with Kent Beck methodology
-- ✅ LLM provider Strategy pattern with 3 implementations
-- ✅ CURRENT_ISSUE.md meta tracking file
 - ✅ Streaming support with tok/s metrics
 - ✅ `--model` flag for runtime model selection
-- ✅ llama.cpp provider using ChatOpenAI client
+- ✅ OpenRouter provider integration
+- ✅ TDD sandbox with Kent Beck methodology
+- ✅ LLM provider Strategy pattern
+- ✅ CURRENT_ISSUE.md meta tracking file
