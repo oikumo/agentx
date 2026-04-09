@@ -3,7 +3,6 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 from common.utils import StreamingMetrics
 
-
 class ChatLoop:
     def __init__(
         self,

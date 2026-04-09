@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from controllers.main_controller.commands_base import Command, CommandResult
 from controllers.main_controller.main_controller import MainController
-from controllers.main_controller.repl import Command, CommandResult
 from common.utils import clear_console, safe_int
 from services.ai.services import openrouter_llm_provider, cloud_llm_provider
 from views.common.console import Console
@@ -112,24 +112,4 @@ class AIChat(Command):
 
     def run(self, arguments: list[str]) -> None:
         model_name, query = parse_chat_arguments(arguments)
-
-
-        # TODO Refactor: Move
-        provider = cloud_llm_provider()
-        llm = provider.create_llm()
-        chat_loop = ChatLoop(llm=llm)
-
-        if not query:
-            Console.log_info(
-                "Starting interactive chat (type 'quit' or 'exit' to end):"
-            )
-            chat_loop.start_interactive_streaming()
-        else:
-            try:
-                response, metrics = chat_loop.run_streaming_with_metrics(query)
-                if response is not None:
-                    print()
-                    Console.log_info(metrics.format())
-            except Exception as e:
-                Console.log_error(f"Chat error: {e}")
-
+        self.controller.showChat(query)

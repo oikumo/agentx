@@ -1,4 +1,6 @@
-from controllers.main_controller.repl import Command, CommandParser
+from controllers.chat_controller.chat_controller import ChatController
+from controllers.main_controller.commands_base import Command
+from controllers.main_controller.commands_parser import CommandParser
 from views.main_view.main_view import MainView, IMainViewPartner
 from model.session.session import Session
 from model.session.session import SessionDatabase
@@ -13,6 +15,11 @@ class MainController(IMainViewPartner):
         if not self.session.create() or not self.session.is_created():
             raise Exception()
         self.database = SessionDatabase(self.session)
+
+
+    def showChat(self, query: str | None):
+        self.chat_controller = ChatController()
+        self.chat_controller.show(query)
 
     def run(self):
         self.view.show()
