@@ -3,9 +3,7 @@ from __future__ import annotations
 from controllers.main_controller.commands_base import Command, CommandResult
 from controllers.main_controller.main_controller import MainController
 from common.utils import clear_console, safe_int
-from services.ai.services import openrouter_llm_provider, cloud_llm_provider
 from views.common.console import Console
-from views.chat_view.chat_loop import ChatLoop
 
 
 class CommandResultLogInfo(CommandResult):
@@ -84,24 +82,6 @@ class SumCommand(Command):
         return None
 
 
-def parse_chat_arguments(arguments: list[str]) -> tuple[str | None, str]:
-    model: str | None = None
-    query_parts: list[str] = []
-    i = 0
-    while i < len(arguments):
-        if arguments[i] == "--model":
-            if i + 1 < len(arguments):
-                model = arguments[i + 1]
-                i += 2
-            else:
-                i += 1
-        else:
-            query_parts.append(arguments[i])
-            i += 1
-    query = " ".join(query_parts)
-    return model, query
-
-
 class AIChat(Command):
     def __init__(self, key: str, controller: MainController):
         super().__init__(
@@ -111,5 +91,23 @@ class AIChat(Command):
         self.controller = controller
 
     def run(self, arguments: list[str]) -> None:
-        model_name, query = parse_chat_arguments(arguments)
+        model_name, query = self.parse_chat_arguments(arguments)
         self.controller.showChat(query)
+
+    @staticmethod
+    def parse_chat_arguments(arguments: list[str]) -> tuple[str | None, str]:
+        model: str | None = None
+        query_parts: list[str] = []
+        i = 0
+        while i < len(arguments):
+            if arguments[i] == "--model":
+                if i + 1 < len(arguments):
+                    model = arguments[i + 1]
+                    i += 2
+                else:
+                    i += 1
+            else:
+                query_parts.append(arguments[i])
+                i += 1
+        query = " ".join(query_parts)
+        return model, query
