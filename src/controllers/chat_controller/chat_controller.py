@@ -1,5 +1,5 @@
 from services.ai.services import cloud_llm_provider
-from views.chat_view.chat_view import ChatLoop
+from views.chat_view.chat_loop import ChatLoop
 from views.chat_view.chat_view_controller import ChatViewController
 
 
