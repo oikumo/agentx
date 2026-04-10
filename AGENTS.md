@@ -1,7 +1,7 @@
 # AGENTS.md - Agent-X System Agent Rules
 
 > **Purpose**: Primary entry point for the system agent. Defines rules, commands, and navigation paths.
-> **Last Updated**: April 4, 2026
+> **Last Updated**: April 10, 2026
 
 ---
 
