@@ -1,6 +1,6 @@
-# User Manual - Agent-X
+# Agent-X
 
-> **Version**: 0.1.0  
+> **Version**: 0.2.0  
 > **Python**: 3.14+  
 > **Package Manager**: uv
 
