@@ -1,97 +1,120 @@
-# MCP Server X
+# MCP Products Server
+
+A Model Context Protocol (MCP) server for managing product inventory with SQLite database persistence.
+
+## Features
+
+- **SQLite Database**: Products are stored in a local SQLite database (`products.db`)
+- **Full CRUD Operations**: Create, Read, Update, Delete products
+- **MCP Tools**: 5 exposed tools for product management
+- **TDD Tested**: Comprehensive test suite with 22 passing tests
+
+## MCP Tools
+
+The server exposes the following tools:
+
+### `get_products_tool()`
+Lists all SKUs available in the inventory.
+
+**Returns**: Comma-separated list of product SKUs
+
+### `get_product_by_sku_tool(sku: str)`
+Queries the price and stock of a specific product.
+
+**Args**:
+- `sku`: The product identifier
+
+**Returns**: Formatted string with product information or not found message
+
+### `add_product_tool(sku: str, price: float, stock: int = 0)`
+Adds a new product to the inventory.
+
+**Args**:
+- `sku`: Product identifier (must be unique, trimmed of whitespace)
+- `price`: Product price (must be non-negative)
+- `stock`: Quantity in stock (default: 0)
+
+**Returns**: Confirmation message or error
+
+### `update_product_tool(sku: str, price: float, stock: int)`
+Updates an existing product's price and stock.
+
+**Args**:
+- `sku`: Product identifier
+- `price`: New price
+- `stock`: New stock quantity
+
+**Returns**: Confirmation message or not found error
+
+### `delete_product_tool(sku: str)`
+Deletes a product from the inventory.
+
+**Args**:
+- `sku`: Product identifier
+
+**Returns**: Confirmation message or not found error
 
 ## Running the Server
 
-### Run the server in streamable-http default mode
+### Run the server in stdio mode (required for Claude)
 
 ```bash
 uv run server.py
 ```
 
-### Run the server in stdio mode (required for Claude)
+## Testing
+
+Run the test suite:
 
 ```bash
-uv run server.py stdio
+uv run pytest test_products.py -v
 ```
 
+All 22 tests should pass.
 
-## Test with MCP Inspector (Anthropic)
+## Database Schema
 
-* Documentation
-  - https://modelcontextprotocol.io/docs/tools/inspector
+```sql
+CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sku TEXT UNIQUE NOT NULL,
+    price REAL NOT NULL,
+    stock INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
 
-* Run
-```commandline
+## Connection Examples
+
+### MCP Inspector
+
 ```bash
 npx @modelcontextprotocol/inspector
 ```
 
-### Output
+Then connect to `http://localhost:8000/mcp` using Streamable HTTP transport.
 
-MCP Inspector output should be like as follows
+### Claude Code Connection
 
-```
-Starting MCP inspector...
-⚙️ Proxy server listening on 127.0.0.1:6277
-🔑 Session token: 3bfbe238c862a189df058632deae6bcc21cea40c2df55f58ca98c7288125fd00
-Use this token to authenticate requests or set DANGEROUSLY_OMIT_AUTH=true to disable auth
+Add to `.mcp.json` in your project root:
 
-🔗 Open inspector with token pre-filled:
-   http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=3bfbe238cd00
-
-🔍 MCP Inspector is up and running at http://127.0.0.1:6274 🚀
-```
-
-USE GENERATED URL TO OPEN IT EASILY
-```
-🔗 Open inspector with token pre-filled:
- http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=3bfbe238cd00
-```   
-
-### MCP Inspector usage
-
-* Select **Streamable HTTP** transport and connect to MCP URL (must end with /mcp for "Streamable HTTP" option):
-```
-Use URL from MCP Server 
-Like: http://localhost:8000/mcp
-```
-
-## Claude Code connection
-
-* Claude Code uses `stdio`
-
-### Local Config
-
-* In root project folder add the file .mcp.json
-
-.mcp.json
 ```json
 {
   "mcpServers": {
-    "mcp_server_x": {
+    "products_server": {
       "command": "uv",
       "args": [
         "--directory",
-        "/home/oikumo/develop/mcp_server_x",
+        "/path/to/products_server",
         "run",
-        "server.py",
-        "stdio"        
+        "server.py"
       ]
     }
   }
 }
 ```
 
-### Global Config
-
-```bash
-cd mcp_server_x
-claude mcp add mcp_server_x -- uv run server.py stdio
-claude mcp list
-claude
-```
-
-#### Verify the server is up with cURL
+### Verify with cURL
 
 ```bash
 curl -X POST http://localhost:8000/mcp \
@@ -99,3 +122,23 @@ curl -X POST http://localhost:8000/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
 
+## Example Usage
+
+```python
+# Add products
+add_product("laptop-pro", 1200.0, 5)
+add_product("teclado-mecanico", 89.0, 10)
+
+# List all products
+print(get_products())  # SKUs: laptop-pro, teclado-mecanico
+
+# Get specific product
+print(get_product_by_sku("laptop-pro"))  
+# SKU: laptop-pro | Price: $1200.0 | Stock: 5
+
+# Update product
+update_product("laptop-pro", 1100.0, 3)
+
+# Delete product
+delete_product("teclado-mecanico")
+```

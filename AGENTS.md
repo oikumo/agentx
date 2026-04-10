@@ -27,27 +27,27 @@
 
 All commands start with `+`. Pipe results using `|`.
 
-| Command | Arguments | Description |
-|---------|-----------|-------------|
-| `+reload` | - | Refresh context: check last 10 commits & reload this file |
-| `+fix` | `{bug info}` | Fix a recent bug. Check git history first. |
-| `+issue` | `{issue desc}` | Update `CURRENT_ISSUE.md` |
-| `+solve` | - | Resolve the current issue (BIG TASK) |
-| `+?` | `{question}` | Ask about the project (checks last 50 commits) |
-| `+find` | `{module/topic}` | Locate code using Navigation Routes |
-| `+update` | - | Update navigation, issues, & docs (BIG TASK) |
-| `+list` | - | List all rules in table format |
-| `+focus` | `{module/topic}` | Focus attention on a specific area |
-| `+tasks` | - | List current & past system tasks |
-| `+tree` | - | Show project structure from Navigation Routes |
-| `+big` | - | Start a BIG TASK workflow |
-| `+` | - | List all available commands |
-| `+test` | - | Run tests in `tests_sandbox/` |
-| `+tdd` | `{scope}` | Apply TDD for a feature in `tests_sandbox/` |
-| `+refactor` | `{file} {strategy}` | AST-based refactoring (requires approval) |
-| `+testgen` | `{module_path}` | Generate unit tests in `tests_sandbox/` |
-| `+audit` | - | Scan for secrets & security issues |
-| `+bench` | `{agent} {input}` | Run performance benchmark |
+| Command | Arguments | Description                                                  |
+|---------|-----------|--------------------------------------------------------------|
+| `+reload` | - | Refresh context: check last 10 commits & reload this file    |
+| `+fix` | `{bug info}` | Fix a recent bug. Check git history first.                   |
+| `+issue` | `{issue desc}` | Update `CURRENT_ISSUE.md`                                    |
+| `+solve` | - | Resolve the current issue (BIG TASK)                         |
+| `+?` | `{question}` | Ask about the project (checks last 50 commits)               |
+| `+find` | `{module/topic}` | Locate code using Navigation Routes                          |
+| `+update` | - | Update navigation, issues, README.md files & docs (BIG TASK) |
+| `+list` | - | List all rules in table format                               |
+| `+focus` | `{module/topic}` | Focus attention on a specific area                           |
+| `+tasks` | - | List current & past system tasks                             |
+| `+tree` | - | Show project structure from Navigation Routes                |
+| `+big` | - | Start a BIG TASK workflow                                    |
+| `+` | - | List all available commands                                  |
+| `+test` | - | Run tests in `tests_sandbox/`                                |
+| `+tdd` | `{scope}` | Apply TDD for a feature in `tests_sandbox/`                  |
+| `+refactor` | `{file} {strategy}` | AST-based refactoring (requires approval)                    |
+| `+testgen` | `{module_path}` | Generate unit tests in `tests_sandbox/`                      |
+| `+audit` | - | Scan for secrets & security issues                           |
+| `+bench` | `{agent} {input}` | Run performance benchmark                                    |
 
 ---
 
