@@ -1,6 +1,6 @@
 # Project Roadmap - Agent-X
 
-> **Last Updated**: April 4, 2026
+> **Last Updated**: April 10, 2026
 
 ## Planned Features & Improvements
 
@@ -28,6 +28,10 @@
 ---
 
 ## Completed
+
+### License & Public Release (April 2026)
+- ✅ Added LICENSE file for public release
+- ✅ Prepared codebase for public repository
 
 ### Architecture (v0.2.0 - April 2026)
 - ✅ MVC architecture migration complete
