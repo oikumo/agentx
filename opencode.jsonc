@@ -34,7 +34,7 @@
     },
     "products": {
       "type": "local",
-      "command": ["uv", "run", "dev_tools/mcp/products_server/server.py"],
+      "command": ["uv", "run", ".dev_tools/mcp/products_server/server.py"],
       "enabled": true
     },
     "jira": {
