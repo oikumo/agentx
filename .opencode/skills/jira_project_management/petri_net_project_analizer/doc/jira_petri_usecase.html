@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petri Net Process Intelligence for Jira</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --ink:      #0f0e0c;
+    --paper:    #f5f2eb;
+    --cream:    #ede9df;
+    --accent:   #c84b2f;
+    --gold:     #c9923a;
+    --teal:     #2a6e72;
+    --muted:    #6b6558;
+    --border:   #d4cfc4;
+    --code-bg:  #1a1917;
+    --code-fg:  #e8e4dc;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 5rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.04) 39px, rgba(255,255,255,.04) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.04) 39px, rgba(255,255,255,.04) 40px);
+  }
+  .hero-inner { max-width: 860px; margin: 0 auto; position: relative; }
+  .hero-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 3px 10px;
+    margin-bottom: 1.6rem;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 300;
+    line-height: 1.12;
+    margin-bottom: 1.4rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .hero p {
+    font-size: 1.05rem;
+    color: #b8b4aa;
+    max-width: 600px;
+    line-height: 1.75;
+  }
+
+  /* ── Layout ── */
+  .page { max-width: 860px; margin: 0 auto; padding: 0 2rem; }
+
+  section { padding: 3.5rem 0; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.7rem;
+    font-weight: 300;
+    margin-bottom: 1.2rem;
+    color: var(--ink);
+  }
+  h2 .num {
+    font-family: 'DM Mono', monospace;
+    font-size: .75rem;
+    color: var(--accent);
+    letter-spacing: .1em;
+    display: block;
+    margin-bottom: .3rem;
+  }
+  h3 {
+    font-size: .82rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 2rem 0 .6rem;
+  }
+  p { margin-bottom: 1rem; color: #2a2720; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ── Workflow diagram ── */
+  .flow-wrap {
+    overflow-x: auto;
+    padding: 2rem 0;
+  }
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-width: 700px;
+  }
+  .place {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .place-circle {
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    text-align: center;
+    line-height: 1.3;
+    padding: 4px;
+    background: var(--paper);
+    position: relative;
+    transition: transform .2s;
+  }
+  .place-circle:hover { transform: scale(1.1); }
+  .place-circle.has-tokens::after {
+    content: attr(data-tokens);
+    position: absolute;
+    top: -8px; right: -8px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+  }
+  .place-circle.bottleneck { border-color: var(--accent); background: #fdf0ed; }
+  .place-circle.blocked-st { border-color: var(--gold); background: #fdf6ed; }
+  .place-label {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .transition {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin: 0 4px;
+  }
+  .t-bar {
+    width: 3px;
+    height: 34px;
+    background: var(--ink);
+    border-radius: 2px;
+  }
+  .t-label {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .arrow {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, var(--ink), var(--ink) 80%, transparent);
+    position: relative;
+    min-width: 18px;
+    margin-bottom: 20px;
+  }
+  .arrow::after {
+    content: '';
+    position: absolute;
+    right: 0; top: -4px;
+    border: 5px solid transparent;
+    border-left: 8px solid var(--ink);
+  }
+
+  /* ── Architecture diagram ── */
+  .arch {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+  .arch-cell {
+    background: var(--paper);
+    padding: 1.4rem;
+  }
+  .arch-cell h4 {
+    font-family: 'DM Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .arch-cell p { font-size: .85rem; color: var(--muted); margin: 0; }
+
+  /* ── Data flow ── */
+  .dataflow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 1.5rem 0;
+    border: 1px solid var(--border);
+  }
+  .df-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .df-row:last-child { border-bottom: none; }
+  .df-step {
+    background: var(--cream);
+    padding: 1rem 1.2rem;
+    border-right: 1px solid var(--border);
+    display: flex; align-items: center;
+    gap: .6rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .75rem;
+    font-weight: 500;
+  }
+  .df-step .n {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .65rem;
+    flex-shrink: 0;
+  }
+  .df-body { padding: 1rem 1.2rem; }
+  .df-body p { font-size: .85rem; margin: 0; }
+  .df-body code { font-family: 'DM Mono', monospace; font-size: .78rem; background: var(--cream); padding: 1px 5px; }
+
+  /* ── Insights table ── */
+  .insights { margin: 1.5rem 0; border: 1px solid var(--border); }
+  .ins-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    border-bottom: 1px solid var(--border);
+    gap: 0;
+  }
+  .ins-row:last-child { border-bottom: none; }
+  .ins-sev {
+    padding: .9rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .7rem;
+    font-weight: 500;
+    letter-spacing: .08em;
+    display: flex; align-items: flex-start; gap: .4rem;
+    border-right: 1px solid var(--border);
+  }
+  .ins-sev.crit { background: #fdf0ed; color: var(--accent); }
+  .ins-sev.warn { background: #fdf6ed; color: var(--gold); }
+  .ins-sev.info { background: #edf5f5; color: var(--teal); }
+  .ins-body { padding: .9rem 1.2rem; }
+  .ins-body strong { font-size: .83rem; display: block; margin-bottom: .25rem; }
+  .ins-body p { font-size: .8rem; color: var(--muted); margin: 0; }
+
+  /* ── Code block ── */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    font-family: 'DM Mono', monospace;
+    font-size: .78rem;
+    line-height: 1.65;
+    padding: 1.4rem 1.6rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    border-radius: 2px;
+  }
+  .kw { color: #cf8e6d; }
+  .fn { color: #7dafca; }
+  .st { color: #6aab73; }
+  .cm { color: #7a7368; font-style: italic; }
+  .num-c { color: #6897bb; }
+
+  /* ── Property grid ── */
+  .prop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+  .prop-cell {
+    background: var(--paper);
+    padding: 1.1rem 1.3rem;
+  }
+  .prop-cell h4 {
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: .4rem;
+  }
+  .prop-cell h4.pass { color: var(--teal); }
+  .prop-cell h4.fail { color: var(--accent); }
+  .prop-cell h4.info-c { color: var(--gold); }
+  .prop-cell p { font-size: .82rem; color: var(--muted); margin: 0; }
+
+  /* ── Callout ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--cream);
+    padding: 1rem 1.4rem;
+    margin: 1.5rem 0;
+    font-size: .88rem;
+  }
+  .callout strong { color: var(--accent); }
+
+  /* ── Footer ── */
+  footer {
+    background: var(--ink);
+    color: #6b6558;
+    text-align: center;
+    padding: 2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: .72rem;
+    letter-spacing: .08em;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <span class="hero-tag">Conceptual Use-Case</span>
+    <h1>Process Intelligence<br>for <em>Jira</em> with<br>Petri Nets</h1>
+    <p>
+      A formal-verification layer that sits on top of your Jira board,
+      detects bottlenecks, deadlocks and liveness violations in real-time,
+      and pushes actionable recommendations back via Claude Code and MCP.
+    </p>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ═══════════════════════════════════════════ WHY -->
+<section>
+  <h2><span class="num">01 — Problem</span>Why Jira boards lie to you</h2>
+
+  <p>
+    Jira shows you <em>what</em> is happening — a kanban column, a sprint report,
+    a velocity chart. It does not tell you <em>why</em> tickets pile up in review,
+    why the same story gets reopened three times, or whether the current workflow
+    can ever deliver all committed stories before the sprint ends.
+  </p>
+  <p>
+    Petri nets are a mathematical model for concurrent processes invented by
+    Carl Adam Petri in 1962. They model states as <strong>places</strong>,
+    actions as <strong>transitions</strong>, and work items as <strong>tokens</strong>.
+    With that model in hand you can <em>formally prove</em> properties of your
+    development process — the same way a compiler proves type safety.
+  </p>
+
+  <div class="prop-grid">
+    <div class="prop-cell">
+      <h4 class="fail">Deadlock</h4>
+      <p>A state from which no transition can ever fire — the process
+      grinds to a halt with tickets stuck and no defined next step.</p>
+    </div>
+    <div class="prop-cell">
+      <h4 class="fail">Liveness violation</h4>
+      <p>Some transition never fires from any reachable state — a workflow
+      path that exists on paper but is never actually used.</p>
+    </div>
+    <div class="prop-cell">
+      <h4 class="fail">Unboundedness</h4>
+      <p>A place accumulates tokens without limit — equivalent to a WIP
+      explosion where reviewers or QA become an infinite queue.</p>
+    </div>
+    <div class="prop-cell">
+      <h4 class="info-c">Reversibility</h4>
+      <p>The ability to return to the initial marking — relevant when a
+      "Done" ticket needs to be reopened due to a regression.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ MODEL -->
+<section>
+  <h2><span class="num">02 — Model</span>The Jira workflow as a Petri net</h2>
+
+  <p>
+    Each Jira status becomes a <strong>place</strong>. Each allowed status
+    transition becomes a <strong>transition bar</strong>. The number of
+    tickets currently in that status becomes the <strong>token count</strong>.
+  </p>
+
+  <div class="flow-wrap">
+    <div class="flow">
+      <div class="place">
+        <div class="place-circle has-tokens" data-tokens="2">BACK<br>LOG</div>
+        <div class="place-label">backlog</div>
+      </div>
+      <div class="arrow"></div>
+      <div class="transition"><div class="t-bar"></div><div class="t-label">plan</div></div>
+      <div class="arrow"></div>
+      <div class="place">
+        <div class="place-circle has-tokens bottleneck" data-tokens="3">TO<br>DO</div>
+        <div class="place-label">todo</div>
+      </div>
+      <div class="arrow"></div>
+      <div class="transition"><div class="t-bar"></div><div class="t-label">start</div></div>
+      <div class="arrow"></div>
+      <div class="place">
+        <div class="place-circle has-tokens bottleneck" data-tokens="3">IN<br>PROG</div>
+        <div class="place-label">in_progress</div>
+      </div>
+      <div class="arrow"></div>
+      <div class="transition"><div class="t-bar"></div><div class="t-label">submit</div></div>
+      <div class="arrow"></div>
+      <div class="place">
+        <div class="place-circle has-tokens bottleneck" data-tokens="4">IN<br>REV</div>
+        <div class="place-label">in_review ⚠</div>
+      </div>
+      <div class="arrow"></div>
+      <div class="transition"><div class="t-bar"></div><div class="t-label">approve</div></div>
+      <div class="arrow"></div>
+      <div class="place">
+        <div class="place-circle has-tokens" data-tokens="2">QA</div>
+        <div class="place-label">qa</div>
+      </div>
+      <div class="arrow"></div>
+      <div class="transition"><div class="t-bar"></div><div class="t-label">pass_qa</div></div>
+      <div class="arrow"></div>
+      <div class="place">
+        <div class="place-circle has-tokens" data-tokens="3">DONE</div>
+        <div class="place-label">done</div>
+      </div>
+    </div>
+  </div>
+
+  <p style="font-size:.82rem; color:var(--muted);">
+    Red badge = token count (live ticket count from Jira).
+    Orange border = WIP accumulation alert.
+    Side-transitions (rework, fail_qa, block/unblock, reopen) omitted for clarity.
+  </p>
+
+  <h3>Mapping rules</h3>
+
+  <div class="insights">
+    <div class="ins-row">
+      <div class="ins-sev info">Jira status</div>
+      <div class="ins-body"><strong>→ Petri net Place</strong>
+        <p>Backlog · To Do · In Progress · In Review · QA · Done · Blocked</p></div>
+    </div>
+    <div class="ins-row">
+      <div class="ins-sev info">Ticket count</div>
+      <div class="ins-body"><strong>→ Token count in that Place</strong>
+        <p>Fetched via Jira MCP <code>search_issues</code> and grouped by status.</p></div>
+    </div>
+    <div class="ins-row">
+      <div class="ins-sev info">Status change</div>
+      <div class="ins-body"><strong>→ Transition fire</strong>
+        <p>plan · start · submit · rework · approve · fail_qa · pass_qa · block · unblock · reopen</p></div>
+    </div>
+    <div class="ins-row">
+      <div class="ins-sev info">Blocked-by link</div>
+      <div class="ins-body"><strong>→ Token in "blocked" place + dependency arc</strong>
+        <p>A blocked ticket holds a token in the <code>blocked</code> place until its dependency resolves.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ ARCHITECTURE -->
+<section>
+  <h2><span class="num">03 — Architecture</span>Claude Code + MCP + Petri net engine</h2>
+
+  <p>
+    Three components integrate through a simple daily automation loop triggered
+    by CI/CD or a cron job inside Claude Code.
+  </p>
+
+  <div class="arch">
+    <div class="arch-cell">
+      <h4>Jira MCP Server</h4>
+      <p>Read-write access to the project board via the official Jira MCP adapter.
+      Provides <code>search_issues</code>, <code>add_comment</code>,
+      <code>create_issue</code>, and <code>transition_issue</code> tools.</p>
+    </div>
+    <div class="arch-cell">
+      <h4>Claude Code (orchestrator)</h4>
+      <p>Runs the Python pipeline, interprets the analysis output in natural
+      language, decides which Jira actions to take, and posts human-readable
+      recommendations back to the board.</p>
+    </div>
+    <div class="arch-cell">
+      <h4>Petri net engine</h4>
+      <p><code>petri_net.py</code> — runtime.
+      <code>petri_net_analysis.py</code> — formal verifier (BFS reachability,
+      SCC liveness, siphon/trap enumeration).
+      <code>jira_petri_workflow.py</code> — bridge.</p>
+    </div>
+  </div>
+
+  <h3>Data flow</h3>
+
+  <div class="dataflow">
+    <div class="df-row">
+      <div class="df-step"><span class="n">1</span>MCP pull</div>
+      <div class="df-body"><p>Claude Code calls <code>jira.search_issues(jql="sprint = active")</code>
+      via MCP. Returns JSON list of issues with status, assignee, created date, blocked-by links.</p></div>
+    </div>
+    <div class="df-row">
+      <div class="df-step"><span class="n">2</span>Net build</div>
+      <div class="df-body"><p><code>build_net_from_jira(issues)</code> groups tickets by status,
+      sets token counts on each place, and wires the full transition graph.</p></div>
+    </div>
+    <div class="df-row">
+      <div class="df-step"><span class="n">3</span>Analysis</div>
+      <div class="df-body"><p><code>analyse(net)</code> runs boundedness, safeness, deadlock-freedom,
+      quasi-liveness, full L1-liveness (Kosaraju SCC), reversibility, and siphon/trap checks.</p></div>
+    </div>
+    <div class="df-row">
+      <div class="df-step"><span class="n">4</span>Insights</div>
+      <div class="df-body"><p><code>derive_insights()</code> translates formal results into
+      human-readable findings ranked CRITICAL / WARNING / INFO with affected ticket keys.</p></div>
+    </div>
+    <div class="df-row">
+      <div class="df-step"><span class="n">5</span>MCP push</div>
+      <div class="df-body"><p>Claude Code posts the report as a comment on the Sprint Epic.
+      CRITICAL findings trigger automatic <code>create_issue</code> calls that assign
+      follow-up tasks to the scrum master.</p></div>
+    </div>
+    <div class="df-row">
+      <div class="df-step"><span class="n">6</span>Explanation</div>
+      <div class="df-body"><p>Claude replies in plain English — "Your review queue is a siphon,
+      meaning once tickets enter it and reviewers are occupied, the net can deadlock if no
+      rework arc exists" — so the team understands the <em>why</em>, not just the <em>what</em>.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ INSIGHTS -->
+<section>
+  <h2><span class="num">04 — Insights</span>What the analysis surfaces on a real sprint</h2>
+
+  <p>
+    Running against a representative 19-ticket sprint (3 in Backlog, 3 To Do,
+    3 In Progress, 4 In Review, 2 QA, 3 Done, 2 Blocked) the engine produced:
+  </p>
+
+  <div class="insights">
+    <div class="ins-row">
+      <div class="ins-sev crit">🔴 CRITICAL</div>
+      <div class="ins-body">
+        <strong>2 blocked tickets (DEV-151, DEV-152)</strong>
+        <p>Formally: tokens are in the "blocked" place with no outgoing enabled transition
+        until a dependency place receives a token first. Action: unblocking session with named owner + deadline.</p>
+      </div>
+    </div>
+    <div class="ins-row">
+      <div class="ins-sev warn">🟡 WARNING</div>
+      <div class="ins-body">
+        <strong>WIP accumulation in "in_review" (4 tickets)</strong>
+        <p>Formally: the "in_review" place is unbounded in the partial state space —
+        tokens arrive faster than the "approve" transition fires. Introduce a WIP limit of 3.</p>
+      </div>
+    </div>
+    <div class="ins-row">
+      <div class="ins-sev warn">🟡 WARNING</div>
+      <div class="ins-body">
+        <strong>Review queue 1.3× larger than In Progress</strong>
+        <p>Formally: the input rate to "in_review" dominates the output rate of "approve".
+        Reviewers will become a structural bottleneck within 1–2 more transitions.</p>
+      </div>
+    </div>
+    <div class="ins-row">
+      <div class="ins-sev warn">🟡 WARNING</div>
+      <div class="ins-body">
+        <strong>Sprint throughput 18% (3/17 done)</strong>
+        <p>Formally: the proportion of tokens in the "done" place is critically low.
+        The remaining marking cannot drain to "done" without a flow-rate change. Descope now.</p>
+      </div>
+    </div>
+    <div class="ins-row">
+      <div class="ins-sev info">🟢 INFO</div>
+      <div class="ins-body">
+        <strong>Process irreversibility detected</strong>
+        <p>Formally: M₀ is not reachable from some markings (expected for Done tickets).
+        Confirm that Done is the only intended terminal state; add a Reopen transition if needed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ CODE -->
+<section>
+  <h2><span class="num">05 — Code</span>Core implementation sketch</h2>
+
+  <h3>1 — Build the net from live Jira data</h3>
+<pre><span class="cm"># jira_petri_workflow.py  (abridged)</span>
+<span class="kw">def</span> <span class="fn">build_net_from_jira</span>(issues):
+    counts = {p: <span class="num-c">0</span> <span class="kw">for</span> p <span class="kw">in</span> STATUS_TO_PLACE.values()}
+    <span class="kw">for</span> issue <span class="kw">in</span> issues:
+        counts[STATUS_TO_PLACE[issue.status]] += <span class="num-c">1</span>
+
+    net = PetriNet(<span class="st">"Jira Sprint Workflow"</span>)
+    in_progress = net.add_place(<span class="st">"in_progress"</span>, tokens=counts[<span class="st">"in_progress"</span>])
+    in_review   = net.add_place(<span class="st">"in_review"</span>,   tokens=counts[<span class="st">"in_review"</span>])
+    <span class="cm"># … all places …</span>
+
+    submit  = net.add_transition(<span class="st">"submit"</span>)   <span class="cm"># In Progress → In Review</span>
+    rework  = net.add_transition(<span class="st">"rework"</span>)   <span class="cm"># In Review → In Progress</span>
+    approve = net.add_transition(<span class="st">"approve"</span>)  <span class="cm"># In Review → QA</span>
+
+    net.add_arc(in_progress, submit);  net.add_arc(submit,  in_review)
+    net.add_arc(in_review,   rework);  net.add_arc(rework,  in_progress)
+    net.add_arc(in_review,   approve); net.add_arc(approve, qa)
+    <span class="kw">return</span> net</pre>
+
+  <h3>2 — Run formal verification</h3>
+<pre>results = analyse(net, max_states=<span class="num-c">50_000</span>)
+<span class="cm"># Returns AnalysisResult objects for:</span>
+<span class="cm"># Boundedness · Safeness · Deadlock-freedom · Quasi-liveness</span>
+<span class="cm"># L1-Liveness (Kosaraju SCC) · Reversibility · Siphons & Traps</span></pre>
+
+  <h3>3 — Post back via Jira MCP</h3>
+<pre><span class="cm"># In a real Claude Code session:</span>
+result = <span class="kw">await</span> mcp.call_tool(
+    <span class="st">"jira"</span>, <span class="st">"add_comment"</span>,
+    {<span class="st">"issueKey"</span>: epic_key, <span class="st">"body"</span>: export_jira_comment(insights)}
+)
+
+<span class="cm"># For CRITICAL findings, open a follow-up task:</span>
+<span class="kw">if</span> <span class="fn">any</span>(i.severity == <span class="st">"CRITICAL"</span> <span class="kw">for</span> i <span class="kw">in</span> insights):
+    <span class="kw">await</span> mcp.call_tool(<span class="st">"jira"</span>, <span class="st">"create_issue"</span>, {
+        <span class="st">"project"</span>: <span class="st">"DEV"</span>,
+        <span class="st">"summary"</span>: <span class="st">"[PROCESS] Petri net detected critical issue"</span>,
+        <span class="st">"description"</span>: report_markdown,
+        <span class="st">"assignee"</span>: scrum_master
+    })</pre>
+
+  <h3>4 — Claude Code orchestration prompt</h3>
+<pre><span class="st">"""
+You are a software process analyst in the team's CI/CD pipeline.
+Your tools:
+  petri_net.py · petri_net_analysis.py · jira_petri_workflow.py · Jira MCP
+
+Daily task:
+  1. Fetch live sprint data via MCP
+  2. Build Petri net from current board state
+  3. Run formal verification (analyse)
+  4. Derive insights and rank by severity
+  5. Post report to Jira Epic via MCP
+  6. Create tasks for CRITICAL findings
+
+Explain findings in plain English — the team needs to understand
+WHY the math says the process has a problem, not just WHAT failed.
+"""</span></pre>
+</section>
+
+<!-- ═══════════════════════════════════════════ PROPERTIES -->
+<section>
+  <h2><span class="num">06 — Properties</span>What each formal check means for your team</h2>
+
+  <div class="prop-grid">
+    <div class="prop-cell">
+      <h4 class="fail">Deadlock-freedom</h4>
+      <p>Every reachable board state has at least one enabled transition.
+      If false: there exists a configuration of tickets where the team has
+      nothing valid to do next — a systemic process gap, not a people problem.</p>
+    </div>
+    <div class="prop-cell">
+      <h4 class="fail">Liveness (L1)</h4>
+      <p>From any board state, every workflow transition can eventually fire again.
+      If false: some step (e.g. "fail_qa") gets stuck and can never happen —
+      meaning QA can never reject a ticket from that state forward.</p>
+    </div>
+    <div class="prop-cell">
+      <h4 class="fail">Boundedness</h4>
+      <p>Every column has a finite maximum ticket count across all reachable states.
+      Unbounded columns are WIP bombs: mathematically guaranteed to grow without limit
+      unless the upstream flow rate is capped.</p>
+    </div>
+    <div class="prop-cell">
+      <h4 class="pass">Quasi-liveness</h4>
+      <p>Every transition fires at least once from the initial marking.
+      A cheaper check than full liveness — confirms that no workflow step
+      is completely unreachable given today's board snapshot.</p>
+    </div>
+    <div class="prop-cell">
+      <h4 class="info-c">Reversibility</h4>
+      <p>The initial marking (start of sprint) is reachable from every reachable state.
+      Expected to fail for Done tickets — but unexpected failures reveal hidden
+      dead-ends where a ticket can never progress nor be reset.</p>
+    </div>
+    <div class="prop-cell">
+      <h4 class="info-c">Siphons & Traps</h4>
+      <p>Siphons (once empty, stay empty) map to stages that, once cleared,
+      never refill. Traps (once marked, stay marked) map to stages that
+      permanently accumulate work — both are structural bottleneck predictors.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ EXTENSION -->
+<section>
+  <h2><span class="num">07 — Extensions</span>Where to take this next</h2>
+
+  <div class="callout">
+    <strong>Timed Petri nets</strong> — attach a firing time to each transition
+    (e.g. average review duration from Jira cycle-time data) to predict
+    sprint completion probability, not just structural feasibility.
+  </div>
+  <div class="callout">
+    <strong>Coloured Petri nets</strong> — give each token an identity (the actual
+    issue key, priority, story points). The analysis then answers: "Will DEV-181
+    specifically be able to reach Done given the current board?" rather than
+    reasoning about anonymous tokens.
+  </div>
+  <div class="callout">
+    <strong>Historical replay</strong> — load the Jira changelog to reconstruct
+    the marking at every point in past sprints and run the analyser retroactively.
+    Identify <em>which sprint events</em> historically triggered deadlock-prone states.
+  </div>
+  <div class="callout">
+    <strong>Live dashboard</strong> — expose the net state via a WebSocket so the
+    team's standup screen shows the Petri net diagram updating in real-time as
+    tickets move, with colour-coded bottleneck alerts.
+  </div>
+  <div class="callout">
+    <strong>WIP limit enforcement</strong> — use the MCP <code>transition_issue</code>
+    tool to <em>block</em> Jira transitions that would push a column over its
+    k-bounded limit, turning the formal model into a live process guard.
+  </div>
+</section>
+
+</div><!-- /page -->
+
+<footer>
+  petri_net.py · petri_net_analysis.py · jira_petri_workflow.py
+  &nbsp;·&nbsp; Claude Code + Jira MCP
+  &nbsp;·&nbsp; No dependencies
+</footer>
+
+</body>
+</html>
