@@ -8,7 +8,9 @@
 
 ## What is Agent-X?
 
-Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop) interface. It lets you interact with language models through a command-line shell, supporting chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows.
+Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop) interface. It lets you interact with language models through a command-line shell, supporting chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows. 
+
+The development of this project is allways assisted by opencode coding agent (https://opencode.ai/).
 
 ---
 
