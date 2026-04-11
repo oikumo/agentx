@@ -8,9 +8,33 @@
 
 ## What is Agent-X?
 
-Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop) interface. It lets you interact with language models through a command-line shell, supporting chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows. 
+Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop) interface, created strictly for educational purposes. This project is free to use for everyone, including enterprise users, under the Apache 2.0 License.
 
-The development of this project is allways assisted by opencode coding agent (https://opencode.ai/).
+It lets you interact with language models through a command-line shell, supporting chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows. 
+
+The development of this project is assisted by opencode coding agent (https://opencode.ai/).
+
+The project includes an experimental proof-of-concept applying Petri Net formal verification to software workflows. 
+It detects deadlocks, bottlenecks, and unreachable states in any MCP-compatible issue tracker.
+
+---
+
+## ⚠️ Important Legal Notice
+
+**THIS IS AN EDUCATIONAL PROJECT ONLY**
+
+Agent-X is created solely for educational and experimental purposes. It is not affiliated with, endorsed by, or sponsored by any of the companies or projects mentioned herein.
+
+All product names, logos, brands, trademarks, and registered trademarks mentioned in this documentation or code are the property of their respective owners. Use of these names, logos, brands, and trademarks does not imply endorsement.
+
+Specifically, but not limited to:
+- OpenAI, OpenRouter, Ollama, LlamaCpp, Qwen are trademarks of their respective owners
+- LangChain, LangGraph, FAISS, Pinecone, Chroma, Tavily are trademarks of their respective owners
+- Any other third-party products or services mentioned are trademarks of their respective owners
+
+This project may reference these trademarks solely for the purpose of describing compatibility or educational examples, which is permissible under nominative fair use. No association with or endorsement by these trademark owners is implied or intended.
+
+Users are solely responsible for ensuring their use of any third-party services (such as OpenAI API, etc.) complies with those services' terms of service and applicable laws.
 
 ---
 
