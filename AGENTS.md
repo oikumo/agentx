@@ -2,6 +2,7 @@
 
 Primary entry point for the system agent. Defines rules, commands, and navigation paths.
 You, the opencode coding agent must use the project meta directories to execute any task.
+The META project structure is optimized for opencode agent programming tasks and to produce code quality optimal code.
 Each Meta directory have a META.md file that must be read first to understand it purpose.
 
 ## Project Meta Directories
