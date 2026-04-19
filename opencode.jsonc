@@ -38,7 +38,7 @@
   "mcp": {
     "products": {
       "type": "local",
-      "command": ["uv", "run", ".development_tools/mcp/dummy_products_server/server.py"],
+      "command": ["uv", "run", ".meta.development_tools/mcp/dummy_products_server/server.py"],
       "enabled": true
     }
   }
