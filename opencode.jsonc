@@ -1,0 +1,33 @@
+// THIS OPENCODE CONFIGURATION FILE IS JUST FOR REFERENCE PURPOSE
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "code-reviewer": {
+      "description": "Reviews code for best practices and potential issues",
+      "mode": "primary",
+      "model": "openrouter/openrouter/auto",
+      "prompt": "You are a code reviewer. Focus on security, performance, and maintainability.",
+      "tools": {
+        "write": false,
+        "edit": false
+      }
+    }
+  },
+  "permission": {
+    "edit": "ask",
+    "bash": "ask",
+    "webfetch": "deny",
+    "grep": "allow",
+    "glob": "allow",
+    "list": "allow",
+    "lsp": "allow",
+    "skill": "allow"
+  },
+  "mcp": {
+    "products": {
+      "type": "local",
+      "command": ["uv", "run", ".dev_tools/mcp/dummmy_products_server/server.py"],
+      "enabled": true
+    }
+  }
+}
