@@ -1,57 +1,18 @@
-# MCP Tools for opencode - Meta Project Harness
+# MCP Knowledge Base Tools for opencode
 
-## 📦 Meta Harness Knowledge Base
+## ✅ Complete
 
-The Knowledge Base MCP tool has been refactored into a dedicated package:
+This MCP toolset allows **opencode** to directly use the Meta Project Harness Knowledge Base with RAG (Retrieval-Augmented Generation).
 
-**Location**: `.meta.development_tools/mcp/meta-harness-knowledge-base/`
-
-### Quick Start
+## Quick Start
 
 ```bash
-# Run tests
-python3 .meta.development_tools/mcp/meta-harness-knowledge-base/test_kb_tools.py
+# Test all tools
+python .meta.development_tools/mcp/rag_tool.py
 
 # Test via MCP server
-echo '{"tool": "kb_stats"}' | python3 -m meta_harness_knowledge-base
+echo '{"tool": "kb_stats"}' | python3 .meta.development_tools/mcp/knowledge_base_server.py
 ```
-
-### Usage
-
-```python
-from meta_harness_knowledge_base import rag_search, rag_ask, rag_add_entry
-
-# Search
-result = rag_search("TDD workflow", top_k=3)
-
-# Ask
-result = rag_ask("Where should I write tests?")
-
-# Add entry
-result = rag_add_entry(
-    entry_type="pattern",
-    category="workflow",
-    title="My Pattern",
-    finding="What I found",
-    solution="How to handle"
-)
-```
-
-### Documentation
-
-See [`meta-harness-knowledge-base/README.md`](meta-harness-knowledge-base/README.md) for full documentation.
-
----
-
-## Other MCP Tools
-
-- `dummy_products_server/` - Example MCP server
-- `meta-harness-knowledge-base/` - Knowledge Base RAG tool (see above)
-
----
-
-**Status**: ✅ Refactored and Ready  
-**Version**: 1.0.0
 
 ## Available Tools
 

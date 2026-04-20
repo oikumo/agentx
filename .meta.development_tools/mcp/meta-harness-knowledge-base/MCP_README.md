@@ -4,8 +4,6 @@
 
 This MCP (Model Context Protocol) tool allows **opencode** to interact with the Meta Project Harness Knowledge Base using RAG (Retrieval-Augmented Generation).
 
-**Location**: `.meta.development_tools/mcp-knowledge-base/`
-
 ## Available Tools
 
 ### 1. `kb_search` - Search Knowledge Base
@@ -28,6 +26,27 @@ Search for relevant entries in the knowledge base.
 }
 ```
 
+**Response:**
+```json
+{
+  "success": true,
+  "query": "TDD workflow",
+  "count": 1,
+  "results": [
+    {
+      "id": "PAT-50B1",
+      "type": "pattern",
+      "category": "workflow",
+      "title": "TDD in .meta.tests_sandbox",
+      "confidence": 0.98,
+      "finding": "Tests must be written before code",
+      "solution": "1. Write test 2. Implement 3. Verify"
+    }
+  ],
+  "message": "Found 1 relevant entries"
+}
+```
+
 ### 2. `kb_ask` - Ask Question (RAG)
 
 Ask a question and get RAG-augmented response with retrieved context.
@@ -44,6 +63,18 @@ Ask a question and get RAG-augmented response with retrieved context.
     "question": "Where should I write tests?",
     "top_k": 3
   }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "question": "Where should I write tests?",
+  "augmented_prompt": "You are an AI agent...\n\n### Retrieved Knowledge:\n[1] **TDD in .meta.tests_sandbox**...\n\n### Question:\nWhere should I write tests?\n\n### Your Answer:\n",
+  "context_count": 1,
+  "retrieved_context": [...],
+  "message": "Retrieved 1 relevant entries"
 }
 ```
 
@@ -91,7 +122,7 @@ Add a correction to an existing entry.
   "tool": "kb_correct",
   "params": {
     "entry_id": "PAT-50B1",
-    "reason": "Workflow updated in v2.0",
+    "reason": "Workflow changed in v2.0",
     "new_finding": "Use .meta.experiments/ for prototyping"
   }
 }
@@ -108,6 +139,17 @@ Run the evolution cycle to decay unused entries and archive low-confidence ones.
 }
 ```
 
+**Response:**
+```json
+{
+  "success": true,
+  "decayed": 0,
+  "archived": 0,
+  "pending_corrections": 0,
+  "message": "Evolution complete: 0 decayed, 0 archived"
+}
+```
+
 ### 6. `kb_stats` - Get Statistics
 
 Get knowledge base statistics.
@@ -119,7 +161,44 @@ Get knowledge base statistics.
 }
 ```
 
-## Usage
+**Response:**
+```json
+{
+  "success": true,
+  "total_entries": 10,
+  "by_type": {
+    "pattern": {"count": 4, "avg_confidence": 0.95},
+    "finding": {"count": 2, "avg_confidence": 0.93},
+    "decision": {"count": 1, "avg_confidence": 1.0}
+  },
+  "by_category": {
+    "workflow": 4,
+    "tool": 2,
+    "architecture": 1
+  },
+  "confidence_distribution": {
+    "high": 5,
+    "medium": 1,
+    "low": 0
+  },
+  "pending_corrections": 0,
+  "message": "KB Stats: 10 entries, 0 pending corrections"
+}
+```
+
+## Usage with opencode
+
+### As MCP Server
+
+Start the server:
+```bash
+python .meta.development_tools/mcp/knowledge_base_server.py
+```
+
+Send requests:
+```bash
+echo '{"tool": "kb_stats"}' | python .meta.development_tools/mcp/knowledge_base_server.py
+```
 
 ### As Python Module
 
@@ -143,19 +222,6 @@ result = rag_add_entry(
 )
 ```
 
-### As MCP Server
-
-Start the server:
-```bash
-cd .meta.development_tools/mcp-knowledge-base
-python server.py
-```
-
-Send requests via stdin:
-```bash
-echo '{"tool": "kb_stats"}' | python server.py
-```
-
 ## Integration Examples
 
 ### Example 1: Pre-task Research
@@ -163,8 +229,6 @@ echo '{"tool": "kb_stats"}' | python server.py
 Before starting a task, opencode can query the KB:
 
 ```python
-from rag_tool import rag_ask
-
 # Ask where to work
 result = rag_ask("Where should I implement this feature?")
 print(result["augmented_prompt"])
@@ -176,8 +240,7 @@ print(result["augmented_prompt"])
 After completing a task, store the pattern:
 
 ```python
-from rag_tool import rag_add_entry
-
+# Add new pattern
 result = rag_add_entry(
     entry_type="pattern",
     category="workflow",
@@ -193,8 +256,7 @@ result = rag_add_entry(
 When discovering better approaches:
 
 ```python
-from rag_tool import rag_correct
-
+# Correct old pattern
 result = rag_correct(
     entry_id="PAT-XXXX",
     reason="Workflow updated",
@@ -202,39 +264,20 @@ result = rag_correct(
 )
 ```
 
-## Response Format
+## Error Handling
 
 All tools return a standardized response format:
 
 ```json
 {
-  "success": true,
+  "success": true/false,
   "message": "Human-readable message",
-  ... (tool-specific fields)
+  "error": "Error details if success=false",
+  ... (other fields)
 }
 ```
 
-Always check the `success` field first.
-
-## Testing
-
-```bash
-# Test all functions
-python rag_tool.py
-
-# Test specific query
-python -c "from rag_tool import rag_ask; print(rag_ask('tests'))"
-```
-
-## Files
-
-```
-mcp-knowledge-base/
-├── rag_tool.py         # Main RAG tool
-├── server.py           # MCP server wrapper
-├── README.md           # This file
-└── pyproject.toml      # Optional dependencies
-```
+Always check `success` field first.
 
 ## Best Practices
 
@@ -244,7 +287,22 @@ mcp-knowledge-base/
 4. **Use high confidence**: Only for verified knowledge (0.9+)
 5. **Run `kb_evolve` weekly**: Maintain knowledge quality
 
+## Troubleshooting
+
+**No results from search?**
+- Try broader query
+- Check spelling
+- Verify KB exists at `.meta.knowledge_base/knowledge.db`
+
+**Database not found?**
+- Ensure you're in project root
+- Check path: `.meta.knowledge_base/knowledge.db`
+
+**Low confidence results?**
+- Results with confidence < 0.6 may not appear
+- Lower confidence entries need verification
+
 ---
 
 **Version**: 1.0.0
-**Location**: `.meta.development_tools/mcp-knowledge-base/`
+**Location**: `.meta.development_tools/mcp/`

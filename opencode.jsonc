@@ -14,7 +14,7 @@
     }
   },
   "permission": {
-    "edit": "ask",
+    "edit": "allow",
      "bash": {
         "*": "ask",
         "git *": "allow",
@@ -38,7 +38,7 @@
   "mcp": {
     "knowledge-base": {
       "type": "local",
-      "command": ["uv", "run", ".meta.development_tools/mcp-knowledge-base/mcp/server.py"],
+      "command": ["uv", "run", ".meta.development_tools/mcp/meta-harness-knowledge-base/knowledge_base_server.py"],
       "enabled": true
     },
     "products": {

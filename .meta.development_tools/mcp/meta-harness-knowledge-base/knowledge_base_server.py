@@ -22,17 +22,27 @@ import json
 from pathlib import Path
 
 # Add parent path for imports
-KB_PATH = Path(__file__).parent.parent.parent / ".meta.knowledge_base"
-sys.path.insert(0, str(KB_PATH))
+KB_PATH = Path(__file__).parent.parent.parent.parent / ".meta.knowledge_base"
+sys.path.insert(0, str(Path(__file__).parent))
 
-from rag_tool import (
-    rag_search,
-    rag_ask,
-    rag_add_entry,
-    rag_correct,
-    rag_evolve,
-    rag_stats,
-)
+try:
+    from rag_tool import (
+        rag_search,
+        rag_ask,
+        rag_add_entry,
+        rag_correct,
+        rag_evolve,
+        rag_stats,
+    )
+except ImportError:
+    from .rag_tool import (
+        rag_search,
+        rag_ask,
+        rag_add_entry,
+        rag_correct,
+        rag_evolve,
+        rag_stats,
+    )
 
 
 def main():

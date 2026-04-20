@@ -28,8 +28,8 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 import re
 
-# Path to knowledge base
-KB_PATH = Path(__file__).parent.parent.parent / ".meta.knowledge_base"
+# Path to knowledge base (go up from .meta.development_tools/mcp/meta-harness-knowledge-base to project root)
+KB_PATH = Path(__file__).parent.parent.parent.parent / ".meta.knowledge_base"
 DB_PATH = KB_PATH / "knowledge.db"
 
 # Add KB to path for imports
@@ -37,11 +37,12 @@ sys.path.insert(0, str(KB_PATH))
 
 
 def get_db_connection():
-    """Get SQLite connection."""
+    """Get SQLite connection with proper isolation."""
     if not DB_PATH.exists():
         raise FileNotFoundError(f"Knowledge base not found at {DB_PATH}")
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA busy_timeout = 30000")  # Wait 30s for locks
     return conn
 
 
@@ -222,51 +223,60 @@ Use the following retrieved knowledge from the project's knowledge base to answe
         }
 
 
-def rag_add_entry(entry_type: str, category: str, title: str, finding: str, 
-                  solution: str, context: str = "", confidence: float = 0.5) -> Dict[str, Any]:
+def rag_add_entry(entry_type: str, category: str, title: str, finding: str,
+    solution: str, context: str = "", confidence: float = 0.5, example: str = "") -> Dict[str, Any]:
     """
     Add new knowledge entry to the knowledge base.
-    
+
     Args:
         entry_type: Type of entry (pattern, finding, correction, decision)
         category: Category (workflow, code, test, docs, tool, architecture)
         title: Concise title
         finding: What was discovered
-        solution: How to handle it
+        solution: How to solve it
         context: When/where this applies
         confidence: Confidence score (0.0-1.0)
-    
+        example: Optional example
+
     Returns:
         Dictionary with result and entry ID
     """
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        # Generate ID
+
+        # Generate unique ID with timestamp and random component
         import hashlib
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        hash_input = f"{entry_type}{category}{timestamp}"
+        import random
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
+        random_val = random.randint(0, 9999)
+        hash_input = f"{entry_type}{category}{timestamp}{random_val}"
         hash_val = hashlib.md5(hash_input.encode()).hexdigest()[:4].upper()
         prefix_map = {'pattern': 'PAT', 'finding': 'FIND', 'correction': 'COR', 'decision': 'DEC'}
         entry_id = f"{prefix_map.get(entry_type, 'KB')}-{hash_val}"
-        
+
         now = datetime.now().isoformat()
-        
+
         cursor.execute("""
-            INSERT INTO entries (id, type, category, title, confidence, context, 
-                                finding, solution, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO entries (id, type, category, title, confidence, context,
+        finding, solution, example, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (entry_id, entry_type, category, title, confidence, context,
-              finding, solution, now, now))
-        
+        finding, solution, example, now, now))
+
         conn.commit()
         conn.close()
-        
+
         return {
             "success": True,
             "entry_id": entry_id,
             "message": f"Added {entry_type.upper()} entry: {entry_id} - {title}"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": f"Failed to add entry: {str(e)}"
         }
     except Exception as e:
         return {
