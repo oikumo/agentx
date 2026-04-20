@@ -373,20 +373,47 @@ Agent-X uses the **Meta Project Harness** - a structured development system opti
 | `.experiments/` | Experimental features and prototyping |
 | `.development_tools/` | Development utilities and tools |
 
+### Knowledge Base (MCP Tool)
+
+The project includes a **self-evolving knowledge base** accessible via MCP (Model Context Protocol):
+
+- **Location**: `.meta.knowledge_base/` and `.meta.development_tools/mcp-knowledge-base/`
+- **Purpose**: Stores project patterns, findings, and decisions
+- **Features**: RAG-enabled, auto-correcting, confidence scoring
+- **For AI Agents**: Automatically activated via `opencode.jsonc`
+
+**Usage:**
+```bash
+# CLI access
+python .meta.knowledge_base/kb.py stats
+python .meta.knowledge_base/kb.py search "TDD"
+
+# MCP tools (for opencode)
+# - kb_search: Search knowledge base
+# - kb_ask: Ask questions with RAG context
+# - kb_add_entry: Document new patterns
+# - kb_correct: Correct existing knowledge
+```
+
+**Documentation**: See `.meta.knowledge_base/META.md` and `.meta.development_tools/mcp-knowledge-base/README.md`
+
 ### For AI Agents
 
 If you're an AI agent working on this project:
 1. Read `AGENTS.md` first - it contains mandatory rules
 2. Review `META_HARNESS.md` for complete harness documentation
-3. Always work in safe spaces (`.sandbox/`, `.experiments/`)
-4. Follow TDD in `.tests_sandbox/`
-5. Never modify production code directly
+3. **Use the Knowledge Base** - Query with `kb_ask` before starting work
+4. Always work in safe spaces (`.sandbox/`, `.experiments/`)
+5. Follow TDD in `.tests_sandbox/`
+6. Never modify production code directly
+7. **Document discoveries** - Add to knowledge base after completing tasks
 
 ### For Human Developers
 
 - **Getting Started**: See `META_HARNESS.md` for development workflows
 - **Quick Reference**: `.project_development/QUICK_REFERENCE.md`
 - **Standards**: `.project_development/CODING_STYLE.md`
+- **Knowledge Base**: `.meta.knowledge_base/META.md`
 
 ---
 

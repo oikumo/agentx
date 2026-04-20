@@ -1,0 +1,18 @@
+[project]
+name = "agent-x-knowledge-base"
+version = "1.0.0"
+description = "Self-evolving knowledge base for Agent-X Meta Project Harness"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+rag = [
+    "sentence-transformers==5.4.1",
+    "numpy==2.4.4",
+]
+dev = [
+    "pytest==9.0.3",
+]
+
+[tool.uv]
+dev-dependencies = []

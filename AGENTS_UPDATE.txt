@@ -1,0 +1,56 @@
+# AGENTS.md Updates Needed
+
+## Add after "Directory Structure" section (around line 35):
+
+### Knowledge Base Integration
+
+As an AI agent, you have access to the **Meta Project Harness Knowledge Base** via MCP tools:
+
+**Available Tools:**
+- `kb_ask(question)` - Ask questions with RAG context retrieval
+- `kb_search(query)` - Search for patterns and findings
+- `kb_add_entry(...)` - Document new discoveries
+- `kb_correct(id, reason, finding)` - Correct outdated knowledge
+- `kb_evolve()` - Run evolution cycle
+- `kb_stats()` - Get statistics
+
+**Workflow Integration:**
+
+1. **Before starting work**: Use `kb_ask` to query existing knowledge
+   - "Where should I implement this feature?"
+   - "What's the workflow for tests?"
+
+2. **After completing work**: Use `kb_add_entry` to document
+   - Store patterns you discovered
+   - Record findings and solutions
+   - Add context for future agents
+
+3. **When correcting**: Use `kb_correct` if knowledge is outdated
+   - Confidence auto-adjusts
+   - History preserved
+
+**Example:**
+```python
+# Before task - query knowledge
+result = kb_ask("Where do I write tests?")
+# → Returns augmented prompt with retrieved context
+
+# After task - document pattern
+kb_add_entry(
+  type="pattern",
+  category="workflow", 
+  title="TDD Workflow",
+  finding="Tests before code",
+  solution="Write → Implement → Verify",
+  confidence=0.95
+)
+```
+
+**Key Principle**: The knowledge base evolves through your contributions. Store key findings only, correct errors, and let confidence scores guide quality.
+
+## Update Resources table to add:
+| `.meta.knowledge_base/META.md` | Knowledge base documentation |
+| `.meta.development_tools/mcp-knowledge-base/README.md` | MCP tool guide |
+
+## Update version to:
+**Version**: 1.2.0 (2026-04-19) - Added Knowledge Base MCP integration
