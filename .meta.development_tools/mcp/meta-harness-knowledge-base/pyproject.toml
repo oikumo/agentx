@@ -1,0 +1,14 @@
+[project]
+name = "meta-harness-knowledge-base"
+version = "1.0.0"
+description = "MCP Knowledge Base server for opencode"
+requires-python = ">=3.14"
+dependencies = [
+    "mcp[cli]==1.27.0",
+    "fastmcp==3.2.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
