@@ -36,6 +36,11 @@
     "skill": "allow"
   },
   "mcp": {
+    "knowledge-base": {
+      "type": "local",
+      "command": ["uv", "run", ".meta.development_tools/mcp-knowledge-base/mcp/server.py"],
+      "enabled": true
+    },
     "products": {
       "type": "local",
       "command": ["uv", "run", ".meta.development_tools/mcp/dummy_products_server/server.py"],
