@@ -2,151 +2,256 @@
 
 > **Your primary entry point. Read this FIRST before any task.**
 
-This file defines the mandatory rules and workflows for AI agents (opencode) working on Agent-X. You **MUST** follow these rules at all times.
-
 ---
 
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 
-These 6 rules are absolute. Never violate them:
-
 | # | Directive | What It Means |
 |---|-----------|---------------|
-| 1 | **NEVER commit or push** | Not even if user asks. Not even "just this once". |
-| 2 | **NEVER add dependencies** | Use what exists. Explicit approval required for exceptions. |
-| 3 | **NEVER modify `.env`** | Or any file likely to contain secrets/credentials. |
-| 4 | **ALWAYS check `git log`** | Before making ANY changes. Understand context first. |
-| 5 | **NEVER modify `tests/`** | Use `.meta.tests_sandbox/` for new tests (requires approval). |
-| 6 | **Use `uv` & `pyproject.toml`** | For all dependency management. Avoid pin drift. |
+| 1 | **NEVER commit or push** | Not even if user asks |
+| 2 | **NEVER add dependencies** | Use what exists; explicit approval required for exceptions |
+| 3 | **NEVER modify `.env`** | Or any file likely to contain secrets/credentials |
+| 4 | **ALWAYS check `git log`** | Before making ANY changes |
+| 5 | **NEVER modify `tests/`** | Use `.meta.tests_sandbox/` for new tests (requires approval) |
+| 6 | **Use `uv` & `pyproject.toml`** | For all dependency management; avoid pin drift |
 
 ---
 
 ## What is the Meta Project Harness?
 
-The **Meta Project Harness** is a structured development system optimized for AI-assisted development. It provides:
-
+A structured development system optimized for AI-assisted development providing:
 - **Safe spaces** to work without affecting production
 - **Clear workflows** for consistent, high-quality output
 - **Comprehensive documentation** at every level
 - **Quality gates** to ensure correctness
 
 ### Directory Structure
+```
+agent-x/
+├── META_HARNESS.md              # Master documentation
+├── AGENTS.md                    # This file
+├── .meta.project_development/   # Development standards
+├── .meta.sandbox/               # Your safe workspace
+├── .meta.experiments/           # Experimental features
+├── .meta.tests_sandbox/         # TDD workspace
+├── .meta.development_tools/     # Development utilities
+└── .meta.knowledge_base/        # RAG knowledge base
+```
 
-```\nagent-x/\n├── META_HARNESS.md              # Master documentation\n├── AGENTS.md                    # This file - your rules\n├── .meta.project_development/        # Development standards\n│   ├── META.md\n│   └── QUICK_REFERENCE.md\n├── .meta.sandbox/                    # Your safe workspace\n│   └── META.md\n├── .meta.experiments/                # Experimental features\n│   └── META.md\n├── .meta.tests_sandbox/              # TDD workspace\n│   └── META.md\n└── .meta.development_tools/          # Development utilities\n    └── META.md\n```\n\n**All harness directories start with `.meta.`** and contain a `META.md` file you must read first.
+**Rule:** All harness directories start with `.meta.` and contain a `META.md` file you must read first.
 
 ---
 
-## Your Workflow (Step by Step)
+## Your Workflow
 
 ### Before Any Task
-
-1. **Check `git log`** - Understand recent changes
-   ```bash
-   git log --oneline -10
-   ```
-
+1. **Check `git log`** - `git log --oneline -10`
 2. **Read relevant META.md files** - Know the rules
-   - `META_HARNESS.md` - Master guide
-   - `.meta.project_development/META.md` - Development standards
-   - Directory-specific META.md for your task
-
 3. **Identify correct directory** - Where to work
-- Code changes → `.meta.sandbox/`
-- New tests → `.meta.tests_sandbox/`
-- Experiments → `.meta.experiments/`
-- Tools → `.meta.development_tools/`
+4. **Query knowledge base** - Use `kb_ask()` for guidance (optional)
 
 ### During Task
-
-4. **Plan your approach** - Think before acting
-   - Smallest viable change
-   - Required tests
-   - Expected outcome
-
-5. **Execute in safe space** - Never production
-- Copy production code to `.meta.sandbox/`
-- Make changes there
-- Test thoroughly
-
-6. **Test using TDD** - In `.meta.tests_sandbox/`
-   - Write failing test first (RED)
-   - Make it pass (GREEN)
-   - Refactor (REFACTOR)
-   - Follow Kent Beck methodology
+5. **Plan your approach** - Smallest viable change
+6. **Execute in safe space** - Copy production code to `.meta.sandbox/`
+7. **Test using TDD** - In `.meta.tests_sandbox/` (RED → GREEN → REFACTOR)
 
 ### After Task
-
-7. **Document your changes**
-   - Update relevant META.md if needed
-   - Add examples
-   - Note any issues
-
-8. **Report to user**
-   - What you did
-   - Test results
-   - Next steps
-   - Any blockers
+8. **Document your changes** - Update META.md, add examples
+9. **Store knowledge** - Use `kb_add_entry()` to document patterns
+10. **Report to user** - What you did, test results, next steps
 
 ---
 
 ## Decision Tree
 
-```\nNeed to...\n├─ Modify code?\n│ └─→ Work in .meta.sandbox/\n│\n├─ Write tests?\n│ └─→ Use .meta.tests_sandbox/ (TDD)\n│\n├─ Test new idea?\n│ └─→ Use .meta.experiments/\n│\n├─ Use/create tools?\n│ └─→ Check .meta.development_tools/\n│\n└─ Understand rules?\n └─→ Read META.md files first\n```\n\n---
+```
+Need to...
+├─ Modify code?       → Work in .meta.sandbox/
+├─ Write tests?       → Use .meta.tests_sandbox/ (TDD)
+├─ Test new idea?     → Use .meta.experiments/
+├─ Use/create tools?  → Check .meta.development_tools/
+├─ Ask for guidance?  → Use kb_ask() from knowledge base
+└─ Understand rules?  → Read META.md files first
+```
+
+---
 
 ## Quality Gates
 
 Before reporting completion, verify:
-
 - [ ] Read relevant META.md files
 - [ ] Checked `git log`
 - [ ] Worked in correct directory
 - [ ] Followed TDD (if applicable)
 - [ ] All tests pass
 - [ ] Documented changes
+- [ ] Stored new knowledge (if applicable)
 - [ ] Cleaned workspace
 - [ ] No secrets exposed
 - [ ] No production code modified
 
 ---
 
-## Tools You Have
+## Tools Available
 
-- `read` - Read files
-- `glob` - Find files by pattern
-- `bash` - Run commands (git, ls, etc.)
-- `edit` - Edit files
-- `write` - Write new files
-- `task` - Delegate complex tasks
+### Core Tools
+`read`, `glob`, `bash`, `edit`, `write`, `task`
+
+### Knowledge Base Tools (via MCP)
+```python
+from .meta.development_tools.mcp.rag_tool import (
+    rag_search, rag_ask, rag_add_entry, rag_correct, rag_evolve, rag_stats
+)
+
+# Before task: Ask for guidance
+result = rag_ask("Where should I implement this feature?")
+
+# After task: Document discovery
+result = rag_add_entry(
+    entry_type="pattern",
+    category="workflow",
+    title="My Discovery",
+    finding="What I found",
+    solution="How to handle it"
+)
+```
 
 ---
 
 ## Common Scenarios
 
-### Scenario 1: "Add a new feature"
+### Scenario 1: Add Feature
+```bash
+1. Read META_HARNESS.md
+2. Ask KB: rag_ask("Where to implement this?")
+3. Create experiment in .meta.experiments/
+4. Write tests in .meta.tests_sandbox/
+5. Implement in .meta.sandbox/
+6. Document: rag_add_entry(...)
+7. Report to user
+```
 
-```\n1. Read META_HARNESS.md\n2. Create experiment in .meta.experiments/\n3. Write tests in .meta.tests_sandbox/\n4. Implement in .meta.sandbox/\n5. Validate & document\n6. Report to user\n```\n\n### Scenario 2: "Fix a bug"
+### Scenario 2: Fix Bug
+```bash
+1. Check git log
+2. Search KB: rag_search("similar bug")
+3. Reproduce in .meta.sandbox/
+4. Write failing test in .meta.tests_sandbox/
+5. Fix in .meta.sandbox/
+6. Document: rag_add_entry(type="finding", ...)
+7. Report to user
+```
 
-```\n1. Check git log\n2. Reproduce in .meta.sandbox/\n3. Write failing test in .meta.tests_sandbox/\n4. Fix in .meta.sandbox/\n5. Verify test passes\n6. Document fix\n```\n\n### Scenario 3: "Refactor code"
+### Scenario 3: Refactor Code
+```bash
+1. Copy to .meta.sandbox/
+2. Write behavior tests
+3. Refactor
+4. Verify tests pass
+5. Document: rag_add_entry(type="pattern", ...)
+```
 
-```\n1. Copy to .meta.sandbox/\n2. Write behavior tests\n3. Refactor\n4. Verify tests still pass\n5. Document improvements\n```\n\n### Scenario 4: "Monthly maintenance"
+### Scenario 4: Maintenance
+```bash
+1. Run health check: rag_stats()
+2. Run evolution: rag_evolve()
+3. Review META.md files
+4. Update as needed
+5. Document changes
+```
 
-```\n1. Run health check (see skill: optimize-meta-harness)\n2. Review all META.md files\n3. Update as needed\n4. Document changes\n```\n\n---
+---
 
 ## Available Skills
 
 ### optimize-meta-harness
+Use to analyze and optimize the harness itself:
+```bash
+skill optimize-meta-harness
+```
+**Workflows:** Health Check → Documentation Analysis → Structure Optimization → Workflow Enhancement → Continuous Improvement
 
-Use this skill to analyze and optimize the harness itself.
+---
 
-```bash\nskill optimize-meta-harness\n```\n\n**Workflows**:\n1. Health Check - Assess current state\n2. Documentation Analysis - Score META.md files\n3. Structure Optimization - Improve organization\n4. Workflow Enhancement - Streamline processes\n5. Continuous Improvement - Monitor & maintain\n\n---
+## Knowledge Base Integration
+
+### Available Tools
+
+| Tool | Function | Use Case |
+|------|----------|----------|
+| `kb_search` | `rag_search(query, top_k)` | Find specific patterns |
+| `kb_ask` | `rag_ask(question)` | Get RAG-augmented guidance |
+| `kb_add_entry` | `rag_add_entry(...)` | Document discoveries |
+| `kb_correct` | `rag_correct(entry_id, reason, new_finding)` | Auto-correct knowledge |
+| `kb_evolve` | `rag_evolve()` | Run evolution cycle |
+| `kb_stats` | `rag_stats()` | Monitor KB health |
+
+### Example Usage
+```python
+# Search for TDD patterns
+result = rag_search("TDD workflow", top_k=3, category="workflow")
+
+# Ask a question (RAG-augmented)
+result = rag_ask("Where should I write tests?")
+print(result["augmented_prompt"])
+
+# Add new knowledge
+result = rag_add_entry(
+    entry_type="pattern",
+    category="workflow",
+    title="Feature Implementation",
+    finding="Work in .meta.sandbox/",
+    solution="Copy → Modify → Test",
+    confidence=0.95
+)
+
+# Get statistics
+result = rag_stats()
+print(f"Total entries: {result['total_entries']}")
+```
+
+### Response Format
+All tools return standardized JSON:
+```json
+{
+  "success": true,
+  "message": "Human-readable message",
+  ... (tool-specific fields)
+}
+```
+
+---
 
 ## When Things Go Wrong
 
-### If you're unsure:\n1. Stop\n2. Re-read META.md files\n3. Check examples in `.meta.sandbox/.user/`\n4. Ask user for clarification\n\n### If you made a mistake:\n1. Document what happened\n2. Don't hide it\n3. Propose fix\n4. Learn from it\n\n### If production code is affected:\n1. Stop immediately\n2. Document the change\n3. Propose rollback plan\n4. Get user approval\n\n---
+| Situation | Action |
+|-----------|--------|
+| **Unsure** | Stop → Re-read META.md → Check examples → Ask KB (`rag_ask()`) |
+| **Made mistake** | Document → Don't hide → Propose fix → Learn |
+| **Production affected** | Stop → Document → Propose rollback → Get approval |
+| **No KB results** | Try broader query → Check spelling → Verify DB exists |
+
+---
 
 ## Resources
 
-| Resource | Purpose |\n|----------|---------| 
-| `META_HARNESS.md` | Complete harness documentation |\n| `.meta.project_development/META.md` | Development standards |\n| `.meta.project_development/QUICK_REFERENCE.md` | Quick decision guide |\n| `.meta.sandbox/META.md` | Safe workspace rules |\n| `.meta.tests_sandbox/META.md` | TDD methodology (Kent Beck) |\n| `README.md` | Project overview |\n\n---
+| Resource | Purpose |
+|----------|---------|
+| `META_HARNESS.md` | Complete harness documentation |
+| `.meta.project_development/META.md` | Development standards |
+| `.meta.project_development/QUICK_REFERENCE.md` | Quick decision guide |
+| `.meta.sandbox/META.md` | Safe workspace rules |
+| `.meta.tests_sandbox/META.md` | TDD methodology (Kent Beck) |
+| `.meta.development_tools/mcp/README.md` | MCP KB tools documentation |
+| `.meta.development_tools/mcp/INTEGRATION.md` | KB integration guide |
+| `README.md` | Project overview |
 
-## Remember\n\n> **READ META.md FIRST**  \n> **WORK IN SAFE SPACES**  \n> **TEST BEFORE PROPOSING**  \n> **DOCUMENT EVERYTHING**  \n> **NEVER COMMIT WITHOUT PERMISSION**\n\n---\n\n**Version**: 1.1.0 (2026-04-19)  \n**Maintained by**: opencode AI agent  \n**License**: Apache 2.0
+---
+
+> **READ META.md FIRST** · **WORK IN SAFE SPACES** · **TEST BEFORE PROPOSING** · **DOCUMENT EVERYTHING** · **STORE KNOWLEDGE** · **NEVER COMMIT WITHOUT PERMISSION**
+
+---
+
+**Version**: 1.3.0 (2026-04-19)  
+**Maintained by**: opencode AI agent  
+**License**: Apache 2.0
