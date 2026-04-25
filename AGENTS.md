@@ -107,15 +107,15 @@ Before reporting completion, verify:
 ### Core Tools
 `read`, `glob`, `bash`, `edit`, `write`, `task`
 
-### Knowledge Base Tools (via MCP)
+### Knowledge Base Tools
 
-The User can query directly to this tool by asking: "?kb {query}"
+Tool: meta-harness-knowledge-base.
+
+The User can query directly to this tool by asking: `?kb {User Query}`.
+
+Call Python functions **ALLWAYS** using uv.
 
 ```python
-from .meta.development_tools.mcp.rag_tool import (
-    rag_search, rag_ask, rag_add_entry, rag_correct, rag_evolve, rag_stats
-)
-
 # Before task: Ask for guidance
 result = rag_ask("Where should I implement this feature?")
 
