@@ -1,25 +1,15 @@
 #!/usr/bin/env python3
-"""
-MCP Server: Knowledge Base RAG Server for opencode
+import sys
+from pathlib import Path
 
-This MCP server provides tools for opencode to interact with the
-Meta Project Harness Knowledge Base using RAG.
+# Path to knowledge base (go up from .meta.development_tools/mcp/meta-harness-knowledge-base to project root)
+KB_PATH = Path(__file__).parent.parent.parent / ".meta.data"
+DB_PATH = KB_PATH / "kb-meta" / "knowledge-meta.db"
 
-Tools:
-- kb_search(query, top_k=5, category=None) - Search KB
-- kb_ask(question, top_k=3) - Ask question with RAG
-- kb_add_entry(type, category, title, finding, solution, context, confidence) - Add entry
-- kb_correct(entry_id, reason, new_finding) - Correct entry
-- kb_evolve() - Run evolution cycle
-- kb_stats() - Get statistics
-"""
-
-from mcp.server.fastmcp import FastMCP
-
-mcp = FastMCP("meta-harness-knowledge-base")
+# Add KB to path for imports
+sys.path.insert(0, str(KB_PATH))
 
 
-@mcp.tool()
 def kb_search(query: str, top_k: int = 5, category: str = None) -> str:
     """Search knowledge base for relevant entries.
     
@@ -28,7 +18,7 @@ def kb_search(query: str, top_k: int = 5, category: str = None) -> str:
         top_k: Number of results (default: 5)
         category: Optional category filter
     """
-    from rag_tool import rag_search
+    from src.rag_tool import rag_search
     result = rag_search(query, top_k, category)
     
     if result.get("success"):
@@ -49,7 +39,6 @@ def kb_search(query: str, top_k: int = 5, category: str = None) -> str:
         return f"Error: {result.get('error', 'Unknown error')}"
 
 
-@mcp.tool()
 def kb_ask(question: str, top_k: int = 3) -> str:
     """Ask a question and get RAG-augmented response.
     
@@ -57,7 +46,7 @@ def kb_ask(question: str, top_k: int = 3) -> str:
         question: Question to ask
         top_k: Number of context entries (default: 3)
     """
-    from rag_tool import rag_ask
+    from src.rag_tool import rag_ask
     result = rag_ask(question, top_k)
     
     if result.get("success"):
@@ -66,7 +55,6 @@ def kb_ask(question: str, top_k: int = 3) -> str:
         return f"Error: {result.get('error', 'Unknown error')}"
 
 
-@mcp.tool()
 def kb_add_entry(
     entry_type: str,
     category: str,
@@ -89,7 +77,7 @@ def kb_add_entry(
         confidence: Confidence score (0.0-1.0)
         example: Optional example
     """
-    from rag_tool import rag_add_entry
+    from src.rag_tool import rag_add_entry
     result = rag_add_entry(entry_type, category, title, finding, solution, context, confidence, example)
     
     if result.get("success"):
@@ -98,7 +86,6 @@ def kb_add_entry(
         return f"Error: {result.get('error', 'Unknown error')}"
 
 
-@mcp.tool()
 def kb_correct(entry_id: str, reason: str, new_finding: str) -> str:
     """Add correction to existing entry.
     
@@ -107,7 +94,7 @@ def kb_correct(entry_id: str, reason: str, new_finding: str) -> str:
         reason: Why correction is needed
         new_finding: Updated information
     """
-    from rag_tool import rag_correct
+    from src.rag_tool import rag_correct
     result = rag_correct(entry_id, reason, new_finding)
     
     if result.get("success"):
@@ -116,10 +103,9 @@ def kb_correct(entry_id: str, reason: str, new_finding: str) -> str:
         return f"Error: {result.get('error', 'Unknown error')}"
 
 
-@mcp.tool()
 def kb_evolve() -> str:
     """Run evolution cycle: decay unused entries, archive low confidence."""
-    from rag_tool import rag_evolve
+    from src.rag_tool import rag_evolve
     result = rag_evolve()
     
     if result.get("success"):
@@ -128,10 +114,9 @@ def kb_evolve() -> str:
         return f"Error: {result.get('error', 'Unknown error')}"
 
 
-@mcp.tool()
 def kb_stats() -> str:
     """Get knowledge base statistics."""
-    from rag_tool import rag_stats
+    from src.rag_tool import rag_stats
     result = rag_stats()
     
     if result.get("success"):
@@ -155,6 +140,3 @@ def kb_stats() -> str:
     else:
         return f"Error: {result.get('error', 'Unknown error')}"
 
-
-if __name__ == "__main__":
-    mcp.run()

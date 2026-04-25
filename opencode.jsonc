@@ -36,15 +36,5 @@
     "skill": "allow"
   },
   "mcp": {
-    "knowledge-base": {
-      "type": "local",
-      "command": ["uv", "run", ".meta.development_tools/mcp/meta-harness-knowledge-base/knowledge_base_server.py"],
-      "enabled": true
-    },
-    "products": {
-      "type": "local",
-      "command": ["uv", "run", ".meta.development_tools/mcp/dummy_products_server/server.py"],
-      "enabled": true
-    }
   }
 }

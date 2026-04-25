@@ -28,15 +28,8 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 import re
 
-# Path to knowledge base (go up from .meta.development_tools/mcp/meta-harness-knowledge-base to project root)
-KB_PATH = Path(__file__).parent.parent.parent.parent / ".meta.knowledge_base"
-DB_PATH = KB_PATH / "knowledge.db"
 
-# Add KB to path for imports
-sys.path.insert(0, str(KB_PATH))
-
-
-def get_db_connection():
+def get_db_connection(DB_PATH: str):
     """Get SQLite connection with proper isolation."""
     if not DB_PATH.exists():
         raise FileNotFoundError(f"Knowledge base not found at {DB_PATH}")
@@ -48,61 +41,182 @@ def get_db_connection():
 
 def simple_tokenize(text: str) -> List[str]:
     """Simple tokenization."""
-    return re.findall(r'\b\w+\b', text.lower())
+    return re.findall(r'\b\w+\b', text.lower()) if text else []
+
+
+def escape_fts5_query(text: str) -> str:
+    """
+    Escape special characters for FTS5 query.
+    For simplicity, we'll remove problematic characters for now.
+    FTS5 special chars: " * ( ) : - + ~
+    """
+    if not text:
+        return ""
+    # Remove special FTS5 characters that can cause syntax errors
+    special_chars = ['"', '*', '(', ')', ':', '-', '+', '~', '&', '|', '!', '{', '}', '[', ']', '^', '?', '\\']
+    escaped = text
+    for char in special_chars:
+        escaped = escaped.replace(char, ' ')
+    # Collapse multiple spaces
+    escaped = ' '.join(escaped.split())
+    return escaped.strip()
 
 
 def keyword_score(text: str, query: str) -> float:
-    """Keyword matching score."""
-    if not text:
+    """Calculate keyword matching score with TF-IDF-like weighting."""
+    if not text or not query:
         return 0.0
-    text_tokens = set(simple_tokenize(text))
+    
+    text_tokens = simple_tokenize(text)
+    query_tokens = simple_tokenize(query)
+    
+    if not query_tokens or not text_tokens:
+        return 0.0
+    
+    text_set = set(text_tokens)
+    query_set = set(query_tokens)
+    
+    # Calculate match ratio
+    matches = len(text_set & query_set)
+    
+    # Bonus for exact phrase match
+    exact_match_bonus = 0.2 if query.lower() in text.lower() else 0.0
+    
+    # Weight by query term coverage (how many query terms appear in text)
+    coverage = matches / len(query_set) if query_set else 0.0
+    
+    # Weight by text specificity (more matches in shorter text is better)
+    specificity = matches / len(text_set) if text_set else 0.0
+    
+    # Combined score: coverage + specificity + exact match bonus
+    return min(1.0, 0.5 * coverage + 0.3 * specificity + 0.2 * exact_match_bonus)
+
+
+def semantic_boost(entry: Dict, query: str) -> float:
+    """
+    Calculate semantic similarity boost based on field importance.
+    Returns boost factor (0.8-1.2) based on semantic relevance.
+    """
+    query_lower = query.lower()
+    
+    # Check title for query terms (highest importance)
+    title = entry.get('title', '').lower()
+    title_tokens = set(simple_tokenize(title))
     query_tokens = set(simple_tokenize(query))
-    if not query_tokens:
-        return 0.0
-    matches = len(text_tokens & query_tokens)
-    return matches / len(query_tokens)
+    title_match = len(title_tokens & query_tokens) / max(1, len(query_tokens))
+    
+    # Check finding and solution (high importance)
+    finding = entry.get('finding', '').lower()
+    solution = entry.get('solution', '').lower()
+    core_text = f"{finding} {solution}"
+    core_tokens = set(simple_tokenize(core_text))
+    core_match = len(core_tokens & query_tokens) / max(1, len(query_tokens))
+    
+    # Check context (medium importance)
+    context = entry.get('context', '').lower()
+    context_tokens = set(simple_tokenize(context))
+    context_match = len(context_tokens & query_tokens) / max(1, len(query_tokens))
+    
+    # Weighted combination: title (50%) + core (35%) + context (15%)
+    semantic_score = 0.5 * title_match + 0.35 * core_match + 0.15 * context_match
+    
+    # Convert to boost factor: 0.8 (no match) to 1.2 (perfect match)
+    return 0.8 + (semantic_score * 0.4)
 
 
 def hybrid_search(conn, query: str, category: Optional[str] = None, top_k: int = 5) -> List[Dict]:
-    """Hybrid search: FTS5 + keyword matching with query expansion."""
+    """
+    Enhanced hybrid search with multi-stage ranking.
+    
+    Stages:
+    1. FTS5 full-text search with query expansion
+    2. Keyword matching with TF-IDF-like weighting
+    3. Semantic boost based on field importance
+    4. Confidence and recency adjustment
+    5. Final re-ranking with combined score
+    """
     cursor = conn.cursor()
     
-    # Query expansion: also search for individual words
+    # Stage 1: Query expansion for better recall
     tokens = simple_tokenize(query)
-    if len(tokens) > 1:
-        # Search for individual tokens OR'd together
-        fts_query = " OR ".join(tokens)
-    else:
-        fts_query = query
     
+    # Expand query: exact phrase + individual terms
+    expanded_queries = [query]  # Exact phrase
+    if len(tokens) > 1:
+        expanded_queries.extend(tokens)  # Individual terms
+    
+    # Build FTS5 query - escape special characters
+    escaped_queries = [escape_fts5_query(q) for q in set(expanded_queries)]
+    # Filter out empty queries
+    escaped_queries = [q for q in escaped_queries if q]
+    fts_query = " OR ".join(escaped_queries) if escaped_queries else "*"
     category_filter = f"AND category = '{category}'" if category else ""
     
+    # Retrieve more candidates for re-ranking
     sql = f"""
-        SELECT e.*, bm25(entries_fts) as bm25_score
-        FROM entries e
-        JOIN entries_fts ON e.rowid = entries_fts.rowid
-        WHERE entries_fts MATCH ?
-        {category_filter}
-        AND e.is_deprecated = 0
-        ORDER BY bm25_score
-        LIMIT ?
+    SELECT e.*, bm25(entries_fts) as bm25_score
+    FROM entries e
+    JOIN entries_fts ON e.rowid = entries_fts.rowid
+    WHERE entries_fts MATCH ?
+    {category_filter}
+    AND e.is_deprecated = 0
+    ORDER BY bm25_score
+    LIMIT ?
     """
     
-    cursor.execute(sql, (fts_query, top_k * 2))
+    cursor.execute(sql, (fts_query, top_k * 3))  # Get 3x for better re-ranking
     fts_results = cursor.fetchall()
     
-    # Re-rank by keyword + confidence
+    # Stage 2-5: Multi-feature scoring and re-ranking
     scored_results = []
     for row in fts_results:
-        text = f"{row['title']} {row['context']} {row['finding']} {row['solution']}"
-        kw_score = keyword_score(text, query)
+        row_dict = dict(row)
+        
+        # Combine all text fields for comprehensive matching
+        full_text = f"{row['title']} {row['context']} {row['finding']} {row['solution']} {row['example'] or ''}"
+        
+        # Feature 1: Keyword matching score (TF-IDF-like)
+        kw_score = keyword_score(full_text, query)
+        
+        # Feature 2: BM25 score (normalized)
+        bm25_raw = row['bm25_score']
+        bm25_normalized = 1 / (1 - bm25_raw + 0.1) if bm25_raw else 0
+        
+        # Feature 3: Semantic boost based on field importance
+        sem_boost = semantic_boost(row_dict, query)
+        
+        # Feature 4: Confidence (user-validated quality)
         confidence = row['confidence']
         
-        # Combined: BM25 + keyword + confidence boost
-        bm25_normalized = 1 / (1 - row['bm25_score'] + 0.1) if row['bm25_score'] else 0
-        combined_score = 0.3 * bm25_normalized + 0.4 * kw_score + 0.3 * confidence
-        scored_results.append((combined_score, dict(row)))
+        # Feature 5: Recency bonus (newer entries get slight boost)
+        try:
+            from datetime import datetime as dt
+            created = dt.fromisoformat(row['created_at'].replace('Z', '+00:00'))
+            days_old = (dt.now() - created).days
+            recency_bonus = 1.0 / (1.0 + 0.01 * days_old)  # Decay over 100 days
+        except:
+            recency_bonus = 1.0
+        
+        # Combined scoring formula:
+        # - 30% BM25 (textual relevance)
+        # - 25% Keyword matching (semantic overlap)
+        # - 20% Semantic boost (field importance)
+        # - 15% Confidence (quality signal)
+        # - 10% Recency (freshness)
+        combined_score = (
+            0.30 * bm25_normalized +
+            0.25 * kw_score +
+            0.20 * sem_boost +
+            0.15 * confidence +
+            0.10 * recency_bonus
+        )
+        
+        # Apply semantic boost as multiplier
+        final_score = combined_score * sem_boost
+        
+        scored_results.append((final_score, row_dict))
     
+    # Sort by final score and return top-k
     scored_results.sort(key=lambda x: x[0], reverse=True)
     return [result for score, result in scored_results[:top_k]]
 
