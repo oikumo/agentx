@@ -111,9 +111,9 @@ Before reporting completion, verify:
 
 Tool: meta-harness-knowledge-base.
 
-The User can query directly to this tool by asking: `?kb {User Query}`.
+The User can query directly to this tool by asking to you: `?kb {User Query}`.
 
-Call Python functions **ALLWAYS** using uv.
+Call Python functions **ALLWAYS** using uv with python3.
 
 ```python
 # Before task: Ask for guidance

@@ -29,11 +29,23 @@ from datetime import datetime
 import re
 
 
-def get_db_connection(DB_PATH: str):
-    """Get SQLite connection with proper isolation."""
+def get_db_connection(DB_PATH: Optional[Path] = None) -> sqlite3.Connection:
+    """Get SQLite connection with proper isolation.
+    
+    Args:
+        DB_PATH: Optional path to database. If None, uses default location.
+    """
+    if DB_PATH is None:
+        # Default path: project root/.meta.data/kb-meta/knowledge-meta.db
+        KB_PATH = Path(__file__).parent.parent.parent.parent / ".meta.data" / "kb-meta"
+        DB_PATH = KB_PATH / "knowledge-meta.db"
+    
     if not DB_PATH.exists():
-        raise FileNotFoundError(f"Knowledge base not found at {DB_PATH}")
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+        # Auto-initialize database if it doesn't exist
+        from .init_db import init_db
+        init_db(DB_PATH)
+    
+    conn = sqlite3.connect(str(DB_PATH), timeout=30.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA busy_timeout = 30000")  # Wait 30s for locks
     return conn
