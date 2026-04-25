@@ -211,28 +211,114 @@ If the experiment exists, use the existing folder in `.meta.experiments/{EXPERMI
 
 ## Knowledge Base Integration
 
-### Available Tools
+### Dual Knowledge Base System
 
-| Tool | Function | Use Case |
-|------|----------|----------|
-| `kb_search` | `rag_search(query, top_k)` | Find specific patterns |
-| `kb_ask` | `rag_ask(question)` | Get RAG-augmented guidance |
-| `kb_add_entry` | `rag_add_entry(...)` | Document discoveries |
-| `kb_correct` | `rag_correct(entry_id, reason, new_finding)` | Auto-correct knowledge |
-| `kb_evolve` | `rag_evolve()` | Run evolution cycle |
-| `kb_stats` | `rag_stats()` | Monitor KB health |
+Agent-X uses **two separate knowledge bases**:
 
-### Example Usage
+| KB | Location | Purpose | Access |
+|----|----------|---------|--------|
+| **Meta Harness KB** | `.meta.data/kb-meta/knowledge-meta.db` | Meta project patterns & workflows | `meta_kb` |
+| **Agent-X KB** | `.meta.data/kb-meta/agent-x/agent-x.db` | Agent-X project knowledge | `agentx_kb` |
+
+### For AI Agents (opencode)
+
+**Rule:** ALWAYS use the appropriate KB before starting work and after completing tasks.
+
 ```python
-# Search for TDD patterns
-result = rag_search("TDD workflow", top_k=3, category="workflow")
+# Import both KBs
+from .meta.tools import meta_kb, agentx_kb
 
-# Ask a question (RAG-augmented)
-result = rag_ask("Where should I write tests?")
-print(result["augmented_prompt"])
+# BEFORE task: Get guidance from Meta Harness KB
+result = meta_kb.kb_ask("Where should I implement this feature?")
+print(result)  # RAG-augmented answer with context
 
-# Add new knowledge
-result = rag_add_entry(
+# AFTER task: Document in Agent-X KB
+agentx_kb.kb_add_entry(
+    entry_type="pattern",
+    category="code",
+    title="My Discovery",
+    finding="What I found",
+    solution="How I solved it",
+    confidence=0.95
+)
+```
+
+### For Human Users - Invokable Commands
+
+**Important:** These commands are for use **during your conversation with the AI agent** (opencode). When you type these commands, the AI agent will execute them and show you the results.
+
+| Command | Syntax | Example |
+|---------|--------|---------|
+| **Search KB** | `search kb "{query}"` | `search kb "TDD workflow"` |
+| **Ask KB** | `ask kb "{question}"` | `ask kb "Where to write tests?"` |
+| **Add to KB** | `add to kb {type} "{title}" "{finding}" "{solution}"` | `add to kb pattern "Chat Workflow" "Uses OpenRouter API"` |
+| **Show KB stats** | `show kb stats` | `show kb stats` |
+| **Evolve KB** | `evolve kb` | `evolve kb` |
+| **Query KB (shorthand)** | `?kb {question}` | `?kb Where should I work?` |
+
+**Examples:**
+
+```bash
+# Search for patterns
+> search kb "REPL command"
+
+# Ask a question (automatically routes to correct KB)
+> ask kb "Where should I implement features?"
+
+# Ask with shorthand
+> ?kb Where should I write tests?
+
+# Add new knowledge (AI will prompt for details if needed)
+> add to kb pattern "Chat Workflow" "Uses OpenRouter API" "Call create() method"
+
+# View statistics (shows both KBs)
+> show kb stats
+
+# Run evolution cycle (evolves both KBs)
+> evolve kb
+```
+
+### Automatic KB Routing
+
+The AI agent **automatically routes** your query to the appropriate KB:
+
+| Your Query | Routes To | Why |
+|------------|-----------|-----|
+| "Where should I write tests?" | Meta Harness KB | General workflow question |
+| "How does REPL work?" | Agent-X KB | Contains "REPL" (Agent-X keyword) |
+| "TDD workflow" | Meta Harness KB | General methodology |
+| "Chat command implementation" | Agent-X KB | Project-specific |
+| "Meta Harness patterns" | Meta Harness KB | Explicit mention |
+
+**To force a specific KB:**
+- Use `in meta` or `in agentx` at the end of your query
+- Example: `search kb "workflow" in agentx`
+
+### Available Functions
+
+| Function | KB | Use Case |
+|----------|-----|----------|
+| `kb_search(query, top_k=5, category=None)` | Both | Find specific patterns |
+| `kb_ask(question, top_k=3)` | Both | Get RAG-augmented guidance |
+| `kb_add_entry(type, category, title, finding, solution, ...)` | Both | Document discoveries |
+| `kb_correct(entry_id, reason, new_finding)` | Both | Auto-correct knowledge |
+| `kb_evolve()` | Both | Run evolution cycle |
+| `kb_stats()` | Both | Monitor KB health |
+
+### Example Usage (AI Agent)
+```python
+from .meta.tools import meta_kb, agentx_kb
+
+# Search Meta Harness KB for workflows
+result = meta_kb.kb_search("TDD workflow", top_k=3)
+print(result)
+
+# Ask Agent-X KB about project structure
+result = agentx_kb.kb_ask("How does the REPL work?")
+print(result)
+
+# Add to Agent-X KB
+agentx_kb.kb_add_entry(
     entry_type="pattern",
     category="workflow",
     title="Feature Implementation",
@@ -242,9 +328,37 @@ result = rag_add_entry(
 )
 
 # Get statistics
-result = rag_stats()
-print(f"Total entries: {result['total_entries']}")
+meta_stats = meta_kb.kb_stats()
+agentx_stats = agentx_kb.kb_stats()
+print(f"Meta KB: {meta_stats.split(chr(10))[0]}")
+print(f"Agent-X KB: {agentx_stats.split(chr(10))[0]}")
 ```
+
+### Response Format
+All tools return standardized text responses:
+- **Search**: Formatted entries with ID, type, category, confidence, finding, solution
+- **Ask**: RAG-augmented prompt with retrieved knowledge context
+- **Add**: Confirmation message with entry ID
+- **Stats**: Formatted statistics report
+- **Evolve**: Evolution cycle results
+
+### When to Use Each KB
+
+**Use Meta Harness KB (`meta_kb`) for:**
+- Where to work (`.meta.sandbox/`, `.meta.tests_sandbox/`)
+- How to structure code
+- Testing methodologies
+- Project organization
+- Meta project patterns
+
+**Use Agent-X KB (`agentx_kb`) for:**
+- REPL interface details
+- Command implementations
+- Agent architecture
+- Feature-specific patterns
+- Project discoveries
+
+---
 
 ### Response Format
 All tools return standardized JSON:
@@ -283,10 +397,34 @@ All tools return standardized JSON:
 
 ---
 
+## Quick Reference - KB Commands
+
+### User Commands (Type to AI Agent)
+These commands are executed by the AI agent (opencode) during your conversation:
+
+```bash
+?kb {question}              # Shorthand: Ask KB a question
+search kb "{query}"         # Search knowledge base
+ask kb "{question}"         # Ask KB question (verbose)
+add to kb {type} "title" "finding" "solution"  # Add knowledge
+show kb stats               # View statistics
+evolve kb                   # Run evolution cycle
+```
+
+### AI Agent Python Usage
+When working on tasks, the AI agent uses:
+```python
+from .meta.tools import meta_kb, agentx_kb
+
+meta_kb.kb_ask("...")    # Meta Harness KB (workflows, patterns)
+agentx_kb.kb_ask("...")  # Agent-X KB (project-specific)
+```
+
+---
 > **READ META.md FIRST** · **WORK IN SAFE SPACES** · **TEST BEFORE PROPOSING** · **DOCUMENT EVERYTHING** · **STORE KNOWLEDGE** · **NEVER COMMIT WITHOUT PERMISSION**
 
 ---
 
-**Version**: 2.1.0 (2026-04-19) - Synced with META_HARNESS.md v2.1.0
+**Version**: 2.2.0 (2026-04-25) - Added dual KB system with user commands
 **Maintained by**: opencode AI agent
 **License**: Apache 2.0

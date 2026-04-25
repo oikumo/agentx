@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 """
-Meta Tools Facade - Dual Knowledge Base System
+Meta Tools Facade - Dual Knowledge Base System with Intelligent Routing
 
 This module provides access to TWO separate knowledge bases:
 1. Meta Harness KB - For Meta Project Harness patterns (.meta.data/kb-meta/knowledge-meta.db)
 2. Agent-X KB - For Agent-X project knowledge (.meta.data/kb-meta/agent-x/agent-x.db)
 
+The system automatically routes queries to the appropriate KB based on:
+- Explicit selection (user specifies which KB)
+- Keyword matching (Agent-X specific terms vs Meta Harness terms)
+- Default fallback (Meta Harness KB for general queries)
+
 Usage:
-    from meta_tools import meta_kb, agentx_kb
+    from meta_tools import meta_kb, agentx_kb, kb_route
     
-    # Search Meta Harness KB
+    # Explicit KB selection
     meta_kb.kb_ask("Where should I write tests?")
-    
-    # Search Agent-X KB
     agentx_kb.kb_ask("How does the REPL work?")
+    
+    # Intelligent routing (auto-detects which KB to use)
+    kb_route.kb_ask("Where should I implement this feature?")
+    kb_route.kb_search("REPL command pattern")
 """
 
 import sys
@@ -347,17 +354,152 @@ AGENTX_KB_PATH = Path(__file__).parent.parent / ".meta.data" / "kb-meta" / "agen
 meta_kb = KnowledgeBase(META_KB_PATH)
 agentx_kb = KnowledgeBase(AGENTX_KB_PATH)
 
-# Export default to meta_kb for backward compatibility
-kb_ask = meta_kb.kb_ask
-kb_search = meta_kb.kb_search
-kb_add_entry = meta_kb.kb_add_entry
-kb_correct = meta_kb.kb_correct
-kb_evolve = meta_kb.kb_evolve
-kb_stats = meta_kb.kb_stats
+# Agent-X specific keywords for automatic routing
+AGENTX_KEYWORDS = [
+    'repl', 'agent-x', 'agentx', 'chat', 'command', 'main.py', 'src/',
+    'openrouter', 'ollama', 'llamacpp', 'tavily', 'langgraph', 'langchain',
+    'pdf', 'rag', 'faiss', 'vector', 'embedding', 'search agent', 'function call',
+    'router agent', 'react agent', 'reflex', 'chains', 'graph'
+]
 
+def _should_use_agentx_kb(query: str) -> bool:
+    """
+    Determine if query should route to Agent-X KB based on keywords.
+    
+    Args:
+        query: The search query or question
+        
+    Returns:
+        True if should use Agent-X KB, False for Meta Harness KB
+    """
+    query_lower = query.lower()
+    
+    # Check for Agent-X specific keywords
+    for keyword in AGENTX_KEYWORDS:
+        if keyword in query_lower:
+            return True
+    
+    return False
+
+
+class KBRouter:
+    """
+    Intelligent router that automatically selects the appropriate KB.
+    
+    Rules:
+    1. If query contains Agent-X specific terms → use Agent-X KB
+    2. If query contains 'meta harness', 'meta-harness', or 'harness' → use Meta Harness KB
+    3. If query contains 'agent-x' or 'agentx' explicitly → use Agent-X KB
+    4. Default: Use Meta Harness KB for general workflow/pattern questions
+    """
+    
+    def __init__(self):
+        self.meta_kb = meta_kb
+        self.agentx_kb = agentx_kb
+    
+    def _select_kb(self, query: str, force_kb: Optional[str] = None) -> KnowledgeBase:
+        """Select appropriate KB based on query content.
+        
+        Args:
+            query: The search query or question
+            force_kb: Explicitly force 'meta' or 'agentx'
+            
+        Returns:
+            Selected KnowledgeBase instance
+        """
+        if force_kb:
+            if force_kb.lower() == 'agentx' or force_kb.lower() == 'agent-x':
+                return self.agentx_kb
+            elif force_kb.lower() == 'meta':
+                return self.meta_kb
+        
+        # Check for explicit Agent-X references
+        if 'agent-x' in query.lower() or 'agentx' in query.lower():
+            return self.agentx_kb
+        
+        # Check for Meta Harness references
+        if 'meta harness' in query.lower() or 'meta-harness' in query.lower() or 'harness' in query.lower():
+            return self.meta_kb
+        
+        # Auto-detect based on keywords
+        if _should_use_agentx_kb(query):
+            return self.agentx_kb
+        
+        # Default to Meta Harness KB
+        return self.meta_kb
+    
+    def kb_search(self, query: str, top_k: int = 5, category: Optional[str] = None, kb: Optional[str] = None) -> str:
+        """Search with automatic KB routing.
+        
+        Args:
+            query: Search query
+            top_k: Number of results
+            category: Optional category filter
+            kb: Force specific KB ('meta' or 'agentx')
+        """
+        selected_kb = self._select_kb(query, kb)
+        return selected_kb.kb_search(query, top_k, category)
+    
+    def kb_ask(self, question: str, top_k: int = 3, kb: Optional[str] = None) -> str:
+        """Ask with automatic KB routing.
+        
+        Args:
+            question: Question to ask
+            top_k: Number of context entries
+            kb: Force specific KB ('meta' or 'agentx')
+        """
+        selected_kb = self._select_kb(question, kb)
+        return selected_kb.kb_ask(question, top_k)
+    
+    def kb_add_entry(self, entry_type: str, category: str, title: str, finding: str,
+                     solution: str, context: str = "", confidence: float = 0.5, 
+                     example: str = "", kb: str = "agentx") -> str:
+        """Add entry (defaults to Agent-X KB for project knowledge).
+        
+        Args:
+            kb: Target KB ('meta' or 'agentx', default 'agentx')
+        """
+        if kb and kb.lower() == 'meta':
+            return self.meta_kb.kb_add_entry(entry_type, category, title, finding, solution, context, confidence, example)
+        return self.agentx_kb.kb_add_entry(entry_type, category, title, finding, solution, context, confidence, example)
+    
+    def kb_correct(self, entry_id: str, reason: str, new_finding: str, kb: str = "agentx") -> str:
+        """Correct entry with KB routing."""
+        if kb and kb.lower() == 'meta':
+            return self.meta_kb.kb_correct(entry_id, reason, new_finding)
+        return self.agentx_kb.kb_correct(entry_id, reason, new_finding)
+    
+    def kb_evolve(self, kb: Optional[str] = None) -> str:
+        """Evolve KB (both if not specified)."""
+        if kb and kb.lower() == 'meta':
+            return self.meta_kb.kb_evolve()
+        elif kb and kb.lower() == 'agentx':
+            return self.agentx_kb.kb_evolve()
+        # Default: evolve both
+        meta_result = self.meta_kb.kb_evolve()
+        agentx_result = self.agentx_kb.kb_evolve()
+        return f"Meta KB: {meta_result}\nAgent-X KB: {agentx_result}"
+    
+    def kb_stats(self, kb: Optional[str] = None) -> str:
+        """Get stats (both if not specified)."""
+        if kb and kb.lower() == 'meta':
+            return self.meta_kb.kb_stats()
+        elif kb and kb.lower() == 'agentx':
+            return self.agentx_kb.kb_stats()
+        # Default: show both
+        meta_stats = self.meta_kb.kb_stats()
+        agentx_stats = self.agentx_kb.kb_stats()
+        return f"=== Meta Harness KB ===\n{meta_stats}\n\n=== Agent-X KB ===\n{agentx_stats}"
+
+
+# Create router instance for automatic KB selection
+kb_route = KBRouter()
+
+# Export with router
 __all__ = [
     "meta_kb",
     "agentx_kb",
+    "kb_route",  # Intelligent router
     "kb_ask",
     "kb_search",
     "kb_add_entry",
