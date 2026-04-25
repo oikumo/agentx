@@ -492,6 +492,30 @@ class KBRouter:
         return f"=== Meta Harness KB ===\n{meta_stats}\n\n=== Agent-X KB ===\n{agentx_stats}"
 
 
+def kb_clean_and_populate(kb: str = "both", verbose: bool = True) -> str:
+    """
+    Clean and populate knowledge base databases by traversing project files.
+    
+    Usage:
+        # User command: ?kb populate [both|meta|agentx]
+        # Python: kb_clean_and_populate('both')
+    """
+    try:
+        from .populate_kb import KBPopulator
+        
+        if verbose:
+            print(f"\n{'='*60}")
+            print(f"KB Population - {'Both KBs' if kb == 'both' else kb.title() + ' KB'}")
+            print(f"{'='*60}\n")
+        
+        populator = KBPopulator(target_kb=kb, verbose=verbose)
+        populator.populate()
+        
+        return f"\n✓ Complete: {populator.entries_added.get('meta', 0)} Meta + {populator.entries_added.get('agentx', 0)} Agent-X entries"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
 # Create router instance for automatic KB selection
 kb_route = KBRouter()
 
@@ -499,13 +523,14 @@ kb_route = KBRouter()
 __all__ = [
     "meta_kb",
     "agentx_kb",
-    "kb_route",  # Intelligent router
+    "kb_route", # Intelligent router
     "kb_ask",
     "kb_search",
     "kb_add_entry",
     "kb_correct",
     "kb_evolve",
     "kb_stats",
+    "kb_clean_and_populate",
 ]
 
 

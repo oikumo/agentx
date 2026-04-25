@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+"""
+Simple KB Population
+
+Usage:
+    python .meta.tools/populate [both]     - Populate both KBs
+    python .meta.tools/populate meta       - Populate Meta Harness KB
+    python .meta.tools/populate agentx     - Populate Agent-X KB
+"""
+
+import sys
+from pathlib import Path
+
+# Quick and simple
+if __name__ == "__main__":
+    target = sys.argv[1] if len(sys.argv) > 1 else "both"
+    
+    if target not in ["both", "meta", "agentx"]:
+        print(__doc__)
+        sys.exit(0)
+    
+    # Import and run
+    sys.path.insert(0, str(Path(__file__).parent))
+    from populate_kb import KBPopulator
+    
+    print(f"\nPopulating {target} KB...\n")
+    KBPopulator(target_kb=target).populate()
