@@ -201,6 +201,11 @@ skill meta-harness-reflection
 
 ---
 
+## Experiments
+
+When the User ask for an experimient use the `.meta.experiments/` folder to create an isolated folder with the experiment.
+If the experiment exists, use the existing folder in `.meta.experiments/{EXPERMIMENT-FOLDER}` and keep track of the findings and changes that you want to make
+
 ## Knowledge Base Integration
 
 ### Available Tools
