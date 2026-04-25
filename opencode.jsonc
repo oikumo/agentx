@@ -34,7 +34,5 @@
     "list": "allow",
     "lsp": "allow",
     "skill": "allow"
-  },
-  "mcp": {
   }
 }
