@@ -108,6 +108,9 @@ Before reporting completion, verify:
 `read`, `glob`, `bash`, `edit`, `write`, `task`
 
 ### Knowledge Base Tools (via MCP)
+
+The User can query directly to this tool by asking: "?kb {query}"
+
 ```python
 from .meta.development_tools.mcp.rag_tool import (
     rag_search, rag_ask, rag_add_entry, rag_correct, rag_evolve, rag_stats
