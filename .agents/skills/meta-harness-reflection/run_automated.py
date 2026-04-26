@@ -437,7 +437,7 @@ class AutomatedReflectionRunner:
         if percentage < 78:
             report += "1. Review all META.md files in the Meta Project Harness\n"
             report += "2. Practice using kb.py commands\n"
-            report += "3. Re-read .meta.tests_sandbox/META.md for TDD\n"
+            report += "3. Re-read .meta/tests_sandbox/META.md for TDD\n"
         elif percentage < 89:
             report += "1. Focus on weak categories identified above\n"
             report += "2. Practice scenario-based questions\n"

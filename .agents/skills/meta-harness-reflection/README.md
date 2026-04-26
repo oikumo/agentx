@@ -23,7 +23,7 @@ This skill tests an AI agent's comprehension and proper usage of the Meta Projec
 
 ## Output
 
-- **Test Log**: Saved to `.meta.reflection/YYYY-MM-DD_HH-MM-SS_reflection_log.md`
+- **Test Log**: Saved to `.meta/reflection/YYYY-MM-DD_HH-MM-SS_reflection_log.md`
 - **Detailed Report**: Includes scores, confidence levels, and KB usage
 - **Performance Tier**: Expert (97%+), Proficient (89%+), Competent (78%+), or Needs Improvement (<78%)
 
@@ -71,9 +71,9 @@ skill meta-harness-reflection
 ## Integration
 
 Works with:
-- Knowledge Base (`.meta.knowledge_base/`)
+- Knowledge Base (`.meta/knowledge_base/`)
 - All META.md files
-- `.meta.reflection/` for logs
+- `.meta/reflection/` for logs
 
 ## Best Practices
 

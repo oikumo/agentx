@@ -15,7 +15,7 @@ Comprehensive capability testing for agent's understanding and usage of the Meta
 
 **Load**: `skill meta-harness-reflection`
 **Time**: 15-30 min (full test suite)
-**Output**: Timestamped log in `.meta.reflection/`
+**Output**: Timestamped log in `.meta/reflection/`
 
 ## When to Use
 
@@ -66,7 +66,7 @@ The skill will present questions from all categories.
 Agent responds using knowledge base retrieval.
 
 ### Step 4: Log Generation
-Detailed log saved to `.meta.reflection/YYYY-MM-DD_HH-MM-SS_reflection_log.md`
+Detailed log saved to `.meta/reflection/YYYY-MM-DD_HH-MM-SS_reflection_log.md`
 
 ## Question Categories
 
@@ -239,7 +239,7 @@ Each test session generates a detailed log:
 skill meta-harness-reflection
 
 # Execute tests (automated)
-# Results saved to: .meta.reflection/2026-04-19_22-30-00_reflection_log.md
+# Results saved to: .meta/reflection/2026-04-19_22-30-00_reflection_log.md
 ```
 
 ### Run Specific Category
@@ -254,10 +254,10 @@ skill meta-harness-reflection --category=tdd
 ### Compare Results
 ```bash
 # View all test logs
-ls -la .meta.reflection/
+ls -la .meta/reflection/
 
 # Compare latest two runs
-diff .meta.reflection/latest_log.md .meta.reflection/previous_log.md
+diff .meta/reflection/latest_log.md .meta/reflection/previous_log.md
 ```
 
 ## Templates
@@ -317,7 +317,7 @@ diff .meta.reflection/latest_log.md .meta.reflection/previous_log.md
 | Issue | Solution |
 |-------|----------|
 | Score <70% | Review KB entries, re-read META.md files |
-| TDD questions wrong | Re-read .meta.tests_sandbox/META.md |
+| TDD questions wrong | Re-read .meta/tests_sandbox/META.md |
 | Directory confusion | Study decision tree pattern |
 | Tool commands unclear | Practice kb.py commands |
 | Scenario failures | Review workflow patterns |
@@ -358,8 +358,8 @@ Date       Score   Tier      Notes
 ## Resources
 
 - **Test Questions**: 36 questions across 8 categories
-- **Log Storage**: `.meta.reflection/` directory
-- **KB Reference**: `.meta.knowledge_base/knowledge.db`
+- **Log Storage**: `.meta/reflection/` directory
+- **KB Reference**: `.meta/knowledge_base/knowledge.db`
 - **Documentation**: All META.md files
 
 ## Version History

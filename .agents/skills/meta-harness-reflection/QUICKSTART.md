@@ -16,7 +16,7 @@ uv run python .opencode/skills/meta-harness-reflection/run_automated.py
 
 ## Output
 
-- **Test Log**: `.meta.reflection/YYYY-MM-DD_HH-MM-SS_reflection_log.md`
+- **Test Log**: `.meta/reflection/YYYY-MM-DD_HH-MM-SS_reflection_log.md`
 - **Performance Score**: Out of 36 points
 - **Tier**: Expert (97%+), Proficient (89%+), Competent (78%+), or Needs Improvement
 

@@ -98,7 +98,7 @@ Need to optimize?
 5. Find redundancies or overlaps
 6. Compare with best practices (depth ≤3, siblings ≤7)
 7. Propose structural improvements
-8. Implement in `.meta.sandbox/`
+8. Implement in `.meta/sandbox/`
 9. Validate improvements
 10. Update documentation
 

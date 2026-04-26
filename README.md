@@ -44,12 +44,21 @@ Users are solely responsible for ensuring their use of any third-party services 
 
 ### Installation
 
+#### Direct Usage
+
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd agent-x
+cd agentx
+uv tool install --editable agent-x
+```
 
-# Install dependencies
+#### Development
+# Clone the repository
+
+```bash
+git clone <repository-url>
+cd agentx
 uv sync
 ```
 
@@ -319,19 +328,19 @@ Agent-X uses the **Meta Harness** - a structured development system optimized fo
 
 | Directory | Purpose |
 |-----------|---------|
-| `.meta.project_development/` | Rules, standards, workflows |
-| `.meta.sandbox/` | Safe workspace for code modifications |
-| `.meta.tests_sandbox/` | TDD workspace (Kent Beck methodology) |
-| `.meta.experiments/` | Experimental features and prototyping |
-| `.meta.development_tools/` | Development utilities and MCP tools |
-| `.meta.knowledge_base/` | RAG knowledge storage |
-| `.meta.reflection/` | Test logs & capability assessment |
+| `.meta/project_development/` | Rules, standards, workflows |
+| `.meta/sandbox/` | Safe workspace for code modifications |
+| `.meta/tests_sandbox/` | TDD workspace (Kent Beck methodology) |
+| `.meta/experiments/` | Experimental features and prototyping |
+| `.meta/development_tools/` | Development utilities and MCP tools |
+| `.meta/knowledge_base/` | RAG knowledge storage |
+| `.meta/reflection/` | Test logs & capability assessment |
 
 ### Knowledge Base (MCP Tool)
 
 The project includes a **self-evolving knowledge base** accessible via MCP (Model Context Protocol):
 
-- **Location**: `.meta.knowledge_base/`
+- **Location**: `.meta/knowledge_base/`
 - **Purpose**: Stores project patterns, findings, and decisions
 - **Features**: RAG-enabled, auto-correcting, confidence scoring
 - **For AI Agents**: Automatically activated via MCP tools
@@ -344,25 +353,26 @@ The project includes a **self-evolving knowledge base** accessible via MCP (Mode
 - `kb_evolve`: Run evolution cycle
 - `kb_stats`: Monitor KB health
 
-**Documentation**: See `.meta.knowledge_base/META.md`
+**Documentation**: See `.meta/knowledge_base/META.md`
 
 ### For AI Agents
 
 If you're an AI agent working on this project:
+
 1. Read `AGENTS.md` first - it contains mandatory rules
 2. Review `META_HARNESS.md` for complete harness documentation
 3. **Use the Knowledge Base** - Query with `kb_ask` before starting work
-4. Always work in safe spaces (`.meta.sandbox/`, `.meta.experiments/`)
-5. Follow TDD in `.meta.tests_sandbox/`
+4. Always work in safe spaces (`.meta/sandbox/`, `.meta/experiments/`)
+5. Follow TDD in `.meta/tests_sandbox/`
 6. Never modify production code directly
 7. **Document discoveries** - Add to knowledge base after completing tasks
 
 ### For Human Developers
 
 - **Getting Started**: See `META_HARNESS.md` for development workflows
-- **Quick Reference**: `.meta.project_development/QUICK_REFERENCE.md`
-- **Standards**: `.meta.project_development/` directory
-- **Knowledge Base**: `.meta.knowledge_base/META.md`
+- **Quick Reference**: `.meta/project_development/QUICK_REFERENCE.md`
+- **Standards**: `.meta/project_development/` directory
+- **Knowledge Base**: `.meta/knowledge_base/META.md`
 
 ---
 

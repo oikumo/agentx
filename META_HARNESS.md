@@ -14,7 +14,7 @@ Structured project organization for AI-assisted development:
 - **Structured workflows**: Consistent, high-quality output
 - **Comprehensive docs**: At every level
 
-**Directory layout**: See [`.meta.project_development/STRUCTURE.md`](.meta.project_development/STRUCTURE.md)
+**Directory layout**: See [`.meta/project_development/STRUCTURE.md`](.meta/project_development/STRUCTURE.md)
 
 ---
 
@@ -27,11 +27,11 @@ Structured project organization for AI-assisted development:
 ```
 Need to...
 ├─ Understand rules? → Read relevant META.md
-├─ Modify code? → .meta.sandbox/
-├─ Test new idea? → .meta.experiments/
-├─ Write tests? → .meta.tests_sandbox/
-├─ Use/create tools? → .meta.development_tools/
-└─ Check workflows? → .meta.project_development/WORKFLOWS.md
+├─ Modify code? → .meta/sandbox/
+├─ Test new idea? → .meta/experiments/
+├─ Write tests? → .meta/tests_sandbox/
+├─ Use/create tools? → .meta/development_tools/
+└─ Check workflows? → .meta/project_development/WORKFLOWS.md
 ```
 
 ---
@@ -46,7 +46,7 @@ Need to...
 5. REPORT: Summarize + document + cleanup
 ```
 
-**Detailed workflows**: [`.meta.project_development/WORKFLOWS.md`](.meta.project_development/WORKFLOWS.md)
+**Detailed workflows**: [`.meta/project_development/WORKFLOWS.md`](.meta/project_development/WORKFLOWS.md)
 
 ---
 
@@ -96,13 +96,13 @@ Before completion:
 
 | Directory | When to Use | META.md |
 |-----------|-------------|---------|
-| `.meta.project_development/` | Rules, standards, workflows | [Link](.meta.project_development/META.md) |
-| `.meta.experiments/` | Test new libraries, prototype | [Link](.meta.experiments/META.md) |
-| `.meta.sandbox/` | Modify code safely | [Link](.meta.sandbox/META.md) |
-| `.meta.tests_sandbox/` | TDD (Kent Beck) | [Link](.meta.tests_sandbox/META.md) |
-| `.meta.development_tools/` | MCP tools, scripts | [Link](.meta.development_tools/META.md) |
-| `.meta.knowledge_base/` | RAG knowledge storage | [Link](.meta.knowledge_base/META.md) |
-| `.meta.reflection/` | Test logs & capability assessment | [Link](.meta.reflection/README.md) |
+| `.meta/project_development/` | Rules, standards, workflows | [Link](.meta/project_development/META.md) |
+| `.meta/experiments/` | Test new libraries, prototype | [Link](.meta/experiments/META.md) |
+| `.meta/sandbox/` | Modify code safely | [Link](.meta/sandbox/META.md) |
+| `.meta/tests_sandbox/` | TDD (Kent Beck) | [Link](.meta/tests_sandbox/META.md) |
+| `.meta/development_tools/` | MCP tools, scripts | [Link](.meta/development_tools/META.md) |
+| `.meta/knowledge_base/` | RAG knowledge storage | [Link](.meta/knowledge_base/META.md) |
+| `.meta/reflection/` | Test logs & capability assessment | [Link](.meta/reflection/README.md) |
 
 ---
 
@@ -121,10 +121,10 @@ Before completion:
 |----------|---------|
 | [`AGENTS.md`](AGENTS.md) | Entry point (read first) |
 | [`README.md`](README.md) | Project overview |
-| [`DIRECTIVES.md`](.meta.project_development/DIRECTIVES.md) | Core rules (6 directives) |
-| [`WORKFLOWS.md`](.meta.project_development/WORKFLOWS.md) | Workflow patterns |
-| [`QUICK_REFERENCE.md`](.meta.project_development/QUICK_REFERENCE.md) | At-a-glance guide |
-| [`.meta.reflection/README.md`](.meta.reflection/README.md) | Reflection test documentation |
+| [`DIRECTIVES.md`](.meta/project_development/DIRECTIVES.md) | Core rules (6 directives) |
+| [`WORKFLOWS.md`](.meta/project_development/WORKFLOWS.md) | Workflow patterns |
+| [`QUICK_REFERENCE.md`](.meta/project_development/QUICK_REFERENCE.md) | At-a-glance guide |
+| [`.meta/reflection/README.md`](.meta/reflection/README.md) | Reflection test documentation |
 
 ---
 
