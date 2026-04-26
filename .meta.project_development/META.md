@@ -1,56 +1,55 @@
-# Project Development - Agent X
+# Sandbox - Agent X
 
-> **Purpose**: Development basis and rules  
+> **Purpose**: Safe workspace for code modifications  
 > **Target**: AI agents (opencode)  
-> **Usage**: Reference for development standards
+> **Rule #1**: NEVER modify production code directly
 
 ---
 
-## Core Principles
+## Core Philosophy
 
-1. **Code Quality**: PEP 8, type hints, docstrings, meaningful names
-2. **TDD**: Tests first (see [`.meta.tests_sandbox/META.md`](../.meta.tests_sandbox/META.md))
-3. **Incremental**: Small, verifiable changes
-
----
-
-## Quick Links
-
-| File | Purpose |
-|------|---------|
-| [`DIRECTIVES.md`](DIRECTIVES.md) | Core rules (6 directives) |
-| [`WORKFLOWS.md`](WORKFLOWS.md) | Workflow patterns |
-| [`QUICK_REFERENCE.md`](QUICK_REFERENCE.md) | At-a-glance guide |
-| [`CODING_STYLE.md`](CODING_STYLE.md) | Code conventions |
-| [`ENVIRONMENT.md`](ENVIRONMENT.md) | Environment setup |
+Safe space to:
+- Test code changes before production
+- Experiment with implementations
+- Validate fixes and features
+- Run risky operations
 
 ---
 
-## Development Workflow
+## Structure
 
-### Before Any Task
-1. Read relevant META.md
-2. Check `git log`
-3. Plan smallest viable change
-
-### During Development
-1. Work in `.meta.sandbox/` or `.meta.experiments/`
-2. Follow TDD in `.meta.tests_sandbox/`
-3. Use `uv` for packages
-
-### After Completion
-1. Verify tests pass
-2. Update documentation
-3. Clean workspace
-4. Document learnings
+```
+.meta.sandbox/
+├── META.md           # This file
+├── .agent/           # Agent configs
+├── .user/            # User configs
+└── <session>/        # Session workspace
+    ├── src/          # Copied source
+    ├── tests/        # Test files
+    └── notes.md      # Session notes
+```
 
 ---
 
-## Best Practices
+## Workflow
 
-**Avoid**: Modifying production, skipping tests, large unverified changes, undocumented features  
-**Always**: Test first, document, follow conventions, respect directives
+```\n1. COPY: Duplicate production code to sandbox\n2. MODIFY: Make changes safely\n3. TEST: Validate in .meta.tests_sandbox/\n4. DOCUMENT: Record changes in notes.md\n5. PROPOSE: Present for review\n```\n\n---
+
+## Rules
+
+**DO**: Work in sandbox, document changes, test thoroughly, clean up  
+**DON'T**: Modify production, leave messy, skip testing, assume production-ready
 
 ---
 
-**Version**: 2.0.0 (lazy-optimized) | **Lines**: 50 (reduced from 180)
+## Session Management
+
+Each session must:
+- Have clear purpose
+- Be time-boxed or task-boxed
+- Include documentation
+- Be cleaned after use
+
+---
+
+**Version**: 2.0.0 (lazy-optimized) | **Lines**: 50 (reduced from 69)
