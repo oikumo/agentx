@@ -15,8 +15,7 @@ class MainController(IMainViewPartner):
         self.session_manager = SessionManager()
         self.session = self.session_manager.get_current_session()
         self.database = self.session_manager.get_database()
-    
-    
+        
     def showChat(self, query: str | None):
         self.chat_controller = ChatController()
         self.chat_controller.show(query)

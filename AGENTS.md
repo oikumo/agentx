@@ -27,7 +27,7 @@ agent-x/
 ├── .meta/sandbox/ # Safe workspace
 ├── .meta/experiments/ # Experimental features
 ├── .meta/tests_sandbox/ # TDD workspace
-├── .meta/development_tools/ # MCP tools, scripts
+├── .meta/development_tools/ # Development tools, scripts
 ├── .meta/knowledge_base/ # RAG knowledge base
 └── .meta/reflection/ # Test logs & capability assessment
 ```

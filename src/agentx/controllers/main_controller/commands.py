@@ -1,9 +1,11 @@
 from __future__ import annotations
+from typing import Optional
 
 from agentx.controllers.main_controller.commands_base import Command, CommandResult
 from agentx.controllers.main_controller.main_controller import MainController
 from agentx.common.utils import clear_console, safe_int
 from agentx.views.common.console import Console
+from agentx.model.session.session_manager import SessionManager
 
 
 class CommandResultLogInfo(CommandResult):
@@ -111,3 +113,39 @@ class AIChat(Command):
                 i += 1
         query = " ".join(query_parts)
         return model, query
+
+
+class NewSessionResult(CommandResult):
+    """Result of creating a new session."""
+    
+    def __init__(self, session_name: str, message: str):
+        self.session_name = session_name
+        self.message = message
+    
+    def apply(self):
+        Console.log_info(self.message)
+
+
+class NewCommand(Command):
+    """
+    Command to create a new session.
+    
+    Usage: new [session_name]
+    If no name is provided, a default session name will be used.
+    """
+    
+    def __init__(self, key: str, controller: MainController):
+        super().__init__(key, description="Create a new session: new [name]")
+        self.controller = controller
+    
+    def run(self, arguments: list[str]) -> Optional[CommandResult]:
+        session_name = " ".join(arguments).strip() if arguments else f"session_default"
+        
+        try:
+            session_manager = SessionManager()
+            new_session = session_manager.create_new_session(session_name)
+            return NewSessionResult(new_session.name, f"New session created: {new_session.name}")
+            
+        except Exception as e:
+            Console.log_error(f"Failed to create new session: {str(e)}")
+            return None

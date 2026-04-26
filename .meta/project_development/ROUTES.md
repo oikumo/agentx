@@ -46,7 +46,7 @@ Defined in README.md file.
 | `chat_controller/chat_controller.py` | Handles chat-specific commands |
 | `chat_controller/__init__.py` | Package initialization for chat controller |
 | `main_controller/main_controller.py` | Core command registry and REPL integration |
-| `main_controller/commands.py` | Command implementations |
+| `main_controller/commands.py` | Command implementations (includes NewCommand) |
 | `main_controller/commands_base.py` | Base command classes |
 | `main_controller/commands_parser.py` | Command parsing logic |
 | `main_controller/repl.py` | REPL application loop |
@@ -64,6 +64,9 @@ Defined in README.md file.
 | `db/session_db.py` | SQLite session database implementation |
 | `db/__init__.py` | Package initialization for db module |
 | `session/session.py` | Session lifecycle management |
+| `session/session_manager.py` | SessionManager singleton - ensures session always exists |
+| `session/session_state_manager.py` | Petri net-based session state management |
+| `session/adaptive_petri_net.py` | Adaptive Petri net implementation |
 | `session/__init__.py` | Package initialization for session module |
 | `__init__.py` | Package initialization |
 

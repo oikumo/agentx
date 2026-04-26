@@ -100,7 +100,7 @@ Before completion:
 | `.meta/experiments/` | Test new libraries, prototype | [Link](.meta/experiments/META.md) |
 | `.meta/sandbox/` | Modify code safely | [Link](.meta/sandbox/META.md) |
 | `.meta/tests_sandbox/` | TDD (Kent Beck) | [Link](.meta/tests_sandbox/META.md) |
-| `.meta/development_tools/` | MCP tools, scripts | [Link](.meta/development_tools/META.md) |
+| `.meta/development_tools/` | Development tools, scripts | [Link](.meta/development_tools/META.md) |
 | `.meta/knowledge_base/` | RAG knowledge storage | [Link](.meta/knowledge_base/META.md) |
 | `.meta/reflection/` | Test logs & capability assessment | [Link](.meta/reflection/README.md) |
 

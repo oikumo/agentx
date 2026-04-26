@@ -6,11 +6,12 @@ import os
 from dotenv import load_dotenv
 
 from agentx.controllers.main_controller.commands import (
-    QuitCommand,
-    ClearCommand,
-    HelpCommand,
-    AIChat,
-    SumCommand, HistoryCommand,
+QuitCommand,
+ClearCommand,
+HelpCommand,
+AIChat,
+SumCommand, HistoryCommand,
+NewCommand,
 )
 from agentx.controllers.main_controller.main_controller import MainController
 
@@ -31,7 +32,8 @@ def create_controller() -> MainController:
     main_controller.add_command(HelpCommand("help", main_controller))
     main_controller.add_command(HistoryCommand("history", main_controller))
     main_controller.add_command(AIChat("chat", main_controller))
-
+    main_controller.add_command(NewCommand("new", main_controller))
+    
     return main_controller
 
 def show():
@@ -42,7 +44,7 @@ def show():
 
 def main():
     show()
-
+    
     main_controller = create_controller()
     main_controller.run()
 
