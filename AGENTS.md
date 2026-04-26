@@ -2,14 +2,14 @@
 
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 
-| # | Directive | What It Means |
-|---|-----------|---------------|
-| 1 | **NEVER commit or push** | Not even if user asks |
-| 2 | **NEVER add dependencies** | Use what exists; explicit approval required for exceptions |
-| 3 | **NEVER modify .env** | Or any file likely to contain secrets/credentials |
-| 4 | **ALWAYS check git log** | Before making ANY changes |
-| 5 | **NEVER modify tests/** | Use .meta.tests_sandbox/ for new tests (requires approval) |
-| 6 | **Use uv & pyproject.toml** | For all dependency management; avoid pin drift |
+| # | Directive                                 | What It Means |
+|---|-------------------------------------------|---------------|
+| 1 | **NEVER commit or push**                  | Not even if user asks |
+| 2 | **NEVER add dependencies**                | Use what exists; explicit approval required for exceptions |
+| 3 | **NEVER modify .env**                     | Or any file likely to contain secrets/credentials |
+| 4 | **ALWAYS check git log**                  | Before making ANY changes |
+| 5 | **NEVER modify tests/**                   | Use .meta.tests_sandbox/ for new tests (requires approval) |
+| 6 | **Use uv & pyproject.toml with python3 ** | For all dependency management; avoid pin drift |
 
 ## What is the Meta Project Harness?
 
