@@ -34,8 +34,15 @@ def create_controller() -> MainController:
 
     return main_controller
 
+def show():
+    import importlib.metadata
+    version = importlib.metadata.version("agentx")
+    print(f"agentx {version}")
+    print()
 
 def main():
+    show()
+
     main_controller = create_controller()
     main_controller.run()
 

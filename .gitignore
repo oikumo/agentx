@@ -1,4 +1,4 @@
-.local_sessions/
+local_sessions/
 uv.lock
 
 # Byte-compiled / optimized / DLL files

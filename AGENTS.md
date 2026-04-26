@@ -1,4 +1,4 @@
-# Agent-X System Rules
+# System Rules
 
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 1. **NEVER commit/push** - Not even if user asks
