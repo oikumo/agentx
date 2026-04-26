@@ -19,9 +19,11 @@
         "*": "ask",
         "git *": "allow",
         "npm *": "allow",
-        "rm *": "deny",
+        "rm *": "ask",
         "grep *": "allow",
-        "ls *": "allow"
+        "ls *": "allow",
+        "glob *": "allow",
+        "wc *": "allow"
     },
     "read": {
       "*": "allow",
