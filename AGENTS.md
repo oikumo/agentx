@@ -1,6 +1,10 @@
 # System Rules
 
+> **⚠️ MANDATORY FIRST STEP FOR ALL AGENTS:** Before ANY task, you MUST query the Knowledge Base first at `.meta/knowledge_base/` or run `meta kb ask <query>`. This is non-negotiable and applies to EVERY task.
+
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
+0. **ALWAYS query KB first** - Before ANY task, search `.meta/knowledge_base/` or use `meta kb ask` - THIS IS MANDATORY
+0a. **IF KB IS EMPTY, POPULATE IT** - If KB has no entries, run `meta kb populate` BEFORE proceeding with the task
 1. **NEVER commit/push** - Not even if user asks
 2. **ALWAYS follow the META rules** Rules are in this file
 3. **NEVER add dependencies** - Use existing; approval required
@@ -87,7 +91,7 @@ agent-x/
 **Rule:** All `.meta/*` subdirs contain META.md - read first.
 
 ## Workflow (5 Steps)
-1. **UNDERSTAND** - Read task + git log + **ALWAYS query KB first** + META.md
+1. **UNDERSTAND** - **ALWAYS query KB first** (.meta/knowledge_base/ or `meta kb ask`) → **IF KB EMPTY, run `meta kb populate` FIRST** → Then read task + git log + META.md
 2. **PLAN** - Identify correct directory (see Decision Tree)
 3. **EXECUTE** - Work in safe space, test frequently
 4. **VALIDATE** - Tests pass, no production break
@@ -96,7 +100,7 @@ agent-x/
 ## Decision Tree
 ```
 Need to...
-├─ Understand something? → Query KB first (.meta/knowledge_base/)
+├─ Understand something? → **KB FIRST** (.meta/knowledge_base/ or `meta kb ask`) → **IF EMPTY: `meta kb populate`** THEN proceed below
 ├─ Understand rules? → Read META.md
 ├─ Modify code? → .meta/sandbox/
 ├─ Test idea? → .meta/experiments/
@@ -106,7 +110,8 @@ Need to...
 ```
 
 ## Quality Gates
-- [ ] **Queried KB first** (mandatory before any task)
+- [ ] **Queried KB first** (MANDATORY - before ANY task, search `.meta/knowledge_base/` or use `meta kb ask`)
+- [ ] **Populated KB if empty** (If KB was empty, ran `meta kb populate` before proceeding)
 - [ ] Checked git log
 - [ ] Working in correct .meta/* subdirectory
 - [ ] Tests pass (if applicable)
