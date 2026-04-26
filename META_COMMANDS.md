@@ -13,14 +13,8 @@ Meta commands are **natural language prompts** you use during AI agent conversat
 
 ### Print All Commands
 
-```bash
-# Show all available meta commands
-meta
-
-# Or with help flag
-meta --help
-meta -h
-```
+**Commands:**
+- `meta`- Show all commands that are in this file
 
 This displays the complete command reference with descriptions and examples.
 
@@ -30,44 +24,26 @@ This displays the complete command reference with descriptions and examples.
 
 ### Population
 
-```bash
-# Clean and populate both KBs
-meta kb populate both
-
-# Populate only Meta Harness KB
-meta kb populate meta
-
-# Populate only Agent-X KB
-meta kb populate agentx
-```
+**Commands:**
+- `meta kb populate both` - Clean and populate both KBs
+- `meta kb populate meta` - Populate only Meta Harness KB
+- `meta kb populate agentx` - Populate only Agent-X KB
 
 **What happens**: Agent traverses all `.meta*` directories, extracts knowledge from Markdown files, and populates both knowledge bases.
 
 ### Search & Query
 
-```bash
-# Search knowledge base
-meta kb search "TDD workflow"
-
-# Ask question with RAG
-meta kb ask "Where should I write tests?"
-
-# Show statistics
-meta kb stats
-```
+**Commands:**
+- `meta kb search "TDD workflow"` - Search knowledge base
+- `meta kb ask "Where should I write tests?"` - Ask question with RAG
+- `meta kb stats` - Show statistics
 
 ### Knowledge Management
 
-```bash
-# Add new entry
-meta kb add pattern workflow "Bug Fix" "Reproduce in sandbox" "Test → Fix → Verify"
-
-# Correct existing entry
-meta kb correct 123 "Outdated" "New finding"
-
-# Run evolution cycle
-meta kb evolve
-```
+**Commands:**
+- `meta kb add pattern workflow "Bug Fix" "Reproduce in sandbox" "Test → Fix → Verify"` - Add new entry
+- `meta kb correct 123 "Outdated" "New finding"` - Correct existing entry
+- `meta kb evolve` - Run evolution cycle
 
 ---
 
@@ -75,26 +51,16 @@ meta kb evolve
 
 ### Token Management
 
-```bash
-# Analyze token usage
-meta token audit
-
-# Compress documentation
-meta compress docs
-```
+**Commands:**
+- `meta token audit` - Analyze token usage
+- `meta compress docs` - Compress documentation
 
 ### Structure & Health
 
-```bash
-# Run health check
-meta health check
-
-# Analyze structure
-meta structure analysis
-
-# Archive old experiments
-meta archive experiments
-```
+**Commands:**
+- `meta health check` - Run health check
+- `meta structure analysis` - Analyze structure
+- `meta archive experiments` - Archive old experiments
 
 ---
 
@@ -102,35 +68,19 @@ meta archive experiments
 
 ### Quick Projects (30 min - 1 hr)
 
-```bash
-# Token audit
-meta token audit
-
-# Archive experiments
-meta archive experiments
-
-# Consolidate docs
-meta consolidate docs
-
-# Monthly health check
-meta health check
-```
+**Commands:**
+- `meta token audit` - Token audit
+- `meta archive experiments` - Archive experiments
+- `meta consolidate docs` - Consolidate docs
+- `meta health check` - Monthly health check
 
 ### Medium Projects (1-3 hrs)
 
-```bash
-# Documentation compression
-meta compress docs
-
-# Structure optimization
-meta structure analysis
-
-# Create workflow templates
-meta create workflows
-
-# Populate knowledge base
-meta populate kb
-```
+**Commands:**
+- `meta compress docs` - Documentation compression
+- `meta structure analysis` - Structure optimization
+- `meta create workflows` - Create workflow templates
+- `meta populate kb` - Populate knowledge base
 
 ### Advanced Projects (3+ hrs)
 
@@ -173,103 +123,33 @@ Unsure? → meta (shows all commands)
 
 ### Example 1: Initial Setup
 
-```bash
-User: meta kb populate both
+User: `meta kb populate both`
 
-Agent: 
-======================================================================
-KB Population - File Traversal & LLM Analysis
-======================================================================
-Found 8 .meta* directories: [...]
-Found 64 files to analyze
-
-Processing: AGENTS.md
-✓ Added to Meta KB: AGENTS.md - Agent-X System Agent Rules...
-✓ Added to AgentX KB: AGENTS.md - Agent-X System Agent Rules...
-...
-
-======================================================================
-Population Complete!
-Meta Harness KB: 150 entries added
-Agent-X KB: 120 entries added
-======================================================================
-```
+Agent response shows file traversal, LLM analysis, and population results with entry counts for both KBs.
 
 ### Example 2: Quick Search
 
-```bash
-User: meta kb search "TDD workflow"
+User: `meta kb search "TDD workflow"`
 
-Agent:
-Found 3 relevant entries:
-
-1. **TDD Workflow** (pattern)
-   Finding: Tests should be written before production code
-   Solution: RED → GREEN → REFACTOR cycle
-   Context: .meta.tests_sandbox/META.md
-
-2. **Bug Fix Workflow** (pattern)
-   Finding: Bugs should be reproduced in sandbox first
-   Solution: Reproduce → Test → Fix → Verify
-   Context: .meta.sandbox/META.md
-```
+Agent returns relevant entries with pattern details, findings, solutions, and file context.
 
 ### Example 3: Health Check
 
-```bash
-User: meta health check
+User: `meta health check`
 
-Agent:
-Running Meta Harness Health Check...
-======================================================================
-Documentation Status:
-✓ AGENTS.md: 443/1500 tokens (29%)
-✓ META_HARNESS.md: 602/2000 tokens (30%)
-✓ All META.md files present and under budget
-
-Structure Status:
-✓ Directory depth: OK (≤3)
-✓ Naming consistency: OK (.meta.* pattern)
-✓ Navigation clarity: OK
-
-Overall Health: EXCELLENT
-======================================================================
-```
+Agent runs health check showing documentation token usage, structure status, and overall health assessment.
 
 ### Example 4: Token Audit
 
-```bash
-User: meta token audit
+User: `meta token audit`
 
-Agent:
-Analyzing token consumption...
-======================================================================
-Token Analysis Report
-======================================================================
-AGENTS.md                        443 tokens
-META_HARNESS.md                  602 tokens
-.meta.project_development/META.md 174 tokens
-...
-
-Total: 2,714 tokens
-Recommendation: All files within budget ✅
-======================================================================
-```
+Agent analyzes token consumption across all META.md files and provides total count with budget recommendation.
 
 ### Example 5: Archive Experiments
 
-```bash
-User: meta archive experiments
+User: `meta archive experiments`
 
-Agent:
-Archiving old experiments...
-✓ Moved: agent-x-session-state-proposal → archive/
-✓ Moved: token-optimization-skill → archive/
-✓ Moved: petri-net-analyzer → archive/
-
-Archived 3 experiments (6,000 tokens)
-======================================================================
-```
+Agent archives old experiments and reports the number of experiments archived with token count.
 
 ---
 
@@ -292,10 +172,17 @@ Archived 3 experiments (6,000 tokens)
 ### Command Patterns
 
 **Pattern 1: Find then Act**
-```bash
-?meta kb search "existing pattern"
-?meta kb add to kb ...
-```
+- `meta kb search "existing pattern"`
+- `meta kb add to kb ...`
+
+**Pattern 2: Check then Modify**
+- `meta health check`
+- `meta run <optimization>`
+
+**Pattern 3: Periodic Maintenance**
+- `meta token audit` (Monthly)
+- `meta archive experiments` (Quarterly)
+- `meta kb evolve` (As needed)
 
 **Pattern 2: Check then Modify**
 ```bash
@@ -316,19 +203,9 @@ Archived 3 experiments (6,000 tokens)
 
 Agent responses follow this structure:
 
-```
-======================================================================
-<Command Name> - <Description>
-======================================================================
-
-<Progress/Status updates>
-✓ Success indicator
-✓ Success indicator
-
-======================================================================
-Summary/Result
-======================================================================
-```
+1. Header with command name and description
+2. Progress/status updates with success indicators
+3. Summary/result section
 
 ---
 
@@ -344,7 +221,39 @@ Summary/Result
 
 ### Quick Reference Card
 
-```
+**Knowledge Base**
+- `meta kb populate [both|meta|agentx]`
+- `meta kb search "<query>" [--top_k N]`
+- `meta kb ask "<question>"`
+- `meta kb stats`
+- `meta kb add pattern <category> "<title>" "<finding>" "<solution>"`
+- `meta kb correct <id> "<reason>" "<new_finding>"`
+- `meta kb evolve`
+
+**Optimization**
+- `meta token audit [--output file.md]`
+- `meta compress docs [--target ratio]`
+- `meta structure analysis`
+- `meta health check`
+- `meta archive experiments [--older_than_days N]`
+
+**Projects**
+- `meta token audit` - Quick (30 min)
+- `meta archive experiments` - Quick (30 min)
+- `meta consolidate docs` - Quick (30 min)
+- `meta health check` - Quick (30 min)
+- `meta compress docs` - Medium (1-2 hrs)
+- `meta structure analysis` - Medium (1-2 hrs)
+- `meta create workflows` - Medium (1-2 hrs)
+- `meta populate kb` - Medium (1-2 hrs)
+- `meta optimize all` - Advanced (3+ hrs)
+- `meta create skill` - Advanced (3+ hrs)
+- `meta enhance workflows` - Advanced (3+ hrs)
+- `meta test capability` - Advanced (3+ hrs)
+
+**Help**
+- `meta` - Show this reference
+- `meta --help` - Show help
 # Knowledge Base
 meta kb populate [both|meta|agentx]
 meta kb search "<query>" [--top_k N]
