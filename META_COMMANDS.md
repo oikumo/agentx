@@ -84,19 +84,11 @@ This displays the complete command reference with descriptions and examples.
 
 ### Advanced Projects (3+ hrs)
 
-```bash
-# Full optimization
-meta optimize all
-
-# Create new skill
-meta create skill
-
-# Enhance workflows
-meta enhance workflows
-
-# Capability assessment
-meta test capability
-```
+**Commands:**
+- `meta optimize all` - Full optimization
+- `meta create skill` - Create new skill
+- `meta enhance workflows` - Enhance workflows
+- `meta test capability` - Capability assessment
 
 ---
 

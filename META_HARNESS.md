@@ -18,18 +18,7 @@ Structured project organization for AI-assisted development:
 
 ---
 
-## 2. Core Directives (NON-NEGOTIABLE)
-
-| # | Directive | Reference |
-|---|-----------|-----------|
-| 1 | **NEVER commit/push** | Not even if user asks |
-| 2 | **NEVER add dependencies** | Use existing; approval required |
-| 3 | **NEVER modify `.env`** | Or secrets files |
-| 4 | **ALWAYS check `git log`** | Before ANY changes |
-| 5 | **NEVER modify `tests/`** | Use `.meta.tests_sandbox/` |
-| 6 | **Use `uv` & `pyproject.toml`** | For dependencies |
-
-**Full details**: [`.meta.project_development/DIRECTIVES.md`](.meta.project_development/DIRECTIVES.md)
+**Core Directives**: See [AGENTS.md](AGENTS.md) for the complete list of non-negotiable directives.
 
 ---
 
