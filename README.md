@@ -1,6 +1,6 @@
 # agentx
 
-> **Version**: 0.3.0
+> **Version**: 0.1.1
 > **Python**: 3.14+
 > **Package Manager**: uv
 
@@ -50,13 +50,13 @@ Users are solely responsible for ensuring their use of any third-party services 
 # Clone the repository
 git clone <repository-url>
 cd agentx
-uv tool install --editable agent-x
+uv tool install --editable .
 ```
 
 #### Development
-# Clone the repository
 
 ```bash
+# Clone the repository
 git clone <repository-url>
 cd agentx
 uv sync
@@ -122,16 +122,18 @@ After each command, agentx prints the command history for the current session.
 | `help` | `help` | Lists all available commands with descriptions |
 | `quit` | `quit` | Exits the application |
 | `clear` | `clear` | Clears the terminal screen |
-| `read` | `read <filename>` | Reads and displays the contents of a file |
+| `history` | `history` | Shows command history for current session |
 | `sum` | `sum <a> <b>` | Adds two integers together |
+| `new` | `new [name]` | Creates a new session |
 
 **Examples:**
 
 ```
 (agent-x) > help
-(agent-x) > read README.md
 (agent-x) > sum 42 58
 100
+(agent-x) > history
+(agent-x) > new my-session
 (agent-x) > clear
 (agent-x) > quit
 ```
@@ -140,133 +142,25 @@ After each command, agentx prints the command history for the current session.
 
 ### AI Chat
 
-The `chat` command is the primary way to interact with LLMs. It supports three modes:
-
-#### Single-Query Chat
+The `chat` command is the primary way to interact with LLMs. It supports model selection and interactive conversations:
 
 ```
-(agent-x) > chat What is Python?
+(agent-x) > chat [query]
+(agent-x) > chat --model <model_name> [query]
 ```
 
-Sends your query to the LLM and streams back the response with token-per-second metrics.
-
-#### Interactive Chat
-
-```
-(agent-x) > chat
-Starting interactive chat (type 'quit' or 'exit' to end):
-> Tell me a joke
-> quit
-```
-
-Enters a persistent conversation loop. Message history is preserved between turns. Type `quit` or `exit` to leave.
-
-#### Chat with Model Selection
-
-```
-(agent-x) > chat --model gpt-4 Explain quantum computing
-```
-
-Uses a specific model for the query. The `--model` flag can appear anywhere in the command:
-
-```
-(agent-x) > chat Explain quantum computing --model gpt-4
-(agent-x) > chat --model claude-3-opus --model gpt-4 Hello
-```
-
-When multiple `--model` flags are given, the last one wins. If `--model` is provided without a query, it starts interactive chat with that model.
+**Features:**
+- Single-query chat: `chat What is Python?`
+- Model selection: `chat --model gpt-4 Explain quantum computing`
+- Interactive mode: `chat` (then conversation loop)
+- The `--model` flag can appear anywhere in the command
+- When multiple `--model` flags are given, the last one wins
 
 **Streaming Metrics:** After each response, agentx displays performance metrics:
 
 ```
 150 tokens in 3.2s (46.9 tok/s)
 ```
-
----
-
-### Web Search
-
-| Command | Usage | Description |
-|---------|-------|-------------|
-| `search` | `search` | Launches a ReAct web search agent using Tavily |
-
-```
-(agent-x) > search
-```
-
-Starts an interactive web search agent that can browse the internet and provide sourced answers.
-
----
-
-### PDF RAG
-
-| Command | Usage | Description |
-|---------|-------|-------------|
-| `rag` | `rag <query>` | Queries a PDF document using Retrieval-Augmented Generation |
-
-```
-(agent-x) > rag What is the main topic of this document?
-```
-
-Loads the configured PDF, creates a FAISS vector index, and retrieves relevant passages to answer your query.
-
----
-
-### Function Calling
-
-| Command | Usage | Description |
-|---------|-------|-------------|
-| `function` | `function` | Demonstrates AI-powered function dispatch |
-
-```
-(agent-x) > function
-```
-
-Uses Ollama tool calling to intelligently route your request to the appropriate function (weather, game recommendations, etc.).
-
----
-
-### Router Agents
-
-| Command | Usage | Description |
-|---------|-------|-------------|
-| `router` | `router` | Runs an agent that routes between CSV and QR code agents |
-
-```
-(agent-x) > router
-```
-
----
-
-### ReAct Agent with Tools
-
-| Command | Usage | Description |
-|---------|-------|-------------|
-| `react` | `react` | Runs a ReAct agent with local LLM and tools |
-
-```
-(agent-x) > react
-```
-
-Executes a Reason+Act loop using a local LlamaCpp model (Qwen 2.5) with tool integration.
-
----
-
-### LangGraph Workflows
-
-| Command | Usage | Description |
-|---------|-------|-------------|
-| `graph` | `graph` | Runs a simple LangGraph ReAct workflow |
-| `chains` | `chains` | Runs a LangGraph reflector chains graph (generate ↔ reflect loop) |
-| `reflex` | `reflex` | Runs a LangGraph reflexion agent (draft → execute → revise) |
-
-```
-(agent-x) > graph
-(agent-x) > chains
-(agent-x) > reflex
-```
-
-These commands demonstrate increasingly sophisticated graph-based reasoning patterns using LangGraph state machines.
 
 ---
 
@@ -277,6 +171,14 @@ Each agentx session creates:
 - A SQLite database for command history
 
 Sessions are isolated and command history is persisted per session.
+
+### Creating New Sessions
+
+```
+(agent-x) > new [session_name]
+```
+
+If no name is provided, a default session name will be used.
 
 ---
 
@@ -293,10 +195,6 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - Check your internet connection
 - For local models, ensure Ollama or LlamaCpp is properly configured
 
-### RAG PDF errors
-- Ensure the PDF file exists at the configured path (`_resources/react.pdf` by default)
-- Check that required embeddings dependencies are installed
-
 ---
 
 ## Architecture Overview
@@ -304,19 +202,18 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 ```
 main.py
 └── create_controller()
-    └── MainController (registers 14 commands)
+    └── MainController
         └── ReplApp(controller).run()
-            ├── Model(session) - command history
-            ├── Loop: parse → find → run → apply → history
+            ├── Session management
+            ├── Command parsing & execution
             └── Exit on quit / Ctrl+C / Ctrl+D
 ```
 
 ### Design Patterns
 
 - **Command Pattern**: Every REPL command implements a consistent `run()` interface
-- **Factory Pattern**: Agents are created via factory functions, decoupling instantiation from usage
-- **Strategy Pattern**: LLM providers (OpenRouter, OpenAI, LlamaCpp) are interchangeable
-- **State Machine**: LangGraph workflows use `StateGraph` for multi-step reasoning
+- **Strategy Pattern**: LLM providers (OpenRouter, OpenAI, Google Gemini, Ollama) are interchangeable
+- **Session Pattern**: Isolated command history per session with SQLite persistence
 
 ---
 
@@ -330,52 +227,27 @@ agentx uses the **Meta Harness** - a structured development system optimized for
 |-----------|---------|
 | `.meta/project_development/` | Rules, standards, workflows |
 | `.meta/sandbox/` | Safe workspace for code modifications |
-| `.meta/tests_sandbox/` | TDD workspace (Kent Beck methodology) |
-| `.meta/experiments/` | Experimental features and prototyping |
-| `.meta/development_tools/` | Development utilities and MCP tools |
-| `.meta/knowledge_base/` | RAG knowledge storage |
-| `.meta/reflection/` | Test logs & capability assessment |
-
-### Knowledge Base (MCP Tool)
-
-The project includes a **self-evolving knowledge base** accessible via MCP (Model Context Protocol):
-
-- **Location**: `.meta/knowledge_base/`
-- **Purpose**: Stores project patterns, findings, and decisions
-- **Features**: RAG-enabled, auto-correcting, confidence scoring
-- **For AI Agents**: Automatically activated via MCP tools
-
-**MCP Tools:**
-- `kb_search`: Search knowledge base
-- `kb_ask`: Ask questions with RAG context
-- `kb_add_entry`: Document new patterns
-- `kb_correct`: Correct existing knowledge
-- `kb_evolve`: Run evolution cycle
-- `kb_stats`: Monitor KB health
-
-**Documentation**: See `.meta/knowledge_base/META.md`
+| `.meta/tests_sandbox/` | TDD workspace |
+| `.meta/experiments/` | Experimental features |
+| `.meta/development_tools/` | Development utilities |
+| `.meta/knowledge_base/` | Knowledge storage |
 
 ### For AI Agents
 
-If you're an AI agent working on this project:
-
 1. Read `AGENTS.md` first - it contains mandatory rules
-2. Review `META_HARNESS.md` for complete harness documentation
-3. **Use the Knowledge Base** - Query with `kb_ask` before starting work
-4. Always work in safe spaces (`.meta/sandbox/`, `.meta/experiments/`)
-5. Follow TDD in `.meta/tests_sandbox/`
-6. Never modify production code directly
-7. **Document discoveries** - Add to knowledge base after completing tasks
+2. Review `META_HARNESS.md` for complete documentation
+3. Always work in safe spaces (`.meta/sandbox/`, `.meta/experiments/`)
+4. Follow TDD in `.meta/tests_sandbox/`
+5. Never modify production code directly
 
 ### For Human Developers
 
-- **Getting Started**: See `META_HARNESS.md` for development workflows
+- **Getting Started**: See `META_HARNESS.md`
 - **Quick Reference**: `.meta/project_development/QUICK_REFERENCE.md`
 - **Standards**: `.meta/project_development/` directory
-- **Knowledge Base**: `.meta/knowledge_base/META.md`
 
 ---
 
 ## License
 
-agentx is provided as-is for educational and experimental purposes.
+Apache 2.0 - Educational and experimental purposes.
