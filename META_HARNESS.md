@@ -1,12 +1,12 @@
-# Meta Project Harness - Agent X
+# Meta Harness - Agent X
 
-> **Purpose**: Master guide for Meta Project Harness (lazy-loaded)  
+> **Purpose**: Master guide for Meta Harness (lazy-loaded)  
 > **Target**: AI agents (opencode)  
 > **Mandatory**: Read section 1, then reference only what you need
 
 ---
 
-## 1. What is the Meta Project Harness?
+## 1. What is the Meta Harness?
 
 Structured project organization for AI-assisted development:
 - **Safe spaces**: Work without affecting production
