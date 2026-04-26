@@ -394,10 +394,27 @@ def kb_clean_and_populate(kb_name: str = "both", verbose: bool = True) -> str:
             print(f"KB Population - Unified KB")
             print(f"{'='*60}\n")
 
+        # First clean the database
+        if verbose:
+            print("Cleaning existing database entries...")
+        
+        # Clean the database
+        conn = sqlite3.connect(str(META_KB_PATH))
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM entries")
+        cursor.execute("DELETE FROM entries_fts")
+        cursor.execute("DELETE FROM corrections")
+        cursor.execute("DELETE FROM evolution_log")
+        conn.commit()
+        conn.close()
+        
+        if verbose:
+            print("Database cleaned. Starting population...")
+        
         populator = KBPopulator(target_kb="both", verbose=verbose)
         populator.populate()
 
-        return f"\n✓ Complete: {populator.entries_added.get('meta', 0)} entries added"
+        return f"\n✓ Complete: Database cleaned and repopulated"
     except Exception as e:
         return f"Error: {str(e)}"
 

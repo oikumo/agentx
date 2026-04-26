@@ -45,7 +45,7 @@ class KBPopulator:
         self.base_path = Path(__file__).parent.parent
         self.entries_added = {"meta": 0}
     
-    def find_all_meta_files(self) -> List[Tuple[Path, str]]:
+def find_all_meta_files(self) -> List[Tuple[Path, str]]:
         """
         Find all relevant files including source code.
         
