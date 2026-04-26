@@ -2,17 +2,17 @@
 
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 
-| # | Directive                                | What It Means                                                        |
-|---|------------------------------------------|----------------------------------------------------------------------|
-| 1 | **NEVER commit or push**                 | Not even if user asks                                                |
-| 2 | **NEVER add dependencies**               | Use what exists; explicit approval required for exceptions           |
-| 3 | **NEVER modify .env**                    | Or any file likely to contain secrets/credentials                    |
-| 4 | **ALWAYS check git log**                 | Before making ANY changes                                            |
-| 5 | **NEVER modify tests/**                  | Use .meta.tests_sandbox/ for new tests (requires approval)           |
-| 6 | **Use uv & pyproject.toml with python3** | For all dependency management; avoid pin drift                       |
-| 7 | **NEVER change the <root>/README.md **   | Modify it only when the User request it explicitly                   |
-| 8 | **ALWAYS** run the User Commands         | The command are in the section: [## User Commands](## User Commands) |
-|---|------------------------------------------|----------------------------------------------------------------------|
+| # | Directive                                                | What It Means                                                        |
+|---|----------------------------------------------------------|----------------------------------------------------------------------|
+| 1 | **NEVER commit or push**                                 | Not even if user asks                                                |
+| 2 | **NEVER add dependencies**                               | Use what exists; explicit approval required for exceptions           |
+| 3 | **NEVER modify .env**                                    | Or any file likely to contain secrets/credentials                    |
+| 4 | **ALWAYS check git log**                                 | Before making ANY changes                                            |
+| 5 | **NEVER modify tests/**                                  | Use .meta.tests_sandbox/ for new tests (requires approval)           |
+| 6 | **Use uv & pyproject.toml with python3**                 | For all dependency management; avoid pin drift                       |
+| 7 | **NEVER change the <root>/README.md **                   | Modify it only when the User request it explicitly                   |
+| 8 | **ALWAYS** run the User Commands that starts with `meta` | The command are in the section: [`.meta.tools/META_COMMANDS.md`](.meta.tools/META_COMMANDS.md)|
+|---| ------------------------------------------               |----------------------------------------------------------------------|
 
 ## What is the Meta Project Harness?
 
