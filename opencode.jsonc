@@ -1,18 +1,21 @@
 // THIS OPENCODE CONFIGURATION FILE IS JUST FOR REFERENCE PURPOSE
 {
   "$schema": "https://opencode.ai/config.json",
-  "agent": {
-    "code-reviewer": {
-      "description": "Reviews code for best practices and potential issues",
-      "mode": "primary",
-      "model": "openrouter/openrouter/auto",
-      "prompt": "You are a code reviewer. Focus on security, performance, and maintainability.",
-      "tools": {
-        "write": false,
-        "edit": false
+"agent": {
+      "build": {
+        "prompt": "MANDATORY KB-FIRST RULE: Before answering ANY question about the project (classes, components, features, architecture), you MUST FIRST query the Knowledge Base by running: python3 .meta/tools/meta-harness-knowledge-base/kb ask \"<user_question>\" --top-k 3. Then answer based on the KB response. DO NOT use grep, glob, or read until you have queried the KB. This is a CORE RULE. If KB has the answer, cite it. If KB has no answer, then you may search the codebase."
+      },
+      "code-reviewer": {
+        "description": "Reviews code for best practices and potential issues",
+        "mode": "primary",
+        "model": "openrouter/openrouter/auto",
+        "prompt": "You are a code reviewer. Focus on security, performance, and maintainability.",
+        "tools": {
+          "write": false,
+          "edit": false
+        }
       }
-    }
-  },
+    },
   "permission": {
     "edit": "allow",
      "bash": {
