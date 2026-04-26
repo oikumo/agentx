@@ -1,4 +1,4 @@
-# Environment - Agent-X
+# Environment - agentx
 
 > **Purpose**: Runtime environment and operational notes.
 > **Last Updated**: April 4, 2026

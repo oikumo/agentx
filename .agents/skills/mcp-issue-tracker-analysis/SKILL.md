@@ -6,7 +6,7 @@ description: >
   analyzes behavioral and structural properties (boundedness, liveness, deadlock-freedom, 
   reversibility, etc.), and generates actionable process improvement insights.
 version: 0.1.0
-author: Agent-X
+author: agentx
 dependencies:
   - petri_net_project_analizer/petri_net.py
   - petri_net_project_analizer/petri_net_analysis.py

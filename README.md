@@ -1,4 +1,4 @@
-# Agent-X
+# agentx
 
 > **Version**: 0.3.0
 > **Python**: 3.14+
@@ -6,9 +6,9 @@
 
 ---
 
-## What is Agent-X?
+## What is agentx?
 
-Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop) interface, created strictly for educational purposes. This project is free to use for everyone, including enterprise users, under the Apache 2.0 License.
+agentx is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop) interface, created strictly for educational purposes. This project is free to use for everyone, including enterprise users, under the Apache 2.0 License.
 
 It lets you interact with language models through a command-line shell, supporting chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows. 
 
@@ -20,7 +20,7 @@ The development of this project is assisted by opencode coding agent (https://op
 
 **THIS IS AN EDUCATIONAL PROJECT ONLY**
 
-Agent-X is created solely for educational and experimental purposes. It is not affiliated with, endorsed by, or sponsored by any of the companies or projects mentioned herein.
+agentx is created solely for educational and experimental purposes. It is not affiliated with, endorsed by, or sponsored by any of the companies or projects mentioned herein.
 
 All product names, logos, brands, trademarks, and registered trademarks mentioned in this documentation or code are the property of their respective owners. Use of these names, logos, brands, and trademarks does not imply endorsement.
 
@@ -64,7 +64,7 @@ uv sync
 
 ### API Keys
 
-Agent-X requires at least an **OpenRouter API key** to run the default chat agent. Other features may need additional keys. Set them in a `.env` file:
+agentx requires at least an **OpenRouter API key** to run the default chat agent. Other features may need additional keys. Set them in a `.env` file:
 
 ```env
 # Required for default chat
@@ -85,7 +85,7 @@ If `OPENROUTER_API_KEY` is not set, the application will prompt for it on startu
 python main.py
 ```
 
-You will see the Agent-X banner and the prompt:
+You will see the agentx banner and the prompt:
 
 ```
 (agent-x) >
@@ -97,13 +97,13 @@ Type `help` to see all available commands, or `quit` to exit.
 
 ## The REPL Interface
 
-Agent-X uses an interactive command loop. Each line you enter is parsed as a command with optional arguments:
+agentx uses an interactive command loop. Each line you enter is parsed as a command with optional arguments:
 
 ```
 (agent-x) > command arg1 arg2
 ```
 
-After each command, Agent-X prints the command history for the current session.
+After each command, agentx prints the command history for the current session.
 
 ### Exiting
 
@@ -176,7 +176,7 @@ Uses a specific model for the query. The `--model` flag can appear anywhere in t
 
 When multiple `--model` flags are given, the last one wins. If `--model` is provided without a query, it starts interactive chat with that model.
 
-**Streaming Metrics:** After each response, Agent-X displays performance metrics:
+**Streaming Metrics:** After each response, agentx displays performance metrics:
 
 ```
 150 tokens in 3.2s (46.9 tok/s)
@@ -272,7 +272,7 @@ These commands demonstrate increasingly sophisticated graph-based reasoning patt
 
 ## Session Management
 
-Each Agent-X session creates:
+Each agentx session creates:
 - A timestamped directory under `local_sessions/`
 - A SQLite database for command history
 
@@ -322,7 +322,7 @@ main.py
 
 ## Development with Meta Harness
 
-Agent-X uses the **Meta Harness** - a structured development system optimized for AI-assisted development.
+agentx uses the **Meta Harness** - a structured development system optimized for AI-assisted development.
 
 ### Key Directories
 
@@ -378,4 +378,4 @@ If you're an AI agent working on this project:
 
 ## License
 
-Agent-X is provided as-is for educational and experimental purposes.
+agentx is provided as-is for educational and experimental purposes.

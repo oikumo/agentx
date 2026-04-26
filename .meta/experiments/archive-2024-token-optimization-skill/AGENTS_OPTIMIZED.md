@@ -1,6 +1,6 @@
 # AGENTS.md - Agent Rules
 
-> **READ FIRST** - Your rules for working on Agent-X
+> **READ FIRST** - Your rules for working on agentx
 
 ## ⚠️ Core Directives
 

@@ -24,7 +24,7 @@ The system automatically:
    - Source code architecture (classes, functions)
 5. **Populates dual KBs**:
    - **Meta Harness KB** - Project workflows, patterns, directives
-   - **Agent-X KB** - Source code, architecture, project-specific knowledge
+   - **agentx KB** - Source code, architecture, project-specific knowledge
 
 ---
 
@@ -39,7 +39,7 @@ python .meta/tools/populate
 # Or specify which KB
 python .meta/tools/populate both    # Both KBs
 python .meta/tools/populate meta    # Meta Harness KB only
-python .meta/tools/populate agentx  # Agent-X KB only
+python .meta/tools/populate agentx # agentx KB only
 ```
 
 ### As AI Command
@@ -81,7 +81,7 @@ result = meta_tools.kb_clean_and_populate(kb='meta', verbose=True)
 - `.meta/development_tools/*.md` - Tool documentation
 - `.meta/tools/*.md` - Tool usage guides
 
-### Agent-X KB (Source Code)
+### agentx KB (Source Code)
 - `src/**/*.py` - All Python source files
 - `src/**/*.md` - Source documentation
 - `doc/**/*.md` - Additional documentation
@@ -161,8 +161,8 @@ Found src/ directory - analyzing source code...
 Found 118 files to analyze
 
 Processing: AGENTS.md
-  ✓ Added to Meta KB: AGENTS.md - Agent-X System Agent Rules...
-  ✓ Added to AgentX KB: AGENTS.md - Agent-X System Agent Rules...
+  ✓ Added to Meta KB: AGENTS.md - agentx System Agent Rules...
+  ✓ Added to agentx KB: AGENTS.md - agentx System Agent Rules...
   ✓ Added to Meta KB: Directives from AGENTS.md...
   ...
 
@@ -173,7 +173,7 @@ Processing: src/main.py
 
 ✓ Complete!
   Meta KB: 150 entries
-  Agent-X KB: 120 entries
+  agentx KB: 120 entries
 ```
 
 ---
@@ -273,7 +273,7 @@ Receives knowledge from:
 
 **Categories:** directives, workflow, documentation, standards, environment
 
-### Agent-X KB
+### agentx KB
 
 Receives knowledge from:
 - `src/**/*.py` (all source code)

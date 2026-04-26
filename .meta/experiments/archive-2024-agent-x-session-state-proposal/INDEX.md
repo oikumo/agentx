@@ -1,4 +1,4 @@
-# Agent-X Session State Proposal - Index
+# agentx Session State Proposal - Index
 
 ## Quick Navigation
 
@@ -11,7 +11,7 @@
 
 ## What This Is
 
-A **Session State Management System** using Adaptive Petri Nets to store and track user objectives in Agent-X.
+A **Session State Management System** using Adaptive Petri Nets to store and track user objectives in agentx.
 
 ## Key Features
 

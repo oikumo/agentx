@@ -4,7 +4,7 @@ description: >
   Analyze and optimize Meta Project Harness documentation, structure, and workflows.
   Reduces token consumption by 30-50% while improving clarity and agent efficiency.
 version: 2.0.0
-author: Agent-X
+author: agentx
 ---
 
 # Meta Harness Optimize

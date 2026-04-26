@@ -93,4 +93,4 @@ Ongoing optimization with scheduled reviews
 
 **Version**: 2.0.0 (Merged from v1.1.0 optimize-meta-harness and v1.0.0 meta-harness-optimize)
 **Date**: 2026-04-19
-**Maintained by**: Agent-X
+**Maintained by**: agentx

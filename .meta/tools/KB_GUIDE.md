@@ -16,7 +16,7 @@ python .meta/tools/commands.py kb_clean_and_populate --kb both
 
 Meta Tools provide unified access to Knowledge Base RAG system:
 - **Meta Harness KB**: Project workflows, directives, patterns
-- **Agent-X KB**: Architecture, commands, features
+- **agentx KB**: Architecture, commands, features
 
 ---
 
@@ -32,11 +32,6 @@ Meta Tools provide unified access to Knowledge Base RAG system:
 ### Usage
 
 ```bash
-# User commands (AI conversation)
-?kb clean and populate both     # Both KBs
-?kb clean and populate meta     # Meta Harness only
-?kb clean and populate agentx   # Agent-X only
-
 # Python API
 from .meta/tools import meta_tools
 result = meta_tools.kb_clean_and_populate(kb='both', verbose=True)
@@ -56,7 +51,7 @@ python .meta/tools/commands.py kb_clean_and_populate --kb both
 - `.meta/reflection/*.md`
 - `.meta/tools/*.md`
 
-**Agent-X KB:**
+**agentx KB:**
 - `README.md`
 - `src/**/*.md`
 - `doc/**/*.md`

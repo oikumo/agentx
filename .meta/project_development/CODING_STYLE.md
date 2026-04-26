@@ -1,4 +1,4 @@
-# Coding Style - Agent-X
+# Coding Style - agentx
 
 > **Purpose**: Code style conventions for the project.
 > **Last Updated**: April 4, 2026

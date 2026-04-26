@@ -1,7 +1,7 @@
-# Core Directives - Agent X
+# Core Directives - agentx
 
 > **Purpose**: Single source of truth for non-negotiable rules  
-> **Target**: AI agents (opencode) working on Agent-X  
+> **Target**: AI agents (opencode) working on agentx  
 > **Enforcement**: ALWAYS check before any action
 
 ---

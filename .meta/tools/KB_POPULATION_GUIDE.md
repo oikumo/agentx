@@ -2,7 +2,7 @@
 
 ## Overview
 
-The KB Population system allows you to **clean and repopulate** both Knowledge Base databases (Meta Harness KB and Agent-X KB) by **automatically traversing** all project documentation files.
+The KB Population system allows you to **clean and repopulate** both Knowledge Base databases (Meta Harness KB and agentx KB) by **automatically traversing** all project documentation files.
 
 ## How It Works
 
@@ -16,7 +16,7 @@ The system:
    - Directives and rules
    - Section-based knowledge
 4. **Creates structured KB entries** with proper categorization
-5. **Populates the appropriate KB** (Meta Harness or Agent-X)
+5. **Populates the appropriate KB** (Meta Harness or agentx)
 
 ## Usage
 
@@ -31,7 +31,7 @@ During your conversation with the AI agent, you can trigger KB population:
 # Populate only Meta Harness KB
 ?kb clean and populate meta
 
-# Populate only Agent-X KB  
+# Populate only agentx KB  
 ?kb clean and populate agentx
 ```
 
@@ -47,7 +47,7 @@ print(result)
 # Clean only Meta Harness KB
 result = meta_tools.kb_clean_and_populate(kb='meta', verbose=True)
 
-# Clean only Agent-X KB
+# Clean only agentx KB
 result = meta_tools.kb_clean_and_populate(kb='agentx', verbose=True)
 ```
 
@@ -83,7 +83,7 @@ Content extracted:
 - Directory structure guidelines
 - Best practices
 
-### Agent-X KB
+### agentx KB
 
 Files analyzed:
 - `README.md` - Project overview
@@ -150,14 +150,14 @@ Found 8 .meta* directories: [...]
 Found 64 files to analyze
 
 Processing: AGENTS.md
-  ✓ Added to Meta KB: AGENTS.md - Agent-X System Agent Rules...
-  ✓ Added to AgentX KB: AGENTS.md - Agent-X System Agent Rules...
+  ✓ Added to Meta KB: AGENTS.md - agentx System Agent Rules...
+  ✓ Added to agentx KB: AGENTS.md - agentx System Agent Rules...
   ...
 
 ======================================================================
 Population Complete!
   Meta Harness KB: 150 entries added
-  Agent-X KB: 120 entries added
+  agentx KB: 120 entries added
 ======================================================================
 ```
 

@@ -2,14 +2,14 @@
 
 ## Summary
 
-The Meta Harness Knowledge Base is now **unified** - serving both Meta Harness patterns and Agent-X project knowledge in a single database.
+The Meta Harness Knowledge Base is now **unified** - serving both Meta Harness patterns and agentx project knowledge in a single database.
 
 ## What Changed
 
 ### Before
 - Two separate KBs:
   - Meta Harness KB (`knowledge-meta.db`)
-  - Agent-X KB (`agent-x/agent-x.db`)
+  - agentx KB (`agent-x/agent-x.db`)
 - Complex routing logic
 - Duplicate entries
 - Confusing maintenance
@@ -24,7 +24,7 @@ The Meta Harness Knowledge Base is now **unified** - serving both Meta Harness p
 
 ```
 .meta/data/kb-meta/
-└── knowledge-meta.db    # Unified KB (Meta Harness + Agent-X)
+└── knowledge-meta.db # Unified KB (Meta Harness + agentx)
 ```
 
 ## Usage
@@ -70,7 +70,7 @@ python .meta/tools/populate both
 
 This populates:
 - ✅ Meta Harness documentation (`.meta.*` directories)
-- ✅ Agent-X source code (`src/`)
+- ✅ agentx source code (`src/`)
 - ✅ Project documentation (`README.md`, etc.)
 
 ## Benefits
@@ -82,7 +82,7 @@ This populates:
 
 2. **Better Search**
    - All knowledge in one place
-   - Cross-referencing between Meta and Agent-X
+   - Cross-referencing between Meta and agentx
    - More comprehensive results
 
 3. **Easier Maintenance**
@@ -99,7 +99,7 @@ This populates:
 
 The old dual-KB system has been removed:
 - ❌ `agentx_kb` alias removed (now just `kb`)
-- ❌ Agent-X KB directory removed
+- ❌ agentx KB directory removed
 - ❌ Routing logic removed
 
 All functionality now uses the unified `kb` instance.
@@ -115,7 +115,7 @@ All functionality now uses the unified `kb` instance.
 
 1. `meta_tools.py` - Simplified to single KB
 2. `populate_kb.py` - Unified population
-3. Removed Agent-X KB directory
+3. Removed agentx KB directory
 
 ## Testing
 

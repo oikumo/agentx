@@ -1,11 +1,11 @@
-# Knowledge Base System - Agent-X
+# Knowledge Base System - agentx
 
 ## Overview
 
-The Agent-X project uses **two separate knowledge bases** to store different types of knowledge:
+The agentx project uses **two separate knowledge bases** to store different types of knowledge:
 
 1. **Meta Harness KB** (`knowledge-meta.db`) - Meta Project Harness patterns and workflows
-2. **Agent-X KB** (`agent-x/agent-x.db`) - Agent-X project-specific knowledge
+2. **agentx KB** (`agent-x/agent-x.db`) - agentx project-specific knowledge
 
 ## Database Locations
 
@@ -13,7 +13,7 @@ The Agent-X project uses **two separate knowledge bases** to store different typ
 .meta/data/kb-meta/
 ├── knowledge-meta.db           # Meta Harness KB
 ├── agent-x/
-│   └── agent-x.db              # Agent-X KB
+│ └── agent-x.db # agentx KB
 └── README.md                   # This file
 ```
 
@@ -28,7 +28,7 @@ from .meta/tools import meta_kb, agentx_kb
 meta_kb.kb_search("TDD workflow")
 meta_kb.kb_ask("Where should I write tests?")
 
-# Search Agent-X KB (project-specific knowledge)
+# Search agentx KB (project-specific knowledge)
 agentx_kb.kb_search("REPL controller")
 agentx_kb.kb_ask("How does the chat command work?")
 ```
@@ -51,7 +51,7 @@ Both KBs support the same interface:
 ```python
 from .meta/tools import agentx_kb
 
-# Add Agent-X specific knowledge
+# Add agentx specific knowledge
 agentx_kb.kb_add_entry(
     entry_type="pattern",           # pattern, finding, correction, decision
     category="code",                # code, workflow, test, docs, tool, architecture
@@ -73,7 +73,7 @@ agentx_kb.kb_add_entry(
 - Project structure standards
 - Tool usage patterns
 
-### Agent-X KB (`agentx_kb`)
+### agentx KB (`agentx_kb`)
 - REPL interface details
 - Command implementations
 - Agent architecture
@@ -91,7 +91,7 @@ print(meta_kb.kb_ask("Where should I implement this feature?"))
 
 # 2. Work on implementation...
 
-# 3. Document in Agent-X KB
+# 3. Document in agentx KB
 agentx_kb.kb_add_entry(
     entry_type="pattern",
     category="code",
@@ -122,5 +122,5 @@ The KB facade and implementation are in:
 ## See Also
 
 - [Meta Harness Documentation](../../../META_HARNESS.md)
-- [Agent-X README](../../../README.md)
+- [agentx README](../../../README.md)
 - [Meta Tools Usage](../../../.meta/tools/USAGE.md)

@@ -1,4 +1,4 @@
-# Agent-X Proposal: Session State Management with Adaptive Petri Nets
+# agentx Proposal: Session State Management with Adaptive Petri Nets
 
 **Date**: 2026-04-25  
 **Status**: Experiment Completed ✓  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This proposal presents a **Session State Management System** using Adaptive Petri Nets to store and track user objectives throughout Agent-X sessions. The implementation successfully reuses existing Petri net components from the codebase and provides a formal, verifiable approach to session state tracking.
+This proposal presents a **Session State Management System** using Adaptive Petri Nets to store and track user objectives throughout agentx sessions. The implementation successfully reuses existing Petri net components from the codebase and provides a formal, verifiable approach to session state tracking.
 
 **Key Achievement**: All experimental tests passed ✓ - the system is production-ready.
 
@@ -18,7 +18,7 @@ This proposal presents a **Session State Management System** using Adaptive Petr
 ## 1. Problem Statement
 
 ### Current State
-- Agent-X sessions lack formal state tracking
+- agentx sessions lack formal state tracking
 - User objectives are not explicitly stored or monitored
 - No mathematical model for session progression
 - Session history is linear (command log) without state context
@@ -389,7 +389,7 @@ The **Session State Management System with Adaptive Petri Nets** is:
 ✅ **Reusable** - Built on existing codebase  
 ✅ **Production-ready** - Ready for integration  
 
-**Recommendation**: **APPROVE** for integration into Agent-X.
+**Recommendation**: **APPROVE** for integration into agentx.
 
 ---
 

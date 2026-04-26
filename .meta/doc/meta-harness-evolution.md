@@ -36,7 +36,7 @@ The system now includes automatic knowledge extraction from project files:
 # Populate KBs from all project files
 python .meta/tools/populate both      # Both KBs
 python .meta/tools/populate meta      # Meta Harness KB only
-python .meta/tools/populate agentx    # Agent-X KB only
+python .meta/tools/populate agentx # agentx KB only
 ```
 
 **What it does:**
@@ -99,7 +99,7 @@ agent-x/
 │ │ ├── evolution_log (evolution events)
 │ │ └── FTS5 index (full-text search)
 │ └── agent-x/
-│     └── agent-x.db # Agent-X specific KB
+│ └── agent-x.db # agentx specific KB
 │
 └── .meta/tools/ # KNOWLEDGE INTERFACE
 ├── meta_tools.py # KB tools

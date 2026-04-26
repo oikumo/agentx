@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide shows how to integrate the Session State Management system into Agent-X.
+This guide shows how to integrate the Session State Management system into agentx.
 
 ## 1. Quick Integration (Recommended)
 

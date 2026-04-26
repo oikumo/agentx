@@ -4,7 +4,7 @@ description: >
   Test agent's knowledge base usage and Meta Project Harness comprehension
   through structured reflection questions. Saves detailed test logs with timestamps.
 version: 1.0.0
-author: Agent-X
+author: agentx
 ---
 
 # Meta Harness Reflection
@@ -368,6 +368,6 @@ Date       Score   Tier      Notes
 
 ---
 
-**Maintained by**: Agent-X
+**Maintained by**: agentx
 **Test Frequency**: Monthly or after major changes
 **Passing Score**: 28/36 (78%)

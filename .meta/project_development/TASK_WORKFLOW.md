@@ -1,4 +1,4 @@
-# Task Workflow - Agent-X
+# Task Workflow - agentx
 
 > **Purpose**: Step-by-step process for completing tasks.
 > **Last Updated**: April 4, 2026

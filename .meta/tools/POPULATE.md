@@ -11,7 +11,7 @@
 ```bash
 python .meta/tools/populate          # both KBs
 python .meta/tools/populate meta     # Meta only  
-python .meta/tools/populate agentx   # Agent-X only
+python .meta/tools/populate agentx # agentx only
 ```
 
 ## What It Does
@@ -30,7 +30,7 @@ python .meta/tools/populate
 # Populate only Meta Harness KB  
 python .meta/tools/populate meta
 
-# Populate only Agent-X KB
+# Populate only agentx KB
 python .meta/tools/populate agentx
 ```
 

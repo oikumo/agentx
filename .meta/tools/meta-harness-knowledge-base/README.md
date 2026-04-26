@@ -321,6 +321,6 @@ Part of the Meta Project Harness system.
 
 ## See Also
 
-- [Agent-X](../../README.md) - Main project
+- [agentx](../../README.md) - Main project
 - [Meta Harness](../../META_HARNESS.md) - Master documentation
 - [Advanced RAG](src/advanced_rag.py) - Implementation

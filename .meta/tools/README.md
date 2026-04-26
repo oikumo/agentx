@@ -9,7 +9,7 @@ python .meta/tools/populate
 # Or specify which KB
 python .meta/tools/populate both    # both (default)
 python .meta/tools/populate meta    # Meta Harness only
-python .meta/tools/populate agentx  # Agent-X only
+python .meta/tools/populate agentx # agentx only
 ```
 
 ## As AI Command
@@ -41,5 +41,5 @@ Processing: AGENTS.md
 
 ✓ Complete!
   Meta KB: 150 entries
-  Agent-X KB: 120 entries
+  agentx KB: 120 entries
 ```

@@ -1,4 +1,4 @@
-# Tool Usage Guidelines - Agent-X
+# Tool Usage Guidelines - agentx
 
 > **Purpose**: How the system agent should interact with the codebase.
 > **Last Updated**: April 4, 2026

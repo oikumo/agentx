@@ -7,7 +7,7 @@ description: >
   Use this skill when token usage is high, documentation is verbose, or to maintain efficient
   AI-human communication. Reduces token costs by 30-50% while maintaining clarity.
 version: 1.0.0
-author: Agent-X
+author: agentx
 ---
 
 ## Quick Start

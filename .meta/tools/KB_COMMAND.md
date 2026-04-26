@@ -28,7 +28,7 @@ This command:
    - Section-based content
 4. **Populates both KBs**:
    - **Meta Harness KB** - Project workflows, directives, patterns
-   - **Agent-X KB** - Project-specific architecture, commands, features
+   - **agentx KB** - Project-specific architecture, commands, features
 
 ## Usage Examples
 
@@ -41,7 +41,7 @@ This command:
 # Populate only Meta Harness KB
 ?kb clean and populate meta
 
-# Populate only Agent-X KB
+# Populate only agentx KB
 ?kb clean and populate agentx
 
 # Show stats after population
@@ -59,7 +59,7 @@ result = meta_tools.kb_clean_and_populate(kb='both', verbose=True)
 # Populate only Meta
 result = meta_tools.kb_clean_and_populate(kb='meta', verbose=True)
 
-# Populate only Agent-X
+# Populate only agentx
 result = meta_tools.kb_clean_and_populate(kb='agentx', verbose=True)
 ```
 
@@ -89,7 +89,7 @@ python .meta/tools/populate_kb.py --kb both --verbose
 - `.meta/development_tools/*.md` - Tool docs
 - `.meta/tools/*.md` - Tool usage
 
-### Agent-X KB
+### agentx KB
 - `src/**/*.md` - Source documentation
 - `doc/**/*.md` - Additional docs
 
@@ -109,20 +109,20 @@ Found 8 .meta* directories: ['.meta/data', '.meta/sandbox', ...]
 Found 65 files to analyze
 
 Processing: AGENTS.md
-  ✓ Added to Meta KB: AGENTS.md - Agent-X System Agent Rules...
-  ✓ Added to AgentX KB: AGENTS.md - Agent-X System Agent Rules...
+  ✓ Added to Meta KB: AGENTS.md - agentx System Agent Rules...
+  ✓ Added to agentx KB: AGENTS.md - agentx System Agent Rules...
   ✓ Added to Meta KB: Directives from AGENTS.md...
   ...
 
 ======================================================================
 Population Complete!
-  Meta Harness KB: 150 entries added
-  Agent-X KB: 120 entries added
+Meta Harness KB: 150 entries added
+agentx KB: 120 entries added
 ======================================================================
 
 Clean and populate complete:
   Meta Harness KB: 150 entries added from files
-  Agent-X KB: 120 entries added from files
+  agentx KB: 120 entries added from files
 ```
 
 ## When to Use

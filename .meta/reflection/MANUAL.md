@@ -133,6 +133,6 @@ After running the test:
 
 ---
 
-**Maintained by**: Agent-X
+**Maintained by**: agentx
 **Test Frequency**: Monthly or after major changes
 **Passing Score**: 28/36 (78%)

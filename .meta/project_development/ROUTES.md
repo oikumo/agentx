@@ -1,4 +1,4 @@
-# ROUTES - Agent-X
+# ROUTES - agentx
 
 > **Last Updated**: April 19, 2026
 > **Version**: 0.2.0
