@@ -2,7 +2,7 @@
 
 ## KB Commands
 - `meta kb populate` - Populate KBs
-- `meta kb search` - Search KB
+- `meta kb` - Search KB
 - `meta kb ask` - RAG query
 - `meta kb stats` - Show stats
 - `meta kb add` - Add entry

@@ -36,7 +36,7 @@ Centralized knowledge storage for:
 | Command | Purpose |
 |---------|---------|
 | `meta kb populate` | Populate KB from codebase |
-| `meta kb search` | Search entries |
+| `meta kb` | Search entries |
 | `meta kb ask` | RAG query |
 | `meta kb stats` | Show statistics |
 | `meta kb add` | Add new entry |

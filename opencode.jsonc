@@ -22,10 +22,12 @@
         "rm *": "ask",
         "grep *": "allow",
         "ls *": "allow",
-        "glob *": "allow",
+        "python3 *": "allow",
+        "python *": "deny",
         "wc *": "allow",
-        "cd *": "allow"
-    },
+        "cd *": "allow",
+        "ls -ls *": "allow"
+     },
     "read": {
       "*": "allow",
       "*.env": "deny",

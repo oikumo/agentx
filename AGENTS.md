@@ -2,7 +2,7 @@
 
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 1. **NEVER commit/push** - Not even if user asks
-2. **ALLWAYS follow the META rules** Rules are in this file
+2. **ALWAYS follow the META rules** Rules are in this file
 3. **NEVER add dependencies** - Use existing; approval required
 3. **NEVER modify .env** - Or secrets files
 4. **ALWAYS check git log** - Before ANY changes
