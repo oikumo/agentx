@@ -23,7 +23,8 @@
         "grep *": "allow",
         "ls *": "allow",
         "glob *": "allow",
-        "wc *": "allow"
+        "wc *": "allow",
+        "cd *": "allow"
     },
     "read": {
       "*": "allow",
