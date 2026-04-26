@@ -33,7 +33,7 @@ agent-x/
 **Rule:** All `.meta.*` dirs contain META.md - read first.
 
 ## Workflow (5 Steps)
-1. **UNDERSTAND** - Read task + git log + META.md
+1. **UNDERSTAND** - Read task + git log + META.md + Always ask the Knowledge Base before continue
 2. **PLAN** - Identify correct directory (see Decision Tree)
 3. **EXECUTE** - Work in safe space, test frequently
 4. **VALIDATE** - Tests pass, no production break
