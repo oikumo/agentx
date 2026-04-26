@@ -18,7 +18,7 @@ Structured development system for AI-assisted development:
 - **Comprehensive docs** - At every level
 - **Quality gates** - Ensure correctness
 
-# Meta Commands
+# User Prompts Shortcuts
 
 ## KB Commands
 - `meta kb populate` - Populate KBs
