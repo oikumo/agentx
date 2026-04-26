@@ -2,14 +2,14 @@
 
 **Version**: 2.0.0 - Enhanced with Source Code Analysis
 **Status**: ✅ Active
-**Core Principle**: Self-Evolving Knowledge Through MCP + Source Code Mining
+**Core Principle**: Self-Evolving Knowledge Through Automatic File Analysis
 **Last Updated**: 2026-04-25 - Added comprehensive KB population from project files
 
 ---
 
 ## Philosophy
 
-The **Meta Project Harness** evolves through a continuous cycle of **discovery**, **documentation**, and **distribution** of knowledge, powered by the **Model Context Protocol (MCP)**.
+The **Meta Project Harness** evolves through a continuous cycle of **discovery**, **documentation**, and **distribution** of knowledge.
 
 ### Core Belief
 
@@ -26,6 +26,27 @@ The Meta Harness approach:
 - ✅ **Auto-corrected** through use (stays accurate)
 - ✅ **Integrated** into workflow (unavoidable)
 - ✅ **Tested** continuously (verified correct)
+- ✅ **Auto-populated** from source code and documentation files
+
+### New: Automatic KB Population
+
+The system now includes automatic knowledge extraction from project files:
+
+```bash
+# Populate KBs from all project files
+python .meta.tools/populate both      # Both KBs
+python .meta.tools/populate meta      # Meta Harness KB only
+python .meta.tools/populate agentx    # Agent-X KB only
+```
+
+**What it does:**
+1. Finds all `.meta*` directories automatically
+2. Traverses all Markdown files (`.md`)
+3. Analyzes Python source code in `src/` (classes, functions, imports)
+4. Extracts patterns, workflows, directives, architecture
+5. Populates both KBs with structured entries
+
+This ensures the KB contains **real project knowledge** from actual source code and documentation.
 
 ---
 
@@ -33,31 +54,31 @@ The Meta Harness approach:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    DISCOVERY (Agent Work)                   │
-│  Agent works on task → Encounters pattern/issue/insight    │
+│ DISCOVERY (Agent Work) │
+│ Agent works on task → Encounters pattern/issue/insight │
 └─────────────────────────────────────────────────────────────┘
-                            ↓
+↓
 ┌─────────────────────────────────────────────────────────────┐
-│               DOCUMENTATION (MCP: kb_add_entry)             │
-│  Agent stores finding → KB entry created with confidence   │
+│ DOCUMENTATION (kb_add_entry) │
+│ Agent stores finding → KB entry created with confidence │
 └─────────────────────────────────────────────────────────────┘
-                            ↓
+↓
 ┌─────────────────────────────────────────────────────────────┐
-│              DISTRIBUTION (MCP: kb_ask / kb_search)         │
-│  Next agent asks → RAG retrieves relevant knowledge         │
+│ DISTRIBUTION (kb_ask / kb_search) │
+│ Next agent asks → RAG retrieves relevant knowledge │
 └─────────────────────────────────────────────────────────────┘
-                            ↓
+↓
 ┌─────────────────────────────────────────────────────────────┐
-│                VALIDATION (MCP: kb_correct)                 │
-│  Agent finds error/updates → Confidence adjusted, corrected│
+│ VALIDATION (kb_correct) │
+│ Agent finds error/updates → Confidence adjusted, corrected│
 └─────────────────────────────────────────────────────────────┘
-                            ↓
+↓
 ┌─────────────────────────────────────────────────────────────┐
-│                  EVOLUTION (MCP: kb_evolve)                 │
-│  Periodic review → Decay unused, archive low-confidence    │
+│ EVOLUTION (kb_evolve) │
+│ Periodic review → Decay unused, archive low-confidence │
 └─────────────────────────────────────────────────────────────┘
-                            ↓
-                      (cycle repeats)
+↓
+(cycle repeats)
 ```
 
 ---
@@ -68,84 +89,58 @@ The Meta Harness approach:
 
 ```
 agent-x/
-├── opencode.jsonc                          # MCP configuration
 ├── doc/
-│   └── META-HARNESS-EVOLUTION.md           # This document
+│ └── META-HARNESS-EVOLUTION.md # This document
 │
-├── .meta.knowledge_base/                   # KNOWLEDGE STORAGE
-│   ├── knowledge.db                        # SQLite database
-│   │   ├── entries (knowledge entries)
-│   │   ├── corrections (correction history)
-│   │   ├── evolution_log (evolution events)
-│   │   └── FTS5 index (full-text search)
-│   ├── schemas/v1_schema.sql              # Database schema
-│   └── seed.py                            # Seed data
+├── .meta.data/kb-meta/ # KNOWLEDGE STORAGE
+│ ├── knowledge-meta.db # SQLite database
+│ │ ├── entries (knowledge entries)
+│ │ ├── corrections (correction history)
+│ │ ├── evolution_log (evolution events)
+│ │ └── FTS5 index (full-text search)
+│ └── agent-x/
+│     └── agent-x.db # Agent-X specific KB
 │
-└── .meta.development_tools/mcp/
-    └── meta-harness-knowledge-base/        # KNOWLEDGE INTERFACE
-        ├── knowledge_base_server.py        # MCP server
-        ├── rag_tool.py                     # RAG logic
-        ├── test_kb_tools.py                # Test suite
-        └── README.md                       # Documentation
+└── .meta.tools/ # KNOWLEDGE INTERFACE
+├── meta_tools.py # KB tools
+├── populate_kb.py # Population script
+└── README.md # Documentation
 ```
 
 ### Logical Layers
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ LAYER 1: AGENT LAYER                                    │
-│ - opencode AI agent                                     │
-│ - Receives user tasks                                   │
-│ - Queries KB before work                                │
-│ - Documents after work                                  │
+│ LAYER 1: AGENT LAYER │
+│ - opencode AI agent │
+│ - Receives user tasks │
+│ - Queries KB before work │
+│ - Documents after work │
 └─────────────────────────────────────────────────────────┘
-              │
-              │ MCP Protocol (JSON stdin/stdout)
-              ▼
+│
+│ Python imports
+▼
 ┌─────────────────────────────────────────────────────────┐
-│ LAYER 2: INTERFACE LAYER                                │
-│ - knowledge_base_server.py                              │
-│ - Routes tool calls                                     │
-│ - Handles JSON serialization                            │
-│ - Manages connections                                   │
+│ LAYER 2: LOGIC LAYER │
+│ - meta_tools.py │
+│ - kb_search(): Hybrid search (FTS5 + keyword) │
+│ - kb_ask(): RAG-augmented Q&A │
+│ - kb_add_entry(): Add knowledge │
+│ - kb_correct(): Auto-correct │
+│ - kb_evolve(): Run evolution │
+│ - kb_stats(): Statistics │
 └─────────────────────────────────────────────────────────┘
-              │
-              │ Python imports
-              ▼
+│
+│ SQLite
+▼
 ┌─────────────────────────────────────────────────────────┐
-│ LAYER 3: LOGIC LAYER                                    │
-│ - rag_tool.py                                           │
-│ - rag_search(): Hybrid search (FTS5 + keyword)          │
-│ - rag_ask(): RAG-augmented Q&A                          │
-│ - rag_add_entry(): Add knowledge                        │
-│ - rag_correct(): Auto-correct                           │
-│ - rag_evolve(): Run evolution                           │
-│ - rag_stats(): Statistics                               │
-└─────────────────────────────────────────────────────────┘
-              │
-              │ SQLite
-              ▼
-┌─────────────────────────────────────────────────────────┐
-│ LAYER 4: STORAGE LAYER                                  │
-│ - knowledge.db (SQLite)                                 │
-│ - Persistent storage                                    │
-│ - FTS5 full-text index                                  │
-│ - Embeddings (future)                                   │
+│ LAYER 3: STORAGE LAYER │
+│ - knowledge-meta.db (SQLite) │
+│ - agent-x.db (SQLite) │
+│ - Persistent storage │
+│ - FTS5 full-text index │
 └─────────────────────────────────────────────────────────┘
 ```
-
----
-
-## The Six Sacred Tools
-
-The MCP provides six fundamental operations that enable the evolution cycle:
-
-### 1. `kb_search` - Discovery
-**Purpose**: Find relevant knowledge  
-**Philosophy**: "Don't rediscover; search first"  
-**Usage**: Before starting any task
-
-```python
 result = rag_search("TDD workflow", top_k=3)
 # Returns: Relevant patterns and findings
 ```
@@ -426,20 +421,23 @@ Before any knowledge is trusted:
 
 ## Future Evolution
 
-### Phase 1: Manual (Current)
-- Agents manually call MCP tools
+### Phase 1: Manual (Foundation - Current)
+- Agents manually call KB tools
 - Human reviews corrections
 - Periodic evolution runs
+- **KB population from source code and docs** ✓ NEW
 
-### Phase 2: Semi-Automated
+### Phase 2: Semi-Automated (Current)
 - Auto-suggest entries after git commits
 - Auto-run evolution daily
 - Confidence thresholds trigger actions
+- **Automatic file traversal and analysis** ✓ NEW
 
-### Phase 3: Fully Automated
+### Phase 3: Fully Automated (Future)
 - Auto-detect patterns from code changes
 - Auto-correct based on test failures
 - Self-organizing knowledge graph
+- **Real-time KB updates from code commits**
 
 ### Phase 4: Predictive
 - Anticipate knowledge needs
