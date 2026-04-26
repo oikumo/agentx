@@ -79,13 +79,6 @@ Need to...
 - **Fix Bug**: Reproduce in sandbox, test, then merge
 - **Refactor**: Copy to sandbox, refactor, test, merge
 
-## Available Skills
-
-- `meta-harness-optimize` - Token optimization and structure analysis
-- `meta-harness-reflection` - Capability testing and assessment
-- `python-static-analysis` - Code quality and type checking
-- `find-skills` - Discover and install new skills
-
 ---
 
 ## Meta Harness Projects (User Tasks)
@@ -132,59 +125,6 @@ Need to...
 ---
 
 ## Knowledge Base User Commands
-
-This are prompt shortcuts that you must run when the User call it.
-
-
-#### Population Commands
-| Command | Description |
-|---------|-------------|
-| `meta kb populate both` | Populate both KBs (full refresh) |
-| `meta kb populate meta` | Populate Meta Harness KB only |
-| `meta kb populate agentx` | Populate Agent-X KB only |
-
-#### Search & Query Commands
-| Command | Description |
-|---------|-------------|
-| `meta kb search "TDD workflow"` | Search KB for patterns |
-| `meta kb ask "Where should I write tests?"` | Ask question with RAG |
-| `meta kb stats` | Show KB statistics |
-
-#### Knowledge Management Commands
-| Command | Description |
-|---------|-------------|
-| `meta kb add pattern workflow "Title" "Finding" "Solution"` | Add new entry |
-| `meta kb correct 123 "Outdated" "New finding"` | Correct existing entry |
-| `meta kb evolve` | Cleanup old entries |
-
-#### Maintenance Commands
-| Command | Description |
-|---------|-------------|
-| `meta token audit` | Analyze token usage |
-| `meta archive experiments` | Archive old experiments |
-| `meta health check` | Run harness health check |
-| `meta compress docs` | Compress documentation |
-| `meta structure analysis` | Analyze structure |
-
-### Project Commands
-
-#### Quick Projects (30 min - 1 hr)
-- `meta token audit` - Analyze token usage
-- `meta archive experiments` - Clean up old experiments
-- `meta consolidate docs` - Merge redundant docs
-- `meta health check` - Monthly health check
-
-#### Medium Projects (1-3 hrs)
-- `meta compress docs` - Compress documentation (30-50%)
-- `meta structure analysis` - Review directory structure
-- `meta create workflows` - Create workflow templates
-- `meta populate kb` - Populate knowledge base
-
-#### Advanced Projects (3+ hrs)
-- `meta optimize all` - Full optimization
-- `meta create skill` - Create new Meta Harness skill
-- `meta enhance workflows` - Improve existing workflows
-- `meta test capability` - Run reflection tests
 
 ### Decision Tree
 
