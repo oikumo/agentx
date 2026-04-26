@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-KB Population Script - Traverses all Meta Harness and Agent-X files
-and populates knowledge bases with LLM-analyzed insights.
+KB Population Script - Unified KB for Meta Harness and Agent-X
 
 This script:
 1. Finds all .meta.* directories and key documentation files
 2. Reads each file's content
 3. Uses LLM to analyze and extract key insights
 4. Creates structured knowledge base entries
-5. Populates the appropriate KB (Meta Harness or Agent-X)
+5. Populates the unified Meta Harness KB
 
 Usage:
-    python .meta.tools/populate_kb.py [--kb both|meta|agentx] [--verbose]
+python .meta.tools/populate_kb.py [--kb both|meta] [--verbose]
 """
 
 import sys
@@ -23,25 +22,28 @@ from typing import Dict, List, Tuple
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from meta_tools import meta_kb, agentx_kb, KnowledgeBase
+from meta_tools import kb, KnowledgeBase
+
+# Backward compatibility aliases
+meta_kb = kb
 
 
 class KBPopulator:
-    """Traverses project files and populates KBs with analyzed knowledge."""
+    """Traverses project files and populates unified KB with analyzed knowledge."""
     
     def __init__(self, target_kb: str = "both", verbose: bool = True):
         """
         Initialize KB Populator.
-        
+
         Args:
-            target_kb: Which KB to populate ('meta', 'agentx', or 'both')
+            target_kb: Which KB to populate ('both' or 'meta' - now unified)
             verbose: Print progress information
         """
         self.target_kb = target_kb
         self.verbose = verbose
         # Correct base path: .meta.tools is in .meta.tools/, so parent.parent.parent = project root
         self.base_path = Path(__file__).parent.parent
-        self.entries_added = {"meta": 0, "agentx": 0}
+        self.entries_added = {"meta": 0}
     
     def find_all_meta_files(self) -> List[Tuple[Path, str]]:
         """
@@ -381,71 +383,63 @@ class KBPopulator:
         )
     
     def populate(self):
-        """Execute the population process."""
+        """Execute the population process - unified KB."""
         if self.verbose:
             print("=" * 70)
-            print("KB Population - File Traversal & LLM Analysis")
+            print("KB Population - Unified KB (Meta Harness + Agent-X)")
             print("=" * 70)
-        
+
         # Find all files
         files = self.find_all_meta_files()
-        
+
         if self.verbose:
             print(f"\nFound {len(files)} files to analyze\n")
-        
-        # Process each file
+
+        # Process each file - all go to unified KB
         for file_path, kb_type in files:
             if self.verbose:
                 print(f"Processing: {file_path.relative_to(self.base_path)}")
-            
+
             # Analyze file
             analysis = self.analyze_file_with_llm(file_path)
-            
+
             if not analysis:
                 if self.verbose:
-                    print(f"  ✗ No content extracted")
+                    print(f" ✗ No content extracted")
                 continue
-            
+
             # Create entries
             entries = self.create_kb_entries(file_path, analysis, kb_type)
-            
-            # Add to appropriate KB
+
+            # Add to unified KB
             for entry in entries:
                 try:
-                    if kb_type == "meta" or kb_type == "both":
-                        result = self.add_entry(meta_kb, entry)
-                        self.entries_added["meta"] += 1
-                        if self.verbose:
-                            print(f"  ✓ Added to Meta KB: {entry['title'][:60]}...")
-                    
-                    if kb_type == "agentx" or kb_type == "both":
-                        result = self.add_entry(agentx_kb, entry)
-                        self.entries_added["agentx"] += 1
-                        if self.verbose:
-                            print(f"  ✓ Added to AgentX KB: {entry['title'][:60]}...")
+                    result = self.add_entry(kb, entry)
+                    self.entries_added["meta"] += 1
+                    if self.verbose:
+                        print(f" ✓ Added: {entry['title'][:60]}...")
                 except Exception as e:
                     if self.verbose:
-                        print(f"  ✗ Error adding entry: {e}")
-        
+                        print(f" ✗ Error adding entry: {e}")
+
         # Summary
         if self.verbose:
             print(f"\n✓ Complete!")
-            print(f"  Meta KB: {self.entries_added['meta']} entries")
-            print(f"  Agent-X KB: {self.entries_added['agentx']} entries\n")
+            print(f" Total entries added: {self.entries_added['meta']}\n")
 
 
 def main():
     """Main entry point."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
-        description="Populate knowledge bases by traversing project files"
+        description="Populate unified knowledge base by traversing project files"
     )
     parser.add_argument(
         "--kb",
-        choices=["meta", "agentx", "both"],
+        choices=["both", "meta"],
         default="both",
-        help="Which KB to populate (default: both)"
+        help="Which KB to populate (default: both - now unified)"
     )
     parser.add_argument(
         "--verbose",
@@ -453,9 +447,9 @@ def main():
         default=True,
         help="Print progress information"
     )
-    
+
     args = parser.parse_args()
-    
+
     populator = KBPopulator(target_kb=args.kb, verbose=args.verbose)
     populator.populate()
 
