@@ -11,6 +11,19 @@ Meta commands are **natural language prompts** you use during AI agent conversat
 - `meta health check` - Check harness health
 - `meta kb populate both` - Populate both KBs
 
+### Print All Commands
+
+```bash
+# Show all available meta commands
+meta
+
+# Or with help flag
+meta --help
+meta -h
+```
+
+This displays the complete command reference with descriptions and examples.
+
 ---
 
 ## Knowledge Base Commands
@@ -150,6 +163,8 @@ Need to...
 ├─ Compress docs? → meta compress docs
 ├─ Analyze structure? → meta structure analysis
 └─ Create skill? → meta create skill
+
+Unsure? → meta (shows all commands)
 ```
 
 ---
@@ -325,5 +340,89 @@ Summary/Result
 
 ---
 
+## Complete Command Reference
+
+### Quick Reference Card
+
+```
+# Knowledge Base
+meta kb populate [both|meta|agentx]
+meta kb search "<query>" [--top_k N]
+meta kb ask "<question>"
+meta kb stats
+meta kb add pattern <category> "<title>" "<finding>" "<solution>"
+meta kb correct <id> "<reason>" "<new_finding>"
+meta kb evolve
+
+# Optimization
+meta token audit [--output file.md]
+meta compress docs [--target ratio]
+meta structure analysis
+meta health check
+meta archive experiments [--older_than_days N]
+
+# Projects
+meta token audit              # Quick (30 min)
+meta archive experiments      # Quick (30 min)
+meta consolidate docs         # Quick (30 min)
+meta health check             # Quick (30 min)
+meta compress docs            # Medium (1-2 hrs)
+meta structure analysis       # Medium (1-2 hrs)
+meta create workflows         # Medium (1-2 hrs)
+meta populate kb              # Medium (1-2 hrs)
+meta optimize all             # Advanced (3+ hrs)
+meta create skill             # Advanced (3+ hrs)
+meta enhance workflows        # Advanced (3+ hrs)
+meta test capability          # Advanced (3+ hrs)
+
+# Help
+meta                          # Show this reference
+meta --help                   # Show help
+```
+
+### All Commands by Category
+
+#### Knowledge Base (10 commands)
+1. `meta kb populate both` - Clean and populate both KBs
+2. `meta kb populate meta` - Populate Meta Harness KB only
+3. `meta kb populate agentx` - Populate Agent-X KB only
+4. `meta kb search "<query>"` - Search knowledge base
+5. `meta kb ask "<question>"` - Ask question with RAG
+6. `meta kb stats` - Show KB statistics
+7. `meta kb add pattern ...` - Add pattern entry
+8. `meta kb add finding ...` - Add finding entry
+9. `meta kb correct ...` - Correct existing entry
+10. `meta kb evolve` - Run evolution cycle
+
+#### Optimization (5 commands)
+11. `meta token audit` - Analyze token consumption
+12. `meta compress docs` - Compress documentation
+13. `meta structure analysis` - Analyze directory structure
+14. `meta health check` - Run harness health check
+15. `meta archive experiments` - Archive old experiments
+
+#### Projects (12 commands)
+16. `meta token audit` - Quick token audit (30 min)
+17. `meta archive experiments` - Quick archive (30 min)
+18. `meta consolidate docs` - Quick consolidation (30 min)
+19. `meta health check` - Quick health check (30 min)
+20. `meta compress docs` - Medium compression (1-2 hrs)
+21. `meta structure analysis` - Medium analysis (1-2 hrs)
+22. `meta create workflows` - Medium workflow creation (1-2 hrs)
+23. `meta populate kb` - Medium KB population (1-2 hrs)
+24. `meta optimize all` - Advanced full optimization (3+ hrs)
+25. `meta create skill` - Advanced skill development (3+ hrs)
+26. `meta enhance workflows` - Advanced enhancement (3+ hrs)
+27. `meta test capability` - Advanced reflection test (3+ hrs)
+
+#### Help & Info (2 commands)
+28. `meta` - Show all commands (this reference)
+29. `meta --help` - Show help information
+
+**Total**: 29 meta commands available
+
+---
+
 **Version**: 1.0.0  
-**Maintained by**: opencode AI agent
+**Maintained by**: opencode AI agent  
+**Updated**: 2026-04-25

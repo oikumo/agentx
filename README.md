@@ -311,9 +311,9 @@ main.py
 
 ---
 
-## Development with Meta Project Harness
+## Development with Meta Harness
 
-Agent-X uses the **Meta Project Harness** - a structured development system optimized for AI-assisted development.
+Agent-X uses the **Meta Harness** - a structured development system optimized for AI-assisted development.
 
 ### Key Directories
 

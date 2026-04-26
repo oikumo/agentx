@@ -152,6 +152,9 @@ Need to...
 ### Quick Start
 
 ```bash
+# Show all commands
+meta
+
 # During AI agent conversation (recommended)
 meta kb populate both
 
