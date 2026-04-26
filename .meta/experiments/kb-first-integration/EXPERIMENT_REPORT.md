@@ -51,7 +51,7 @@ The Full-Text Search (FTS) index was empty. Fixed by:
 - ✅ Reads ALL `.md` files in `.meta` directory and subdirectories
 - ✅ Processes all Python source code in `src/agentx/`
 - ✅ Creates structured KB entries with Advanced RAG
-- ✅ Result: 371 entries from 114 files
+- ✅ Result: 1662 entries from 114 files
 
 ---
 
@@ -128,8 +128,8 @@ Opencode (with KB-First prompt in opencode.jsonc)
 Automatic KB Query (Advanced RAG)
 python3 .meta/tools/meta-harness-knowledge-base/kb ask "What is MainController?" --top-k 3
        ↓
-KB Database (.meta/data/kb-meta/agent-x/agent-x.db)
-- 371 entries indexed in FTS
+KB Database (.meta/data/kb-meta/knowledge-meta.db)
+- 1662 entries indexed in FTS
 - Full-text search enabled
        ↓
 Synthesized Answer (from KB entries)
@@ -188,7 +188,7 @@ python3 .meta/tools/populate_kb.py
 ```bash
 python3 -c "
 import sqlite3
-conn = sqlite3.connect('.meta/data/kb-meta/agent-x/agent-x.db')
+conn = sqlite3.connect('.meta/data/kb-meta/knowledge-meta.db')
 cursor = conn.cursor()
 cursor.execute('INSERT INTO entries_fts(entries_fts) VALUES(\"rebuild\")')
 conn.commit()
