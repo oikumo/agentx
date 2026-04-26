@@ -27,6 +27,58 @@ The Meta Harness Knowledge Base is a Retrieval-Augmented Generation (RAG) system
 
 ## Usage
 
+### Command Line (Enhanced)
+
+```bash
+# Advanced search with query expansion
+python .meta.tools/meta-harness-knowledge-base/kb search "TDD workflow" -k 5
+
+# Ask with answer synthesis
+python .meta.tools/meta-harness-knowledge-base/kb ask "Where should I write tests?"
+
+# Explore by category
+python .meta.tools/meta-harness-knowledge-base/kb explore
+python .meta.tools/meta-harness-knowledge-base/kb explore workflow
+
+# Interactive chat mode
+python .meta.tools/meta-harness-knowledge-base/kb chat
+
+# Get statistics
+python .meta.tools/meta-harness-knowledge-base/kb stats
+
+# Add new entry
+python .meta.tools/meta-harness-knowledge-base/kb add pattern workflow "Feature Implementation" "Work in .meta.sandbox/" "Copy → Modify → Test"
+```
+
+### Python API (Advanced)
+
+```python
+from src.advanced_rag import AdvancedRAG
+
+rag = AdvancedRAG()
+
+# Advanced search with multi-hop retrieval
+result = rag.advanced_search(
+    "TDD workflow",
+    top_k=5,
+    use_multi_hop=True,
+    use_diversification=True
+)
+
+# Ask with synthesis
+result = rag.ask("Where should I write tests?", top_k=5)
+
+# Query expansion
+variations = rag.rewrite_query("complex query")
+
+# Multi-hop retrieval
+results = rag.multi_hop_retrieval("query", max_hops=2)
+
+rag.close()
+```
+
+### Python API
+
 ### Search Knowledge
 ```python
 # Search for relevant entries
@@ -43,11 +95,11 @@ result = kb_ask("Where should I write tests?")
 ```python
 # Document new findings
 result = kb_add_entry(
-    entry_type="pattern",
-    category="workflow",
-    title="Feature Implementation",
-    finding="Work in .meta.sandbox/",
-    solution="Copy → Modify → Test"
+entry_type="pattern",
+category="workflow",
+title="Feature Implementation",
+finding="Work in .meta.sandbox/",
+solution="Copy → Modify → Test"
 )
 ```
 
@@ -100,7 +152,9 @@ Before adding knowledge:
 ## References
 
 - Core implementation: [rag_tool.py](src/rag_tool.py)
+- Advanced RAG: [advanced_rag.py](src/advanced_rag.py)
 - Usage examples: [knowledge_base.py](knowledge_base.py)
+- Advanced features: [ADVANCED_FEATURES.md](ADVANCED_FEATURES.md)
 - Project workflows: [.meta.project_development/WORKFLOWS.md](../../.meta.project_development/WORKFLOWS.md)
 
 ---

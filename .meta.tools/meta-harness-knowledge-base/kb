@@ -1,0 +1,335 @@
+#!/usr/bin/env python3
+"""
+Enhanced Knowledge Base CLI with Advanced RAG
+
+Features:
+- Advanced query expansion
+- Multi-hop retrieval
+- Semantic clustering
+- LLM-powered synthesis
+- Conversational context
+- Rich formatting
+
+Usage:
+    python kb search "query" [options]
+    python kb ask "question" [options]
+    python kb stats
+    python kb add <type> <category> <title> <finding> <solution>
+    python kb explore [category]
+    python kb chat  # Interactive mode
+"""
+
+import sys
+import json
+import argparse
+from pathlib import Path
+from datetime import datetime
+from typing import List, Dict, Any
+
+# Add current directory to path
+sys.path.insert(0, str(Path(__file__).parent))
+
+from knowledge_base import kb_search, kb_ask, kb_stats, kb_add_entry
+from src.advanced_rag import AdvancedRAG
+
+
+def format_result(result: Dict, use_color: bool = True) -> str:
+    """Format search result with optional colors."""
+    lines = []
+    
+    # Header
+    lines.append(f"\n{'='*80}")
+    
+    # Title with color
+    title = result.get('title', 'No title')
+    if use_color:
+        lines.append(f"\033[1;36m{title}\033[0m")  # Cyan bold
+    else:
+        lines.append(title)
+    
+    # Metadata
+    meta_parts = []
+    if result.get('type'):
+        meta_parts.append(result['type'].upper())
+    if result.get('category'):
+        meta_parts.append(result['category'])
+    if result.get('confidence'):
+        conf = result['confidence']
+        if use_color:
+            if conf >= 0.9:
+                color = '\033[92m'  # Green
+            elif conf >= 0.7:
+                color = '\033[93m'  # Yellow
+            else:
+                color = '\033[91m'  # Red
+            meta_parts.append(f"{color}Conf: {conf:.2f}\033[0m")
+        else:
+            meta_parts.append(f"Conf: {conf:.2f}")
+    
+    lines.append(" | ".join(meta_parts))
+    lines.append(f"ID: {result.get('id', 'N/A')}")
+    
+    # Content
+    if result.get('finding'):
+        lines.append(f"\nFinding:\n  {result['finding']}")
+    
+    if result.get('solution'):
+        lines.append(f"\nSolution:\n  {result['solution']}")
+    
+    if result.get('example'):
+        lines.append(f"\nExample:\n  {result['example']}")
+    
+    return "\n".join(lines)
+
+
+def format_synthesis(result: Dict, use_color: bool = True) -> str:
+    """Format synthesized answer."""
+    lines = []
+    
+    if use_color:
+        lines.append(f"\n\033[1;32m✓ Answer synthesized from {result.get('result_count', 0)} sources\033[0m")
+        lines.append(f"\033[90mConfidence: {result.get('confidence', 0):.2f}\033[0m\n")
+    else:
+        lines.append(f"✓ Answer synthesized from {result.get('result_count', 0)} sources")
+        lines.append(f"Confidence: {result.get('confidence', 0):.2f}\n")
+    
+    lines.append(result.get('answer', ''))
+    
+    # Sources
+    sources = result.get('sources', [])
+    if sources:
+        lines.append(f"\n{'='*80}")
+        lines.append("Sources:")
+        for i, src in enumerate(sources[:5], 1):  # Top 5 sources
+            lines.append(f"  {i}. [{src['id']}] {src['title']} (Conf: {src['confidence']:.2f})")
+    
+    return "\n".join(lines)
+
+
+def cmd_search(args):
+    """Execute search command."""
+    rag = AdvancedRAG()
+    try:
+        result = rag.advanced_search(
+            args.query,
+            top_k=args.top_k,
+            use_multi_hop=not args.simple,
+            use_diversification=not args.simple
+        )
+        
+        if result['success']:
+            print(f"\nSearch results for: '{args.query}'")
+            print(f"Query variations used: {result['metadata']['query_variations_used']}")
+            print(f"Retrieval time: {result['metadata']['retrieval_time_sec']:.3f}s\n")
+            
+            if result['count'] == 0:
+                print("No results found.")
+                return
+            
+            for entry in result['results']:
+                print(format_result(entry, use_color=not args.no_color))
+            
+            print(f"\n{'='*80}")
+            print(f"Total: {result['count']} results")
+        else:
+            print(f"Error: {result.get('error', 'Unknown error')}")
+    finally:
+        rag.close()
+
+
+def cmd_ask(args):
+    """Execute ask command."""
+    rag = AdvancedRAG()
+    try:
+        result = rag.ask(
+            args.question,
+            top_k=args.top_k,
+            use_advanced=not args.simple,
+            synthesize=True
+        )
+        
+        if result['success']:
+            print(format_synthesis(result, use_color=not args.no_color))
+        else:
+            print(f"Error: {result.get('error', 'Unknown error')}")
+    finally:
+        rag.close()
+
+
+def cmd_stats(args):
+    """Execute stats command."""
+    print(kb_stats())
+
+
+def cmd_add(args):
+    """Execute add command."""
+    result = kb_add_entry(
+        args.type,
+        args.category,
+        args.title,
+        args.finding,
+        args.solution,
+        args.context or "",
+        args.confidence or 0.5,
+        args.example or ""
+    )
+    print(result)
+
+
+def cmd_explore(args):
+    """Explore knowledge base by category."""
+    rag = AdvancedRAG()
+    try:
+        # Get all categories
+        cursor = rag.conn.cursor()
+        
+        if args.category:
+            cursor.execute("""
+                SELECT type, COUNT(*) as count, AVG(confidence) as avg_conf
+                FROM entries 
+                WHERE category = ? AND is_deprecated = 0
+                GROUP BY type
+            """, (args.category,))
+        else:
+            cursor.execute("""
+                SELECT category, type, COUNT(*) as count, AVG(confidence) as avg_conf
+                FROM entries 
+                WHERE is_deprecated = 0
+                GROUP BY category, type
+            """)
+        
+        results = cursor.fetchall()
+        
+        if not args.category:
+            # Group by category
+            by_category = {}
+            for row in results:
+                cat = row[0]
+                if cat not in by_category:
+                    by_category[cat] = {'types': [], 'total': 0}
+                by_category[cat]['types'].append({
+                    'type': row[1],
+                    'count': row[2],
+                    'avg_conf': row[3] or 0
+                })
+                by_category[cat]['total'] += row[2]
+            
+            print("\nKnowledge Base Exploration")
+            print("="*60)
+            for cat, data in sorted(by_category.items(), key=lambda x: -x[1]['total']):
+                print(f"\n{cat.upper()} ({data['total']} entries)")
+                for t in sorted(data['types'], key=lambda x: -x['count']):
+                    print(f"  - {t['type']}: {t['count']} (avg conf: {t['avg_conf']:.2f})")
+        else:
+            print(f"\nCategory: {args.category}")
+            print("="*60)
+            for row in results:
+                print(f"  {row[1]}: {row[2]} entries (avg conf: {row[3] or 0:.2f})")
+    
+    finally:
+        rag.close()
+
+
+def cmd_chat(args):
+    """Interactive chat mode."""
+    print("\nKB Chat Mode - Type 'quit' or 'exit' to stop\n")
+    
+    rag = AdvancedRAG()
+    try:
+        conversation_history = []
+        
+        while True:
+            try:
+                user_input = input("\n\033[1;32mYou:\033[0m ").strip()
+            except EOFError:
+                break
+            
+            if not user_input:
+                continue
+            
+            if user_input.lower() in ['quit', 'exit', 'q']:
+                print("Goodbye!")
+                break
+            
+            # Use advanced ask
+            result = rag.ask(user_input, top_k=5, use_advanced=True, synthesize=True)
+            
+            if result['success']:
+                print(f"\n\033[1;34mKB:\033[0m")
+                print(result['answer'][:2000])  # Limit output
+                
+                # Track conversation
+                conversation_history.append({
+                    'question': user_input,
+                    'answer': result['answer'],
+                    'sources': result.get('sources', []),
+                    'confidence': result.get('confidence', 0)
+                })
+            else:
+                print(f"Error: {result.get('error', 'Unknown error')}")
+    
+    finally:
+        rag.close()
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Enhanced Knowledge Base CLI",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__
+    )
+    
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    
+    # Search command
+    search_parser = subparsers.add_parser('search', help='Search KB')
+    search_parser.add_argument('query', type=str, help='Search query')
+    search_parser.add_argument('-k', '--top-k', type=int, default=5, help='Number of results')
+    search_parser.add_argument('--simple', action='store_true', help='Simple search (no advanced features)')
+    search_parser.add_argument('--no-color', action='store_true', help='Disable colors')
+    search_parser.set_defaults(func=cmd_search)
+    
+    # Ask command
+    ask_parser = subparsers.add_parser('ask', help='Ask question')
+    ask_parser.add_argument('question', type=str, help='Question to ask')
+    ask_parser.add_argument('-k', '--top-k', type=int, default=5, help='Number of results')
+    ask_parser.add_argument('--simple', action='store_true', help='Simple retrieval')
+    ask_parser.add_argument('--no-color', action='store_true', help='Disable colors')
+    ask_parser.set_defaults(func=cmd_ask)
+    
+    # Stats command
+    stats_parser = subparsers.add_parser('stats', help='Show statistics')
+    stats_parser.set_defaults(func=cmd_stats)
+    
+    # Add command
+    add_parser = subparsers.add_parser('add', help='Add entry')
+    add_parser.add_argument('type', choices=['pattern', 'finding', 'decision', 'correction'], help='Entry type')
+    add_parser.add_argument('category', type=str, help='Category')
+    add_parser.add_argument('title', type=str, help='Title')
+    add_parser.add_argument('finding', type=str, help='Finding')
+    add_parser.add_argument('solution', type=str, help='Solution')
+    add_parser.add_argument('--context', type=str, default='', help='Context')
+    add_parser.add_argument('--confidence', type=float, default=0.5, help='Confidence (0-1)')
+    add_parser.add_argument('--example', type=str, default='', help='Example')
+    add_parser.set_defaults(func=cmd_add)
+    
+    # Explore command
+    explore_parser = subparsers.add_parser('explore', help='Explore KB')
+    explore_parser.add_argument('category', nargs='?', help='Optional category to explore')
+    explore_parser.set_defaults(func=cmd_explore)
+    
+    # Chat command
+    chat_parser = subparsers.add_parser('chat', help='Interactive chat mode')
+    chat_parser.set_defaults(func=cmd_chat)
+    
+    args = parser.parse_args()
+    
+    if not args.command:
+        parser.print_help()
+        sys.exit(0)
+    
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()
