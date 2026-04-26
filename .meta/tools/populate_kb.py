@@ -66,41 +66,46 @@ class KBPopulator:
             if file_path.exists():
                 files_to_analyze.append((file_path, "both"))
         
-        # Find ALL directories starting with .meta
-        meta_dirs = []
-        for item in self.base_path.iterdir():
-            if item.is_dir() and item.name.startswith('.meta'):
-                meta_dirs.append(item)
-        
-        if self.verbose:
-            print(f"Found {len(meta_dirs)} .meta* directories: {[d.name for d in meta_dirs]}")
-        
-        for meta_path in meta_dirs:
-            if not meta_path.exists():
-                continue
-            
-            # Find all META.md files
+    # ALWAYS include .meta directory itself and ALL its subdirectories
+        meta_path = self.base_path  # This is .meta/
+        if meta_path.exists():
+            if self.verbose:
+                print(f"Processing .meta directory: {meta_path}")
+
+            # Find all META.md files in .meta and subdirs
             for meta_file in meta_path.rglob("META.md"):
                 files_to_analyze.append((meta_file, "meta"))
-            
-            # Find all .md files in .meta directories
+
+            # Find ALL .md files in .meta and subdirs (this is the key fix!)
             for md_file in meta_path.rglob("*.md"):
                 if md_file.name != "META.md":
                     files_to_analyze.append((md_file, "meta"))
+
+        # Also check for other .meta* directories (like .meta.data)
+        for item in self.base_path.iterdir():
+            if item.is_dir() and item.name.startswith('.meta') and item != meta_path:
+                if self.verbose:
+                    print(f"Also processing: {item.name}")
+                for md_file in item.rglob("*.md"):
+                    files_to_analyze.append((md_file, "meta"))
         
-        # ===== Agent-X Source Code (CRITICAL!) =====
-        # Analyze actual Python source code in src/
-        src_path = self.base_path / "src"
+# ===== Agent-X Source Code (CRITICAL!) =====
+        # Analyze actual Python source code in src/agentx/
+        src_path = self.base_path.parent / "src"  # Go up from .meta to src
         if src_path.exists():
             if self.verbose:
                 print(f"Found src/ directory - analyzing source code...")
-            
-            # All Python files
-            for py_file in src_path.rglob("*.py"):
-                # Skip __pycache__ and virtual environments
-                if '__pycache__' not in str(py_file) and '.venv' not in str(py_file):
-                    files_to_analyze.append((py_file, "agentx"))
-            
+
+            # All Python files in src/agentx/
+            agentx_path = src_path / "agentx"
+            if agentx_path.exists():
+                for py_file in agentx_path.rglob("*.py"):
+                    # Skip __pycache__ and virtual environments
+                    if '__pycache__' not in str(py_file) and '.venv' not in str(py_file):
+                        files_to_analyze.append((py_file, "agentx"))
+                        if self.verbose:
+                            print(f"  Adding source: {py_file.name}")
+
             # All markdown in src
             for md_file in src_path.rglob("*.md"):
                 files_to_analyze.append((md_file, "agentx"))
@@ -398,7 +403,11 @@ class KBPopulator:
         # Process each file - all go to unified KB
         for file_path, kb_type in files:
             if self.verbose:
-                print(f"Processing: {file_path.relative_to(self.base_path)}")
+                try:
+                    print(f"Processing: {file_path.relative_to(self.base_path)}")
+                except ValueError:
+                    # File is not relative to base_path (e.g., src/ files)
+                    print(f"Processing: {file_path}")
 
             # Analyze file
             analysis = self.analyze_file_with_llm(file_path)
