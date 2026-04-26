@@ -3,8 +3,8 @@ import sys
 from pathlib import Path
 
 # Path to knowledge base (go up from .meta/development_tools/mcp/meta-harness-knowledge-base to project root)
-KB_PATH = Path(__file__).parent.parent.parent / ".meta.data"
-DB_PATH = KB_PATH / "kb-meta" / "knowledge-meta.db"
+KB_PATH = Path(__file__).parent.parent.parent / ".meta" / "data" / "kb-meta"
+DB_PATH = KB_PATH / "knowledge-meta.db"
 
 # Add KB to path for imports
 sys.path.insert(0, str(KB_PATH))

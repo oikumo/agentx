@@ -14,7 +14,7 @@ import sqlite3
 from pathlib import Path
 
 # KB database path
-KB_DB = Path(".meta/data/kb-meta/agent-x/agent-x.db")
+KB_DB = Path(".meta/data/kb-meta/knowledge-meta.db")
 
 def test_kb_has_maincontroller_info():
     """Test 1: Verify KB contains MainController information"""

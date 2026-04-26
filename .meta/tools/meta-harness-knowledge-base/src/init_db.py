@@ -96,6 +96,6 @@ def init_db(DB_PATH: Path):
 
 if __name__ == "__main__":
     # Default path: project root/.meta/data/kb-meta/
-    KB_PATH = Path(__file__).parent.parent.parent.parent / ".meta.data" / "kb-meta"
+    KB_PATH = Path(__file__).parent.parent.parent.parent / ".meta" / "data" / "kb-meta"
     DB_PATH = KB_PATH / "knowledge-meta.db"
     init_db(DB_PATH)

@@ -37,13 +37,18 @@ def get_db_connection(DB_PATH: Optional[Path] = None) -> sqlite3.Connection:
     """
     if DB_PATH is None:
         # Default path: project root/.meta/data/kb-meta/knowledge-meta.db
-        KB_PATH = Path(__file__).parent.parent.parent.parent / ".meta.data" / "kb-meta"
-        DB_PATH = KB_PATH / "knowledge-meta.db"
+        project_root = Path(__file__).parent.parent.parent.parent.parent
+        DB_PATH = project_root / ".meta" / "data" / "kb-meta" / "knowledge-meta.db"
     
     if not DB_PATH.exists():
         # Auto-initialize database if it doesn't exist
-        from .init_db import init_db
-        init_db(DB_PATH)
+        # Use absolute import to avoid relative import issues
+        import importlib.util
+        init_db_path = Path(__file__).parent / "init_db.py"
+        spec = importlib.util.spec_from_file_location("init_db", init_db_path)
+        init_db_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(init_db_module)
+        init_db_module.init_db(DB_PATH)
     
     conn = sqlite3.connect(str(DB_PATH), timeout=30.0)
     conn.row_factory = sqlite3.Row
