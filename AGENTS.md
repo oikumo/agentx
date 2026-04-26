@@ -201,7 +201,7 @@ Need to...
 └─ Create skill? → meta create skill
 ```
 
-**Full Documentation**: [`.meta.tools/META_COMMANDS.md`](.meta.tools/META_COMMANDS.md)
+**Full Documentation**: [`./META_COMMANDS.md`](./META_COMMANDS.md)
 
 ### Example Workflow
 
