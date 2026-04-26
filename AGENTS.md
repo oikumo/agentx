@@ -1,10 +1,13 @@
 # System Rules
 
 > **⚠️ MANDATORY FIRST STEP FOR ALL AGENTS:** Before ANY task, you MUST query the Knowledge Base first at `.meta/knowledge_base/` or run `meta kb ask <query>`. This is non-negotiable and applies to EVERY task.
+>
+> **FAILURE TO QUERY KB FIRST = TASK FAILURE** - Agents must demonstrate KB usage in every response
 
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 0. **ALWAYS query KB first** - Before ANY task, search `.meta/knowledge_base/` or use `meta kb ask` - THIS IS MANDATORY
 0a. **IF KB IS EMPTY, POPULATE IT** - If KB has no entries, run `meta kb populate` BEFORE proceeding with the task
+0b. **ALWAYS REFERENCE KB** - Every response must cite KB entries or explain why KB was not consulted
 1. **NEVER commit/push** - Not even if user asks
 2. **ALWAYS follow the META rules** Rules are in this file
 3. **NEVER add dependencies** - Use existing; approval required
@@ -34,7 +37,14 @@ Structured development system for AI-assisted development:
 - `meta kb evolve` - Evolve KB
 
 ## Knowledge Base Rules
-**MANDATORY**: Before answering any project-specific question, agents must query the KB first.
+**MANDATORY**: Before answering any project-specific question, agents must query the KB first at `.meta/knowledge_base/META.md` or run `meta kb ask <query>`.
+
+**ENFORCEMENT**:
+- Agents must query KB before ANY task
+- Agents must demonstrate KB usage in every response
+- If KB is empty, agents must run `meta kb populate` BEFORE proceeding
+- Every response must cite KB entries or explain why KB was not consulted
+- Failure to query KB first = task failure
 
 Based on `.meta/knowledge_base/META.md`:
 
@@ -171,7 +181,7 @@ agent-x/
 **Rule:** All `.meta/*` subdirs contain META.md - read first.
 
 ## Workflow (5 Steps)
-1. **UNDERSTAND** - **ALWAYS query KB first** (.meta/knowledge_base/ or `meta kb ask`) → **IF KB EMPTY, run `meta kb populate` FIRST** → Then read task + git log + META.md
+1. **UNDERSTAND** - **ALWAYS query KB first** (.meta/knowledge_base/ or `meta kb ask`) → **IF KB EMPTY, run `meta kb populate` FIRST** → **Demonstrate KB query in response** → Then read task + git log + META.md
 2. **PLAN** - Identify correct directory (see Decision Tree)
 3. **EXECUTE** - Work in safe space, test frequently
 4. **VALIDATE** - Tests pass, no production break
@@ -180,8 +190,8 @@ agent-x/
 ## Decision Tree
 ```
 Need to...
-├─ Understand something? → **KB FIRST** (.meta/knowledge_base/ or `meta kb ask`) → **IF EMPTY: `meta kb populate`** THEN proceed below
-├─ Understand rules? → Read META.md
+├─ Understand something? → **KB FIRST** (.meta/knowledge_base/ or `meta kb ask`) → **IF EMPTY: `meta kb populate`** → **Cite KB in response** THEN proceed below
+├─ Understand rules? → Read META.md (via KB)
 ├─ Modify code? → .meta/sandbox/
 ├─ Test idea? → .meta/experiments/
 ├─ Write tests? → .meta/tests_sandbox/
@@ -192,6 +202,7 @@ Need to...
 ## Quality Gates
 - [ ] **Queried KB first** (MANDATORY - before ANY task, search `.meta/knowledge_base/` or use `meta kb ask`)
 - [ ] **Populated KB if empty** (If KB was empty, ran `meta kb populate` before proceeding)
+- [ ] **Referenced KB in response** (Demonstrated KB usage or explained why not consulted)
 - [ ] Checked git log
 - [ ] Working in correct .meta/* subdirectory
 - [ ] Tests pass (if applicable)
@@ -231,8 +242,7 @@ Need to...
 - [META_HARNESS.md](META_HARNESS.md) - Master docs
 - [WORKFLOWS.md](.meta/project_development/WORKFLOWS.md) - Workflows
 - [QUICK_REFERENCE.md](.meta/project_development/QUICK_REFERENCE.md) - Quick ref
-- [KB_GUIDE.md](.meta/tools/KB_GUIDE.md) - KB details
-- [KB META.md](.meta/knowledge_base/META.md) - KB guidelines
+- [KB META.md](.meta/knowledge_base/META.md) - **Consolidated KB documentation (READ FIRST)**
 
 ---
 **Version:** 2.2.0 | **Updated:** 2026-04-25
