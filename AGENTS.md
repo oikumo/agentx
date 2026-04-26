@@ -43,6 +43,7 @@ agent-x/
 ## Decision Tree
 ```
 Need to...
+├─ Understand something? → Query KB first (.meta/knowledge_base/)
 ├─ Understand rules? → Read META.md
 ├─ Modify code? → .meta/sandbox/
 ├─ Test idea? → .meta/experiments/
@@ -52,6 +53,7 @@ Need to...
 ```
 
 ## Quality Gates
+- [ ] **Queried KB first** (mandatory before any task)
 - [ ] Checked git log
 - [ ] Working in correct .meta/* subdirectory
 - [ ] Tests pass (if applicable)
@@ -105,6 +107,7 @@ Quick reference:
 - [WORKFLOWS.md](.meta/project_development/WORKFLOWS.md) - Workflows
 - [QUICK_REFERENCE.md](.meta/project_development/QUICK_REFERENCE.md) - Quick ref
 - [KB_GUIDE.md](.meta/tools/KB_GUIDE.md) - KB details
+- [KB META.md](.meta/knowledge_base/META.md) - KB guidelines
 
 ---
 **Version:** 2.2.0 | **Updated:** 2026-04-25
