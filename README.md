@@ -187,6 +187,29 @@ Sessions are isolated and command history is persisted per session.
 
 If no name is provided, a default session name will be used.
 
+### Session State with Petri Nets
+
+agentx uses **Petri Nets** to formally model and track the semantic state of user queries throughout a session. This provides:
+
+- **Formal State Tracking**: Mathematically rigorous session progression
+- **Semantic Representation**: User intent captured as network structure
+- **Verifiable Properties**: Provable boundedness, liveness, and deadlock-freedom
+- **Progress Visualization**: Clear view of workflow completion status
+
+**Example**: A query like *"I want to analyze the project structure"* creates a Petri Net where tokens flow through semantic states:
+
+```
+[analysis_pending] → [understanding_layout] → [identifying_components] → [analysis_completed]
+```
+
+The system automatically:
+1. Extracts the objective from your query
+2. Classifies the task type (analysis, debug, implementation, etc.)
+3. Generates an appropriate workflow template
+4. Tracks progress through token movement
+
+This enables the agent to maintain context, show progress, and resume sessions from saved states. For detailed technical documentation, see `.meta/doc/petri-nets-for-session-state.md`.
+
 ---
 
 ## Troubleshooting
@@ -221,6 +244,7 @@ main.py
 - **Command Pattern**: Every REPL command implements a consistent `run()` interface
 - **Strategy Pattern**: LLM providers (OpenRouter, OpenAI, Google Gemini, Ollama) are interchangeable
 - **Session Pattern**: Isolated command history per session with SQLite persistence
+- **Petri Net Pattern**: Formal semantic state tracking for user query workflows
 
 ---
 
