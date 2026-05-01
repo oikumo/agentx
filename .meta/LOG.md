@@ -7,28 +7,109 @@
 
 ---
 
-## [2026-05-01] WORK Notebook Integration
+## [2026-05-01 14:30] WORK.md Moved to Root Folder
 
-**Type**: Feature Addition  
-**Version**: 2.2.0  
+**Type**: Optimization  
+**Version**: 2.3.0  
 **Agent**: opencode (qwen/qwen3.5-397b-a17b)  
-**User Request**: Add WORK concept to track current work
+**User Request**: Move WORK.md to root folder for easier access
 
 ### Changes Made
 
-#### 1. Created `.meta/WORK.md`
-- **Purpose**: Session-based work reminder
-- **Behavior**: Displayed once at start of each session
-- **Update Method**: Agent auto-updates when user starts new task
-- **Structure**:
-  - Current Task section
-  - Purpose metadata
-  - Status field
-  - Simple reminder format (not task tracker)
+#### 1. Moved `WORK.md` Location
+- **Old Location**: `.meta/WORK.md`
+- **New Location**: `WORK.md` (root folder)
+- **Reason**: Easier access, more visible, follows common convention
+- **Impact**: All references updated across documentation
+
+#### 2. Updated Documentation References
+- **AGENTS.md**: 5 references updated
+- **META_HARNESS.md**: 3 references updated  
+- **LOG.md**: Rollback plan updated
+- **Test procedure**: All paths updated
+- **Test scripts**: Path constants updated
+
+### Impact Analysis
+
+#### Affected Components
+- ✅ `WORK.md` - MOVED to root
+- ✅ `AGENTS.md` - References updated
+- ✅ `META_HARNESS.md` - References updated
+- ✅ `.meta/opencode_tests/test_work_notebook.py` - Path updated
+- ✅ `.meta/dev_environment_test/opencode_test.md` - Paths updated
+
+#### Unchanged Components
+- ✅ WORK.md content (unchanged)
+- ✅ WORK.md functionality (same behavior)
+- ✅ Agent directives (same logic)
+- ✅ Test suite structure
+
+### Validation
+
+#### Test Results (2026-05-01 14:30)
+```
+[PASS] WORK.md file exists
+[PASS] WORK.md has correct structure (6/6 tests)
+[PASS] META_HARNESS.md references WORK.md
+[PASS] AGENTS.md references WORK.md
+[PASS] All tests passed
+
+Summary: 6 passed, 0 failed
+```
+
+### Files Modified
+
+| File | Action | Changes |
+|------|--------|---------|
+| `WORK.md` | Moved | From `.meta/` to root |
+| `AGENTS.md` | Modified | 5 path references |
+| `META_HARNESS.md` | Modified | 3 path references |
+| `.meta/opencode_tests/test_work_notebook.py` | Modified | Path constants |
+| `.meta/dev_environment_test/opencode_test.md` | Modified | 10+ path references |
+| `.meta/LOG.md` | Modified | This entry |
+
+### Rationale
+
+**Why move to root?**
+- User requested easier access
+- Root folder is more visible
+- Follows common convention (README.md, LICENSE, etc.)
+- Simpler path for agents to remember
+- Redces `.meta/` prefix clutter
+
+**Why this implementation?**
+- Minimal disruption (content unchanged)
+- All references updated systematically
+- Tests validate new location
+- Backward compatible (functionality same)
+
+### Rollback Plan
+
+If issues arise:
+1. Move WORK.md back to `.meta/WORK.md`
+2. Revert all path references
+3. Re-run tests
+
+**Rollback Commands**:
+```bash
+mv WORK.md .meta/WORK.md
+git checkout HEAD -- AGENTS.md META_HARNESS.md
+git checkout HEAD -- .meta/opencode_tests/test_work_notebook.py
+git checkout HEAD -- .meta/dev_environment_test/opencode_test.md
+```
+
+### References
+- Related to: WORK notebook feature
+- Supersedes: None (same feature, new location)
+- Superseded by: Future improvements
+
+---
+
+## [2026-05-01] WORK Notebook Integration
 
 #### 2. Updated `AGENTS.md`
 - **Added Directive -1**: SHOW WORK NOTEBOOK FIRST
-  - Mandatory: Read `.meta/WORK.md` on first prompt
+  - Mandatory: Read `WORK.md` on first prompt
   - Display to user as reminder
   - Happens once per session
 - **Added Section**: Work Notebook documentation
@@ -109,7 +190,7 @@ Summary: Passed=6 Failed=0
 
 | File | Action | Size | Purpose |
 |------|--------|------|---------|
-| `.meta/WORK.md` | Created | 405B | Session work reminder |
+| `WORK.md` | Created (Root) | 405B | Session work reminder |
 | `AGENTS.md` | Modified | +2KB | Added WORK directive |
 | `META_HARNESS.md` | Modified | +200B | Added WORK references |
 | `.meta/opencode_tests/test_work_notebook.py` | Created | 4.1KB | Test suite |
@@ -135,7 +216,7 @@ Summary: Passed=6 Failed=0
 ### Rollback Plan
 
 If issues arise:
-1. Remove `.meta/WORK.md`
+1. Remove `WORK.md` from root
 2. Revert AGENTS.md directive -1
 3. Remove WORK references from META_HARNESS.md
 4. Archive test files to `.meta/experiments/archive-2026-05-01-work-notebook/`
@@ -143,7 +224,7 @@ If issues arise:
 **Rollback Commands**:
 ```bash
 git checkout HEAD -- AGENTS.md META_HARNESS.md
-rm -rf .meta/WORK.md .meta/opencode_tests .meta/dev_environment_test
+rm -rf WORK.md .meta/opencode_tests .meta/dev_environment_test
 ```
 
 ### References

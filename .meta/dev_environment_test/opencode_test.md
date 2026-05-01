@@ -25,7 +25,7 @@
 Before running tests, verify:
 
 - [ ] **KB is populated**: Run `meta kb stats` to confirm entries exist
-- [ ] **WORK.md exists**: Check `.meta/WORK.md` is present
+- [ ] **WORK.md exists**: Check `WORK.md` is present (root folder)
 - [ ] **Test suite exists**: Verify `.meta/opencode_tests/` has test files
 - [ ] **Clean workspace**: No pending changes in production
 - [ ] **Git status clean**: Run `git status` to confirm clean state
@@ -41,13 +41,13 @@ Before running tests, verify:
 **Procedure**:
 ```bash
 # 1. Check WORK.md exists
-ls -la .meta/WORK.md
+ls -la WORK.md
 
 # 2. Read current content
-cat .meta/WORK.md
+cat WORK.md
 
 # 3. Verify structure has required sections
-grep -E "(Current Task|Purpose|Updated by|Status)" .meta/WORK.md
+grep -E "(Current Task|Purpose|Updated by|Status)" WORK.md
 ```
 
 **Expected Result**:
@@ -115,7 +115,7 @@ grep -i "WORK.md\|Work notebook" META_HARNESS.md
 grep -i "WORK.md\|Work Notebook" AGENTS.md
 
 # 3. Check WORK.md exists and is referenced
-ls -la .meta/WORK.md
+ls -la WORK.md
 ```
 
 **Expected Result**:
@@ -183,7 +183,7 @@ opencode run "Check the project structure"
 ```
 
 **Expected Behavior**:
-1. **First**: Read `.meta/WORK.md` (session start)
+1. **First**: Read `WORK.md` (session start)
 2. **Second**: Query KB for context
 3. **Third**: Search code if KB has no answer
 4. **Always**: Work in sandbox for modifications
@@ -319,9 +319,10 @@ After running tests, document results:
 ### Issue 2: WORK.md not displayed
 **Symptom**: Agent doesn't show WORK.md at session start  
 **Solution**:
-- Verify `.meta/WORK.md` exists
+- Verify `WORK.md` exists (root folder)
 - Check AGENTS.md has directive -1
-- Run: `cat .meta/WORK.md` manually
+- Remind agent: "Query KB first per AGENTS.md"
+- Run: `cat WORK.md` manually
 
 ### Issue 3: Tests fail
 **Symptom**: Test suite shows failures  
@@ -426,7 +427,7 @@ echo "============================================"
 
 - [AGENTS.md](../../AGENTS.md) - Agent directives
 - [META_HARNESS.md](../../META_HARNESS.md) - Master documentation
-- [WORK.md](../WORK.md) - Current work tracker
+- [WORK.md](../../WORK.md) - Current work tracker
 - [KB META.md](../knowledge_base/META.md) - Knowledge base documentation
 - [WORKFLOWS.md](../project_development/WORKFLOWS.md) - Workflow patterns
 

@@ -14,15 +14,15 @@ import sys
 from pathlib import Path
 
 def test_work_file_exists():
-    """Test that .meta/WORK.md exists"""
-    work_path = Path(".meta/WORK.md")
+    """Test that WORK.md exists in root"""
+    work_path = Path("WORK.md")
     assert work_path.exists(), f"WORK.md not found at {work_path}"
     print("✓ WORK.md file exists")
     return True
 
 def test_work_file_structure():
     """Test that WORK.md has correct structure"""
-    work_path = Path(".meta/WORK.md")
+    work_path = Path("WORK.md")
     content = work_path.read_text()
     
     required_sections = [
@@ -41,7 +41,7 @@ def test_work_file_structure():
 
 def test_work_file_readable():
     """Test that WORK.md can be read"""
-    work_path = Path(".meta/WORK.md")
+    work_path = Path("WORK.md")
     content = work_path.read_text()
     assert len(content) > 0, "WORK.md is empty"
     print(f"✓ WORK.md is readable ({len(content)} bytes)")
@@ -49,7 +49,7 @@ def test_work_file_readable():
 
 def test_work_file_updatable():
     """Test that WORK.md can be updated"""
-    work_path = Path(".meta/WORK.md")
+    work_path = Path("WORK.md")
     
     # Save original content
     original = work_path.read_text()

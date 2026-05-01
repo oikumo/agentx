@@ -10,7 +10,7 @@ PASSED=0
 
 echo ""
 echo "[1/6] Testing WORK Notebook..."
-if [ -f ".meta/WORK.md" ]; then
+if [ -f "WORK.md" ]; then
     echo "[PASS] WORK.md exists"
     python3 .meta/opencode_tests/test_work_notebook.py
     PASSED=$((PASSED+1))
