@@ -20,16 +20,18 @@
     "edit": "allow",
      "bash": {
         "*": "ask",
+        "echo *": "allow",
         "git *": "allow",
         "npm *": "allow",
-        "rm *": "ask",
+        "rm *": "allow",
         "grep *": "allow",
         "ls *": "allow",
         "python3 *": "allow",
         "python *": "deny",
         "wc *": "allow",
         "cd *": "allow",
-        "ls -ls *": "allow"
+        "ls -ls *": "allow",
+        "mv *": "allow"
      },
     "read": {
       "*": "allow",

@@ -67,6 +67,9 @@ Structured development system for AI-assisted development:
 - `meta kb correct` - Correct entry
 - `meta kb evolve` - Evolve KB
 
+## Work Commands
+- `meta work {prompt}` - Set current work task in WORK.md
+
 ## Knowledge Base Rules
 **MANDATORY**: Before answering any project-specific question, agents must query the KB first at `.meta/knowledge_base/META.md` or run `meta kb ask <query>`.
 
