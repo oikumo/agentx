@@ -43,8 +43,9 @@
 - Pretty Print Tests: 8/8 status types verified
 
 **Next Steps**:
-1. Ready for production use
-2. Consider adding color coding for additional visual distinction
-3. Consider expanding status types if needed
+1. Integrate goal in chat controller, petri net changes made by LLM decisions during the conversation and main commands called
+2. Ready for production use
+3. Consider adding color coding for additional visual distinction
+4Consider expanding status types if needed
 
 ---
