@@ -6,6 +6,7 @@ from agentx.controllers.main_controller.main_controller import MainController
 from agentx.common.utils import clear_console, safe_int
 from agentx.views.common.console import Console
 from agentx.model.session.session_manager import SessionManager, get_session_manager
+from agentx.model.session.petri_net_visualizer import PetriNetVisualizer
 
 
 class CommandResultLogInfo(CommandResult):
@@ -129,23 +130,112 @@ class NewSessionResult(CommandResult):
 class NewCommand(Command):
     """
     Command to create a new session.
-    
+
     Usage: new [session_name]
     If no name is provided, a default session name will be used.
     """
-    
+
     def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Create a new session: new [name]")
         self.controller = controller
-    
+
     def run(self, arguments: list[str]) -> Optional[CommandResult]:
         session_name = " ".join(arguments).strip() if arguments else f"session_default"
-        
+
         try:
             session_manager = get_session_manager()
             new_session = session_manager.create_new_session(session_name)
             return NewSessionResult(new_session.name, f"New session created: {new_session.name}")
-        
+
         except Exception as e:
             Console.log_error(f"Failed to create new session: {str(e)}")
+            return None
+
+
+class PetriNetStatusCommand(Command):
+    """
+    Command to show current Petri Net session state.
+    
+    Usage: status or petri-status
+    """
+    
+    def __init__(self, key: str, controller: MainController):
+        super().__init__(key, description="Show current Petri Net session state: status")
+        self.controller = controller
+    
+    def run(self, arguments: list[str]) -> Optional[CommandResult]:
+        try:
+            # Check if session state exists
+            if not hasattr(self.controller, 'session_state') or self.controller.session_state is None:
+                Console.log_info("No active session state. Start with a query first.")
+                return None
+            
+            state = self.controller.session_state.get_state()
+            
+            # Display state information
+            lines = []
+            lines.append("╔════════════════════════════════════════════════════════╗")
+            lines.append("║           SESSION STATE (Petri Net)                    ║")
+            lines.append("╠════════════════════════════════════════════════════════╣")
+            lines.append(f"║  Objective: {state.objective[:53]:<53} ║")
+            lines.append(f"║  Task Type: {state.context.get('task_type', 'unknown'):<53} ║")
+            lines.append(f"║  Workflow:  {state.context.get('workflow_name', 'N/A'):<53} ║")
+            lines.append(f"║  Status:    {state.context.get('objective_status', 'pending'):<53} ║")
+            lines.append("╠════════════════════════════════════════════════════════╣")
+            
+            # Show enabled transitions
+            enabled = state.context.get('enabled_transitions', [])
+            if enabled:
+                lines.append(f"║  Enabled Actions: {', '.join(enabled)[:35]:<35} ║")
+            else:
+                lines.append("║  Enabled Actions: (none)                              ║")
+            
+            # Show marking
+            marking = state.context.get('marking', {})
+            if marking:
+                lines.append("║  Current Marking:                                     ║")
+                for place, tokens in marking.items():
+                    if tokens > 0:
+                        marker_str = f"    ● {place} ({tokens})"
+                    else:
+                        marker_str = f"    ○ {place} (0)"
+                    lines.append(f"║  {marker_str:<53} ║")
+            
+            lines.append("╚════════════════════════════════════════════════════════╝")
+            
+            return CommandResultLogInfo(lines)
+            
+        except Exception as e:
+            Console.log_error(f"Failed to get status: {str(e)}")
+            return None
+
+
+class PetriNetPrintCommand(Command):
+    """
+    Command to pretty print the Petri Net structure.
+    
+    Usage: petri-print or pp
+    """
+    
+    def __init__(self, key: str, controller: MainController):
+        super().__init__(key, description="Pretty print Petri Net: petri-print or pp")
+        self.controller = controller
+    
+    def run(self, arguments: list[str]) -> Optional[CommandResult]:
+        try:
+            # Check if session state exists
+            if not hasattr(self.controller, 'session_state') or self.controller.session_state is None:
+                Console.log_info("No active session state. Start with a query first.")
+                return None
+            
+            manager = self.controller.session_state
+            visualizer = PetriNetVisualizer(manager.petri_net)
+            
+            # Generate ASCII art
+            ascii_art = visualizer.to_ascii()
+            
+            return CommandResultPrint(ascii_art)
+            
+        except Exception as e:
+            Console.log_error(f"Failed to print Petri Net: {str(e)}")
             return None

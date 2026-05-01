@@ -113,13 +113,20 @@ class AdaptivePetriNet:
         elif marking.get("objective_in_progress", 0) > 0:
             objective_status = "in_progress"
         
+        # Build context with marking and status
+        context = {
+            "marking": marking,
+            "objective_status": objective_status,
+            "enabled_transitions": [t.name for t in self.enabled_transitions()]
+        }
+        
+        # Include metadata if available
+        if hasattr(self, '_metadata') and self._metadata:
+            context.update(self._metadata)
+        
         return SessionState(
             objective=self.objective or "",
-            context={
-                "marking": marking,
-                "objective_status": objective_status,
-                "enabled_transitions": [t.name for t in self.enabled_transitions()]
-            }
+            context=context
         )
     
     def is_complete(self) -> bool:

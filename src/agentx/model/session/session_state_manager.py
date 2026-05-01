@@ -138,15 +138,24 @@ class SessionStateBuilder:
     
     def build(self) -> SessionStateManager:
         """Build the session state manager."""
-        # Create standard objective places
-        self.petri_net.add_place("objective_pending", tokens=1)
-        self.petri_net.add_place("objective_in_progress", tokens=0)
-        self.petri_net.add_place("objective_completed", tokens=0)
+        # Collect all unique places from transitions
+        all_places = set()
+        for _, inputs, outputs in self.transitions:
+            all_places.update(inputs)
+            all_places.update(outputs)
         
-        # Add transitions
+        # Convert to list to ensure consistent ordering
+        place_list = list(all_places)
+        
+        # Create all places (first one gets initial token)
+        for idx, place_name in enumerate(place_list):
+            tokens = 1 if idx == 0 else 0
+            self.petri_net.add_place(place_name, tokens=tokens)
+        
+        # Add transitions and connect arcs
         for name, inputs, outputs in self.transitions:
             transition = self.petri_net.add_transition(name)
-            
+
             # Connect inputs
             for input_place in inputs:
                 if input_place in self.petri_net.places:
@@ -154,15 +163,15 @@ class SessionStateBuilder:
                         self.petri_net.places[input_place],
                         transition
                     )
-            
+
             # Connect outputs
             for output_place in outputs:
                 if output_place in self.petri_net.places:
                     self.petri_net.add_arc(
                         transition,
-                        self.petri_net.add_place(output_place, tokens=0)
+                        self.petri_net.places[output_place]
                     )
-        
+
         manager = SessionStateManager(self.session_name)
         manager.petri_net = self.petri_net
         return manager

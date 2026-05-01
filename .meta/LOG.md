@@ -517,3 +517,83 @@ rm -rf WORK.md .meta/opencode_tests .meta/dev_environment_test
 **Version**: 1.0.0 | **Created**: 2026-05-01  
 **Maintained By**: opencode AI agent  
 **Status**: ✅ Active
+
+## 2026-05-01: LLM-Based Dynamic Petri Net Implementation
+
+### Implemented Features
+
+#### 1. LLM-Based Dynamic Petri Net Generator (`src/agentx/model/session/llm_petri_net_generator.py`)
+- Uses LLM to dynamically generate custom Petri Net structures from user prompts
+- LLM creates workflow structure (places, transitions) based on task understanding
+- Robust JSON parsing with retry logic
+- Falls back to simple workflow if LLM fails
+- Stores generated Petri Nets in session directory with timestamps
+
+#### 2. Workflow Templates (`src/agentx/model/session/workflow_templates.py`)
+- Pre-defined templates for common task types:
+  - Debug workflows
+  - Analysis workflows  
+  - Implementation workflows
+  - Documentation workflows
+  - Refactoring workflows
+  - Research workflows
+  - Parallel workflows
+- Can be used as fallback or for simple tasks
+
+#### 3. Objective Extractor with LLM (`src/agentx/model/session/objective_extractor_llm.py`)
+- LLM-based objective extraction from user prompts
+- Classifies tasks into types (debug, analysis, implementation, etc.)
+- Pattern-based fallback if LLM unavailable
+
+#### 4. Petri Net Visualizer (`src/agentx/model/session/petri_net_visualizer.py`)
+- ASCII art visualization of Petri Nets
+- Shows places, transitions, and token flow
+- Commands: `status` and `petri-print` (pp)
+
+#### 5. Session Integration
+- Petri Nets stored in session directory with timestamps
+- Format: `petri_net_YYYYMMDD_HHMMSS_objective.json`
+- Integrated with MainController via `handle_user_query()`
+
+### Key Files Created/Modified
+
+**New Files:**
+- `src/agentx/model/session/llm_petri_net_generator.py` - Main LLM generator
+- `src/agentx/model/session/workflow_templates.py` - Template library
+- `src/agentx/model/session/objective_extractor_llm.py` - LLM objective extraction
+- `src/agentx/model/session/petri_net_visualizer.py` - Visualization
+- `src/agentx/controllers/main_controller/commands.py` - Added status and print commands
+
+**Modified Files:**
+- `src/agentx/model/session/session_state_manager.py` - Updated builder
+- `src/agentx/model/session/adaptive_petri_net.py` - Added metadata support
+- `src/agentx/model/session/__init__.py` - Exports
+- `src/agentx/controllers/main_controller/main_controller.py` - Integration
+
+### Usage Example
+
+```python
+from agentx.model.session.llm_petri_net_generator import generate_petri_net_from_prompt
+
+# Generate Petri Net from user prompt
+manager = generate_petri_net_from_prompt("Debug the database timeout issue")
+
+# Get state
+state = manager.get_state()
+print(f"Objective: {state.objective}")
+print(f"Workflow: {state.context['workflow_type']}")
+print(f"Reasoning: {state.context['llm_reasoning']}")
+print(f"Initial: {state.context['initial_place']}")
+print(f"Final: {state.context['final_place']}")
+
+# Advance through workflow
+enabled = state.context.get('enabled_transitions', [])
+if enabled:
+    manager.advance_objective(enabled[0])
+```
+
+### Commands
+
+- `status` - Show current Petri Net session state
+- `petri-print` or `pp` - Pretty print Petri Net structure
+
