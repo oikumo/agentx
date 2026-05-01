@@ -12,6 +12,7 @@ from agentx.controllers.main_controller.commands import (
     AIChat,
     SumCommand, HistoryCommand,
     NewCommand, PetriNetStatusCommand, PetriNetPrintCommand,
+    GoalCommand,
 )
 from agentx.controllers.main_controller.main_controller import MainController
 
@@ -35,6 +36,7 @@ def create_controller() -> MainController:
     main_controller.add_command(NewCommand("new", main_controller))
     main_controller.add_command(PetriNetStatusCommand("status", main_controller))
     main_controller.add_command(PetriNetPrintCommand("petri-print", main_controller))
+    main_controller.add_command(GoalCommand("goal", main_controller))
 
     return main_controller
 
