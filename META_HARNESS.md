@@ -14,6 +14,7 @@ Structured project organization for AI-assisted development:
 - **Structured workflows**: Consistent, high-quality output
 - **Comprehensive docs**: At every level
 - **Work notebook**: Simple reminder via `.meta/WORK.md`
+- **Change logging**: All structural changes logged in `.meta/LOG.md`
 
 **Directory layout**: See [`.meta/project_development/STRUCTURE.md`](.meta/project_development/STRUCTURE.md)
 
