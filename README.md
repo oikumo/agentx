@@ -44,13 +44,20 @@ Users are solely responsible for ensuring their use of any third-party services 
 
 ### Installation
 
-#### Direct Usage
+#### Direct Usage Globally
 
+
+##### Install
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd agentx
 uv tool install --editable .
+```
+
+##### Uninstall
+```bash
+uv tool uninstall agent-x
 ```
 
 #### Development
