@@ -58,6 +58,8 @@ Structured development system for AI-assisted development:
 
 # User Prompts Shortcuts
 
+Not bash commands, this an user prompts shortcuts
+
 ## KB Commands
 - `meta kb populate` - Populate KBs
 - `meta kb` - Search KB
