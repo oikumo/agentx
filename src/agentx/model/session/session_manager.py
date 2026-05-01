@@ -27,11 +27,15 @@ class SessionManager:
     def __new__(cls) -> 'SessionManager':
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            return cls._instance
+            cls._instance._initialized = False
+        return cls._instance
 
     def __init__(self):
-        if self._current_session is None:
-            self._ensure_current_session_exists()
+        # Prevent re-initialization
+        if hasattr(self, '_initialized') and self._initialized:
+            return
+        self._initialized = True
+        self._ensure_current_session_exists()
 
     def _ensure_current_session_exists(self) -> Session:
         """

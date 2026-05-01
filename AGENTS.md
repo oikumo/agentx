@@ -212,7 +212,8 @@ agent-x/
 ├── .meta/tests_sandbox/ # TDD workspace
 ├── .meta/development_tools/ # Development tools, scripts
 ├── .meta/knowledge_base/ # RAG knowledge base
-└── .meta/reflection/ # Test logs & capability assessment
+├── .meta/reflection/ # Test logs & capability assessment
+└── test_automated/ # Automated agent tests (reflection tests)
 ```
 **Rule:** All `.meta/*` subdirs contain META.md - read first.
 
@@ -231,6 +232,7 @@ Need to...
 ├─ Modify code? → .meta/sandbox/
 ├─ Test idea? → .meta/experiments/
 ├─ Write tests? → .meta/tests_sandbox/
+├─ Test agent? → test_automated/
 ├─ Use/create tools? → .meta/development_tools/
 └─ Check workflows? → .meta/project_development/WORKFLOWS.md
 ```
@@ -253,6 +255,7 @@ Need to...
 - **Add Feature** → sandbox → tests → merge
 - **Fix Bug** → reproduce in sandbox → test → fix → merge
 - **Refactor** → copy to sandbox → refactor → test → merge
+- **Test Agent** → test_automated/ → run reflection tests
 
 ## Projects (User Tasks)
 
@@ -279,6 +282,7 @@ Need to...
 - [WORKFLOWS.md](.meta/project_development/WORKFLOWS.md) - Workflows
 - [QUICK_REFERENCE.md](.meta/project_development/QUICK_REFERENCE.md) - Quick ref
 - [KB META.md](.meta/knowledge_base/META.md) - **Consolidated KB documentation (READ FIRST)**
+- [Reflection Tests](.meta/reflection/README.md) - Automated test documentation
 
 ---
 **Version:** 2.3.1 (WORK.md moved to root) | **Updated:** 2026-05-01

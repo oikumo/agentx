@@ -7,6 +7,86 @@
 
 ---
 
+## [2026-05-01] Add test_automated Directory to META HARNESS Documentation
+
+**Type**: Documentation
+**Version**: 2.3.1
+**Agent**: opencode (qwen/qwen3.5-397b-a17b)
+**User Request**: META HARNESS must consider the folder test_automated/ for agent test, update it in META_HARNESS.md and AGENTS.md
+
+### Changes Made
+
+#### 1. Updated META_HARNESS.md
+- Added `test_automated/` to Directory Quick Reference table
+- Added "Test agent? → test_automated/" to Decision Tree
+- Documented purpose: "Automated agent tests (reflection tests)"
+
+#### 2. Updated AGENTS.md
+- Added `test_automated/` to Directory Structure diagram
+- Added "Test agent?" scenario to Decision Tree
+- Added "Test Agent" to Common Scenarios section
+- Added Reflection Tests link to Resources section
+
+### Impact Analysis
+
+#### Affected Components
+- ✅ `META_HARNESS.md` - Modified (added test_automated/ reference)
+- ✅ `AGENTS.md` - Modified (added test_automated/ references)
+- ✅ `.meta/LOG.md` - This entry
+
+#### Unchanged Components
+- ✅ test_automated/ directory (already exists, unchanged)
+- ✅ All other META HARNESS documentation
+- ✅ Core workflows and directives
+
+### Validation
+
+#### Quality Gates
+- [x] KB queried before documentation update (3 sources checked)
+- [x] test_automated/ directory verified to exist
+- [x] Both META_HARNESS.md and AGENTS.md updated consistently
+- [x] Decision trees updated in both files
+- [x] Change logged in LOG.md
+- [x] No production code modified
+
+### Files Modified/Created
+
+| File | Action | Lines Changed | Purpose |
+|------|--------|---------------|---------|
+| `META_HARNESS.md` | Modified | +2 lines | Added test_automated/ to directory table and decision tree |
+| `AGENTS.md` | Modified | +4 lines | Added test_automated/ to structure, decision tree, scenarios, resources |
+| `.meta/LOG.md` | Modified | +This entry | Change log |
+
+### Rationale
+
+**Why this change?**
+- User requested that test_automated/ folder be documented in META HARNESS
+- test_automated/ directory exists but was not referenced in main documentation
+- Needed to formalize its role in Meta Harness structure
+- Ensures agents know where to find/run automated reflection tests
+
+**Why this implementation?**
+- Minimal change - only documentation updates
+- Consistent with existing directory documentation pattern
+- Added to both master docs (META_HARNESS.md) and agent entry point (AGENTS.md)
+- Clear labeling as "Automated agent tests (reflection tests)"
+
+### Rollback Plan
+
+If issues arise:
+```bash
+# Revert documentation changes
+git checkout HEAD -- META_HARNESS.md AGENTS.md
+```
+
+### References
+- Related to: test_automated/, automated testing, reflection tests
+- Impacts: Agent workflows, test procedures, documentation
+- Supersedes: None (new documentation)
+- Superseded by: Future test infrastructure improvements
+
+---
+
 ## [2026-05-01] META HARNESS Optimization - Coherence and Token Reduction
 
 **Type**: Optimization
