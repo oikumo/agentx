@@ -86,6 +86,41 @@ Before completion:
 - Successes / failures
 - Next steps
 
+### Change Logging (`.meta/LOG.md`)
+**MANDATORY**: All structural changes to META HARNESS must be logged
+
+**When to log**:
+- Structural changes to META HARNESS
+- New directives added
+- Workflow modifications
+- New test procedures
+- Documentation reorganization
+- Tool/script additions
+
+**Log entry format**:
+```markdown
+## [YYYY-MM-DD] Brief Description
+
+**Type**: Feature | Bugfix | Optimization | Documentation  
+**Version**: X.X.X  
+**Agent**: [agent name]  
+**User Request**: [description]
+
+### Changes Made
+[List changes]
+
+### Validation
+[Test results]
+
+### Files Modified/Created
+[Table of files]
+
+### Rationale
+[Why this change]
+```
+
+**See**: [`.meta/LOG.md`](.meta/LOG.md) for complete logging rules and examples
+
 ---
 
 ## 7. AI Agent Responsibilities
@@ -100,6 +135,7 @@ Before completion:
 
 | Directory | When to Use | META.md |
 |-----------|-------------|---------|
+| `.meta/LOG.md` | META HARNESS change log (auto-updated by agent) | N/A |
 | `.meta/WORK.md` | Current work reminder (auto-updated by agent) | N/A |
 | `.meta/project_development/` | Rules, standards, workflows | [Link](.meta/project_development/META.md) |
 | `.meta/experiments/` | Test new libraries, prototype | [Link](.meta/experiments/META.md) |
@@ -133,5 +169,5 @@ Before completion:
 
 ---
 
-**Version**: 2.2.0 (added WORK.md notebook - session reminder) | **Lines**: 155 (reduced from 368, ~60% token savings)
+**Version**: 2.3.0 (added LOG.md for change tracking) | **Lines**: 155 (reduced from 368, ~60% token savings)
 **Last Updated**: 2026-04-19 | **Maintained By**: opencode AI agent

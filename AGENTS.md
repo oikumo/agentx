@@ -8,6 +8,7 @@
 
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 
+-2. **LOG STRUCTURAL CHANGES** - ALL structural META HARNESS changes MUST be logged in `.meta/LOG.md` - THIS IS Mandatory
 -1. **SHOW WORK NOTEBOOK FIRST** - On first prompt of session only, read `.meta/WORK.md` and display it to user as reminder - THIS IS Mandatory
 0. **ALWAYS query KB first** - Before ANY task, search `.meta/knowledge_base/` or use `meta kb ask` - THIS IS MANDATORY
 0a. **IF KB IS EMPTY, POPULATE IT** - If KB has no entries, run `meta kb populate` BEFORE proceeding with the task
@@ -275,4 +276,4 @@ Need to...
 - [KB META.md](.meta/knowledge_base/META.md) - **Consolidated KB documentation (READ FIRST)**
 
 ---
-**Version:** 2.2.0 | **Updated:** 2026-04-25
+**Version:** 2.3.0 (added LOG.md for change tracking) | **Updated:** 2026-05-01
