@@ -69,6 +69,25 @@ cd agentx
 uv sync
 ```
 
+### Testing
+
+agentx includes comprehensive unit tests (205+ tests) covering all core modules:
+
+```bash
+# Run all unit tests
+uv run pytest tests/unit/ -v
+
+# Run specific module
+uv run pytest tests/unit/model/session/ -v
+
+# Run with coverage (if pytest-cov installed)
+uv run pytest tests/unit/ --cov=agentx --cov-report=html
+```
+
+**Test Coverage**: Petri nets, session management, commands, views, utilities  
+**Isolation**: All tests are isolated with mocking (no external dependencies)  
+**Documentation**: See `tests/unit/README.md` for complete test documentation
+
 ### API Keys
 
 agentx requires at least an **OpenRouter API key** to run the default chat agent. Other features may need additional keys. Set them in a `.env` file:
@@ -245,6 +264,7 @@ main.py
 - **Strategy Pattern**: LLM providers (OpenRouter, OpenAI, Google Gemini, Ollama) are interchangeable
 - **Session Pattern**: Isolated command history per session with SQLite persistence
 - **Petri Net Pattern**: Formal semantic state tracking for user query workflows
+- **Test Coverage**: 205+ isolated unit tests with comprehensive mocking
 
 ---
 
@@ -259,6 +279,7 @@ agentx uses the **Meta Harness** - a structured development system optimized for
 | `.meta/project_development/` | Rules, standards, workflows |
 | `.meta/sandbox/` | Safe workspace for code modifications |
 | `.meta/tests_sandbox/` | TDD workspace |
+| `tests/unit/` | **Unit tests for all src/agentx/ modules (205+ tests)** |
 | `.meta/experiments/` | Experimental features |
 | `.meta/development_tools/` | Development utilities |
 | `.meta/knowledge_base/` | Knowledge storage |
@@ -268,8 +289,9 @@ agentx uses the **Meta Harness** - a structured development system optimized for
 1. Read `AGENTS.md` first - it contains mandatory rules
 2. Review `META_HARNESS.md` for complete documentation
 3. Always work in safe spaces (`.meta/sandbox/`, `.meta/experiments/`)
-4. Follow TDD in `.meta/tests_sandbox/`
+4. Follow TDD in `.meta/tests_sandbox/` or create unit tests in `tests/unit/`
 5. Never modify production code directly
+6. Maintain 205+ passing unit tests
 
 ### For Human Developers
 

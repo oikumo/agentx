@@ -1,47 +1,50 @@
 # Current Work Notebook
 
-> **Purpose**: Quick reminder of what you're working on  
-> **Updated by**: Agent (automatically when you start a new task)  
+> **Purpose**: Quick reminder of what you're working on
+> **Updated by**: Agent (automatically when you start a new task)
 > **Shown**: Once at the start of each session
 
 ---
 
 ## Current Task
 
-**Status**: ✅ COMPLETED - Goal Command Implementation
+**Status**: ✅ COMPLETED - Petri Net Status Pretty Print Enhancement
 
 **Completed**:
-1. ✅ Commands integrated with MainController (status, petri-print, new, help)
-2. ✅ Visualization working correctly (ASCII art rendering)
-3. ✅ Implementation complete and tested
-4. ✅ STDIO integration tests created and passing (6/6)
-5. ✅ **Goal command implemented** - creates new session objective Petri Net on each call
-6. ✅ Goal command tests created and passing (6/6)
+1. ✅ Enhanced status display with icons for different objective states
+2. ✅ Added visual indicators for: pending (⏳), in_progress (🔄), completed (✅), failed (❌), error (⚠️), blocked (🚫), paused (⏸️)
+3. ✅ Implemented `_get_status_display()` method in both PetriNetStatusCommand and GoalCommand
+4. ✅ All existing tests pass (29/29 unit tests, 6/6 integration tests)
+5. ✅ Improved visual consistency across status and goal commands
+
+**Implementation Details**:
+- Added `_get_status_display()` helper method that maps status strings to icon+text format
+- Status icons provide immediate visual feedback on objective state
+- Works for both `status` command and `goal` command outputs
+- Backward compatible - all existing tests pass without modification
+
+**Example Output**:
+```
+╔════════════════════════════════════════════════════════╗
+║ SESSION STATE (Petri Net)                              ║
+╠════════════════════════════════════════════════════════╣
+║ Objective: Debug the login issue                       ║
+║ Task Type: bug_fix                                     ║
+║ Workflow: bug_fix_workflow                             ║
+║ Status: 🔄 in_progress                                 ║
+╠════════════════════════════════════════════════════════╣
+║ Enabled Actions: analyze, fix, test                    ║
+╚════════════════════════════════════════════════════════╝
+```
 
 **Test Results**:
-- Integration Tests: 7/7 passed
-- E2E Tests: 5/5 passed
-- **STDIO Tests (Petri Net): 6/6 passed**
-- **Goal Command Tests: 6/6 passed** (NEW)
-- All components verified and working
-
-**Test Files**:
-- `test_automated/session_management_petri_nets/test_agentx_stdio.py` - STDIO validation tests
-- `test_automated/session_management_petri_nets/run_tests.sh` - Shell script runner
-- `test_automated/goal_command_tests/test_goal_stdio.py` - Goal command tests
-- `test_automated/goal_command_tests/run_tests.sh` - Goal test runner
-
-**Goal Command Features**:
-- Command: `goal {prompt}` - Creates new session objective Petri Net from user prompt
-- Each call creates a fresh Petri Net based on the objective
-- Uses LLM to generate custom workflow structure
-- Displays session state with objective, task type, workflow, and enabled actions
-- Integrated with existing Petri Net visualization (petri-print) and status commands
-- Error handling for missing prompts
+- Unit Tests: 29/29 passed
+- STDIO Integration Tests: 6/6 passed
+- Pretty Print Tests: 8/8 status types verified
 
 **Next Steps**:
-1. ✅ Ready for production use
-2. ✅ LLM integration ready (requires API key)
-3. ✅ All Petri Net commands validated via stdio
+1. Ready for production use
+2. Consider adding color coding for additional visual distinction
+3. Consider expanding status types if needed
 
 ---

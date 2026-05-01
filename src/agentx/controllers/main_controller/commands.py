@@ -156,20 +156,83 @@ class NewCommand(Command):
 class PetriNetStatusCommand(Command):
     """
     Command to show current Petri Net session state.
-    
+
     Usage: status or petri-status
     """
-    
+
     def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Show current Petri Net session state: status")
         self.controller = controller
-    
+
+    def _get_status_display(self, status: str) -> str:
+        """Get formatted status string with icon and color."""
+        status_lower = status.lower() if status else "pending"
+        
+        # Status icons and colors
+        status_icons = {
+            'pending': '⏳',
+            'in_progress': '🔄',
+            'completed': '✅',
+            'failed': '❌',
+            'error': '⚠️',
+            'blocked': '🚫',
+            'paused': '⏸️',
+        }
+        
+        # Get icon for status
+        icon = status_icons.get(status_lower, '📋')
+        
+        # Format with icon and color
+        return f"{icon} {status_lower}"
+
     def run(self, arguments: list[str]) -> Optional[CommandResult]:
         try:
             # Check if session state exists
             if not hasattr(self.controller, 'session_state') or self.controller.session_state is None:
                 Console.log_info("No active session state. Start with a query first.")
                 return None
+
+            state = self.controller.session_state.get_state()
+            raw_status = state.context.get('objective_status', 'pending')
+            formatted_status = self._get_status_display(raw_status)
+
+            # Display state information
+            lines = []
+            lines.append("╔════════════════════════════════════════════════════════╗")
+            lines.append("║ SESSION STATE (Petri Net) ║")
+            lines.append("╠════════════════════════════════════════════════════════╣")
+            lines.append(f"║ Objective: {state.objective[:53]:<53} ║")
+            lines.append(f"║ Task Type: {state.context.get('task_type', 'unknown'):<53} ║")
+            lines.append(f"║ Workflow: {state.context.get('workflow_name', 'N/A'):<53} ║")
+            lines.append(f"║ Status: {formatted_status:<53} ║")
+            lines.append("╠════════════════════════════════════════════════════════╣")
+
+            # Show enabled transitions
+            enabled = state.context.get('enabled_transitions', [])
+            if enabled:
+                enabled_str = ', '.join(enabled)[:35]
+                lines.append(f"║ Enabled Actions: {enabled_str:<35} ║")
+            else:
+                lines.append("║ Enabled Actions: (none) ║")
+
+            # Show marking
+            marking = state.context.get('marking', {})
+            if marking:
+                lines.append("║ Current Marking: ║")
+                for place, tokens in marking.items():
+                    if tokens > 0:
+                        marker_str = f" ● {place} ({tokens})"
+                    else:
+                        marker_str = f" ○ {place} (0)"
+                    lines.append(f"║ {marker_str:<53} ║")
+
+            lines.append("╚════════════════════════════════════════════════════════╝")
+
+            return CommandResultLogInfo(lines)
+
+        except Exception as e:
+            Console.log_error(f"Failed to get status: {str(e)}")
+            return None
             
             state = self.controller.session_state.get_state()
             
@@ -256,11 +319,32 @@ class GoalCommand(Command):
         self.controller = controller
         self.generator = LLMPetriNetGenerator("agentx")
 
+    def _get_status_display(self, status: str) -> str:
+        """Get formatted status string with icon and color."""
+        status_lower = status.lower() if status else "pending"
+        
+        # Status icons and colors
+        status_icons = {
+            'pending': '⏳',
+            'in_progress': '🔄',
+            'completed': '✅',
+            'failed': '❌',
+            'error': '⚠️',
+            'blocked': '🚫',
+            'paused': '⏸️',
+        }
+        
+        # Get icon for status
+        icon = status_icons.get(status_lower, '📋')
+        
+        # Format with icon and color
+        return f"{icon} {status_lower}"
+
     def run(self, arguments: list[str]) -> Optional[CommandResult]:
         try:
             # Join all arguments to form the prompt
             user_prompt = " ".join(arguments).strip()
-            
+
             if not user_prompt:
                 Console.log_error("Goal requires a prompt. Usage: goal {prompt}")
                 return None
@@ -270,6 +354,8 @@ class GoalCommand(Command):
 
             # Get the state
             state = self.controller.session_state.get_state()
+            raw_status = state.context.get('objective_status', 'pending')
+            formatted_status = self._get_status_display(raw_status)
 
             # Display state information
             lines = []
@@ -279,13 +365,14 @@ class GoalCommand(Command):
             lines.append(f"║ Objective: {state.objective[:53]:<53} ║")
             lines.append(f"║ Task Type: {state.context.get('task_type', 'unknown'):<53} ║")
             lines.append(f"║ Workflow: {state.context.get('workflow_name', 'N/A'):<53} ║")
-            lines.append(f"║ Status: {state.context.get('objective_status', 'pending'):<53} ║")
+            lines.append(f"║ Status: {formatted_status:<53} ║")
             lines.append("╠════════════════════════════════════════════════════════╣")
 
             # Show enabled transitions
             enabled = state.context.get('enabled_transitions', [])
             if enabled:
-                lines.append(f"║ Enabled Actions: {', '.join(enabled)[:35]:<35} ║")
+                enabled_str = ', '.join(enabled)[:35]
+                lines.append(f"║ Enabled Actions: {enabled_str:<35} ║")
             else:
                 lines.append("║ Enabled Actions: (none) ║")
 

@@ -33,7 +33,8 @@ Need to...
 ├─ Add/modify feature? → features/ (planned/ → wip/ → ok/)
 ├─ Modify code? → .meta/sandbox/
 ├─ Test new idea? → .meta/experiments/
-├─ Write tests? → .meta/tests_sandbox/
+├─ Write unit tests? → tests/unit/ (isolated tests for src/agentx/)
+├─ Write TDD tests? → .meta/tests_sandbox/
 ├─ Test agent? → test_automated/
 ├─ Use/create tools? → .meta/development_tools/
 └─ Check workflows? → .meta/project_development/WORKFLOWS.md
@@ -64,7 +65,8 @@ Before completion:
 - [ ] Checked `git log`
 - [ ] Correct directory used
 - [ ] TDD followed (if applicable)
-- [ ] Tests pass
+- [ ] Unit tests created/updated (`tests/unit/`)
+- [ ] All tests pass (205+ unit tests)
 - [ ] Documented changes
 - [ ] Workspace clean
 - [ ] No secrets exposed
@@ -144,6 +146,7 @@ Before completion:
 | `features/planned/` | Features planned but not started | [Link](features/META.md) |
 | `features/wip/` | Features in development (Work In Progress) | [Link](features/META.md) |
 | `features/ok/` | Completed features ready for use | [Link](features/META.md) |
+| `tests/unit/` | **Unit tests for all src/agentx/ modules** | [Link](tests/unit/README.md) |
 | `.meta/project_development/` | Rules, standards, workflows | [Link](.meta/project_development/META.md) |
 | `.meta/experiments/` | Test new libraries, prototype | [Link](.meta/experiments/META.md) |
 | `.meta/sandbox/` | Modify code safely | [Link](.meta/sandbox/META.md) |
