@@ -31,7 +31,8 @@
         "wc *": "allow",
         "cd *": "allow",
         "ls -ls *": "allow",
-        "mv *": "allow"
+        "mv *": "allow",
+        "find *": "allow"
      },
     "read": {
       "*": "allow",
