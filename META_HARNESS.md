@@ -13,6 +13,7 @@ Structured project organization for AI-assisted development:
 - **Clear separation**: Production / experimentation / testing
 - **Structured workflows**: Consistent, high-quality output
 - **Comprehensive docs**: At every level
+- **Work notebook**: Simple reminder via `.meta/WORK.md`
 
 **Directory layout**: See [`.meta/project_development/STRUCTURE.md`](.meta/project_development/STRUCTURE.md)
 
@@ -45,6 +46,8 @@ Need to...
 4. VALIDATE: All tests pass, no production break
 5. REPORT: Summarize + document + cleanup
 ```
+
+**Work Notebook**: Agent updates [`.meta/WORK.md`](.meta/WORK.md) as a reminder of your current task
 
 **Detailed workflows**: [`.meta/project_development/WORKFLOWS.md`](.meta/project_development/WORKFLOWS.md)
 
@@ -96,6 +99,7 @@ Before completion:
 
 | Directory | When to Use | META.md |
 |-----------|-------------|---------|
+| `.meta/WORK.md` | Current work reminder (auto-updated by agent) | N/A |
 | `.meta/project_development/` | Rules, standards, workflows | [Link](.meta/project_development/META.md) |
 | `.meta/experiments/` | Test new libraries, prototype | [Link](.meta/experiments/META.md) |
 | `.meta/sandbox/` | Modify code safely | [Link](.meta/sandbox/META.md) |
@@ -128,5 +132,5 @@ Before completion:
 
 ---
 
-**Version**: 2.1.0 (added reflection testing) | **Lines**: 155 (reduced from 368, ~60% token savings)
+**Version**: 2.2.0 (added WORK.md notebook - session reminder) | **Lines**: 155 (reduced from 368, ~60% token savings)
 **Last Updated**: 2026-04-19 | **Maintained By**: opencode AI agent

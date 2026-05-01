@@ -1,10 +1,14 @@
 # System Rules
 
-> **⚠️ MANDATORY FIRST STEP FOR ALL AGENTS:** Before ANY task, you MUST query the Knowledge Base first at `.meta/knowledge_base/` or run `meta kb ask <query>`. This is non-negotiable and applies to EVERY task.
+> **⚠️ MANDATORY FIRST STEP FOR ALL AGENTS:** On the **first prompt of a session**, you MUST read `.meta/WORK.md` and display it to the user as a reminder. This happens ONCE per session, before any other action.
+>
+> **⚠️ SECOND MANDATORY STEP:** Before ANY task, you MUST query the Knowledge Base first at `.meta/knowledge_base/` or run `meta kb ask <query>`. This is non-negotiable and applies to EVERY task.
 >
 > **FAILURE TO QUERY KB FIRST = TASK FAILURE** - Agents must demonstrate KB usage in every response
 
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
+
+-1. **SHOW WORK NOTEBOOK FIRST** - On first prompt of session only, read `.meta/WORK.md` and display it to user as reminder - THIS IS Mandatory
 0. **ALWAYS query KB first** - Before ANY task, search `.meta/knowledge_base/` or use `meta kb ask` - THIS IS MANDATORY
 0a. **IF KB IS EMPTY, POPULATE IT** - If KB has no entries, run `meta kb populate` BEFORE proceeding with the task
 0b. **ALWAYS REFERENCE KB** - Every response must cite KB entries or explain why KB was not consulted
@@ -24,6 +28,32 @@ Structured development system for AI-assisted development:
 - **Clear workflows** - Consistent, high-quality output
 - **Comprehensive docs** - At every level
 - **Quality gates** - Ensure correctness
+- **Work notebook** - Simple reminder via `.meta/WORK.md`
+
+---
+
+## Work Notebook (`.meta/WORK.md`)
+
+**What it is**: A simple reminder file that shows what the user is currently working on.
+
+**When to show**: At the start of EVERY session (first prompt only), the agent MUST:
+1. Read `.meta/WORK.md`
+2. Display its content to the user as a reminder
+3. Continue with normal workflow
+
+**How it works**:
+- Agent updates this file when user starts a new task
+- Shows current task status (if any)
+- Cleared when work is complete
+- Not a task tracker - just a simple reminder
+
+**Format**:
+```markdown
+## Current Task
+**Status**: [Task description or "No active work"]
+```
+
+---
 
 # User Prompts Shortcuts
 
