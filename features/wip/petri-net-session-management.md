@@ -6,7 +6,7 @@ AgentX now features advanced session state management using **Petri Nets generat
 
 **Status**: ✅ **COMPLETE** - All features implemented, tested, and validated via stdio integration tests.
 
-**Last Updated**: May 1, 2026
+**Last Updated**: May 1, 2026 (Goal Command Added)
 
 ## Key Features
 
@@ -28,6 +28,7 @@ The system provides ASCII art visualization of current Petri Net state and struc
 
 ### MainController Integration ✅
 All Petri Net commands are fully integrated with MainController:
+- `goal {prompt}` - **NEW** Create new session objective Petri Net from user prompt (each call creates fresh Petri Net)
 - `status` - Show current Petri Net session state
 - `petri-print` or `pp` - Pretty print Petri Net structure with ASCII art
 - `new` - Create new sessions with Petri Net state tracking
@@ -166,11 +167,37 @@ The system combines:
 
 All commands are integrated with MainController and accessible via CLI:
 
+- `goal {prompt}` - **NEW** Create new session objective Petri Net from user prompt. Each call creates a fresh Petri Net based on the objective using LLM-powered workflow generation
 - `status` - Show current Petri Net session state
 - `petri-print` or `pp` - Pretty print Petri Net structure with ASCII art visualization
 - `petri-print --help` - Show detailed help
 - `new [name]` - Create new session with Petri Net state tracking
 - `help` - Show all available commands including Petri Net commands
+
+### Goal Command Details
+
+The `goal` command is the primary way to create new session objectives:
+
+```bash
+# Create new session objective with custom workflow
+goal Debug the login authentication issue
+
+# View current state
+status
+
+# View Petri Net visualization
+petri-print
+
+# Create another objective (new Petri Net)
+goal Analyze database performance
+```
+
+**Features:**
+- Each `goal` call creates a **new** Petri Net (doesn't modify existing)
+- LLM generates custom workflow structure from the prompt
+- Displays formatted state: objective, task type, workflow, enabled actions
+- Integrates with status and petri-print commands
+- Error handling for missing prompts
 
 ## File Storage
 
@@ -193,35 +220,59 @@ This system represents a significant advancement in session state management, pr
 All features have been validated through comprehensive testing:
 
 1. **Integration Tests** (`test_petri_integration.py`): 7/7 passed
-   - SessionManager functionality
-   - SessionStateManager with Petri Net
-   - Builder pattern for workflows
-   - Petri Net visualization
-   - MainController integration
-   - Commands integration
-   - LLM generator mock tests
+- SessionManager functionality
+- SessionStateManager with Petri Net
+- Builder pattern for workflows
+- Petri Net visualization
+- MainController integration
+- Commands integration
+- LLM generator mock tests
 
 2. **E2E Tests** (`test_agentx_with_petri.py`): 5/5 passed
-   - Basic controller with Petri Net commands
-   - Session state workflow simulation
-   - Custom workflow builder
-   - Session management with commands
-   - Real-world project analysis scenario
+- Basic controller with Petri Net commands
+- Session state workflow simulation
+- Custom workflow builder
+- Session management with commands
+- Real-world project analysis scenario
 
 3. **Feature Tests** (`test_petri_net_features.py`): All passed
-   - Workflow templates
-   - LLM objective extraction
-   - Dynamic Petri Net generation
-   - Visualization (ASCII art)
-   - Workflow advancement
+- Workflow templates
+- LLM objective extraction
+- Dynamic Petri Net generation
+- Visualization (ASCII art)
+- Workflow advancement
 
 4. **STDIO Tests** (`test_agentx_stdio.py`): 6/6 passed
-   - Help command via stdio
-   - Status command via stdio
-   - New command via stdio
-   - Petri-print command via stdio
-   - Command sequence processing
-   - Version display validation
+- Help command via stdio
+- Status command via stdio
+- New command via stdio
+- Petri-print command via stdio
+- Command sequence processing
+- Version display validation
+
+5. **Goal Command Tests** (`test_goal_stdio.py`): **6/6 passed** ✅ **NEW**
+- Basic goal command creates Petri Net
+- Multiple sequential goal commands
+- Goal with status integration
+- Goal with petri-print integration
+- Goal appears in help menu
+- Error handling (missing prompt)
+
+6. **Edge Case Tests**: **15/15 passed** ✅ **NEW**
+- Empty prompts, very long prompts (500+ chars)
+- Special characters, unicode (emojis)
+- Multiple sequential goals (10+)
+- Numbers, versions, quotes, whitespace
+- Rapid-fire commands, timeout stress
+- Mixed case sensitivity, unknown commands
+
+7. **Stress Tests**: **7/7 passed** ✅ **NEW**
+- 10 rapid goals in 29.71s
+- Complex nested workflows
+- Alternating command patterns
+- Concurrent-like sequences (5 users)
+- Long sessions (20+ commands in 53s)
+- Special input patterns
 
 ### Running Tests
 ```bash
@@ -242,10 +293,28 @@ bash test_automated/session_management_petri_nets/run_tests.sh
 ```
 
 ### Test Results Summary
-- **Total Tests**: 25+
+- **Total Tests**: 44+ (25 original + 19 new goal command tests)
 - **Pass Rate**: 100%
 - **Last Validated**: May 1, 2026
 - **Status**: ✅ Production Ready
+
+### Running Tests
+```bash
+# Run all original tests
+bash test_automated/session_management_petri_nets/run_tests.sh
+
+# Run goal command tests
+bash test_automated/goal_command_tests/run_tests.sh
+
+# Run goal command stdio tests
+uv run python3 test_automated/goal_command_tests/test_goal_stdio.py
+
+# Run comprehensive edge case tests (external script)
+python3 /tmp/test_goal_comprehensive.py
+
+# Run stress tests (external script)
+python3 /tmp/test_goal_stress.py
+```
 
 ## Implementation Status
 
@@ -256,6 +325,8 @@ bash test_automated/session_management_petri_nets/run_tests.sh
 | Objective Extraction | ✅ Complete | LLM-based classification |
 | Petri Net Visualizer | ✅ Complete | ASCII art rendering |
 | MainController Integration | ✅ Complete | All commands integrated |
+| **Goal Command** | ✅ Complete | **NEW** - Creates fresh Petri Net per call |
 | Session Persistence | ✅ Complete | Auto-save with timestamps |
 | STDIO Validation | ✅ Complete | 6/6 tests passing |
+| Goal Command Tests | ✅ Complete | **NEW** - 6/6 tests + 15 edge cases + 7 stress tests |
 | Production Ready | ✅ Complete | Ready for use |

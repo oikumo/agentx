@@ -7,6 +7,7 @@ from agentx.common.utils import clear_console, safe_int
 from agentx.views.common.console import Console
 from agentx.model.session.session_manager import SessionManager, get_session_manager
 from agentx.model.session.petri_net_visualizer import PetriNetVisualizer
+from agentx.model.session.llm_petri_net_generator import LLMPetriNetGenerator
 
 
 class CommandResultLogInfo(CommandResult):
@@ -213,29 +214,92 @@ class PetriNetStatusCommand(Command):
 class PetriNetPrintCommand(Command):
     """
     Command to pretty print the Petri Net structure.
-    
+
     Usage: petri-print or pp
     """
-    
+
     def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Pretty print Petri Net: petri-print or pp")
         self.controller = controller
-    
+
     def run(self, arguments: list[str]) -> Optional[CommandResult]:
         try:
             # Check if session state exists
             if not hasattr(self.controller, 'session_state') or self.controller.session_state is None:
                 Console.log_info("No active session state. Start with a query first.")
                 return None
-            
+
             manager = self.controller.session_state
             visualizer = PetriNetVisualizer(manager.petri_net)
-            
+
             # Generate ASCII art
             ascii_art = visualizer.to_ascii()
-            
+
             return CommandResultPrint(ascii_art)
-            
+
         except Exception as e:
             Console.log_error(f"Failed to print Petri Net: {str(e)}")
+            return None
+
+
+class GoalCommand(Command):
+    """
+    Command to create a new session objective Petri Net from a user prompt.
+    Each time this command is called, a new session objective Petri Net is created.
+
+    Usage: goal {prompt}
+    Example: goal Debug the login issue
+    """
+
+    def __init__(self, key: str, controller: MainController):
+        super().__init__(key, description="Create new session objective Petri Net: goal {prompt}")
+        self.controller = controller
+        self.generator = LLMPetriNetGenerator("agentx")
+
+    def run(self, arguments: list[str]) -> Optional[CommandResult]:
+        try:
+            # Join all arguments to form the prompt
+            user_prompt = " ".join(arguments).strip()
+            
+            if not user_prompt:
+                Console.log_error("Goal requires a prompt. Usage: goal {prompt}")
+                return None
+
+            # Generate new Petri Net from the prompt
+            self.controller.session_state = self.generator.generate_from_prompt(user_prompt)
+
+            # Get the state
+            state = self.controller.session_state.get_state()
+
+            # Display state information
+            lines = []
+            lines.append("╔════════════════════════════════════════════════════════╗")
+            lines.append("║ NEW SESSION OBJECTIVE (Petri Net) ║")
+            lines.append("╠════════════════════════════════════════════════════════╣")
+            lines.append(f"║ Objective: {state.objective[:53]:<53} ║")
+            lines.append(f"║ Task Type: {state.context.get('task_type', 'unknown'):<53} ║")
+            lines.append(f"║ Workflow: {state.context.get('workflow_name', 'N/A'):<53} ║")
+            lines.append(f"║ Status: {state.context.get('objective_status', 'pending'):<53} ║")
+            lines.append("╠════════════════════════════════════════════════════════╣")
+
+            # Show enabled transitions
+            enabled = state.context.get('enabled_transitions', [])
+            if enabled:
+                lines.append(f"║ Enabled Actions: {', '.join(enabled)[:35]:<35} ║")
+            else:
+                lines.append("║ Enabled Actions: (none) ║")
+
+            # Show LLM reasoning if available
+            reasoning = state.context.get('llm_reasoning', '')
+            if reasoning:
+                lines.append("╠════════════════════════════════════════════════════════╣")
+                reasoning_short = reasoning[:53] if len(reasoning) > 53 else reasoning
+                lines.append(f"║ Workflow Design: {reasoning_short:<53} ║")
+
+            lines.append("╚════════════════════════════════════════════════════════╝")
+
+            return CommandResultLogInfo(lines)
+
+        except Exception as e:
+            Console.log_error(f"Failed to create goal Petri Net: {str(e)}")
             return None

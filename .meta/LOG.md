@@ -1,9 +1,124 @@
 # META HARNESS Change Log
 
-> **Purpose**: Track all structural changes to META HARNESS  
-> **Target**: AI agents and users tracking META HARNESS evolution  
-> **Rule**: ALL structural changes MUST be logged here  
+> **Purpose**: Track all structural changes to META HARNESS
+> **Target**: AI agents and users tracking META HARNESS evolution
+> **Rule**: ALL structural changes MUST be logged here
 > **Format**: Reverse chronological (newest first)
+
+---
+
+## [2026-05-01] Add Features Folder Structure to META HARNESS Documentation
+
+**Type**: Documentation
+**Version**: 2.3.2
+**Agent**: opencode (qwen/qwen3.5-397b-a17b)
+**User Request**: Update META HARNESS and AGENTS.md to include features/ folder with state-based organization (planned/wip/ok)
+
+### Changes Made
+
+#### 1. Created features/ Directory Structure
+- Created `features/planned/` - For features planned but not yet started
+- Created `features/wip/` - For features currently in development
+- Created `features/ok/` - For completed and tested features
+- Created `features/META.md` - Complete documentation for features organization
+
+#### 2. Updated META_HARNESS.md
+- Added "Feature organization" to core principles
+- Added `features/` to Decision Tree
+- Added `features/`, `features/planned/`, `features/wip/`, `features/ok/` to Directory Quick Reference table
+- Documented purpose: "AgentX features organized by state"
+
+#### 3. Updated AGENTS.md
+- Added `features/` to Directory Structure diagram
+- Added rule: "Features have their own META.md at `features/META.md`"
+- Added "Add/modify feature?" to Decision Tree with state flow (planned/ → wip/ → ok/)
+- Updated Common Scenarios with feature workflow
+- Added Features META.md link to Resources section
+
+### Impact Analysis
+
+#### Affected Components
+- ✅ `features/` - Created with planned/, wip/, ok/ subdirectories
+- ✅ `features/META.md` - Created (comprehensive feature documentation)
+- ✅ `META_HARNESS.md` - Modified (added features references)
+- ✅ `AGENTS.md` - Modified (added features references)
+- ✅ `.meta/LOG.md` - This entry
+
+#### Unchanged Components
+- ✅ All existing META HARNESS directories
+- ✅ Core workflows and directives
+- ✅ Knowledge base structure
+- ✅ Test infrastructure
+
+### Validation
+
+#### Quality Gates
+- [x] KB queried before documentation update (3 sources checked)
+- [x] Features folder structure created correctly
+- [x] META.md created for features/ directory
+- [x] Both META_HARNESS.md and AGENTS.md updated consistently
+- [x] Decision trees updated in both files
+- [x] Change logged in LOG.md
+- [x] No production code modified
+- [x] Documentation follows existing patterns
+
+### Files Modified/Created
+
+| File | Action | Lines Changed | Purpose |
+|------|--------|---------------|---------|
+| `features/` | Created | New directory | Feature organization root |
+| `features/planned/` | Created | New directory | Planned features storage |
+| `features/wip/` | Created | New directory | WIP features storage |
+| `features/ok/` | Created | New directory | Completed features storage |
+| `features/META.md` | Created | +220 lines | Features documentation |
+| `META_HARNESS.md` | Modified | +6 lines | Added features references |
+| `AGENTS.md` | Modified | +8 lines | Added features references |
+| `.meta/LOG.md` | Modified | +This entry | Change log |
+
+### Rationale
+
+**Why this change?**
+- Need clear organization for AgentX features by development state
+- Provides visibility into what's being worked on vs. what's complete
+- Follows best practice of state-based feature tracking
+- Integrates with existing WORK.md workflow
+
+**Why this implementation?**
+- Simple three-state model (planned/wip/ok) is easy to understand
+- Consistent with existing META HARNESS patterns
+- Comprehensive documentation in features/META.md
+- Minimal changes to core files
+- Clear workflow for feature lifecycle
+
+### Feature Lifecycle
+
+```
+planned/ → wip/ → ok/
+   ↓       ↓      ↓
+   └──→ cancelled/ (if abandoned)
+```
+
+**State Transitions**:
+1. **planned → wip**: Start development (update WORK.md)
+2. **wip → ok**: Complete and test (update WORK.md)
+3. **wip → planned**: Pause development (document why)
+4. **any → cancelled**: Feature abandoned (keep for reference)
+
+### Rollback Plan
+
+If issues arise:
+```bash
+# Revert documentation changes
+git checkout HEAD -- META_HARNESS.md AGENTS.md
+# Remove features directory (if needed)
+rm -rf features/
+```
+
+### References
+- Related to: features/, feature development, state tracking
+- Impacts: Feature workflows, development organization, documentation
+- Supersedes: None (new structure)
+- Superseded by: Future feature management improvements
 
 ---
 
