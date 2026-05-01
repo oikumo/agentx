@@ -8,7 +8,7 @@
 
 ## Current Task
 
-**Status**: ✅ WIP - Petri Net Session State Implementation & Testing
+**Status**: WIP - Petri Net Session State Implementation & Testing
 
 **Completed**:
 1. ✅ Commands integrated with MainController (status, petri-print, new, help)
