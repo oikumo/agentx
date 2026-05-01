@@ -206,6 +206,10 @@ Need to...
 agent-x/
 ├── META_HARNESS.md # Master documentation
 ├── AGENTS.md # This file
+├── features/ # AgentX features organized by state
+│   ├── planned/ # Planned features (not started)
+│   ├── wip/ # Work in progress (developing)
+│   └── ok/ # Completed features (ready to use)
 ├── .meta/project_development/ # Rules, standards, workflows
 ├── .meta/sandbox/ # Safe workspace
 ├── .meta/experiments/ # Experimental features
@@ -215,7 +219,7 @@ agent-x/
 ├── .meta/reflection/ # Test logs & capability assessment
 └── test_automated/ # Automated agent tests (reflection tests)
 ```
-**Rule:** All `.meta/*` subdirs contain META.md - read first.
+**Rule:** All `.meta/*` subdirs contain META.md - read first. Features have their own META.md at `features/META.md`.
 
 ## Workflow (5 Steps)
 1. **UNDERSTAND** - **ALWAYS query KB first** (.meta/knowledge_base/ or `meta kb ask`) → **IF KB EMPTY, run `meta kb populate` FIRST** → **Demonstrate KB query in response** → Then read task + git log + META.md
@@ -229,6 +233,7 @@ agent-x/
 Need to...
 ├─ Understand something? → **KB FIRST** (.meta/knowledge_base/ or `meta kb ask`) → **IF EMPTY: `meta kb populate`** → **Cite KB in response** THEN proceed below
 ├─ Understand rules? → Read META.md (via KB)
+├─ Add/modify feature? → features/ (planned/ → wip/ → ok/)
 ├─ Modify code? → .meta/sandbox/
 ├─ Test idea? → .meta/experiments/
 ├─ Write tests? → .meta/tests_sandbox/
@@ -252,7 +257,8 @@ Need to...
 `read`, `glob`, `bash`, `edit`, `write`, `task`
 
 ## Common Scenarios
-- **Add Feature** → sandbox → tests → merge
+- **Add Feature** → features/planned/ → features/wip/ → features/ok/
+- **Add Feature (code)** → sandbox → tests → merge → features/ok/
 - **Fix Bug** → reproduce in sandbox → test → fix → merge
 - **Refactor** → copy to sandbox → refactor → test → merge
 - **Test Agent** → test_automated/ → run reflection tests
@@ -282,6 +288,7 @@ Need to...
 - [WORKFLOWS.md](.meta/project_development/WORKFLOWS.md) - Workflows
 - [QUICK_REFERENCE.md](.meta/project_development/QUICK_REFERENCE.md) - Quick ref
 - [KB META.md](.meta/knowledge_base/META.md) - **Consolidated KB documentation (READ FIRST)**
+- [Features META.md](features/META.md) - **Features organization (READ FIRST)**
 - [Reflection Tests](.meta/reflection/README.md) - Automated test documentation
 
 ---

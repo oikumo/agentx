@@ -11,6 +11,7 @@
 Structured project organization for AI-assisted development:
 - **Safe spaces**: Work without affecting production
 - **Clear separation**: Production / experimentation / testing
+- **Feature organization**: Features tracked by state (planned/wip/ok)
 - **Structured workflows**: Consistent, high-quality output
 - **Comprehensive docs**: At every level
 - **Work notebook**: Simple reminder via `WORK.md`
@@ -29,6 +30,7 @@ Structured project organization for AI-assisted development:
 ```
 Need to...
 ├─ Understand rules? → Read relevant META.md
+├─ Add/modify feature? → features/ (planned/ → wip/ → ok/)
 ├─ Modify code? → .meta/sandbox/
 ├─ Test new idea? → .meta/experiments/
 ├─ Write tests? → .meta/tests_sandbox/
@@ -138,6 +140,10 @@ Before completion:
 |-----------|-------------|---------|
 | `.meta/LOG.md` | META HARNESS change log (auto-updated by agent) | N/A |
 | `WORK.md` | Current work reminder (auto-updated by agent) | N/A |
+| `features/` | AgentX features organized by state | [Link](features/META.md) |
+| `features/planned/` | Features planned but not started | [Link](features/META.md) |
+| `features/wip/` | Features in development (Work In Progress) | [Link](features/META.md) |
+| `features/ok/` | Completed features ready for use | [Link](features/META.md) |
 | `.meta/project_development/` | Rules, standards, workflows | [Link](.meta/project_development/META.md) |
 | `.meta/experiments/` | Test new libraries, prototype | [Link](.meta/experiments/META.md) |
 | `.meta/sandbox/` | Modify code safely | [Link](.meta/sandbox/META.md) |
