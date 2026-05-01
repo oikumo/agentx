@@ -51,10 +51,6 @@ class SessionManager:
         Returns:
             The newly created Session
         """
-        # Destroy current session if it exists
-        if self._current_session and self._current_session.is_created():
-            self._current_session.destroy()
-        
         # Create new session
         self._current_session = Session(name)
         if not self._current_session.create():

@@ -8,10 +8,11 @@ from agentx.common.utils import create_directory_with_timestamp, directory_exist
 class SessionManager:
     """
     Manages sessions ensuring a current session always exists.
-    
+
     - If no current session exists, one is automatically created
     - Users can create a new session with the 'new' command
     - Only one current session exists at a time
+    - Sessions are NEVER deleted - they are preserved on disk for data safety
     """
     
     _instance: Optional['SessionManager'] = None
@@ -43,26 +44,26 @@ class SessionManager:
     
     def create_new_session(self, name: str = "session") -> Session:
         """
-        Create a new session, destroying the current one.
-        
+        Create a new session. The previous session is preserved (not deleted).
+
         Args:
             name: Name for the new session
-            
+
         Returns:
             The newly created Session
         """
-        # Destroy current session if it exists
-        if self._current_session and self._current_session.is_created():
-            self._current_session.destroy()
-        
+        # Note: Previous session is preserved (not destroyed)
+        # Only the reference is replaced, allowing garbage collection of old session data
+        # but preserving the session directory on disk
+
         # Create new session
         self._current_session = Session(name)
         if not self._current_session.create():
             raise Exception("Failed to create new session")
-        
+
         # Create new database for the session
         self._database = SessionDatabase(self._current_session)
-        
+
         return self._current_session
     
     def get_database(self) -> Optional[SessionDatabase]:

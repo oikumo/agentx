@@ -45,12 +45,6 @@ class Session:
             return False
         return directory_exists(self.__directory)
 
-    def destroy(self) -> bool:
-        if not self.is_created():
-            return False
-        dangerous_delete_directory(self.__directory)
-        return True
-
 
 class SessionDatabase:
     def __init__(self, session: Session):
