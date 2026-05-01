@@ -603,6 +603,240 @@ Petri Net:
 
 ---
 
+## 7. Advanced Complex Examples
+
+### Example 6: Multi-Agent Collaboration (Complex Parallel Workflow)
+
+```
+User: "Analyze the security vulnerabilities and performance bottlenecks in the authentication module"
+  ↓
+Objective: "analyze security and performance of auth module"
+  ↓
+Petri Net:
+- Nodes: ["analysis_pending", "security_analyzed", "performance_analyzed", "security_report_ready", "performance_report_ready", "reports_merged", "analysis_completed"]
+- Transitions: ["start_security_analysis", "start_performance_analysis", "complete_security", "complete_performance", "merge_reports", "finalize"]
+- Edges:
+  "analysis_pending" -> [start_security_analysis] -> "security_analyzed"
+  "analysis_pending" -> [start_performance_analysis] -> "performance_analyzed"
+  "security_analyzed" -> [complete_security] -> "security_report_ready"
+  "performance_analyzed" -> [complete_performance] -> "performance_report_ready"
+  "security_report_ready" -> [merge_reports] -> "reports_merged"
+  "performance_report_ready" -> [merge_reports] -> "reports_merged"
+  "reports_merged" -> [finalize] -> "analysis_completed"
+
+Token Flow:
+Initial: [analysis_pending: 1]
+After start: [security_analyzed: 1, performance_analyzed: 1] (parallel)
+After complete: [security_report_ready: 1, performance_report_ready: 1]
+After merge: [reports_merged: 1]
+After finalize: [analysis_completed: 1]
+```
+
+### Example 7: Conditional Branching with Guards
+
+```
+User: "Review the code quality and suggest improvements"
+  ↓
+Objective: "review code quality"
+  ↓
+Petri Net:
+- Nodes: ["review_pending", "code_examined", "issues_found", "no_issues", "minor_issues", "major_issues", "documented", "refactoring_planned", "review_completed"]
+- Transitions: ["examine_code", "check_issues", "document_minor", "plan_refactoring", "finalize_no_issues", "finalize_minor", "finalize_major"]
+- Edges:
+  "review_pending" -> [examine_code] -> "code_examined"
+  "code_examined" -> [check_issues] -> "issues_found"
+  "code_examined" -> [check_issues] -> "no_issues"
+  "issues_found" -> [document_minor] -> "minor_issues"
+  "issues_found" -> [plan_refactoring] -> "major_issues"
+  "no_issues" -> [finalize_no_issues] -> "review_completed"
+  "minor_issues" -> [finalize_minor] -> "review_completed"
+  "major_issues" -> [finalize_major] -> "review_completed"
+
+Guard Conditions:
+- [check_issues] IF issues.count == 0 → "no_issues"
+- [check_issues] IF issues.count > 0 AND issues.severity == "minor" → "minor_issues"
+- [check_issues] IF issues.count > 0 AND issues.severity == "major" → "major_issues"
+```
+
+### Example 8: Resource-Constrained Workflow
+
+```
+User: "Deploy the application with rollback capability"
+  ↓
+Objective: "deploy with rollback"
+  ↓
+Petri Net:
+- Nodes: ["deployment_pending", "backup_created", "deployment_ready", "deploying", "deployed", "rollback_ready", "rollback_completed", "deployment_failed", "deployment_completed"]
+- Transitions: ["create_backup", "prepare_deployment", "deploy", "verify_deployment", "rollback", "confirm_deployment"]
+- Edges:
+  "deployment_pending" -> [create_backup] -> "backup_created"
+  "backup_created" -> [prepare_deployment] -> "deployment_ready"
+  "deployment_ready" -> [deploy] -> "deploying"
+  "deploying" -> [verify_deployment] -> "deployed"
+  "deployed" -> [confirm_deployment] -> "deployment_completed"
+  "deployed" -> [rollback] -> "rollback_ready"
+  "rollback_ready" -> [restore_backup] -> "deployment_pending"
+
+Resource Constraints:
+- [deploy] REQUIRES: backup_exists=True, tests_passed=True, approval=True
+- [rollback] REQUIRES: backup_exists=True, deployment_status="failed" OR "issue_detected"
+- Tokens represent resources: backup_token, approval_token, deployment_token
+```
+
+### Example 9: Hierarchical Petri Net (Nested Workflows)
+
+```
+User: "Build a complete CI/CD pipeline with testing, deployment, and monitoring"
+  ↓
+Objective: "build CI/CD pipeline"
+  ↓
+Hierarchical Petri Net:
+
+Level 1 (Main Workflow):
+- Nodes: ["pipeline_pending", "build_stage", "test_stage", "deploy_stage", "monitor_stage", "pipeline_completed"]
+- Transitions: ["start_build", "complete_build", "start_test", "complete_test", "start_deploy", "complete_deploy", "start_monitor", "complete_monitor"]
+- Edges:
+  "pipeline_pending" -> [start_build] -> "build_stage"
+  "build_stage" -> [complete_build] -> "test_stage"
+  "test_stage" -> [complete_test] -> "deploy_stage"
+  "deploy_stage" -> [complete_deploy] -> "monitor_stage"
+  "monitor_stage" -> [complete_monitor] -> "pipeline_completed"
+
+Level 2 (Sub-net: test_stage):
+- Nodes: ["test_pending", "unit_tests", "integration_tests", "e2e_tests", "test_completed"]
+- Transitions: ["run_unit", "run_integration", "run_e2e", "complete_tests"]
+- Edges:
+  "test_pending" -> [run_unit] -> "unit_tests"
+  "unit_tests" -> [run_integration] -> "integration_tests"
+  "integration_tests" -> [run_e2e] -> "e2e_tests"
+  "e2e_tests" -> [complete_tests] -> "test_completed"
+
+Level 3 (Sub-net: deploy_stage):
+- Nodes: ["deploy_pending", "staging_deploy", "staging_verify", "production_deploy", "production_verify", "deploy_completed"]
+- Transitions: ["deploy_to_staging", "verify_staging", "deploy_to_production", "verify_production"]
+- Edges:
+  "deploy_pending" -> [deploy_to_staging] -> "staging_deploy"
+  "staging_deploy" -> [verify_staging] -> "staging_verify"
+  "staging_verify" -> [deploy_to_production] -> "production_deploy"
+  "production_deploy" -> [verify_production] -> "deploy_completed"
+```
+
+### Example 10: Priority-Based Task Queue
+
+```
+User: "Process these tasks by priority: high, medium, low"
+  ↓
+Objective: "process tasks by priority"
+  ↓
+Petri Net:
+- Nodes: ["queue_empty", "high_priority", "medium_priority", "low_priority", "processing", "completed"]
+- Transitions: ["add_high", "add_medium", "add_low", "process_high", "process_medium", "process_low", "complete"]
+- Edges:
+  "queue_empty" -> [add_high] -> "high_priority"
+  "queue_empty" -> [add_medium] -> "medium_priority"
+  "queue_empty" -> [add_low] -> "low_priority"
+  "high_priority" -> [process_high] -> "processing"
+  "medium_priority" -> [process_medium] -> "processing"
+  "low_priority" -> [process_low] -> "processing"
+  "processing" -> [complete] -> "completed"
+
+Priority Rules:
+- IF high_priority has token → MUST fire process_high first
+- IF high_priority empty AND medium_priority has token → fire process_medium
+- IF ONLY low_priority has token → fire process_low
+- Priority enforced by transition guards
+```
+
+### Example 11: State Machine with Timeout
+
+```
+User: "Wait for user confirmation, but timeout after 30 seconds"
+  ↓
+Objective: "wait for confirmation with timeout"
+  ↓
+Petri Net:
+- Nodes: ["waiting", "confirmed", "timeout", "action_pending", "action_completed", "cancelled"]
+- Transitions: ["start_timer", "receive_confirmation", "timeout_expired", "perform_action", "cancel"]
+- Edges:
+  "waiting" -> [start_timer] -> "action_pending"
+  "action_pending" -> [receive_confirmation] -> "confirmed"
+  "action_pending" -> [timeout_expired] -> "timeout"
+  "confirmed" -> [perform_action] -> "action_completed"
+  "timeout" -> [cancel] -> "cancelled"
+
+Timed Transition:
+- [timeout_expired] FIRES AFTER: 30 seconds IF no confirmation received
+- [receive_confirmation] has higher priority (preempts timeout)
+```
+
+### Example 12: Complex Debugging Session (Real-world Example)
+
+```
+User: "The API is returning 500 errors intermittently. Debug and fix the issue."
+  ↓
+Objective: "fix intermittent API 500 errors"
+  ↓
+Petri Net:
+- Nodes: [
+    "issue_reported",
+    "logs_collected",
+    "patterns_analyzed",
+    "hypothesis_formulated",
+    "hypothesis_tested",
+    "root_cause_identified",
+    "fix_designed",
+    "fix_implemented",
+    "fix_tested",
+    "fix_deployed",
+    "monitoring_active",
+    "issue_resolved",
+    "issue_escalated"
+  ]
+- Transitions: [
+    "collect_logs",
+    "analyze_patterns",
+    "formulate_hypothesis",
+    "test_hypothesis",
+    "identify_root_cause",
+    "design_fix",
+    "implement_fix",
+    "test_fix",
+    "deploy_fix",
+    "start_monitoring",
+    "verify_resolution",
+    "escalate_issue"
+  ]
+- Edges:
+  "issue_reported" -> [collect_logs] -> "logs_collected"
+  "logs_collected" -> [analyze_patterns] -> "patterns_analyzed"
+  "patterns_analyzed" -> [formulate_hypothesis] -> "hypothesis_formulated"
+  "hypothesis_formulated" -> [test_hypothesis] -> "hypothesis_tested"
+  "hypothesis_tested" -> [identify_root_cause] -> "root_cause_identified"
+  "root_cause_identified" -> [design_fix] -> "fix_designed"
+  "fix_designed" -> [implement_fix] -> "fix_implemented"
+  "fix_implemented" -> [test_fix] -> "fix_tested"
+  "fix_tested" -> [deploy_fix] -> "fix_deployed"
+  "fix_deployed" -> [start_monitoring] -> "monitoring_active"
+  "monitoring_active" -> [verify_resolution] -> "issue_resolved"
+  
+  Alternative path (escalation):
+  "hypothesis_tested" -> [escalate_issue] -> "issue_escalated"
+  
+  Retry loop:
+  "hypothesis_tested" -> [test_hypothesis] -> "hypothesis_formulated" (IF hypothesis rejected)
+
+Semantic State Tracking:
+- Current node: "logs_collected"
+- Enabled transitions: ["analyze_patterns"]
+- Progress: 2/12 steps (16.7%)
+- Estimated remaining: 10 transitions
+- Complexity: HIGH (13 nodes, 12 transitions, 1 loop, 1 alternative path)
+```
+
+---
+
+---
+
 ## 7. Implementation in AgentX
 
 ### 7.1 Core Classes
