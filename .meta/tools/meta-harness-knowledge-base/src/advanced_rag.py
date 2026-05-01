@@ -102,7 +102,7 @@ class AdvancedRAG:
     def multi_hop_retrieval(self, query: str, top_k: int = 5, max_hops: int = 2) -> List[Dict]:
         """
         Perform multi-hop retrieval for complex queries.
-        
+
         Process:
         1. Initial retrieval with original query
         2. Extract key entities/concepts from results
@@ -111,35 +111,36 @@ class AdvancedRAG:
         """
         all_results = []
         seen_ids = set()
-        
-        # Hop 0: Original query
+
+        # Hop 0: Original query (most important - use original scoring)
         current_query = query
         hop = 0
-        
+
         while hop <= max_hops:
             results = hybrid_search(self.conn, current_query, None, top_k * 2)
-            
+
             for r in results:
                 if r['id'] not in seen_ids:
                     seen_ids.add(r['id'])
                     r['hop'] = hop
                     r['query_used'] = current_query
+                    # Preserve the original combined_score from hybrid_search
                     all_results.append(r)
-            
+
             # Extract concepts for next hop
             if hop < max_hops and results:
                 # Get top result's key terms
                 top_result = results[0]
                 combined_text = f"{top_result['title']} {top_result['finding']} {top_result['solution']}"
-                next_query_terms = simple_tokenize(combined_text)[:5]  # Top 5 terms
+                next_query_terms = simple_tokenize(combined_text)[:5] # Top 5 terms
                 current_query = " ".join(next_query_terms)
                 hop += 1
             else:
                 break
-        
-        # Re-rank all results by combined score
-        all_results.sort(key=lambda x: (x.get('bm25_score', 0) or 0), reverse=True)
-        
+
+        # Sort by the original scoring from hybrid_search (not just BM25)
+        # Results already have their combined score embedded in their order
+        # Just deduplicate and return top_k
         return all_results[:top_k]
     
     def cluster_and_diversify(self, results: List[Dict], diversity_factor: float = 0.3) -> List[Dict]:
@@ -251,30 +252,37 @@ class AdvancedRAG:
             "question": question
         }
     
-    def advanced_search(self, query: str, top_k: int = 5, 
-                       use_multi_hop: bool = True,
-                       use_diversification: bool = True,
-                       category: Optional[str] = None) -> Dict[str, Any]:
+    def advanced_search(self, query: str, top_k: int = 5,
+        use_multi_hop: bool = True,
+        use_diversification: bool = True,
+        category: Optional[str] = None) -> Dict[str, Any]:
         """
         Advanced search with all enhancements.
-        
+
         Args:
             query: Search query
             top_k: Number of results
             use_multi_hop: Enable multi-hop retrieval
             use_diversification: Ensure result diversity
             category: Optional category filter
-        
+
         Returns:
             Dictionary with results and metadata
         """
         start_time = datetime.now()
-        
+
         # Step 1: Query expansion
         query_variations = self.rewrite_query(query)
-        
+
+        # Disable multi-hop for:
+        # 1. Short queries (1-2 words) - they don't need it
+        # 2. Queries that look like simple lookups (contain "What is", class names, etc.)
+        query_lower = query.lower()
+        is_simple_lookup = any(pattern in query_lower for pattern in ['what is', 'what are', 'who is', 'class:', 'method:', 'function:'])
+        effective_multi_hop = use_multi_hop and len(query.split()) > 3 and not is_simple_lookup
+
         # Step 2: Multi-hop or standard retrieval
-        if use_multi_hop:
+        if effective_multi_hop:
             results = self.multi_hop_retrieval(query, top_k * 2)
         else:
             results = hybrid_search(self.conn, query, category, top_k * 2)

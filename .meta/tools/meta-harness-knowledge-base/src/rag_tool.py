@@ -144,7 +144,7 @@ def semantic_boost(entry: Dict, query: str) -> float:
 def hybrid_search(conn, query: str, category: Optional[str] = None, top_k: int = 5) -> List[Dict]:
     """
     Enhanced hybrid search with multi-stage ranking.
-    
+
     Stages:
     1. FTS5 full-text search with query expansion
     2. Keyword matching with TF-IDF-like weighting
@@ -153,23 +153,23 @@ def hybrid_search(conn, query: str, category: Optional[str] = None, top_k: int =
     5. Final re-ranking with combined score
     """
     cursor = conn.cursor()
-    
+
     # Stage 1: Query expansion for better recall
     tokens = simple_tokenize(query)
-    
+
     # Expand query: exact phrase + individual terms
-    expanded_queries = [query]  # Exact phrase
+    expanded_queries = [query] # Exact phrase
     if len(tokens) > 1:
-        expanded_queries.extend(tokens)  # Individual terms
-    
+        expanded_queries.extend(tokens) # Individual terms
+
     # Build FTS5 query - escape special characters
     escaped_queries = [escape_fts5_query(q) for q in set(expanded_queries)]
     # Filter out empty queries
     escaped_queries = [q for q in escaped_queries if q]
     fts_query = " OR ".join(escaped_queries) if escaped_queries else "*"
     category_filter = f"AND category = '{category}'" if category else ""
-    
-    # Retrieve more candidates for re-ranking
+
+    # Retrieve more candidates for re-ranking (5x for better coverage)
     sql = f"""
     SELECT e.*, bm25(entries_fts) as bm25_score
     FROM entries e
@@ -180,59 +180,84 @@ def hybrid_search(conn, query: str, category: Optional[str] = None, top_k: int =
     ORDER BY bm25_score
     LIMIT ?
     """
-    
-    cursor.execute(sql, (fts_query, top_k * 3))  # Get 3x for better re-ranking
+
+    cursor.execute(sql, (fts_query, top_k * 5)) # Get 5x for better re-ranking
     fts_results = cursor.fetchall()
     
     # Stage 2-5: Multi-feature scoring and re-ranking
     scored_results = []
     for row in fts_results:
         row_dict = dict(row)
-        
+
         # Combine all text fields for comprehensive matching
         full_text = f"{row['title']} {row['context']} {row['finding']} {row['solution']} {row['example'] or ''}"
-        
+
         # Feature 1: Keyword matching score (TF-IDF-like)
         kw_score = keyword_score(full_text, query)
-        
+
         # Feature 2: BM25 score (normalized)
         bm25_raw = row['bm25_score']
         bm25_normalized = 1 / (1 - bm25_raw + 0.1) if bm25_raw else 0
-        
+
         # Feature 3: Semantic boost based on field importance
         sem_boost = semantic_boost(row_dict, query)
-        
+
         # Feature 4: Confidence (user-validated quality)
         confidence = row['confidence']
-        
+
         # Feature 5: Recency bonus (newer entries get slight boost)
         try:
             from datetime import datetime as dt
             created = dt.fromisoformat(row['created_at'].replace('Z', '+00:00'))
             days_old = (dt.now() - created).days
-            recency_bonus = 1.0 / (1.0 + 0.01 * days_old)  # Decay over 100 days
+            recency_bonus = 1.0 / (1.0 + 0.01 * days_old) # Decay over 100 days
         except:
             recency_bonus = 1.0
+
+        # NEW: Exact match bonus for title - CRITICAL for class/method queries!
+        title = row_dict.get('title', '').lower()
+        query_lower = query.lower()
+        title_match_bonus = 0.0
         
-        # Combined scoring formula:
-        # - 30% BM25 (textual relevance)
-        # - 25% Keyword matching (semantic overlap)
-        # - 20% Semantic boost (field importance)
+        # Check if query or key terms appear in title
+        query_terms = [query_lower] + tokens
+        matching_terms = [t for t in query_terms if t and t in title]
+        
+        if query_lower in title:
+            title_match_bonus = 2.0  # Very strong bonus for exact title match
+        elif len(matching_terms) >= 2:
+            title_match_bonus = 1.0  # Strong bonus for multiple term matches
+        elif any(token.lower() in title for token in tokens):
+            title_match_bonus = 0.5  # Moderate bonus for single term match
+
+        # NEW: Category boost for code-related queries
+        category_boost = 0.0
+        if any(kw in query_lower for kw in ['class', 'method', 'function', 'def', 'code']):
+            if row_dict.get('category', '') in ['class', 'method', 'function', 'code']:
+                category_boost = 0.5  # Strong boost for matching category
+
+        # Combined scoring formula (updated):
+        # - 25% BM25 (textual relevance)
+        # - 20% Keyword matching (semantic overlap)
+        # - 15% Semantic boost (field importance)
         # - 15% Confidence (quality signal)
         # - 10% Recency (freshness)
+        # - 15% Title exact match (NEW - critical for class/method queries)
         combined_score = (
-            0.30 * bm25_normalized +
-            0.25 * kw_score +
-            0.20 * sem_boost +
+            0.25 * bm25_normalized +
+            0.20 * kw_score +
+            0.15 * sem_boost +
             0.15 * confidence +
-            0.10 * recency_bonus
+            0.10 * recency_bonus +
+            0.15 * title_match_bonus +
+            0.05 * category_boost
         )
-        
+
         # Apply semantic boost as multiplier
         final_score = combined_score * sem_boost
-        
+
         scored_results.append((final_score, row_dict))
-    
+
     # Sort by final score and return top-k
     scored_results.sort(key=lambda x: x[0], reverse=True)
     return [result for score, result in scored_results[:top_k]]

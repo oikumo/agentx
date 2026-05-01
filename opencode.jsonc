@@ -1,7 +1,7 @@
 // THIS OPENCODE CONFIGURATION FILE IS JUST FOR REFERENCE PURPOSE
 {
   "$schema": "https://opencode.ai/config.json",
-"agent": {
+  "agent": {
       "build": {
         "prompt": "{file:./prompts/build.txt}"
       },
@@ -18,27 +18,12 @@
     },
   "permission": {
     "edit": "allow",
-     "bash": {
-        "*": "ask",
-        "echo *": "allow",
-        "git *": "allow",
-        "npm *": "allow",
-        "rm *": "allow",
-        "grep *": "allow",
-        "ls *": "allow",
-        "python3 *": "allow",
-        "python *": "deny",
-        "wc *": "allow",
-        "cd *": "allow",
-        "ls -ls *": "allow",
-        "mv *": "allow",
-        "find *": "allow"
-     },
     "read": {
       "*": "allow",
       "*.env": "deny",
       "*.env.*": "deny"
     },
+    "bash": "allow",
     "webfetch": "deny",
     "grep": "allow",
     "glob": "allow",

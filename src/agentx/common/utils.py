@@ -25,23 +25,43 @@ def create_directory_with_timestamp(name: str, base_directory) -> str | None:
     datetime_string = now.strftime("%Y-%m-%d-%H-%M-%S")
     directory = f"{name}_{datetime_string}"
     session_directory = f"{base_directory}/{directory}"
-
+    
     if os.path.isdir(session_directory):
         print("error file exists")
         return None
-
+    
     directory_path = Path(session_directory)
-
+    
     try:
         directory_path.mkdir(parents=True, exist_ok=True)
     except Exception as e:
         print("create directory error")
         return None
-
+    
     if not os.path.isdir(session_directory):
         print("error checking if directory exits")
         return None
+    
+    return str(directory_path.absolute().resolve())
 
+
+def create_directory_without_timestamp(name: str, base_directory) -> str | None:
+    """Create a directory without timestamp (for current session)."""
+    directory = f"{name}"
+    session_directory = f"{base_directory}/{directory}"
+    
+    directory_path = Path(session_directory)
+    
+    try:
+        directory_path.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        print("create directory error")
+        return None
+    
+    if not os.path.isdir(session_directory):
+        print("error checking if directory exits")
+        return None
+    
     return str(directory_path.absolute().resolve())
 
 

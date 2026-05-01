@@ -4,13 +4,14 @@ from pathlib import Path
 from typing import Any
 
 from agentx.common.security import SESSION_DEFAULT_NAME, SESSION_DEFAULT_BASE_DIRECTORY
-from agentx.common.utils import create_directory_with_timestamp, directory_exists, dangerous_delete_directory
+from agentx.common.utils import create_directory_with_timestamp, create_directory_without_timestamp, directory_exists, dangerous_delete_directory
 from agentx.model.db.session_db import TableHistory, TableUser
 
 
 class Session:
     __directory: str | None
     __session_name: str
+    __use_timestamp: bool
 
     @property
     def name(self) -> str:
@@ -20,9 +21,10 @@ class Session:
     def directory(self) -> str | None:
         return self.__directory
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, use_timestamp: bool = True):
         self.__directory = None
         self.__session_name = SESSION_DEFAULT_NAME
+        self.__use_timestamp = use_timestamp
         if not (name and name.strip()):
             self.__session_name = SESSION_DEFAULT_NAME
         elif " " in name:
@@ -32,9 +34,14 @@ class Session:
 
     def create(self):
         self.__directory = None
-        new_directory = create_directory_with_timestamp(
-            self.__session_name, SESSION_DEFAULT_BASE_DIRECTORY
-        )
+        if self.__use_timestamp:
+            new_directory = create_directory_with_timestamp(
+                self.__session_name, SESSION_DEFAULT_BASE_DIRECTORY
+            )
+        else:
+            new_directory = create_directory_without_timestamp(
+                self.__session_name, SESSION_DEFAULT_BASE_DIRECTORY
+            )
         if not new_directory:
             return False
         self.__directory = new_directory
@@ -81,7 +88,7 @@ class SessionDatabase:
             with sqlite3.connect(db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute(query, parameters)
-            return True
+                return True
         except Exception:
             return False
 

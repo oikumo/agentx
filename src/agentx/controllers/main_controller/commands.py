@@ -5,7 +5,7 @@ from agentx.controllers.main_controller.commands_base import Command, CommandRes
 from agentx.controllers.main_controller.main_controller import MainController
 from agentx.common.utils import clear_console, safe_int
 from agentx.views.common.console import Console
-from agentx.model.session.session_manager import SessionManager
+from agentx.model.session.session_manager import SessionManager, get_session_manager
 
 
 class CommandResultLogInfo(CommandResult):
@@ -142,10 +142,10 @@ class NewCommand(Command):
         session_name = " ".join(arguments).strip() if arguments else f"session_default"
         
         try:
-            session_manager = SessionManager()
+            session_manager = get_session_manager()
             new_session = session_manager.create_new_session(session_name)
             return NewSessionResult(new_session.name, f"New session created: {new_session.name}")
-            
+        
         except Exception as e:
             Console.log_error(f"Failed to create new session: {str(e)}")
             return None
