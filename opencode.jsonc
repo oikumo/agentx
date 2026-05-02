@@ -3,13 +3,13 @@
   "$schema": "https://opencode.ai/config.json",
   "agent": {
       "build": {
-        "prompt": "{file:./agents_prompts/build.txt}"
+        "prompt": "{file:./.agents_prompts/build.txt}"
       },
       "code-reviewer": {
         "description": "Reviews code for best practices and potential issues",
         "mode": "primary",
         "model": "openrouter/openrouter/auto",
-        "prompt": "You are a code reviewer. Focus on security, performance, and maintainability.",
+        "prompt": "{file:./.agents_prompts/code-reviewer.txt}",
         "tools": {
           "write": false,
           "edit": false
