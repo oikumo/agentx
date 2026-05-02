@@ -15,7 +15,6 @@ Structured project organization for AI-assisted development:
 - **Structured workflows**: Consistent, high-quality output
 - **Comprehensive docs**: At every level
 - **Work notebook**: Simple reminder via `WORK.md`
-- **Project tracker**: Multi-project status via `PROJECTS.md`
 - **Change logging**: All structural changes logged in `.meta/LOG.md`
 
 **Directory layout**: See [`.meta/project_development/STRUCTURE.md`](.meta/project_development/STRUCTURE.md)
@@ -31,15 +30,13 @@ Structured project organization for AI-assisted development:
 ```
 Need to...
 ├─ Understand rules? → Read relevant META.md
-├─ Add/modify feature? → features/ (planned/ → wip/ → ok/)
 ├─ Modify code? → .meta/sandbox/
 ├─ Test new idea? → .meta/experiments/
 ├─ Write unit tests? → tests/unit/ (isolated tests for src/agentx/)
 ├─ Write TDD tests? → .meta/tests_sandbox/
-├─ Test agent (automated)? → .meta/tests_automated/
-├─ Test agent (legacy)? → test_automated/
-├─ Use/create tools? → .meta/development_tools/
-└─ Check workflows? → .meta/project_development/WORKFLOWS.md
+├─ Test agent (automated)? → .meta/tests_automated/ or test_automated/
+├─ Use/create tools? → .meta/tools/
+└─ Check workflows? → .meta/project_development/WORKFLOWS.md (if exists)
 ```
 
 ---
@@ -54,10 +51,9 @@ Need to...
 5. REPORT: Summarize + document + cleanup
 ```
 
-**Work Notebook**: Agent updates [WORK.md](WORK.md) as a reminder of your current task and the next in planning  
-**Project Tracker**: Agent tracks multiple projects in [PROJECTS.md](PROJECTS.md)
+**Work Notebook**: Agent updates [WORK.md](WORK.md) as a reminder of your current task and the next in planning
 
-**Startup Reminder**: At session start, agent reads both [WORK.md](WORK.md) and [PROJECTS.md](PROJECTS.md) and displays them to the user.
+**Startup Reminder**: At session start, agent reads [WORK.md](WORK.md) and displays it to the user.
 
 **Detailed workflows**: [`.meta/project_development/WORKFLOWS.md`](.meta/project_development/WORKFLOWS.md)
 
@@ -147,21 +143,15 @@ Before completion:
 |-----------|-------------|---------|
 | `.meta/LOG.md` | META HARNESS change log (auto-updated by agent) | N/A |
 | `WORK.md` | Current work reminder (auto-updated by agent) | N/A |
-| `PROJECTS.md` | Multiple project tracker (auto-updated by agent) | N/A |
-| `features/` | AgentX features organized by state | [Link](features/META.md) |
-| `features/planned/` | Features planned but not started | [Link](features/META.md) |
-| `features/wip/` | Features in development (Work In Progress) | [Link](features/META.md) |
-| `features/ok/` | Completed features ready for use | [Link](features/META.md) |
 | `tests/unit/` | **Unit tests for all src/agentx/ modules** | [Link](tests/unit/README.md) |
-| `.meta/project_development/` | Rules, standards, workflows | [Link](.meta/project_development/META.md) |
 | `.meta/experiments/` | Test new libraries, prototype | [Link](.meta/experiments/META.md) |
 | `.meta/sandbox/` | Modify code safely | [Link](.meta/sandbox/META.md) |
 | `.meta/tests_sandbox/` | TDD (Kent Beck) | [Link](.meta/tests_sandbox/META.md) |
-| `.meta/tests_automated/` | **Automated reflection tests** | [Link](.meta/tests_automated/META.md) |
-| `.meta/development_tools/` | Development tools, scripts | [Link](.meta/development_tools/META.md) |
 | `.meta/knowledge_base/` | RAG knowledge storage | [Link](.meta/knowledge_base/META.md) |
 | `.meta/reflection/` | Test logs & capability assessment | [Link](.meta/reflection/README.md) |
-| `test_automated/` | Automated agent tests (legacy) | N/A |
+| `.meta/tools/` | Development tools, scripts | [Link](.meta/tools/META.md) |
+| `.meta/doc/` | Documentation archives | N/A |
+| `.meta/data/` | Data storage |
 
 ---
 
@@ -180,12 +170,9 @@ Before completion:
 |----------|---------|
 | [`AGENTS.md`](AGENTS.md) | Entry point (read first) |
 | [`README.md`](README.md) | Project overview |
-| [`DIRECTIVES.md`](.meta/project_development/DIRECTIVES.md) | Core rules (6 directives) |
-| [`WORKFLOWS.md`](.meta/project_development/WORKFLOWS.md) | Workflow patterns |
-| [`QUICK_REFERENCE.md`](.meta/project_development/QUICK_REFERENCE.md) | At-a-glance guide |
 | [`.meta/reflection/README.md`](.meta/reflection/README.md) | Reflection test documentation |
 
 ---
 
-**Version**: 2.3.1 (WORK.md moved to root folder) | **Lines**: 155 (reduced from 368, ~60% token savings)
-**Last Updated**: 2026-04-19 | **Maintained By**: opencode AI agent
+**Version**: 2.3.2 (Removed non-existent directories) | **Lines**: ~170
+**Last Updated**: 2026-05-02 | **Maintained By**: opencode AI agent

@@ -1,6 +1,6 @@
 # System Rules
 
-> **⚠️ MANDATORY FIRST STEP FOR ALL AGENTS:** On the **first prompt of a session**, you MUST read `WORK.md` and `PROJECTS.md`, then display them to the user as a reminder. This happens ONCE per session, before any other action.
+> **⚠️ MANDATORY FIRST STEP FOR ALL AGENTS:** On the **first prompt of a session**, you MUST read `WORK.md`, then display it to the user as a reminder. This happens ONCE per session, before any other action.
 >
 > **⚠️ SECOND MANDATORY STEP:** Before ANY task, you MUST query the Knowledge Base first at `.meta/knowledge_base/` or run `meta kb ask <query>`. This is non-negotiable and applies to EVERY task.
 >
@@ -9,7 +9,7 @@
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 
 **Priority 0 (Session Startup):**
-0. **SHOW WORK & PROJECTS FIRST** - On first prompt only, read `WORK.md` and `PROJECTS.md`, display to user
+0. **SHOW WORK FIRST** - On first prompt only, read `WORK.md`, display to user
 0a. **ALWAYS query KB first** - Before ANY task, search `.meta/knowledge_base/` or use `meta kb ask`
 0b. **IF KB IS EMPTY, POPULATE IT** - Run `meta kb populate` before proceeding
 0c. **ALWAYS REFERENCE KB** - Cite KB entries or explain why not consulted
@@ -37,7 +37,7 @@ Structured development system for AI-assisted development:
 
 ---
 
-## Work Notebook (`WORK.md`) and Project Tracker (`PROJECTS.md`)
+## Work Notebook (`WORK.md`)
 
 ### Work Notebook (`WORK.md`)
 **What it is**: A simple reminder file that shows what the user is currently working on and the next planned work.
@@ -62,26 +62,7 @@ Structured development system for AI-assisted development:
 2. [Other next task]
 ```
 
-### Project Tracker (`PROJECTS.md`)
-**What it is**: A multi-project tracker that shows the status of all active projects across the AgentX ecosystem.
 
-**When to show**: At the start of EVERY session (first prompt only), the agent MUST:
-1. Read `PROJECTS.md`
-2. Display relevant project status to the user
-3. Use project priorities to guide work suggestions
-
-**How it works**:
-- Tracks multiple projects with status (🟢 Active, 🟡 Planned, 🟠 In Progress, 🔴 Blocked, ⚪ Backlog, ✅ Completed)
-- Shows project dependencies and next steps
-- Updated when projects change state or priorities shift
-- Complements `WORK.md` (session-level vs project-level)
-
-**Startup Workflow**:
-1. Read both `WORK.md` and `PROJECTS.md`
-2. Display WORK.md current task
-3. Display PROJECTS.md active projects overview
-4. Query Knowledge Base
-5. Proceed with task
 
 ---
 
@@ -233,23 +214,21 @@ Need to...
 ### Directory Structure
 ```
 agent-x/
-    ├── META_HARNESS.md # Master documentation
-    ├── AGENTS.md # This file
-    ├── features/ # AgentX features organized by state
-    │ ├── planned/ # Planned features (not started)
-    │ ├── wip/ # Work in progress (developing)
-    │ └── ok/ # Completed features (ready to use)
-    ├── .meta/project_development/ # Rules, standards, workflows
-    ├── .meta/sandbox/ # Safe workspace
-    ├── .meta/experiments/ # Experimental features
-    ├── .meta/tests_sandbox/ # TDD workspace
-    ├── .meta/tests_automated/ # Automated reflection tests (NEW)
-    ├── .meta/development_tools/ # Development tools, scripts
-    ├── .meta/knowledge_base/ # RAG knowledge base
-    ├── .meta/reflection/ # Test logs & capability assessment
-    └── test_automated/ # Automated agent tests (legacy)
+├── META_HARNESS.md # Master documentation
+├── AGENTS.md # This file
+├── .meta/sandbox/ # Safe workspace
+├── .meta/experiments/ # Experimental features
+├── .meta/tests_sandbox/ # TDD workspace
+├── .meta/knowledge_base/ # RAG knowledge base
+├── .meta/reflection/ # Test logs & capability assessment
+├── .meta/tools/ # Development tools, scripts
+├── .meta/doc/ # Documentation archives
+├── .meta/data/ # Data storage
+├── tests/ # Unit and integration tests
+│   └── unit/ # Unit tests
+└── test_automated/ # Automated agent tests (legacy)
 ```
-**Rule:** All `.meta/*` subdirs contain META.md - read first. Features have their own META.md at `features/META.md`.
+**Rule:** All `.meta/*` subdirs contain META.md - read first.
 
 ## Workflow (5 Steps)
 1. **UNDERSTAND** - **ALWAYS query KB first** (.meta/knowledge_base/ or `meta kb ask`) → **IF KB EMPTY, run `meta kb populate` FIRST** → **Demonstrate KB query in response** → Then read task + git log + META.md
@@ -263,14 +242,12 @@ agent-x/
 Need to...
 ├─ Understand something? → **KB FIRST** (.meta/knowledge_base/ or `meta kb ask`) → **IF EMPTY: `meta kb populate`** → **Cite KB in response** THEN proceed below
 ├─ Understand rules? → Read META.md (via KB)
-├─ Add/modify feature? → features/ (planned/ → wip/ → ok/)
 ├─ Modify code? → .meta/sandbox/
 ├─ Test idea? → .meta/experiments/
 ├─ Write tests? → .meta/tests_sandbox/
-├─ Test agent (automated)? → .meta/tests_automated/
-├─ Test agent (legacy)? → test_automated/
-├─ Use/create tools? → .meta/development_tools/
-└─ Check workflows? → .meta/project_development/WORKFLOWS.md
+├─ Test agent (automated)? → .meta/tests_automated/ or test_automated/
+├─ Use/create tools? → .meta/tools/
+└─ Check workflows? → .meta/project_development/WORKFLOWS.md (if exists)
 ```
 
 ## Quality Gates
@@ -288,12 +265,10 @@ Need to...
 `read`, `glob`, `bash`, `edit`, `write`, `task`
 
 ## Common Scenarios
-- **Add Feature** → features/planned/ → features/wip/ → features/ok/
-- **Add Feature (code)** → sandbox → tests → merge → features/ok/
+- **Add Feature (code)** → .meta/sandbox/ → tests → merge
 - **Fix Bug** → reproduce in sandbox → test → fix → merge
 - **Refactor** → copy to sandbox → refactor → test → merge
-- **Test Agent (Automated)** → .meta/tests_automated/ → run reflection tests
-- **Test Agent (Manual)** → test_automated/ → run legacy tests
+- **Test Agent (Automated)** → .meta/tests_automated/ or test_automated/ → run reflection tests
 
 ## Projects (User Tasks)
 
@@ -306,22 +281,18 @@ Need to...
 ### Medium (1-3hr)
 - Docs Compression → `.meta/sandbox/`
 - Structure Analysis → `.meta/sandbox/`
-- Workflow Templates → `.meta/project_development/`
+- Workflow Templates → `.meta/project_development/` (if exists)
 - KB Population → `.meta/knowledge_base/`
 
 ### Advanced (3+hr)
 - Full Optimization → Multiple dirs
 - Skill Development → `.meta/experiments/`
-- Workflow Enhancement → `.meta/project_development/`
+- Workflow Enhancement → `.meta/project_development/` (if exists)
 - Capability Assessment → `.meta/reflection/`
 
 ## Resources
 - [META_HARNESS.md](META_HARNESS.md) - Master docs
-- [WORKFLOWS.md](.meta/project_development/WORKFLOWS.md) - Workflows
-- [QUICK_REFERENCE.md](.meta/project_development/QUICK_REFERENCE.md) - Quick ref
-- [KB META.md](.meta/knowledge_base/META.md) - **Consolidated KB documentation (READ FIRST)**
-- [Features META.md](features/META.md) - **Features organization (READ FIRST)**
 - [Reflection Tests](.meta/reflection/README.md) - Automated test documentation
 
 ---
-**Version:** 2.3.1 (WORK.md moved to root) | **Updated:** 2026-05-01
+**Version:** 2.3.2 (Removed non-existent directories) | **Updated:** 2026-05-02
