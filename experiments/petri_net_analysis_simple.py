@@ -3,7 +3,7 @@
 Simple Petri Net Analysis for Agent-X Sprint 2 (SCRUM Project)
 
 This demonstrates Petri Net formal verification concepts applied to
-real Jira sprint data without external dependencies.
+real issue tracker system data without external dependencies.
 
 Author: Agent-X System
 Date: April 11, 2026

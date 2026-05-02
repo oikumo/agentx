@@ -1,80 +1,105 @@
 # Project Overview - Agent-X
 
-> **Version**: 0.1.0 | **Python**: >=3.14 | **Package Manager**: uv
+> **Version**: 0.2.0  
+> **Last Updated**: April 2026  
+> **Python**: 3.14+  
+> **Package Manager**: uv
+
+---
+
+## What is Agent-X?
 
 Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop) interface. It enables users to interact with various language models through command-line commands, supporting multiple interaction patterns:
 
-- **Simple Chat**: Conversational interaction with local/cloud LLMs (single-turn and persistent REPL with streaming)
-- **Chat Loop**: Persistent conversation with message history, streaming output, and context preservation
-- **Function Calling**: Ollama-based tool calling for function dispatch
-- **RAG (Retrieval-Augmented Generation)**: PDF Q&A with FAISS vector store and Ollama embeddings
-- **ReAct Web Search**: Web search agents using Tavily with structured output
-- **Graph-based Reasoning**: LangGraph workflows for reflection, reflexion, and multi-agent reasoning
+- **Simple Chat**: Basic conversational interface
+- **RAG with PDFs**: Document retrieval and question answering
+- **ReAct Web Search**: Reasoning and acting with web search capabilities
+- **Graph-based Workflows**: Complex multi-step reasoning workflows
+
+---
+
+## Architecture
+
+Agent-X follows the **MVC (Model-View-Controller)** architectural pattern:
+
+### Model Layer (`src/model/`)
+- Data persistence with SQLite
+- Session lifecycle management
+- Command history tracking
+
+### View Layer (`src/views/`)
+- Chat interface with streaming support
+- Main application UI
+- Shared console utilities
+
+### Controller Layer (`src/controllers/`)
+- Command routing and parsing
+- Business logic implementation
+- REPL integration
+
+### Service Layer (`src/services/`)
+- AI/LLM service orchestration
+- Provider strategy pattern (OpenAI, Google, Ollama, LlamaCpp)
+- Vector store integrations (ChromaDB, Pinecone)
+
+### Common (`src/common/`)
+- Shared utilities
+- Security constants
+- Helper functions
 
 ---
 
 ## Application Flow
 
 ```
-main.py → src/main.py
-  └── create_controller()
-        └── MainController (command registry)
-              ├── Register 14 commands
-              └── ReplApp(controller).run()
-                    ├── Model(session_name="test_2") - session + DB
-                    ├── Loop:
-                    │   ├── input("(agent-x) > ")
-                    │   ├── CommandParser.parse() → CommandData(key, arguments)
-                    │   ├── MainController.find_command(key)
-                    │   ├── Model.log_command(HistoryEntry)
-                    │   ├── command.run(arguments) → CommandResult
-                    │   ├── result.apply()
-                    │   └── Print command history
-                    └── Exit on KeyboardInterrupt / EOFError / QuitCommand
+User Input (REPL)
+    ↓
+Command Parser (Controller)
+    ↓
+Command Handler (Controller)
+    ↓
+Service Layer (AI/LLM)
+    ↓
+LLM Provider (Strategy Pattern)
+    ↓
+Response → View Layer → User
 ```
-
----
-
-## Command Registry
-
-| Command | Class | Module | Description |
-|---------|-------|--------|-------------|
-| `sum` | SumCommand | src.app.repl.commands.math_commands | Add two integers |
-| `quit` | QuitCommand | src.app.repl.commands.cli_commands | Exit the application |
-| `clear` | ClearCommand | src.app.repl.commands.cli_commands | Clear console screen |
-| `chat` | AIChat | src.app.repl.commands.llm_chat_commands | Start AI chat session (single-query or interactive REPL with streaming) |
-| `router` | AIRouterAgents | src.app.repl.commands.llm_chat_commands | Run router agent (CSV + QR) |
-| `react` | AIReactTools | src.app.repl.commands.llm_chat_commands | Run ReAct agent with tools |
-| `search` | AISearch | src.app.repl.commands.llm_chat_commands | ReAct web search agent |
-| `read` | ReadFile | src.app.repl.commands.cli_commands | Read and display a file |
-| `function` | AIFunction | src.app.repl.commands.llm_chat_commands | AI function call demo |
-| `rag` | RagPDF | src.app.repl.commands.llm_chat_commands | Query PDF with RAG |
-| `graph` | AIGraphSimple | src.app.repl.commands.llm_graph_commands | Simple LangGraph workflow |
-| `chains` | AIGraphChains | src.app.repl.commands.llm_graph_commands | LangGraph reflector chains |
-| `reflex` | AIGraphReflexion | src.app.repl.commands.llm_graph_commands | LangGraph reflexion agent |
-| `help` | HelpCommand | src.app.repl.commands.cli_commands | Show available commands |
 
 ---
 
 ## Design Patterns
 
-- **Factory**: `AgentFactory` class in `src/llm_managers/factory.py` encapsulates all agent creation
-- **Command**: `Command` ABC with `run()` method; `CommandResult` ABC with `apply()`
-- **Strategy**: LLM providers implement `LLMProvider` ABC; different agents implement different reasoning strategies
-- **State Machine**: LangGraph `StateGraph` for graph-based workflows
-- **RAG Pipeline**: Standard pipeline: load → embed → store → retrieve → generate
-- **Repository**: `SessionDatabase` for per-session SQLite persistence
+### Strategy Pattern
+Used for LLM provider selection, allowing runtime switching between different model providers (OpenAI, Google, Ollama, etc.) without changing the application logic.
+
+### Factory Pattern
+LLM provider factory creates appropriate provider instances based on configuration.
+
+### Singleton Pattern
+Session management and database connections use singleton patterns for resource efficiency.
 
 ---
 
-## Key Architectural Decisions
+## Key Decisions
 
-1. **Factory Pattern**: All agents are created via `AgentFactory` static methods, decoupling instantiation from usage
-2. **Command Pattern**: All REPL commands implement the `Command` ABC, ensuring consistent interface
-3. **Session-Based Persistence**: Each REPL session creates a timestamped directory with its own SQLite database
-4. **Security-First Deletion**: Directory deletion is restricted to `local_sessions/` within the current working directory
-5. **Local-First Default**: All agents default to local LlamaCpp models, with cloud options available via separate factory functions
-6. **LangChain Ecosystem**: Heavy reliance on LangChain ecosystem (langchain, langgraph, langchain-community) for LLM abstractions
-7. **Vector Store Flexibility**: Supports FAISS (local), Pinecone (cloud), and Chroma (local) for different deployment scenarios
-8. **src/ Layout**: All source code lives in `src/` and is installed as the `agent-x` package in development mode
-9. **MCP Support**: Model Context Protocol servers extend agent capabilities via stdio transport
+1. **MVC Architecture**: Chosen for clear separation of concerns and testability
+2. **SQLite for Persistence**: Lightweight, file-based, no external dependencies
+3. **Strategy Pattern for LLM Providers**: Enables easy provider switching
+4. **uv as Package Manager**: Fast, modern Python package management
+5. **Tests Sandbox**: Isolated environment for feature testing before migration to main test suite
+
+---
+
+## Project Structure
+
+```
+agent-x/
+├── main.py                 # Application entry point
+├── pyproject.toml          # Project configuration
+├── .project_development/   # Meta documentation
+├── src/                    # Source code (MVC)
+├── tests/                  # Unit tests (read-only)
+├── tests_sandbox/          # Feature tests
+├── doc/                    # Documentation
+└── _resources/             # Sample data files
+```

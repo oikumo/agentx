@@ -1,53 +1,67 @@
 # Root Module - Agent-X
 
-## main.py (wrapper)
+> **Last Updated**: April 2026
 
-**Path**: `/main.py`
+---
 
-Thin wrapper that delegates to `src/main.py`.
+## main.py
 
-```python
-from src.main import main
+Application entry point located at project root.
 
-if __name__ == "__main__":
-    main()
-```
+**Purpose**: Bootstraps the application and initiates the REPL loop.
 
-## src/main.py (entry point)
-
-**Path**: `src/main.py`
-
-Application entry point. Loads environment variables via `dotenv`, creates `MainController`, registers all commands, and launches `ReplApp`.
-
-```python
-def main():
-    controller = create_controller()
-    ReplApp(controller).run()
-```
-
-**Registered Commands**:
-- **CLI**: `quit`, `clear`, `help`, `read`
-- **Math**: `sum`
-- **LLM Chat**: `chat`, `router`, `react`, `search`, `function`, `rag`
-- **LLM Graph**: `graph`, `chains`, `reflex`
+**Key Functions**:
+- Imports main controller from `src/main.py`
+- Initializes the REPL application
+- Handles application lifecycle
 
 ---
 
 ## pyproject.toml
 
-**Path**: `/pyproject.toml`
+Project configuration and dependency management.
 
-Project configuration with dependencies managed via `uv`. Source code discovered via `[tool.setuptools.packages.find]` where = ["src"].
-
+### Project Metadata
 - **Name**: agent-x
 - **Version**: 0.1.0
 - **Python**: >=3.14
-- **Install**: `uv pip install -e .` (development mode)
+- **Package Manager**: uv
+
+### Dependencies
+Core dependencies include:
+- **LLM Providers**: langchain-openai, langchain-google-genai, langchain-ollama
+- **Vector Stores**: chromadb, langchain-pinecone, faiss-cpu
+- **LangChain**: langchain, langchain-community, langgraph
+- **Local LLM**: llama-cpp-python
+- **Utilities**: python-dotenv, pypdf
+
+### Configuration
+```toml
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "tests_sandbox"]
+pythonpath = ["src"]
+```
 
 ---
 
 ## README.md
 
-**Path**: `/README.md`
+Project readme with:
+- Project overview
+- Installation instructions
+- Quick start guide
+- Feature list
+- Architecture summary
 
-Contains environment variable documentation, package manager instructions (uv/pip), LLM configuration notes (Ollama models, OpenAI), and LangChain tool decorator patterns.
+---
+
+## Related Files
+
+| File | Description |
+|------|-------------|
+| `AGENTS.md` | System agent rules and commands |
+| `.env` | Environment variables (not committed) |
+| `uv.lock` | Dependency lock file |

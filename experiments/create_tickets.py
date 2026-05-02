@@ -48,7 +48,7 @@ tickets = [
     
     # MCP (Model Context Protocol) tickets
     {"type": "Epic", "summary": "MCP local servers implementation", "status": "Tareas por hacer"},
-    {"type": "Tarea", "summary": "Create MCP server for Jira integration", "status": "Tareas por hacer"},
+    {"type": "Tarea", "summary": "Create MCP server for issue tracker system integration", "status": "Tareas por hacer"},
     {"type": "Tarea", "summary": "Create MCP server for Confluence integration", "status": "Tareas por hacer"},
     {"type": "Tarea", "summary": "Create MCP server for filesystem operations", "status": "Tareas por hacer"},
     {"type": "Tarea", "summary": "Create MCP server for GitHub integration", "status": "Tareas por hacer"},

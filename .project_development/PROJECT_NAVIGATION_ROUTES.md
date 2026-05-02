@@ -17,11 +17,11 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 
 | Module | Files | Description |
 |--------|-------|-------------|
-| [src/common/](#srccommon) | 4 | Shared utilities and security |
-| [src/controllers/](#srccontrollers) | 2 | Command routing and controllers |
+| [src/common/](#srccommon) | 3 | Shared utilities and security |
+| [src/controllers/](#srccontrollers) | 9 | Command routing and controllers |
 | [src/model/](#srcmodel) | 5 | Data persistence, SQLite, session management |
-| [src/services/](#srcservices) | 3 | AI/LLM service layer with providers |
-| [src/views/](#srcviews) | 3 | User interface components |
+| [src/services/](#srcservices) | 24 | AI/LLM service layer with providers |
+| [src/views/](#srcviews) | 8 | User interface components |
 
 ---
 
@@ -41,10 +41,16 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 
 **Path**: `src/controllers/`
 
-| Submodule | Description |
-|-----------|-------------|
-| `chat_controller/` | Handles chat-specific commands |
-| `main_controller/` | Core command registry and REPL integration |
+| File | Description |
+|------|-------------|
+| `chat_controller/chat_controller.py` | Handles chat-specific commands |
+| `chat_controller/__init__.py` | Package initialization for chat controller |
+| `main_controller/main_controller.py` | Core command registry and REPL integration |
+| `main_controller/commands.py` | Command implementations |
+| `main_controller/commands_base.py` | Base command classes |
+| `main_controller/commands_parser.py` | Command parsing logic |
+| `main_controller/repl.py` | REPL application loop |
+| `main_controller/__init__.py` | Package initialization for main controller |
 | `__init__.py` | Package initialization |
 
 ---
@@ -53,10 +59,12 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 
 **Path**: `src/model/`
 
-| Submodule | Description |
-|----------|-------------|
-| `db/` | SQLite session database implementation |
-| `session/` | Session lifecycle management |
+| File | Description |
+|------|-------------|
+| `db/session_db.py` | SQLite session database implementation |
+| `db/__init__.py` | Package initialization for db module |
+| `session/session.py` | Session lifecycle management |
+| `session/__init__.py` | Package initialization for session module |
 | `__init__.py` | Package initialization |
 
 ---
@@ -65,10 +73,31 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 
 **Path**: `src/services/`
 
-| Submodule | Description |
-|-----------|-------------|
-| `ai/` | LLM providers (OpenAI, OpenRouter, LlamaCpp) and vectorstore integrations |
+| File | Description |
+|------|-------------|
 | `__init__.py` | Package initialization |
+| `ai/__init__.py` | Package initialization for AI services |
+| `ai/providers.py` | LLM provider factory and strategy interface |
+| `ai/services.py` | High-level service orchestration |
+| `ai/vectorstores/__init__.py` | Package initialization for vectorstores |
+| `ai/vectorstores/vectorstore_chroma.py` | ChromaDB wrapper |
+| `ai/vectorstores/vectorstore_pinecone.py` | Pinecone wrapper |
+| `ai/cloud/__init__.py` | Package initialization for cloud providers |
+| `ai/cloud/google/__init__.py` | Package initialization for Google provider |
+| `ai/cloud/google/google_gemini.py` | Google Gemini LLM provider |
+| `ai/cloud/google/google.md` | Google provider documentation |
+| `ai/cloud/open_ai/__init__.py` | Package initialization for OpenAI provider |
+| `ai/cloud/open_ai/open_ai_gpt.py` | OpenAI GPT LLM provider |
+| `ai/cloud/open_ai/open_ai.md` | OpenAI provider documentation |
+| `ai/local/__init__.py` | Package initialization for local providers |
+| `ai/local/llama_cpp/__init__.py` | Package initialization for LlamaCpp provider |
+| `ai/local/llama_cpp/llamacpp.py` | LlamaCpp LLM provider |
+| `ai/local/llama_cpp/llamacpp_config.py` | LlamaCpp configuration |
+| `ai/local/llama_cpp/llama_cpp_factory.py` | Pre-configured LlamaCpp factory |
+| `ai/local/ollama/__init__.py` | Package initialization for Ollama provider |
+| `ai/local/ollama/ollama.py` | Ollama LLM provider |
+| `ai/local/ollama/ollama_embeddings.py` | Ollama embeddings provider |
+| `ai/local/ollama/ollama_factory.py` | Ollama model manager |
 
 ---
 
@@ -76,12 +105,16 @@ Agent-X is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop)
 
 **Path**: `src/views/`
 
-| Submodule | Description |
-|-----------|-------------|
-| `chat_view/` | Chat UI and loop |
-| `main_view/` | Main application UI |
-| `common/` | Shared view utilities (console output) |
-| `__init__.py` | Package initialization |
+| File | Description |
+|------|-------------|
+| `chat_view/chat_view.py` | Chat UI component |
+| `chat_view/chat_loop.py` | Chat REPL loop implementation |
+| `chat_view/__init__.py` | Package initialization for chat view |
+| `main_view/main_view.py` | Main application UI |
+| `main_view/__init__.py` | Package initialization for main view |
+| `src/views/common/console.py` | Shared console output utilities |
+| `src/views/common/__init__.py` | Package initialization for common views |
+| `src/views/__init__.py` | Package initialization |
 
 ---
 

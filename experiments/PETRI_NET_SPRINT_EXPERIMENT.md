@@ -4,24 +4,24 @@
 **Project**: Agent-X  
 **Experiment ID**: PN-SPRINT2-001  
 **Conducted by**: Agent-X System Agent  
-**Jira Instance**: oikumo.atlassian.net  
+**Issue Tracker**: MCP-compatible (simulated)  
 **Project Key**: SCRUM  
 
 ## Executive Summary
 
-This experiment demonstrates the application of Petri Net formal verification techniques to analyze and improve the workflow of Agent-X Sprint 2. By modeling the Jira sprint as a Petri net and applying formal verification algorithms, we identified key process insights and bottlenecks that can inform sprint planning and execution improvements.
+This experiment demonstrates the application of Petri Net formal verification techniques to analyze and improve the workflow of Agent-X Sprint 2. By modeling the issue tracker sprint as a Petri net and applying formal verification algorithms, we identified key process insights and bottlenecks that can inform sprint planning and execution improvements.
 
 ## Experiment Overview
 
 ### Objective
-To apply Petri Net formal verification to the Agent-X Sprint 2 Jira workflow to:
+To apply Petri Net formal verification to the Agent-X Sprint 2 issue tracker workflow to:
 1. Validate workflow correctness through formal property checking
 2. Identify bottlenecks and process inefficiencies
 3. Generate actionable insights for sprint improvement
 4. Demonstrate the power of formal methods in agile project management
 
 ### Scope
-- **Sprint**: Sprint 2 (represented by SCRUM project in Jira)
+- **Sprint**: Sprint 2 (represented by SCRUM project in the issue tracker)
 - **Work Items**: 57 tickets created for comprehensive coverage
 - **Workflow States**: Backlog, To Do, In Progress, In Review, QA, Done, Blocked
 - **Analysis Properties**: Boundedness, Safeness, Liveness, Deadlock-Freedom, Reversibility
@@ -29,7 +29,7 @@ To apply Petri Net formal verification to the Agent-X Sprint 2 Jira workflow to:
 ## Methodology
 
 ### 1. Data Collection
-Created 57 Jira tickets representing real Agent-X development tasks across multiple components:
+Created 57 issue tracker system tickets representing real Agent-X development tasks across multiple components:
 - LLM Manager infrastructure (6 tickets)
 - Agent core functionality (8 tickets)  
 - RAG module implementation (11 tickets)
@@ -45,7 +45,7 @@ Constructed a Petri net model where:
 - **Places** represent workflow states (Backlog, To Do, In Progress, etc.)
 - **Transitions** represent workflow actions (Plan, Start, Submit, Approve, etc.)
 - **Tokens** represent the count of work items in each state
-- **Initial marking** based on actual Jira data: 55 items in Backlog, 2 in In Progress
+- **Initial marking** based on actual issue tracker system data: 55 items in Backlog, 2 in In Progress
 
 ### 3. Formal Verification Analysis
 Applied state-space exploration to verify key properties:

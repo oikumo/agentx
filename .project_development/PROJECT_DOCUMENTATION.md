@@ -75,6 +75,39 @@ agent-x/
 └── doc/                        # Project documentation
 ```
 agent-x/
+├── main.py                     # Application entry point
+├── pyproject.toml              # Project configuration, dependencies
+├── .project_development/       # Project meta and rules files
+│   ├── CORE_DIRECTIVES.md
+│   ├── TOOL_USAGE.md
+│   ├── CODING_STYLE.md
+│   ├── TASK_WORKFLOW.md
+│   ├── ENVIRONMENT.md
+│   ├── CURRENT_ISSUE.md
+│   ├── PROJECT_DOCUMENTATION.md
+│   ├── PROJECT_NAVIGATION_ROUTES.md
+│   ├── PROJECT_ROADMAP.md
+│   ├── PROJECT_TESTING_SANDBOX_RULES.md
+│   └── USER_COMMAND_EXTENSION.md
+├── src/                        # All source code (MVC architecture)
+│   ├── common/                 # Shared utilities
+│   ├── controllers/            # Business logic & command routing
+│   ├── model/                  # Data persistence, SQLite, sessions
+│   │   ├── db/                 # Database layer
+│   │   └── session/            # Session lifecycle
+│   ├── services/               # AI/LLM service layer
+│   │   └── ai/                 # AI service implementations
+│   ├── views/                  # User interface layer
+│   │   ├── chat_view/          # Chat interface
+│   │   ├── main_view/          # Main application view
+│   │   └── common/             # Shared view utilities
+│   └── main.py                 # Module entry point
+├── tests/                      # Unit and integration tests (read-only)
+├── tests_sandbox/              # Feature and integration testing sandbox
+├── _resources/                 # Sample data files
+└── doc/                        # Project documentation
+```
+agent-x/
 ├── main.py # Application entry point
 ├── pyproject.toml # Project configuration, dependencies
 ├── .project_development/ # Project meta and rules files
@@ -134,32 +167,6 @@ agent-x/
 │   │   │   ├── llamacpp_provider.py # Local LLM via llama.cpp
 │   │   │   ├── openai_provider.py   # Cloud LLM via OpenAI API
 │   │   │   └── openrouter_provider.py # Cloud LLM via OpenRouter
-│   │   ├── factory.py               # Unified AgentFactory class
-│   │   └── llm_provider.py          # LLMProvider ABC - strategy interface
-│   ├── local_mcp/                   # MCP (Model Context Protocol) servers
-│   │   ├── mcp_main.py              # MCP server entry point
-│   │   └── servers_stdio/           # MCP servers using stdio transport
-│   │       └── math_server.py       # Math operations MCP server
-│   ├── app/                         # Core application
-│   │   ├── common/                  # Shared utilities
-│   │   ├── model/                   # Data persistence, sessions, SQLite
-│   │   ├── repl/                    # REPL system and commands
-│   │   └── security/                # Directory deletion safeguards
-│   ├── app_modules/                 # Extended application modules
-│   │   ├── data_stores/             # FAISS vector store
-│   │   ├── document_loaders/        # PDF loading and chunking
-│   │   ├── llm/                     # LangChain and LangGraph integrations
-│   │   └── web_ingestion_app/       # Web scraping pipeline
-│   ├── llm_models/                  # LLM model providers and vector stores
-│   │   ├── cloud/                   # Cloud providers (OpenAI, Google)
-│   │   ├── local/                   # Local providers (LlamaCpp, Ollama)
-│   │   │   ├── llama_cpp/           # Llama.cpp GGUF models
-│   │   │   ├── llama_cpp_factory.py # Pre-configured factory
-│   │   │   ├── ollama/              # Ollama chat models
-│   │   │   └── ollama_factory.py    # Ollama model manager
-│   │   └── vectorstores/            # Vector store integrations
-│   │       ├── vectorstore_pinecone.py # Pinecone wrapper
-│   │       └── vectorstore_chroma.py   # Chroma wrapper
 │   └── main.py                      # Application entry point
 ├── tests/                           # Unit and integration tests (read-only)
 ├── tests_sandbox/                   # Feature and integration testing sandbox

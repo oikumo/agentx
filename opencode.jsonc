@@ -27,19 +27,9 @@
     "skill": "allow"
   },
   "mcp": {
-    "langchain": {
-      "type": "remote",
-      "url": "https://docs.langchain.com/mcp",
-      "enabled": true
-    },
     "products": {
       "type": "local",
       "command": ["uv", "run", ".dev_tools/mcp/products_server/server.py"],
-      "enabled": true
-    },
-    "jira": {
-      "type": "remote",
-      "url": "https://mcp.atlassian.com/v1/mcp",
       "enabled": true
     }
   }
