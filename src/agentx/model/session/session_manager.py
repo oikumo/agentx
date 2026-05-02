@@ -1,11 +1,11 @@
+from enum import Enum
 from pathlib import Path
+from pydoc import resolve
 from typing import Optional
-import os
 import shutil
 from datetime import datetime
 from agentx.model.session.session import Session, SessionDatabase
-from agentx.common.security import SESSION_DEFAULT_NAME, SESSION_DEFAULT_BASE_DIRECTORY
-from agentx.common.utils import create_directory_with_timestamp, directory_exists
+from agentx.common.security import SESSION_DEFAULT_BASE_DIRECTORY
 
 
 class SessionManager:
@@ -18,9 +18,10 @@ class SessionManager:
     - Only one current session exists at a time
     - Sessions are NEVER deleted - they are preserved on disk for data safety
     """
+    SESSION_DIRECTORIES_RAG = "rag"
 
     _instance: Optional['SessionManager'] = None
-    _current_session: Optional[Session] = None
+    _current_session: Session = None
     _database: Optional[SessionDatabase] = None
     _current_session_name: str = "current"  # Always use "current" as the active session name
 
@@ -37,6 +38,11 @@ class SessionManager:
         self._initialized = True
         self._ensure_current_session_exists()
 
+        self._ensure_folder_exists(self.SESSION_DIRECTORIES_RAG)
+
+    def get_directory_rag(self):
+        return f"{self._current_session.directory}/{self.SESSION_DIRECTORIES_RAG}"
+
     def _ensure_current_session_exists(self) -> Session:
         """
         Ensure the 'current' session always exists.
@@ -48,7 +54,12 @@ class SessionManager:
             raise Exception("Failed to create 'current' session")
         self._database = SessionDatabase(self._current_session)
         return self._current_session
-    
+
+    def _ensure_folder_exists(self, session_folder_path: str):
+        """Ensure the 'rag' folder always exists in the session directory."""
+        rag_path = Path(self._current_session.directory) / session_folder_path
+        rag_path.mkdir(exist_ok=True)
+
     def get_current_session(self) -> Session:
         """Get the current session. Creates one if it doesn't exist."""
         if self._current_session is None:

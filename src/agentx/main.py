@@ -13,7 +13,7 @@ from agentx.controllers.main_controller.commands import (
     SumCommand, HistoryCommand,
     NewCommand, PetriNetStatusCommand, PetriNetPrintCommand,
     GoalCommand,
-    LSCommand,
+    LSCommand, RagWebIngestion,
 )
 from agentx.controllers.main_controller.main_controller import MainController
 from agentx.services.ai.service import AIService
@@ -39,6 +39,7 @@ def create_controller(ai_service: AIService) -> MainController:
     main_controller.add_command(PetriNetPrintCommand("petri-print", main_controller))
     main_controller.add_command(GoalCommand("goal", main_controller))
     main_controller.add_command(LSCommand("ls", main_controller))
+    main_controller.add_command(RagWebIngestion("ingest", main_controller))
 
     return main_controller
 

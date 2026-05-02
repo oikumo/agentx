@@ -1,4 +1,5 @@
 from agentx.services.ai.providers import OpenRouterProvider, LlamaCppProvider, OpenAIProvider
+from agentx.services.ai.vectorstores.vectorstore_chroma import vectorstore_chroma_ollama
 
 
 class AIService:
@@ -13,3 +14,6 @@ class AIService:
 
     def cloud_llm_provider(self) -> OpenAIProvider:
         return OpenAIProvider()
+
+    def rag_chromadb(self, directory: str):
+        return vectorstore_chroma_ollama(directory)

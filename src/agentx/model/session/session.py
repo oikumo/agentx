@@ -57,7 +57,7 @@ class SessionDatabase:
     def __init__(self, session: Session):
         self._session = session
         self._create()
-
+    
     def _create(self):
         db_path = self._get_session_path()
         with sqlite3.connect(db_path) as conn:

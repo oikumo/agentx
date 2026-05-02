@@ -5,6 +5,7 @@ import os
 from agentx.controllers.main_controller.commands_base import Command, CommandResult
 from agentx.controllers.main_controller.main_controller import MainController
 from agentx.common.utils import clear_console, safe_int
+from agentx.services.rag.rag import Rag
 from agentx.views.common.console import Console
 from agentx.model.session.session_manager import get_session_manager
 
@@ -66,6 +67,26 @@ class HelpCommand(Command):
             commands.append(f"{command.key} - {command.description}")
         return CommandResultLogInfo(commands)
 
+
+class RagWebIngestion(Command):
+    def __init__(self, key: str, controller: MainController):
+        super().__init__(key, description="RAG web ingestion of URL: <url>")
+        self.controller = controller
+
+    def run(self, arguments: list[str]):
+        if len(arguments) != 1:
+            Console.log_warning("invalid command")
+            return None
+
+        site_url = arguments[0]
+
+        rag = Rag(
+            self.controller.session_manager,
+            self.controller.ai_service
+        )
+        rag.web_ingestion(site_url)
+
+        return CommandResultLogInfo(["Success"])
 
 class SumCommand(Command):
     def __init__(self, key: str, controller: MainController):

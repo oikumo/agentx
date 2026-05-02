@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
 
-from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 from langchain_openrouter import ChatOpenRouter
@@ -18,14 +17,6 @@ class LLMProvider(ABC):
     def create_llm(self) -> BaseChatModel:
         """Create and return a configured LLM instance."""
         ...
-
-
-@dataclass
-class RagConfig:
-    pdf_path: str = "_resources/react.pdf"
-    vectorstore_path: Optional[str] = None
-    llm_provider: Optional[LLMProvider] = None
-    embeddings: Optional[Embeddings] = None
 
 
 class LlamaCppProvider(LLMProvider):
