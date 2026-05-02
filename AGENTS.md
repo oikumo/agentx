@@ -62,26 +62,6 @@ Structured development system for AI-assisted development:
 2. [Other next task]
 ```
 
-
-
----
-
-# User Prompts Shortcuts
-
-Not bash commands, this an user prompts shortcuts
-
-## KB Commands
-- `meta kb populate` - Populate KBs
-- `meta kb` - Search KB
-- `meta kb ask` - RAG query
-- `meta kb stats` - Show stats
-- `meta kb add` - Add entry
-- `meta kb correct` - Correct entry
-- `meta kb evolve` - Evolve KB
-
-## Work Commands
-- `meta work {prompt}` - Set current work task in WORK.md
-
 ## Knowledge Base Rules
 **MANDATORY**: Before answering any project-specific question, agents must query the KB first at `.meta/knowledge_base/META.md` or run `meta kb ask <query>`.
 
@@ -132,84 +112,11 @@ Centralized knowledge storage for:
 5. Commit knowledge (not code)
 ```
 
-### Entry Format
-```markdown
-# Entry ID: YYYY-MM-DD-topic
-
-**Tags**: [tag1, tag2]
-**Related**: [links to other entries]
-
-## Context
-Why this knowledge matters
-
-## Content
-The actual knowledge
-
-## Examples
-Code snippets or use cases
-
-## References
-- Links to source files
-- Related decisions
-```
 
 ### Rules
 **DO**: Query before answering, add entries after tasks, keep entries concise, tag properly
 **DON'T**: Store secrets, duplicate code, skip population, ignore outdated entries
 
-### Maintenance
-- **After each session**: Add new learnings
-- **Weekly**: Review and prune outdated entries
-- **Monthly**: Run `meta kb evolve` to optimize structure
-
-### Integration
-KB works with:
-- `.meta/sandbox/` - Reference knowledge during modifications
-- `.meta/tests_sandbox/` - Store test patterns
-- `.meta/experiments/` - Document experimental findings
-- `.meta/reflection/` - Store capability assessments
-
-## Optimization Commands
-- `meta token audit` - Audit tokens
-- `meta compress docs` - Compress docs
-- `meta structure analysis` - Analyze structure
-- `meta health check` - Health check
-- `meta archive experiments` - Archive experiments
-
-## Project Commands
-- `meta token audit` - Quick audit (30min)
-- `meta archive experiments` - Quick archive (30min)
-- `meta consolidate docs` - Consolidate docs (30min)
-- `meta health check` - Health check (30min)
-- `meta compress docs` - Compress docs (1-3hr)
-- `meta structure analysis` - Analyze structure (1-3hr)
-- `meta create workflows` - Create workflows (1-3hr)
-- `meta populate kb` - Populate KB (1-3hr)
-- `meta optimize all` - Full optimize (3+hr)
-- `meta create skill` - Create skill (3+hr)
-- `meta enhance workflows` - Enhance workflows (3+hr)
-- `meta test capability` - Test capability (3+hr)
-
-## Help
-- `meta` - Show commands
-- `meta help` - Show help
-
-## Decision Tree
-```
-Need to...
-├─ Populate KB? → meta kb populate
-├─ Search KB? → meta kb search
-├─ Add knowledge? → meta kb add
-├─ Check health? → meta health check
-├─ Save tokens? → meta token audit
-├─ Clean up? → meta archive experiments
-├─ Compress docs? → meta compress docs
-├─ Analyze structure? → meta structure analysis
-└─ Create skill? → meta create skill
-```
-
----
-**Total**: 22 commands
 
 ### Directory Structure
 ```
@@ -250,49 +157,8 @@ Need to...
 └─ Check workflows? → .meta/project_development/WORKFLOWS.md (if exists)
 ```
 
-## Quality Gates
-- [ ] **Queried KB first** (MANDATORY - before ANY task, search `.meta/knowledge_base/` or use `meta kb ask`)
-- [ ] **Populated KB if empty** (If KB was empty, ran `meta kb populate` before proceeding)
-- [ ] **Referenced KB in response** (Demonstrated KB usage or explained why not consulted)
-- [ ] Checked git log
-- [ ] Working in correct .meta/* subdirectory
-- [ ] Tests pass (if applicable)
-- [ ] Changes documented
-- [ ] No production code modified
-- [ ] No secrets exposed
-
-## Tools
-`read`, `glob`, `bash`, `edit`, `write`, `task`
-
-## Common Scenarios
-- **Add Feature (code)** → .meta/sandbox/ → tests → merge
-- **Fix Bug** → reproduce in sandbox → test → fix → merge
-- **Refactor** → copy to sandbox → refactor → test → merge
-- **Test Agent (Automated)** → .meta/tests_automated/ or test_automated/ → run reflection tests
-
-## Projects (User Tasks)
-
-### Quick (30min)
-- Token Audit → `.meta/sandbox/`
-- Archive Experiments → `.meta/experiments/`
-- Consolidate Docs → `.meta/tools/`
-- Health Check → `.meta/reflection/`
-
-### Medium (1-3hr)
-- Docs Compression → `.meta/sandbox/`
-- Structure Analysis → `.meta/sandbox/`
-- Workflow Templates → `.meta/project_development/` (if exists)
-- KB Population → `.meta/knowledge_base/`
-
-### Advanced (3+hr)
-- Full Optimization → Multiple dirs
-- Skill Development → `.meta/experiments/`
-- Workflow Enhancement → `.meta/project_development/` (if exists)
-- Capability Assessment → `.meta/reflection/`
-
 ## Resources
 - [META_HARNESS.md](META_HARNESS.md) - Master docs
-- [Reflection Tests](.meta/reflection/README.md) - Automated test documentation
 
 ---
 **Version:** 2.3.2 (Removed non-existent directories) | **Updated:** 2026-05-02

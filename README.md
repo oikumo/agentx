@@ -51,13 +51,12 @@ Users are solely responsible for ensuring their use of any third-party services 
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd agentx
-uv tool install --editable .
+uv tool install --editable agentx
 ```
 
 ##### Uninstall
 ```bash
-uv tool uninstall agent-x
+uv tool uninstall agentx
 ```
 
 #### Development
