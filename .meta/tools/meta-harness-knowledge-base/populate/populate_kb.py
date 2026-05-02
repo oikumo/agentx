@@ -20,11 +20,23 @@ from datetime import datetime
 from typing import Dict, List, Tuple
 
 # Add parent to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from meta_tools import kb, KnowledgeBase
+from knowledge_base import kb_add_entry, kb_ask, kb_search, kb_stats, kb_correct, kb_evolve
 
-# Backward compatibility aliases
+# Backward compatibility - create a simple namespace
+class KnowledgeBase:
+    """Simple wrapper for knowledge base operations."""
+    pass
+
+class KB:
+    """Knowledge base operations namespace."""
+    @staticmethod
+    def add_entry(entry_type, category, title, finding, solution, context="", confidence=0.5, example=""):
+        """Add entry via knowledge_base module."""
+        return kb_add_entry(entry_type, category, title, finding, solution, context, confidence, example)
+
+kb = KB()
 meta_kb = kb
 
 
@@ -427,9 +439,9 @@ class KBPopulator:
         
         return entries
     
-    def add_entry(self, kb: KnowledgeBase, entry: Dict) -> str:
+    def add_entry(self, entry: Dict) -> str:
         """Add entry to knowledge base."""
-        return kb.kb_add_entry(
+        return kb_add_entry(
             entry_type=entry["type"],
             category=entry["category"],
             title=entry["title"],
@@ -476,7 +488,7 @@ class KBPopulator:
             # Add to unified KB
             for entry in entries:
                 try:
-                    result = self.add_entry(kb, entry)
+                    result = self.add_entry(entry)
                     self.entries_added["meta"] += 1
                     if self.verbose:
                         print(f" ✓ Added: {entry['title'][:60]}...")

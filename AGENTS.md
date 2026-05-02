@@ -1,6 +1,6 @@
 # System Rules
 
-> **⚠️ MANDATORY FIRST STEP FOR ALL AGENTS:** On the **first prompt of a session**, you MUST read `WORK.md` and display it to the user as a reminder. This happens ONCE per session, before any other action.
+> **⚠️ MANDATORY FIRST STEP FOR ALL AGENTS:** On the **first prompt of a session**, you MUST read `WORK.md` and `PROJECTS.md`, then display them to the user as a reminder. This happens ONCE per session, before any other action.
 >
 > **⚠️ SECOND MANDATORY STEP:** Before ANY task, you MUST query the Knowledge Base first at `.meta/knowledge_base/` or run `meta kb ask <query>`. This is non-negotiable and applies to EVERY task.
 >
@@ -9,7 +9,7 @@
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 
 -2. **LOG STRUCTURAL CHANGES** - ALL structural META HARNESS changes MUST be logged in `.meta/LOG.md` - THIS IS Mandatory
--1. **SHOW WORK NOTEBOOK FIRST** - On first prompt of session only, read `WORK.md` and display it to user as reminder - THIS IS Mandatory
+-1. **SHOW WORK & PROJECTS FIRST** - On first prompt of session only, read `WORK.md` and `PROJECTS.md`, display both to user as reminder - THIS IS Mandatory
 0. **ALWAYS query KB first** - Before ANY task, search `.meta/knowledge_base/` or use `meta kb ask` - THIS IS MANDATORY
 0a. **IF KB IS EMPTY, POPULATE IT** - If KB has no entries, run `meta kb populate` BEFORE proceeding with the task
 0b. **ALWAYS REFERENCE KB** - Every response must cite KB entries or explain why KB was not consulted
@@ -33,9 +33,10 @@ Structured development system for AI-assisted development:
 
 ---
 
-## Work Notebook (`WORK.md`)
+## Work Notebook (`WORK.md`) and Project Tracker (`PROJECTS.md`)
 
-**What it is**: A simple reminder file that shows what the user is currently working on and the next planned woek.
+### Work Notebook (`WORK.md`)
+**What it is**: A simple reminder file that shows what the user is currently working on and the next planned work.
 
 **When to show**: At the start of EVERY session (first prompt only), the agent MUST:
 1. Read `WORK.md`
@@ -56,6 +57,27 @@ Structured development system for AI-assisted development:
 1. [Next task]
 2. [Other next task]
 ```
+
+### Project Tracker (`PROJECTS.md`)
+**What it is**: A multi-project tracker that shows the status of all active projects across the AgentX ecosystem.
+
+**When to show**: At the start of EVERY session (first prompt only), the agent MUST:
+1. Read `PROJECTS.md`
+2. Display relevant project status to the user
+3. Use project priorities to guide work suggestions
+
+**How it works**:
+- Tracks multiple projects with status (🟢 Active, 🟡 Planned, 🟠 In Progress, 🔴 Blocked, ⚪ Backlog, ✅ Completed)
+- Shows project dependencies and next steps
+- Updated when projects change state or priorities shift
+- Complements `WORK.md` (session-level vs project-level)
+
+**Startup Workflow**:
+1. Read both `WORK.md` and `PROJECTS.md`
+2. Display WORK.md current task
+3. Display PROJECTS.md active projects overview
+4. Query Knowledge Base
+5. Proceed with task
 
 ---
 

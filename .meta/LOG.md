@@ -7,6 +7,95 @@
 
 ---
 
+## [2026-05-02] Enforce PROJECTS.md in Agent Startup Workflow
+
+**Type**: Feature - Workflow Enhancement
+**Version**: 2.4.2
+**Agent**: opencode (qwen/qwen3.5-397b-a17b)
+**User Request**: Include rule that agent must use PROJECTS.md content in same way as WORK.md at startup
+
+### Changes Made
+
+#### 1. Updated AGENTS.md System Rules
+- **Line 3**: Changed mandatory first step to read both `WORK.md` AND `PROJECTS.md`
+- **Line 12**: Updated directive -1 to "SHOW WORK & PROJECTS FIRST"
+- **Lines 36-58**: Expanded Work Notebook section to include Project Tracker documentation
+- Added detailed "Project Tracker (PROJECTS.md)" subsection
+- Defined startup workflow: Read both files → Display WORK.md task → Display PROJECTS.md overview → Query KB → Proceed
+
+#### 2. Updated META_HARNESS.md
+- **Lines 56-58**: Added explicit startup reminder to read both files and display to user
+
+#### 3. Updated prompts/build.txt
+- **Lines 1-6**: Added "SESSION STARTUP" section with 3-step workflow
+- Positioned PROJECTS.md alongside WORK.md in mandatory startup sequence
+
+### Validation
+- AGENTS.md now mandates reading both WORK.md and PROJECTS.md at session start
+- build.txt includes PROJECTS.md in startup workflow
+- META_HARNESS.md references both files in workflow section
+- Consistent messaging across all documentation
+
+### Files Modified/Created
+| File | Action | Purpose |
+|------|--------|---------|
+| `AGENTS.md` | Modified | Added PROJECTS.md to startup rules |
+| `META_HARNESS.md` | Modified | Added startup reminder |
+| `prompts/build.txt` | Modified | Added PROJECTS.md to startup workflow |
+| `.meta/LOG.md` | Modified | This log entry |
+
+### Rationale
+PROJECTS.md was created but not enforced in agent startup workflow. This change ensures agents consistently display project-level context (PROJECTS.md) alongside session-level tasks (WORK.md), providing users with complete situational awareness at session start.
+
+---
+
+## [2026-05-02] Add PROJECTS.md Multi-Project Tracker
+
+### Changes Made
+
+#### 1. Created PROJECTS.md at Root Level
+- **Location**: `/PROJECTS.md` (root level, alongside WORK.md)
+- **Purpose**: Track multiple projects and their status across the AgentX ecosystem
+- **Philosophy**: Same as WORK.md - simple reminder, not a detailed task tracker
+- **Key features**:
+  - Active projects table with status and priority
+  - Color-coded status legend (🟢 Active, 🟡 Planned, 🟠 In Progress, 🔴 Blocked, ⚪ Backlog, ✅ Completed)
+  - Project details with goals, dependencies, and next steps
+  - Completed projects history
+  - Guidelines for when to update
+  - Relationship documentation with WORK.md
+
+#### 2. Updated META_HARNESS.md
+- Added PROJECTS.md to Directory Quick Reference table
+- Added "Project tracker" bullet in section 1 (What is the Meta Harness?)
+- Added PROJECTS.md reference in Standard Workflow section
+- Positioned as complementary to WORK.md (session-level vs project-level)
+
+#### 3. Initial Projects Tracked
+1. Session Petri Net Module (🟡 Planned, High)
+2. Goal Integration in Chat Controller (🟡 Planned, High)
+3. Production Readiness (🟡 Planned, Medium)
+4. Status Color Coding (⚪ Backlog, Low)
+5. Status Types Expansion (⚪ Backlog, Low)
+
+### Validation
+- File created successfully at root level
+- All internal references updated to PROJECTS.md (plural form)
+- META_HARNESS.md updated consistently
+- WORK.md relationship clearly documented
+
+### Files Modified/Created
+| File | Action | Purpose |
+|------|--------|---------|
+| `PROJECTS.md` | Created | Multi-project tracker |
+| `META_HARNESS.md` | Modified | Added PROJECTS.md references |
+| `.meta/LOG.md` | Modified | This log entry |
+
+### Rationale
+WORK.md tracks single current task at session-level. PROJECTS.md provides project-level tracking for multiple concurrent initiatives, maintaining the same simple reminder philosophy while scaling to handle complex multi-project development.
+
+---
+
 ## [2026-05-02] Add .meta.tests_automated Concept to META HARNESS
 
 **Type**: Feature - Test Infrastructure
@@ -1162,6 +1251,160 @@ rm -rf WORK.md .meta/opencode_tests .meta/dev_environment_test
 **Version**: 1.0.0 | **Created**: 2026-05-01  
 **Maintained By**: opencode AI agent  
 **Status**: ✅ Active
+
+## [2026-05-02] Session Petri Net Isolated Module Creation
+
+**Type**: Feature - Module Refactoring  
+**Version**: 1.0.0  
+**Agent**: opencode (qwen/qwen3.5-397b-a17b)  
+**User Request**: Make Session Petri Net an isolated python module, with just one interface
+
+### Changes Made
+
+#### 1. Created Isolated Session Petri Net Module
+- **File**: `src/agentx/model/session/session_petri_net.py`
+- **Purpose**: Single, clean interface for all session Petri net functionality
+- **Key Features**:
+  - `SessionPetriNet` class - Main entry point with simplified API
+  - Automatic creation of standard transitions (start/finish)
+  - Convenience functions (`create_session_petri_net`, `create_from_objective`)
+  - Self-contained with no external dependencies
+  - Backward compatible with existing code
+
+#### 2. Updated Module Exports
+- **File**: `src/agentx/model/session/__init__.py`
+- Added exports for new isolated module
+- Maintains backward compatibility with legacy imports
+- Clear separation between isolated and legacy components
+
+#### 3. Updated Main Controller
+- **File**: `src/agentx/controllers/main_controller/main_controller.py`
+- Changed import from `SessionStateManager` to `SessionPetriNet`
+- Updated type hints and comments
+- Maintains backward compatibility with existing workflows
+
+### Impact Analysis
+
+#### Affected Components
+- ✅ `src/agentx/model/session/session_petri_net.py` - CREATED (isolated module)
+- ✅ `src/agentx/model/session/__init__.py` - Modified (added exports)
+- ✅ `src/agentx/controllers/main_controller/main_controller.py` - Modified (updated imports)
+- ✅ `.meta/LOG.md` - Updated (this entry)
+
+#### Unchanged Components
+- ✅ Legacy `SessionStateManager` - Still available for backward compatibility
+- ✅ `AdaptivePetriNet` - Core implementation unchanged
+- ✅ All existing tests and workflows
+- ✅ Session management infrastructure
+
+### Validation
+
+#### Test Results
+```
+Test 1: Create SessionPetriNet ✓
+Test 2: Set objective ✓
+Test 3: Check initial state ✓
+Test 4: Fire transition ✓
+Test 5: Convenience function ✓
+Test 6: Check completion ✓
+Test 7: Advanced operations ✓
+
+✅ All 7 tests passed!
+```
+
+#### Quality Gates
+- [x] KB queried before implementation (3 sources checked)
+- [x] Isolated module created with single interface
+- [x] All tests passing (7/7)
+- [x] Backward compatibility maintained
+- [x] Main controller updated
+- [x] Change logged in LOG.md
+- [x] No breaking changes to existing code
+
+### Files Modified/Created
+
+| File | Action | Lines | Purpose |
+|------|--------|-------|---------|
+| `src/agentx/model/session/session_petri_net.py` | Created | ~486 lines | Isolated module with single interface |
+| `src/agentx/model/session/__init__.py` | Modified | +10 lines | Export new isolated module |
+| `src/agentx/controllers/main_controller/main_controller.py` | Modified | +5 lines | Use isolated module |
+| `.meta/LOG.md` | Modified | +This entry | Change log |
+
+### Rationale
+
+**Why this change?**
+- User requested isolated Session Petri Net module with single interface
+- Need for cleaner API for chat controller integration
+- Simplify usage pattern for LLM-driven state changes
+- Reduce complexity in main controller imports
+
+**Why this implementation?**
+- Single class (`SessionPetriNet`) provides clean API
+- Automatic transition creation simplifies usage
+- Backward compatible - legacy code still works
+- Self-contained with no external dependencies
+- Follows existing code patterns and conventions
+
+### API Comparison
+
+**Before (Multiple imports):**
+```python
+from agentx.model.session.session_state_manager import SessionStateManager
+from agentx.model.session.adaptive_petri_net import AdaptivePetriNet
+
+manager = SessionStateManager("session")
+manager.petri_net.set_objective("Goal")
+manager.petri_net.fire_transition("start")
+```
+
+**After (Single interface):**
+```python
+from agentx.model.session.session_petri_net import SessionPetriNet
+
+petri = SessionPetriNet("session")
+petri.set_objective("Goal")
+petri.fire("start")  # Automatic transitions created
+```
+
+### Usage Example
+
+```python
+from agentx.model.session.session_petri_net import SessionPetriNet, create_from_objective
+
+# Method 1: Create and configure
+petri = SessionPetriNet("my_session")
+petri.set_objective("Analyze project structure")
+
+# Fire transitions
+petri.fire("start")  # Built-in transitions
+petri.fire("finish")
+
+# Get state
+state = petri.get_state()
+print(f"Status: {state.context['objective_status']}")
+
+# Method 2: Convenience function
+petri2 = create_from_objective("Quick objective")
+```
+
+### Rollback Plan
+
+If issues arise:
+```bash
+# Revert to previous version
+git checkout HEAD -- src/agentx/model/session/session_petri_net.py
+git checkout HEAD -- src/agentx/model/session/__init__.py
+git checkout HEAD -- src/agentx/controllers/main_controller/main_controller.py
+```
+
+### References
+- Related to: Session management, Petri nets, chat controller integration
+- Impacts: Main controller, chat controller, session state management
+- Supersedes: None (new isolated module)
+- Superseded by: Future session management improvements
+- Documentation: `src/agentx/model/session/session_petri_net.py` (inline docs)
+
+---
 
 ## 2026-05-01: LLM-Based Dynamic Petri Net Implementation
 

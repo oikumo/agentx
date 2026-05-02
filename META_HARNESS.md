@@ -15,6 +15,7 @@ Structured project organization for AI-assisted development:
 - **Structured workflows**: Consistent, high-quality output
 - **Comprehensive docs**: At every level
 - **Work notebook**: Simple reminder via `WORK.md`
+- **Project tracker**: Multi-project status via `PROJECTS.md`
 - **Change logging**: All structural changes logged in `.meta/LOG.md`
 
 **Directory layout**: See [`.meta/project_development/STRUCTURE.md`](.meta/project_development/STRUCTURE.md)
@@ -53,7 +54,10 @@ Need to...
 5. REPORT: Summarize + document + cleanup
 ```
 
-**Work Notebook**: Agent updates [WORK.md](WORK.md) as a reminder of your current task and the next in planning
+**Work Notebook**: Agent updates [WORK.md](WORK.md) as a reminder of your current task and the next in planning  
+**Project Tracker**: Agent tracks multiple projects in [PROJECTS.md](PROJECTS.md)
+
+**Startup Reminder**: At session start, agent reads both [WORK.md](WORK.md) and [PROJECTS.md](PROJECTS.md) and displays them to the user.
 
 **Detailed workflows**: [`.meta/project_development/WORKFLOWS.md`](.meta/project_development/WORKFLOWS.md)
 
@@ -143,6 +147,7 @@ Before completion:
 |-----------|-------------|---------|
 | `.meta/LOG.md` | META HARNESS change log (auto-updated by agent) | N/A |
 | `WORK.md` | Current work reminder (auto-updated by agent) | N/A |
+| `PROJECTS.md` | Multiple project tracker (auto-updated by agent) | N/A |
 | `features/` | AgentX features organized by state | [Link](features/META.md) |
 | `features/planned/` | Features planned but not started | [Link](features/META.md) |
 | `features/wip/` | Features in development (Work In Progress) | [Link](features/META.md) |
