@@ -1,0 +1,108 @@
+{
+  "timestamp": "2026-05-02T11:25:34.727495",
+  "test_logs": [
+    {
+      "name": "Stdio KB Search Command",
+      "passed": true,
+      "warning": false,
+      "message": "Duration: 0.07s, Return code: 0",
+      "log": "Duration: 0.07s, Return code: 0",
+      "timestamp": "2026-05-02T11:25:32.851437"
+    },
+    {
+      "name": "Stdio KB Ask Command",
+      "passed": true,
+      "warning": false,
+      "message": "Duration: 0.07s, Output length: 3241",
+      "log": "Duration: 0.07s, Output length: 3241",
+      "timestamp": "2026-05-02T11:25:32.925626"
+    },
+    {
+      "name": "Stdio KB Stats Command",
+      "passed": true,
+      "warning": false,
+      "message": "Return code: 0, Has stats: True",
+      "log": "Return code: 0, Has stats: True",
+      "timestamp": "2026-05-02T11:25:33.003732"
+    },
+    {
+      "name": "Simulated Agent Startup (Stdio)",
+      "passed": true,
+      "warning": false,
+      "message": "1. WORK.md exists: True | 2. KB query via stdio: OK | 3. KB stats via stdio: OK",
+      "log": "1. WORK.md exists: True | 2. KB query via stdio: OK | 3. KB stats via stdio: OK",
+      "timestamp": "2026-05-02T11:25:33.141834"
+    },
+    {
+      "name": "Simulated KB-First Workflow (Stdio)",
+      "passed": true,
+      "warning": false,
+      "message": "3/3 OK | Where should I write tests?...: OK | How to add a feature?...: OK | What is MainController?...: OK",
+      "log": "3/3 OK | Where should I write tests?...: OK | How to add a feature?...: OK | What is MainController?...: OK",
+      "timestamp": "2026-05-02T11:25:33.424077"
+    },
+    {
+      "name": "Simulated Task Completion (Stdio)",
+      "passed": true,
+      "warning": false,
+      "message": "1. Query KB: OK | 2. Add entry: OK | 3. Verify entry: OK | 4. Get stats: OK",
+      "log": "1. Query KB: OK | 2. Add entry: OK | 3. Verify entry: OK | 4. Get stats: OK",
+      "timestamp": "2026-05-02T11:25:33.718992"
+    },
+    {
+      "name": "Stdio Command Latency",
+      "passed": true,
+      "warning": false,
+      "message": "Avg: 0.07s, Max: 0.08s",
+      "log": "Avg: 0.07s, Max: 0.08s",
+      "timestamp": "2026-05-02T11:25:33.938019"
+    },
+    {
+      "name": "Stdio Concurrent Commands",
+      "passed": true,
+      "warning": false,
+      "message": "5/5 concurrent commands OK",
+      "log": "5/5 concurrent commands OK",
+      "timestamp": "2026-05-02T11:25:34.132872"
+    },
+    {
+      "name": "Stdio Error Handling",
+      "passed": true,
+      "warning": false,
+      "message": "Handled 3/3 error scenarios",
+      "log": "Handled 3/3 error scenarios",
+      "timestamp": "2026-05-02T11:25:34.512358"
+    },
+    {
+      "name": "Stdio Timeout Handling",
+      "passed": true,
+      "warning": false,
+      "message": "Completed in 0.07s or timed out gracefully",
+      "log": "Completed in 0.07s or timed out gracefully",
+      "timestamp": "2026-05-02T11:25:34.580279"
+    },
+    {
+      "name": "Stdio Output Format",
+      "passed": true,
+      "warning": false,
+      "message": "Output length: 1733, Structured: True",
+      "log": "Output length: 1733, Structured: True",
+      "timestamp": "2026-05-02T11:25:34.654078"
+    },
+    {
+      "name": "Stdio JSON Output",
+      "passed": true,
+      "warning": false,
+      "message": "Has output: True, Length: 408",
+      "log": "Has output: True, Length: 408",
+      "timestamp": "2026-05-02T11:25:34.727297"
+    }
+  ],
+  "summary": {
+    "passed": 12,
+    "failed": 0,
+    "warnings": 0,
+    "total": 12,
+    "success_rate": 100.0
+  }
+}

@@ -1,37 +1,37 @@
 {
-  "timestamp": "2026-05-02T11:07:09.963149",
-  "total": 7,
-  "passed": 7,
+  "timestamp": "2026-05-02T11:32:25.001451",
+  "total": 8,
+  "passed": 8,
   "failed": 0,
   "tests": [
     {
       "name": "test_kb_functionality",
       "success": true,
-      "duration": 0.109792,
+      "duration": 0.086498,
       "error": null
     },
     {
       "name": "test_kb_performance",
       "success": true,
-      "duration": 0.169886,
+      "duration": 0.178986,
       "error": null
     },
     {
       "name": "test_kb_edge_cases",
       "success": true,
-      "duration": 3.572486,
+      "duration": 3.502356,
       "error": null
     },
     {
       "name": "test_kb_integration",
       "success": true,
-      "duration": 0.568466,
+      "duration": 0.56289,
       "error": null
     },
     {
       "name": "test_kb_populate",
       "success": true,
-      "duration": 0.083834,
+      "duration": 0.095764,
       "error": null
     },
     {
@@ -43,154 +43,154 @@
             "passed": true,
             "warning": false,
             "message": "Complete startup workflow",
-            "timestamp": "2026-05-02T11:07:14.513632"
+            "timestamp": "2026-05-02T11:32:29.463201"
           },
           {
             "name": "KB-First Rule Enforcement",
             "passed": true,
             "warning": false,
             "message": "KB-first queries work",
-            "timestamp": "2026-05-02T11:07:14.539871"
+            "timestamp": "2026-05-02T11:32:29.488276"
           },
           {
             "name": "Agent Context Switching",
             "passed": true,
             "warning": false,
             "message": "3/3 switches OK",
-            "timestamp": "2026-05-02T11:07:14.541590"
+            "timestamp": "2026-05-02T11:32:29.490609"
           },
           {
             "name": "Agent Query Patterns",
             "passed": true,
             "warning": false,
             "message": "5/5 patterns work",
-            "timestamp": "2026-05-02T11:07:14.543848"
+            "timestamp": "2026-05-02T11:32:29.493399"
           },
           {
             "name": "Multi-Hop Reasoning",
             "passed": true,
             "warning": false,
             "message": "Multi-hop capable",
-            "timestamp": "2026-05-02T11:07:14.592903"
+            "timestamp": "2026-05-02T11:32:29.535069"
           },
           {
             "name": "Query Expansion",
             "passed": true,
             "warning": false,
             "message": "2 variations generated",
-            "timestamp": "2026-05-02T11:07:14.593275"
+            "timestamp": "2026-05-02T11:32:29.535422"
           },
           {
             "name": "Context Persistence",
             "passed": true,
             "warning": false,
             "message": "Context persisted",
-            "timestamp": "2026-05-02T11:07:14.607826"
+            "timestamp": "2026-05-02T11:32:29.550511"
           },
           {
             "name": "Concurrent Access",
             "passed": true,
             "warning": false,
             "message": "4/4 concurrent ops",
-            "timestamp": "2026-05-02T11:07:14.619710"
+            "timestamp": "2026-05-02T11:32:29.561115"
           },
           {
             "name": "Session State Management",
             "passed": true,
             "warning": false,
             "message": "Session: 4/4 ops",
-            "timestamp": "2026-05-02T11:07:14.639792"
+            "timestamp": "2026-05-02T11:32:29.584239"
           },
           {
             "name": "Agent Mistake Handling",
             "passed": true,
             "warning": false,
             "message": "Handled 5/5 mistakes",
-            "timestamp": "2026-05-02T11:07:14.647470"
+            "timestamp": "2026-05-02T11:32:29.591253"
           },
           {
             "name": "Invalid Input Handling",
             "passed": true,
             "warning": false,
             "message": "Invalid inputs handled",
-            "timestamp": "2026-05-02T11:07:14.668900"
+            "timestamp": "2026-05-02T11:32:29.611013"
           },
           {
             "name": "Error Recovery",
             "passed": true,
             "warning": false,
             "message": "Recovered from 3/3 errors",
-            "timestamp": "2026-05-02T11:07:14.673263"
+            "timestamp": "2026-05-02T11:32:29.615325"
           },
           {
             "name": "Query Latency",
             "passed": true,
             "warning": false,
             "message": "Avg: 0.00s",
-            "timestamp": "2026-05-02T11:07:14.686383"
+            "timestamp": "2026-05-02T11:32:29.628055"
           },
           {
             "name": "Batch Operations",
             "passed": true,
             "warning": false,
             "message": "5ms/op",
-            "timestamp": "2026-05-02T11:07:14.731612"
+            "timestamp": "2026-05-02T11:32:29.673285"
           },
           {
             "name": "Memory Efficiency",
             "passed": true,
             "warning": false,
             "message": "+0.0MB",
-            "timestamp": "2026-05-02T11:07:14.887093"
+            "timestamp": "2026-05-02T11:32:29.796914"
           },
           {
             "name": "RAG Augmentation",
             "passed": true,
             "warning": false,
             "message": "RAG provides context",
-            "timestamp": "2026-05-02T11:07:14.902387"
+            "timestamp": "2026-05-02T11:32:29.804532"
           },
           {
             "name": "Confidence Scoring",
             "passed": true,
             "warning": false,
             "message": "Confidence scores present",
-            "timestamp": "2026-05-02T11:07:14.908183"
+            "timestamp": "2026-05-02T11:32:29.808047"
           },
           {
             "name": "Category Filtering",
             "passed": true,
             "warning": false,
             "message": "4/4 categories",
-            "timestamp": "2026-05-02T11:07:14.913511"
+            "timestamp": "2026-05-02T11:32:29.810093"
           },
           {
             "name": "Agent Entry Creation",
             "passed": true,
             "warning": false,
             "message": "Entry created",
-            "timestamp": "2026-05-02T11:07:14.924076"
+            "timestamp": "2026-05-02T11:32:29.817041"
           },
           {
             "name": "Knowledge Evolution",
             "passed": true,
             "warning": false,
             "message": "Evolution cycle works",
-            "timestamp": "2026-05-02T11:07:14.932330"
+            "timestamp": "2026-05-02T11:32:29.819007"
           },
           {
             "name": "Complete Agent Session",
             "passed": true,
             "warning": false,
             "message": "6/6 steps",
-            "timestamp": "2026-05-02T11:07:14.975544"
+            "timestamp": "2026-05-02T11:32:29.852741"
           },
           {
             "name": "Error Recovery Workflow",
             "passed": true,
             "warning": false,
             "message": "Recovered 5/5 ops",
-            "timestamp": "2026-05-02T11:07:14.988916"
+            "timestamp": "2026-05-02T11:32:29.867953"
           }
         ],
         {
@@ -201,7 +201,7 @@
           "success_rate": 100.0
         }
       ],
-      "duration": 0.487103,
+      "duration": 0.415311,
       "error": null
     },
     {
@@ -213,7 +213,119 @@
         "total": 14,
         "success_rate": 100.0
       },
-      "duration": 0.906095,
+      "duration": 0.730194,
+      "error": null
+    },
+    {
+      "name": "test_opencode_stdio",
+      "success": [
+        [
+          {
+            "name": "Stdio KB Search Command",
+            "passed": true,
+            "warning": false,
+            "message": "Duration: 0.07s, Return code: 0",
+            "log": "Duration: 0.07s, Return code: 0",
+            "timestamp": "2026-05-02T11:32:30.674326"
+          },
+          {
+            "name": "Stdio KB Ask Command",
+            "passed": true,
+            "warning": false,
+            "message": "Duration: 0.09s, Output length: 3241",
+            "log": "Duration: 0.09s, Output length: 3241",
+            "timestamp": "2026-05-02T11:32:30.759615"
+          },
+          {
+            "name": "Stdio KB Stats Command",
+            "passed": true,
+            "warning": false,
+            "message": "Return code: 0, Has stats: True",
+            "log": "Return code: 0, Has stats: True",
+            "timestamp": "2026-05-02T11:32:30.831864"
+          },
+          {
+            "name": "Simulated Agent Startup (Stdio)",
+            "passed": true,
+            "warning": false,
+            "message": "1. WORK.md exists: True | 2. KB query via stdio: OK | 3. KB stats via stdio: OK",
+            "log": "1. WORK.md exists: True | 2. KB query via stdio: OK | 3. KB stats via stdio: OK",
+            "timestamp": "2026-05-02T11:32:30.973995"
+          },
+          {
+            "name": "Simulated KB-First Workflow (Stdio)",
+            "passed": true,
+            "warning": false,
+            "message": "3/3 OK | Where should I write tests?...: OK | How to add a feature?...: OK | What is MainController?...: OK",
+            "log": "3/3 OK | Where should I write tests?...: OK | How to add a feature?...: OK | What is MainController?...: OK",
+            "timestamp": "2026-05-02T11:32:31.276191"
+          },
+          {
+            "name": "Simulated Task Completion (Stdio)",
+            "passed": true,
+            "warning": false,
+            "message": "1. Query KB: OK | 2. Add entry: OK | 3. Verify entry: OK | 4. Get stats: OK",
+            "log": "1. Query KB: OK | 2. Add entry: OK | 3. Verify entry: OK | 4. Get stats: OK",
+            "timestamp": "2026-05-02T11:32:31.596704"
+          },
+          {
+            "name": "Stdio Command Latency",
+            "passed": true,
+            "warning": false,
+            "message": "Avg: 0.08s, Max: 0.08s",
+            "log": "Avg: 0.08s, Max: 0.08s",
+            "timestamp": "2026-05-02T11:32:31.823558"
+          },
+          {
+            "name": "Stdio Concurrent Commands",
+            "passed": true,
+            "warning": false,
+            "message": "5/5 concurrent commands OK",
+            "log": "5/5 concurrent commands OK",
+            "timestamp": "2026-05-02T11:32:31.995629"
+          },
+          {
+            "name": "Stdio Error Handling",
+            "passed": true,
+            "warning": false,
+            "message": "Handled 3/3 error scenarios",
+            "log": "Handled 3/3 error scenarios",
+            "timestamp": "2026-05-02T11:32:32.411096"
+          },
+          {
+            "name": "Stdio Timeout Handling",
+            "passed": true,
+            "warning": false,
+            "message": "Completed in 0.07s or timed out gracefully",
+            "log": "Completed in 0.07s or timed out gracefully",
+            "timestamp": "2026-05-02T11:32:32.480522"
+          },
+          {
+            "name": "Stdio Output Format",
+            "passed": true,
+            "warning": false,
+            "message": "Output length: 1733, Structured: True",
+            "log": "Output length: 1733, Structured: True",
+            "timestamp": "2026-05-02T11:32:32.560132"
+          },
+          {
+            "name": "Stdio JSON Output",
+            "passed": true,
+            "warning": false,
+            "message": "Has output: True, Length: 408",
+            "log": "Has output: True, Length: 408",
+            "timestamp": "2026-05-02T11:32:32.637814"
+          }
+        ],
+        {
+          "passed": 12,
+          "failed": 0,
+          "warnings": 0,
+          "total": 12,
+          "success_rate": 100.0
+        }
+      ],
+      "duration": 2.031141,
       "error": null
     }
   ]

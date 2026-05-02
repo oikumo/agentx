@@ -11,8 +11,9 @@ Comprehensive tests for the Meta Harness Knowledge Base system.
 - `test_kb_edge_cases.py` - Edge cases and error handling (14 tests)
 - `test_kb_integration.py` - Integration tests (11 tests)
 - `test_kb_populate.py` - Population functionality tests (11 tests)
-- `test_opencode_integration.py` - OpenCode agent integration tests (20 tests)
+- `test_opencode_integration.py` - OpenCode agent integration tests (22 tests)
 - `test_opencode_commands.py` - OpenCode command integration tests (15 tests)
+- `test_opencode_stdio.py` - OpenCode stdio interface tests (12 tests) ⭐ NEW
 - `test_results.json` - Test results (auto-generated)
 - `TEST_SUMMARY.md` - Comprehensive test documentation
 
@@ -33,6 +34,7 @@ python3 test_kb_integration.py
 python3 test_kb_populate.py
 python3 test_opencode_integration.py
 python3 test_opencode_commands.py
+python3 test_opencode_stdio.py
 
 # Verbose output
 python3 run_tests.py --verbose
@@ -114,6 +116,20 @@ python3 run_tests.py --verbose
 - 🖥️ KB-first workflow
 - 🖥️ Task completion workflow
 - 🖥️ Meta commands
+
+### OpenCode Stdio Tests (12 tests) ⭐ NEW
+- 🔌 Stdio KB search command
+- 🔌 Stdio KB ask command
+- 🔌 Stdio KB stats command
+- 🔌 Simulated agent startup via stdio
+- 🔌 Simulated KB-first workflow via stdio
+- 🔌 Simulated task completion via stdio
+- 🔌 Stdio command latency
+- 🔌 Stdio concurrent commands
+- 🔌 Stdio error handling
+- 🔌 Stdio timeout handling
+- 🔌 Stdio output format
+- 🔌 Stdio JSON output
 
 ## Output
 

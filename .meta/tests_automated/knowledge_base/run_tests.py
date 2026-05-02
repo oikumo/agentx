@@ -27,7 +27,8 @@ TEST_MODULES = [
     'test_kb_integration',
     'test_kb_populate',
     'test_opencode_integration',
-    'test_opencode_commands'
+    'test_opencode_commands',
+    'test_opencode_stdio'  # NEW: Stdio interface tests
 ]
 
 
