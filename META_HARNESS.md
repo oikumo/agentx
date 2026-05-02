@@ -35,7 +35,8 @@ Need to...
 ├─ Test new idea? → .meta/experiments/
 ├─ Write unit tests? → tests/unit/ (isolated tests for src/agentx/)
 ├─ Write TDD tests? → .meta/tests_sandbox/
-├─ Test agent? → test_automated/
+├─ Test agent (automated)? → .meta/tests_automated/
+├─ Test agent (legacy)? → test_automated/
 ├─ Use/create tools? → .meta/development_tools/
 └─ Check workflows? → .meta/project_development/WORKFLOWS.md
 ```
@@ -151,10 +152,11 @@ Before completion:
 | `.meta/experiments/` | Test new libraries, prototype | [Link](.meta/experiments/META.md) |
 | `.meta/sandbox/` | Modify code safely | [Link](.meta/sandbox/META.md) |
 | `.meta/tests_sandbox/` | TDD (Kent Beck) | [Link](.meta/tests_sandbox/META.md) |
+| `.meta/tests_automated/` | **Automated reflection tests** | [Link](.meta/tests_automated/META.md) |
 | `.meta/development_tools/` | Development tools, scripts | [Link](.meta/development_tools/META.md) |
 | `.meta/knowledge_base/` | RAG knowledge storage | [Link](.meta/knowledge_base/META.md) |
 | `.meta/reflection/` | Test logs & capability assessment | [Link](.meta/reflection/README.md) |
-| `test_automated/` | Automated agent tests (reflection tests) | N/A |
+| `test_automated/` | Automated agent tests (legacy) | N/A |
 
 ---
 

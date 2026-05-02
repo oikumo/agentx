@@ -1,9 +1,243 @@
-# META HARNESS Change Log 
+# META HARNESS Change Log
 
-> **Purpose**: Track all structural changes to META HARNESS 
-> **Target**: AI agents and users tracking META HARNESS evolution 
-> **Rule**: ALL structural changes MUST be logged here 
+> **Purpose**: Track all structural changes to META HARNESS
+> **Target**: AI agents and users tracking META HARNESS evolution
+> **Rule**: ALL structural changes MUST be logged here
 > **Format**: Reverse chronological (newest first)
+
+---
+
+## [2026-05-02] Add .meta.tests_automated Concept to META HARNESS
+
+**Type**: Feature - Test Infrastructure
+**Version**: 2.4.0
+**Agent**: opencode (qwen/qwen3.5-397b-a17b)
+**User Request**: Add @.meta.tests_automated concept to META HARNESS
+
+### Changes Made
+
+#### 1. Created `.meta.tests_automated/` Directory Structure
+- **Location**: `.meta.tests_automated/` (already existed, now documented)
+- **Purpose**: Dedicated space for automated agent reflection tests and test execution frameworks
+- **Key features**:
+  - Automated execution without human intervention
+  - Reflection-focused tests
+  - Scheduled runs capability
+  - Results storage in `.meta.reflection/`
+  - Knowledge-based test content
+
+#### 2. Created META.md Documentation
+- **File**: `.meta.tests_automated/META.md`
+- **Lines**: ~200 lines
+- **Content**:
+  - Purpose and target audience
+  - Directory structure specification
+  - When to use vs. other test directories
+  - Workflow for running automated tests
+  - Test types (Reflection, Workflow, Knowledge)
+  - Configuration examples
+  - Results interpretation guide
+  - Integration points
+  - Maintenance procedures
+
+#### 3. Updated AGENTS.md
+- Added `.meta.tests_automated/` to Directory Structure diagram
+- Updated Decision Tree: "Test agent (automated)? → .meta.tests_automated/"
+- Added scenario: "Test Agent (Automated) → .meta.tests_automated/ → run reflection tests"
+- Clarified legacy vs. new automated test locations
+
+#### 4. Updated META_HARNESS.md
+- Updated Decision Tree with automated test path
+- Added `.meta.tests_automated/` to Directory Quick Reference table
+- Documented purpose: "Automated reflection tests"
+- Distinguished from legacy `test_automated/` directory
+
+### Impact Analysis
+
+#### Affected Components
+- ✅ `.meta.tests_automated/` - Documented (directory already existed)
+- ✅ `.meta.tests_automated/META.md` - CREATED (comprehensive documentation)
+- ✅ `AGENTS.md` - Modified (added references)
+- ✅ `META_HARNESS.md` - Modified (added references)
+- ✅ `.meta/LOG.md` - This entry
+
+#### Unchanged Components
+- ✅ All existing test directories
+- ✅ Core workflows and directives
+- ✅ Knowledge base structure
+- ✅ Unit test infrastructure (`tests/unit/`)
+- ✅ TDD workspace (`.meta/tests_sandbox/`)
+
+### Validation
+
+#### Quality Gates
+- [x] KB queried before documentation update (3 sources checked)
+- [x] `.meta.tests_automated/` directory verified to exist
+- [x] META.md created following lazy-loading pattern
+- [x] Both META_HARNESS.md and AGENTS.md updated consistently
+- [x] Decision trees updated in both files
+- [x] Change logged in LOG.md
+- [x] No production code modified
+- [x] Documentation follows existing patterns
+
+### Files Modified/Created
+
+| File | Action | Lines Changed | Purpose |
+|------|--------|---------------|---------|
+| `.meta.tests_automated/META.md` | Created | +200 lines | Automated tests documentation |
+| `META_HARNESS.md` | Modified | +3 lines | Added .meta.tests_automated/ references |
+| `AGENTS.md` | Modified | +5 lines | Added .meta.tests_automated/ references |
+| `.meta/LOG.md` | Modified | +This entry | Change log |
+
+### Rationale
+
+**Why this change?**
+- User requested formal documentation of `.meta.tests_automated/` concept
+- Directory existed but lacked proper documentation
+- Need clear distinction between automated tests and manual/legacy tests
+- Provides structured approach to agent reflection testing
+
+**Why this implementation?**
+- Minimal change - only documentation updates
+- Follows existing META.md pattern (lazy-loading, concise)
+- Clear separation from legacy `test_automated/` directory
+- Comprehensive coverage of automated testing workflow
+- Integration with `.meta.reflection/` for results storage
+
+### Automated Test Workflow
+
+```
+.meta.tests_automated/
+    ↓
+Run reflection test suite
+    ↓
+Store results in .meta.reflection/
+    ↓
+Review performance tier
+    ↓
+Update KB if gaps found
+```
+
+### Test Types Documented
+
+1. **Reflection Tests**: 36 questions, monthly execution
+2. **Workflow Tests**: Decision tree adherence validation
+3. **Knowledge Tests**: RAG query accuracy verification
+
+### Performance Tiers
+
+| Tier | Score Range | Description |
+|------|-------------|-------------|
+| Expert | 97-100% | Comprehensive understanding |
+| Proficient | 89-96% | Strong grasp, minor gaps |
+| Competent | 78-86% | Adequate, review needed |
+| Needs Improvement | <78% | Significant gaps |
+
+### Rollback Plan
+
+If issues arise:
+```bash
+# Revert documentation changes
+git checkout HEAD -- META_HARNESS.md AGENTS.md
+# Remove META.md if needed
+rm .meta.tests_automated/META.md
+```
+
+### References
+- Related to: `.meta.reflection/`, automated testing, reflection tests
+- Impacts: Agent testing workflows, capability assessment
+- Supersedes: None (new documentation for existing directory)
+- Superseded by: Future test infrastructure improvements
+- Documentation: `.meta.tests_automated/META.md`
+
+---
+
+## [2026-05-02] Knowledge Base Population Script Fix
+
+**Type**: Bug Fix - Import Resolution
+
+**Version**: 1.0.1
+
+**Agent**: opencode (qwen/qwen3.5-397b-a17b)
+
+**User Request**: Fix @.meta/tools/meta-harness-knowledge-base
+
+### Issue
+
+The `populate_kb.py` script had incorrect imports - it was trying to import from a non-existent `meta_tools` module.
+
+### Changes Made
+
+#### 1. Fixed Import Statements
+
+**File**: `.meta/tools/meta-harness-knowledge-base/populate/populate_kb.py`
+
+**Before**:
+```python
+from meta_tools import kb, KnowledgeBase
+```
+
+**After**:
+```python
+from knowledge_base import kb_add_entry, kb_ask, kb_search, kb_stats, kb_correct, kb_evolve
+
+# Backward compatibility - create a simple namespace
+class KnowledgeBase:
+    """Simple wrapper for knowledge base operations."""
+    pass
+
+class KB:
+    """Knowledge base operations namespace."""
+    @staticmethod
+    def add_entry(entry_type, category, title, finding, solution, context="", confidence=0.5, example=""):
+        """Add entry via knowledge_base module."""
+        return kb_add_entry(entry_type, category, title, finding, solution, context, confidence, example)
+
+kb = KB()
+meta_kb = kb
+```
+
+#### 2. Fixed Method Signature
+
+**Before**:
+```python
+def add_entry(self, kb: KnowledgeBase, entry: Dict) -> str:
+    return kb.kb_add_entry(...)
+```
+
+**After**:
+```python
+def add_entry(self, entry: Dict) -> str:
+    return kb_add_entry(...)
+```
+
+#### 3. Fixed Method Call
+
+**Before**:
+```python
+result = self.add_entry(kb, entry)
+```
+
+**After**:
+```python
+result = self.add_entry(entry)
+```
+
+### Validation
+
+- ✅ Script imports successfully
+- ✅ KB population runs without errors
+- ✅ Added 20 new entries to knowledge base
+- ✅ KB stats command works (1694 total entries)
+- ✅ KB ask command works with answer synthesis
+- ✅ All CLI commands functional (search, ask, stats, explore, chat)
+
+### Impact
+
+- **Fixed**: `.meta/tools/meta-harness-knowledge-base/populate/populate_kb.py`
+- **Fixed**: `.meta/tools/meta-harness-knowledge-base/populate/populate` (wrapper script)
+- **No breaking changes**: All existing functionality preserved
+- **Improved**: Import structure now matches actual module layout
 
 ---
 

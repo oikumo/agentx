@@ -207,20 +207,21 @@ Need to...
 ### Directory Structure
 ```
 agent-x/
-├── META_HARNESS.md # Master documentation
-├── AGENTS.md # This file
-├── features/ # AgentX features organized by state
-│   ├── planned/ # Planned features (not started)
-│   ├── wip/ # Work in progress (developing)
-│   └── ok/ # Completed features (ready to use)
-├── .meta/project_development/ # Rules, standards, workflows
-├── .meta/sandbox/ # Safe workspace
-├── .meta/experiments/ # Experimental features
-├── .meta/tests_sandbox/ # TDD workspace
-├── .meta/development_tools/ # Development tools, scripts
-├── .meta/knowledge_base/ # RAG knowledge base
-├── .meta/reflection/ # Test logs & capability assessment
-└── test_automated/ # Automated agent tests (reflection tests)
+    ├── META_HARNESS.md # Master documentation
+    ├── AGENTS.md # This file
+    ├── features/ # AgentX features organized by state
+    │ ├── planned/ # Planned features (not started)
+    │ ├── wip/ # Work in progress (developing)
+    │ └── ok/ # Completed features (ready to use)
+    ├── .meta/project_development/ # Rules, standards, workflows
+    ├── .meta/sandbox/ # Safe workspace
+    ├── .meta/experiments/ # Experimental features
+    ├── .meta/tests_sandbox/ # TDD workspace
+    ├── .meta/tests_automated/ # Automated reflection tests (NEW)
+    ├── .meta/development_tools/ # Development tools, scripts
+    ├── .meta/knowledge_base/ # RAG knowledge base
+    ├── .meta/reflection/ # Test logs & capability assessment
+    └── test_automated/ # Automated agent tests (legacy)
 ```
 **Rule:** All `.meta/*` subdirs contain META.md - read first. Features have their own META.md at `features/META.md`.
 
@@ -240,7 +241,8 @@ Need to...
 ├─ Modify code? → .meta/sandbox/
 ├─ Test idea? → .meta/experiments/
 ├─ Write tests? → .meta/tests_sandbox/
-├─ Test agent? → test_automated/
+├─ Test agent (automated)? → .meta/tests_automated/
+├─ Test agent (legacy)? → test_automated/
 ├─ Use/create tools? → .meta/development_tools/
 └─ Check workflows? → .meta/project_development/WORKFLOWS.md
 ```
@@ -264,7 +266,8 @@ Need to...
 - **Add Feature (code)** → sandbox → tests → merge → features/ok/
 - **Fix Bug** → reproduce in sandbox → test → fix → merge
 - **Refactor** → copy to sandbox → refactor → test → merge
-- **Test Agent** → test_automated/ → run reflection tests
+- **Test Agent (Automated)** → .meta/tests_automated/ → run reflection tests
+- **Test Agent (Manual)** → test_automated/ → run legacy tests
 
 ## Projects (User Tasks)
 
