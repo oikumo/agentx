@@ -8,20 +8,24 @@
 
 ## ⚠️ Core Directives (NON-NEGOTIABLE)
 
--2. **LOG STRUCTURAL CHANGES** - ALL structural META HARNESS changes MUST be logged in `.meta/LOG.md` - THIS IS Mandatory
--1. **SHOW WORK & PROJECTS FIRST** - On first prompt of session only, read `WORK.md` and `PROJECTS.md`, display both to user as reminder - THIS IS Mandatory
-0. **ALWAYS query KB first** - Before ANY task, search `.meta/knowledge_base/` or use `meta kb ask` - THIS IS MANDATORY
-0a. **IF KB IS EMPTY, POPULATE IT** - If KB has no entries, run `meta kb populate` BEFORE proceeding with the task
-0b. **ALWAYS REFERENCE KB** - Every response must cite KB entries or explain why KB was not consulted
+**Priority 0 (Session Startup):**
+0. **SHOW WORK & PROJECTS FIRST** - On first prompt only, read `WORK.md` and `PROJECTS.md`, display to user
+0a. **ALWAYS query KB first** - Before ANY task, search `.meta/knowledge_base/` or use `meta kb ask`
+0b. **IF KB IS EMPTY, POPULATE IT** - Run `meta kb populate` before proceeding
+0c. **ALWAYS REFERENCE KB** - Cite KB entries or explain why not consulted
+
+**Priority 1 (Safety - NEVER violate):**
 1. **NEVER commit/push** - Not even if user asks
-2. **ALWAYS follow the META rules** Rules are in this file
+2. **NEVER modify .env** - Or secrets files
 3. **NEVER add dependencies** - Use existing; approval required
-3. **NEVER modify .env** - Or secrets files
-4. **ALWAYS check git log** - Before ANY changes
-5. **NEVER modify tests/** - Use .meta/tests_sandbox/ (requires approval)
-6. **Use uv & pyproject.toml** - For dependencies
-7. **NEVER change README.md** - Only if user explicitly requests
-8. **ALWAYS run USER PROMPTS** - Commands start with `meta` (see META_COMMANDS.md)
+4. **NEVER modify tests/** - Use .meta/tests_sandbox/ (requires approval)
+5. **NEVER change README.md** - Only if user explicitly requests
+
+**Priority 2 (Process - ALWAYS follow):**
+6. **ALWAYS check git log** - Before ANY changes
+7. **ALWAYS follow META rules** - All rules in this file
+8. **ALWAYS run USER PROMPTS** - Commands start with `meta`
+9. **LOG STRUCTURAL CHANGES** - All META HARNESS changes in `.meta/LOG.md`
 
 ## Meta Project Harness
 Structured development system for AI-assisted development:
