@@ -1,4 +1,4 @@
-# Project Tracker
+# Projects Tracker
 
 > **Purpose**: Track multiple projects and their status across the AgentX ecosystem
 > **Updated by**: Agent (automatically when starting new projects or upon user request)
@@ -9,13 +9,11 @@
 
 ## Active Projects
 
-| ID | Project | Status | Priority | Notes |
-|----|---------|--------|----------|-------|
-| 1 | Session Petri Net Module | 🟡 Planned | High | Isolate with single interface |
-| 2 | Goal Integration in Chat Controller | 🟡 Planned | High | LLM-driven petri net changes |
-| 3 | Production Readiness | 🟡 Planned | Medium | Final polish and validation |
-| 4 | Status Color Coding | ⚪ Backlog | Low | Visual distinction enhancement |
-| 5 | Status Types Expansion | ⚪ Backlog | Low | Additional state types |
+| ID | Project                                        | Status | Priority | Notes                                                        |
+|----|------------------------------------------------|--------|----------|--------------------------------------------------------------|
+| 0  | Agentx Systemic Petri Net Software Development | 🟡 Planned | High | agentx software development driven by Petri Net global state |
+| 1  | Session Petri Net Module                       | 🟡 Planned | High | Isolate with single interface                                |
+| 2  | Goal Integration in Chat Controller            | 🟡 Planned | High | LLM-driven petri net changes                                 |
 
 ### Status Legend
 - 🟢 **Active**: Currently being worked on
@@ -28,6 +26,8 @@
 ---
 
 ## Project Details
+
+### 0. Agentx Systemic Petri Net Software Development
 
 ### 1. Session Petri Net Module
 **Goal**: Create isolated Python module with single interface
@@ -43,49 +43,12 @@
 **Dependencies**: #1 (Session Petri Net Module)
 **Next Step**: Design goal-petri net integration pattern
 
-### 3. Production Readiness
-**Goal**: Prepare for production deployment
-**Current State**: Planned
-**Location**: Entire codebase
-**Dependencies**: #1, #2
-**Next Step**: Define production readiness criteria
-
-### 4. Status Color Coding
-**Goal**: Add color coding for visual distinction of status types
-**Current State**: Backlog
-**Location**: UI/View layer
-**Dependencies**: None
-**Next Step**: Design color scheme
-
-### 5. Status Types Expansion
-**Goal**: Expand available status types beyond current set
-**Current State**: Backlog
-**Location**: Status model/enums
-**Dependencies**: None
-**Next Step**: Define additional status types needed
-
 ---
 
 ## Completed Projects (Recent)
 
 | ID | Project | Completed | Notes |
 |----|---------|-----------|-------|
-| 0 | KB Import Fix | 2026-05-02 | Fixed import errors in populate_kb.py |
-
----
-
-## Quick Commands
-
-```bash
-# View current work reminder
-meta work
-
-# Set new work task
-meta work {task description}
-
-# View project tracker (this file)
-cat PROJECTS.md
-```
 
 ---
 

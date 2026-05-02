@@ -22,10 +22,12 @@ from typing import Dict, List, Any
 # Test modules
 TEST_MODULES = [
     'test_kb_functionality',
-    'test_kb_performance', 
+    'test_kb_performance',
     'test_kb_edge_cases',
     'test_kb_integration',
-    'test_kb_populate'
+    'test_kb_populate',
+    'test_opencode_integration',
+    'test_opencode_commands'
 ]
 
 

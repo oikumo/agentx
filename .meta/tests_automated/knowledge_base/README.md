@@ -11,6 +11,8 @@ Comprehensive tests for the Meta Harness Knowledge Base system.
 - `test_kb_edge_cases.py` - Edge cases and error handling (14 tests)
 - `test_kb_integration.py` - Integration tests (11 tests)
 - `test_kb_populate.py` - Population functionality tests (11 tests)
+- `test_opencode_integration.py` - OpenCode agent integration tests (20 tests)
+- `test_opencode_commands.py` - OpenCode command integration tests (15 tests)
 - `test_results.json` - Test results (auto-generated)
 - `TEST_SUMMARY.md` - Comprehensive test documentation
 
@@ -29,6 +31,8 @@ python3 test_kb_performance.py
 python3 test_kb_edge_cases.py
 python3 test_kb_integration.py
 python3 test_kb_populate.py
+python3 test_opencode_integration.py
+python3 test_opencode_commands.py
 
 # Verbose output
 python3 run_tests.py --verbose
@@ -80,6 +84,36 @@ python3 run_tests.py --verbose
 - 📥 Entry addition
 - 📥 Script execution
 - 📥 Stats validation
+
+### OpenCode Integration Tests (20 tests)
+- 🤖 Agent startup workflow
+- 🤖 KB-first rule enforcement
+- 🤖 Context switching
+- 🤖 Query patterns (where, how, what, when, why)
+- 🤖 Multi-hop reasoning
+- 🤖 Query expansion
+- 🤖 Context persistence
+- 🤖 Concurrent access
+- 🤖 Session state management
+- 🤖 Mistake handling
+- 🤖 Invalid input handling
+- 🤖 Error recovery
+- 🤖 Query latency (< 1s)
+- 🤖 Batch operations
+- 🤖 Memory efficiency
+- 🤖 RAG augmentation
+- 🤖 Confidence scoring
+- 🤖 Category filtering
+- 🤖 Entry creation
+- 🤖 Knowledge evolution
+
+### OpenCode Command Tests (15 tests)
+- 🖥️ CLI commands (search, ask, stats, add, explore, correct)
+- 🖥️ Python API (search, ask, stats, add_entry)
+- 🖥️ Agent startup sequence
+- 🖥️ KB-first workflow
+- 🖥️ Task completion workflow
+- 🖥️ Meta commands
 
 ## Output
 

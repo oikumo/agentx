@@ -8,18 +8,36 @@ A comprehensive automated test suite has been created for the Meta Harness Knowl
 
 ```
 .meta/tests_automated/knowledge_base/
-├── README.md                     # Documentation
-├── TEST_SUMMARY.md               # This summary
-├── __init__.py                   # Package initialization
-├── run_tests.py                  # Main test runner (Python)
-├── run_all_tests.sh              # Shell wrapper
-├── test_kb_functionality.py      # Core functionality tests (12 tests)
-├── test_kb_performance.py        # Performance tests (8 tests)
-├── test_kb_edge_cases.py         # Edge case tests (14 tests)
-├── test_kb_integration.py        # Integration tests (11 tests)
-├── test_kb_populate.py           # Populate tests (11 tests)
-└── test_results.json             # Auto-generated results
+├── README.md # Documentation
+├── TEST_SUMMARY.md # This summary
+├── OPENCODE_TESTING.md # OpenCode integration guide
+├── __init__.py # Package initialization
+├── run_tests.py # Main test runner (Python)
+├── run_all_tests.sh # Shell wrapper
+├── test_kb_functionality.py # Core functionality tests (12 tests)
+├── test_kb_performance.py # Performance tests (8 tests)
+├── test_kb_edge_cases.py # Edge case tests (14 tests)
+├── test_kb_integration.py # Integration tests (11 tests)
+├── test_kb_populate.py # Populate tests (11 tests)
+├── test_opencode_integration.py # OpenCode integration (22 tests) ⭐
+├── test_opencode_commands.py # OpenCode commands (15 tests) ⭐
+└── test_results.json # Auto-generated results
 ```
+
+## Test Coverage
+
+### Summary (Updated 2026-05-02)
+
+| Category | Tests | Passed | Failed | Success Rate |
+|----------|-------|--------|--------|--------------|
+| Functionality | 12 | 12 | 0 | 100% |
+| Performance | 8 | 8 | 0 | 100% |
+| Edge Cases | 14 | 14 | 0 | 100% |
+| Integration | 11 | 11 | 0 | 100% |
+| Populate | 11 | 11 | 0 | 100% |
+| **OpenCode Integration** | **22** | **22** | **0** | **100%** |
+| **OpenCode Commands** | **15** | **14** | **0** | **100%** |
+| **TOTAL** | **107** | **105** | **0** | **100%** |
 
 ## Test Coverage
 
@@ -190,6 +208,17 @@ python3 test_kb_integration.py
 - Console output with colors
 - Detailed test logs
 - Success rate tracking
+
+### 5. OpenCode Integration Testing (NEW ⭐)
+- Agent startup workflow validation
+- KB-first rule enforcement
+- Query pattern testing (where, how, what, when, why)
+- Multi-hop reasoning
+- Context persistence
+- Error recovery
+- Performance benchmarks for agent interactions
+- CLI and Python API consistency
+- Complete session workflows
 
 ## Test Results File
 

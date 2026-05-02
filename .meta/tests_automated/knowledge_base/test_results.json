@@ -1,37 +1,219 @@
 {
-  "timestamp": "2026-05-02T10:53:44.024652",
-  "total": 5,
-  "passed": 5,
+  "timestamp": "2026-05-02T11:07:09.963149",
+  "total": 7,
+  "passed": 7,
   "failed": 0,
   "tests": [
     {
       "name": "test_kb_functionality",
       "success": true,
-      "duration": 0.079111,
+      "duration": 0.109792,
       "error": null
     },
     {
       "name": "test_kb_performance",
       "success": true,
-      "duration": 0.157707,
+      "duration": 0.169886,
       "error": null
     },
     {
       "name": "test_kb_edge_cases",
       "success": true,
-      "duration": 2.819758,
+      "duration": 3.572486,
       "error": null
     },
     {
       "name": "test_kb_integration",
       "success": true,
-      "duration": 0.498024,
+      "duration": 0.568466,
       "error": null
     },
     {
       "name": "test_kb_populate",
       "success": true,
-      "duration": 0.076942,
+      "duration": 0.083834,
+      "error": null
+    },
+    {
+      "name": "test_opencode_integration",
+      "success": [
+        [
+          {
+            "name": "Agent Startup Workflow",
+            "passed": true,
+            "warning": false,
+            "message": "Complete startup workflow",
+            "timestamp": "2026-05-02T11:07:14.513632"
+          },
+          {
+            "name": "KB-First Rule Enforcement",
+            "passed": true,
+            "warning": false,
+            "message": "KB-first queries work",
+            "timestamp": "2026-05-02T11:07:14.539871"
+          },
+          {
+            "name": "Agent Context Switching",
+            "passed": true,
+            "warning": false,
+            "message": "3/3 switches OK",
+            "timestamp": "2026-05-02T11:07:14.541590"
+          },
+          {
+            "name": "Agent Query Patterns",
+            "passed": true,
+            "warning": false,
+            "message": "5/5 patterns work",
+            "timestamp": "2026-05-02T11:07:14.543848"
+          },
+          {
+            "name": "Multi-Hop Reasoning",
+            "passed": true,
+            "warning": false,
+            "message": "Multi-hop capable",
+            "timestamp": "2026-05-02T11:07:14.592903"
+          },
+          {
+            "name": "Query Expansion",
+            "passed": true,
+            "warning": false,
+            "message": "2 variations generated",
+            "timestamp": "2026-05-02T11:07:14.593275"
+          },
+          {
+            "name": "Context Persistence",
+            "passed": true,
+            "warning": false,
+            "message": "Context persisted",
+            "timestamp": "2026-05-02T11:07:14.607826"
+          },
+          {
+            "name": "Concurrent Access",
+            "passed": true,
+            "warning": false,
+            "message": "4/4 concurrent ops",
+            "timestamp": "2026-05-02T11:07:14.619710"
+          },
+          {
+            "name": "Session State Management",
+            "passed": true,
+            "warning": false,
+            "message": "Session: 4/4 ops",
+            "timestamp": "2026-05-02T11:07:14.639792"
+          },
+          {
+            "name": "Agent Mistake Handling",
+            "passed": true,
+            "warning": false,
+            "message": "Handled 5/5 mistakes",
+            "timestamp": "2026-05-02T11:07:14.647470"
+          },
+          {
+            "name": "Invalid Input Handling",
+            "passed": true,
+            "warning": false,
+            "message": "Invalid inputs handled",
+            "timestamp": "2026-05-02T11:07:14.668900"
+          },
+          {
+            "name": "Error Recovery",
+            "passed": true,
+            "warning": false,
+            "message": "Recovered from 3/3 errors",
+            "timestamp": "2026-05-02T11:07:14.673263"
+          },
+          {
+            "name": "Query Latency",
+            "passed": true,
+            "warning": false,
+            "message": "Avg: 0.00s",
+            "timestamp": "2026-05-02T11:07:14.686383"
+          },
+          {
+            "name": "Batch Operations",
+            "passed": true,
+            "warning": false,
+            "message": "5ms/op",
+            "timestamp": "2026-05-02T11:07:14.731612"
+          },
+          {
+            "name": "Memory Efficiency",
+            "passed": true,
+            "warning": false,
+            "message": "+0.0MB",
+            "timestamp": "2026-05-02T11:07:14.887093"
+          },
+          {
+            "name": "RAG Augmentation",
+            "passed": true,
+            "warning": false,
+            "message": "RAG provides context",
+            "timestamp": "2026-05-02T11:07:14.902387"
+          },
+          {
+            "name": "Confidence Scoring",
+            "passed": true,
+            "warning": false,
+            "message": "Confidence scores present",
+            "timestamp": "2026-05-02T11:07:14.908183"
+          },
+          {
+            "name": "Category Filtering",
+            "passed": true,
+            "warning": false,
+            "message": "4/4 categories",
+            "timestamp": "2026-05-02T11:07:14.913511"
+          },
+          {
+            "name": "Agent Entry Creation",
+            "passed": true,
+            "warning": false,
+            "message": "Entry created",
+            "timestamp": "2026-05-02T11:07:14.924076"
+          },
+          {
+            "name": "Knowledge Evolution",
+            "passed": true,
+            "warning": false,
+            "message": "Evolution cycle works",
+            "timestamp": "2026-05-02T11:07:14.932330"
+          },
+          {
+            "name": "Complete Agent Session",
+            "passed": true,
+            "warning": false,
+            "message": "6/6 steps",
+            "timestamp": "2026-05-02T11:07:14.975544"
+          },
+          {
+            "name": "Error Recovery Workflow",
+            "passed": true,
+            "warning": false,
+            "message": "Recovered 5/5 ops",
+            "timestamp": "2026-05-02T11:07:14.988916"
+          }
+        ],
+        {
+          "passed": 22,
+          "failed": 0,
+          "warnings": 0,
+          "total": 22,
+          "success_rate": 100.0
+        }
+      ],
+      "duration": 0.487103,
+      "error": null
+    },
+    {
+      "name": "test_opencode_commands",
+      "success": {
+        "passed": 14,
+        "failed": 0,
+        "warnings": 1,
+        "total": 14,
+        "success_rate": 100.0
+      },
+      "duration": 0.906095,
       "error": null
     }
   ]

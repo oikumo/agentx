@@ -1,0 +1,166 @@
+{
+  "timestamp": "2026-05-02T11:06:32.666770",
+  "test_results": [
+    {
+      "name": "Agent Startup Workflow",
+      "passed": true,
+      "warning": false,
+      "message": "Complete startup workflow",
+      "timestamp": "2026-05-02T11:06:32.234272"
+    },
+    {
+      "name": "KB-First Rule Enforcement",
+      "passed": true,
+      "warning": false,
+      "message": "KB-first queries work",
+      "timestamp": "2026-05-02T11:06:32.257704"
+    },
+    {
+      "name": "Agent Context Switching",
+      "passed": true,
+      "warning": false,
+      "message": "3/3 switches OK",
+      "timestamp": "2026-05-02T11:06:32.259379"
+    },
+    {
+      "name": "Agent Query Patterns",
+      "passed": true,
+      "warning": false,
+      "message": "5/5 patterns work",
+      "timestamp": "2026-05-02T11:06:32.262022"
+    },
+    {
+      "name": "Multi-Hop Reasoning",
+      "passed": true,
+      "warning": false,
+      "message": "Multi-hop capable",
+      "timestamp": "2026-05-02T11:06:32.308421"
+    },
+    {
+      "name": "Query Expansion",
+      "passed": true,
+      "warning": false,
+      "message": "2 variations generated",
+      "timestamp": "2026-05-02T11:06:32.308785"
+    },
+    {
+      "name": "Context Persistence",
+      "passed": true,
+      "warning": false,
+      "message": "Context persisted",
+      "timestamp": "2026-05-02T11:06:32.326199"
+    },
+    {
+      "name": "Concurrent Access",
+      "passed": true,
+      "warning": false,
+      "message": "4/4 concurrent ops",
+      "timestamp": "2026-05-02T11:06:32.341572"
+    },
+    {
+      "name": "Session State Management",
+      "passed": true,
+      "warning": false,
+      "message": "Session: 4/4 ops",
+      "timestamp": "2026-05-02T11:06:32.361522"
+    },
+    {
+      "name": "Agent Mistake Handling",
+      "passed": true,
+      "warning": false,
+      "message": "Handled 5/5 mistakes",
+      "timestamp": "2026-05-02T11:06:32.370727"
+    },
+    {
+      "name": "Invalid Input Handling",
+      "passed": true,
+      "warning": false,
+      "message": "Invalid inputs handled",
+      "timestamp": "2026-05-02T11:06:32.391494"
+    },
+    {
+      "name": "Error Recovery",
+      "passed": true,
+      "warning": false,
+      "message": "Recovered from 3/3 errors",
+      "timestamp": "2026-05-02T11:06:32.396003"
+    },
+    {
+      "name": "Query Latency",
+      "passed": true,
+      "warning": false,
+      "message": "Avg: 0.01s",
+      "timestamp": "2026-05-02T11:06:32.412648"
+    },
+    {
+      "name": "Batch Operations",
+      "passed": true,
+      "warning": false,
+      "message": "5ms/op",
+      "timestamp": "2026-05-02T11:06:32.458067"
+    },
+    {
+      "name": "Memory Efficiency",
+      "passed": true,
+      "warning": false,
+      "message": "+0.0MB",
+      "timestamp": "2026-05-02T11:06:32.595180"
+    },
+    {
+      "name": "RAG Augmentation",
+      "passed": true,
+      "warning": false,
+      "message": "RAG provides context",
+      "timestamp": "2026-05-02T11:06:32.607165"
+    },
+    {
+      "name": "Confidence Scoring",
+      "passed": true,
+      "warning": false,
+      "message": "Confidence scores present",
+      "timestamp": "2026-05-02T11:06:32.612328"
+    },
+    {
+      "name": "Category Filtering",
+      "passed": true,
+      "warning": false,
+      "message": "4/4 categories",
+      "timestamp": "2026-05-02T11:06:32.614791"
+    },
+    {
+      "name": "Agent Entry Creation",
+      "passed": true,
+      "warning": false,
+      "message": "Entry created",
+      "timestamp": "2026-05-02T11:06:32.622508"
+    },
+    {
+      "name": "Knowledge Evolution",
+      "passed": true,
+      "warning": false,
+      "message": "Evolution cycle works",
+      "timestamp": "2026-05-02T11:06:32.625051"
+    },
+    {
+      "name": "Complete Agent Session",
+      "passed": true,
+      "warning": false,
+      "message": "6/6 steps",
+      "timestamp": "2026-05-02T11:06:32.652975"
+    },
+    {
+      "name": "Error Recovery Workflow",
+      "passed": true,
+      "warning": false,
+      "message": "Recovered 5/5 ops",
+      "timestamp": "2026-05-02T11:06:32.666564"
+    }
+  ],
+  "summary": {
+    "passed": 22,
+    "failed": 0,
+    "warnings": 0,
+    "total": 22,
+    "success_rate": 100.0
+  }
+}
