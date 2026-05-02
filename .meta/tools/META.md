@@ -1,4 +1,4 @@
-# Development Tools - Agent X
+# Tools
 
 > **Purpose**: Development tools and utilities  
 > **Target**: AI agents (opencode) and developers  

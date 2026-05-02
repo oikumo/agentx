@@ -35,7 +35,7 @@ Structured development system for AI-assisted development:
 
 ## Work Notebook (`WORK.md`)
 
-**What it is**: A simple reminder file that shows what the user is currently working on.
+**What it is**: A simple reminder file that shows what the user is currently working on and the next planned woek.
 
 **When to show**: At the start of EVERY session (first prompt only), the agent MUST:
 1. Read `WORK.md`
@@ -52,6 +52,9 @@ Structured development system for AI-assisted development:
 ```markdown
 ## Current Task
 **Status**: [Task description or "No active work"]
+## Planned Work
+1. [Next task]
+2. [Other next task]
 ```
 
 ---

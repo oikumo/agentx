@@ -52,7 +52,7 @@ Need to...
 5. REPORT: Summarize + document + cleanup
 ```
 
-**Work Notebook**: Agent updates [WORK.md](WORK.md) as a reminder of your current task
+**Work Notebook**: Agent updates [WORK.md](WORK.md) as a reminder of your current task and the next in planning
 
 **Detailed workflows**: [`.meta/project_development/WORKFLOWS.md`](.meta/project_development/WORKFLOWS.md)
 
