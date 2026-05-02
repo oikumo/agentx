@@ -1,16 +1,16 @@
-from agentx.services.ai.services import cloud_llm_provider
+from agentx.services.ai.providers import LLMProvider
 from agentx.views.chat_view.chat_loop import ChatLoop
 from agentx.views.chat_view.chat_view import ChatViewController
 
 
 class ChatController:
-    def __init__(self):
+    def __init__(self, provider: LLMProvider):
         self.view = ChatViewController()
+        self.provider = provider
         pass
 
     def show(self, query: str | None):
-        provider = cloud_llm_provider()
-        llm = provider.create_llm()
+        llm = self.provider.create_llm()
         chat_loop = ChatLoop(llm=llm)
 
         if not query:

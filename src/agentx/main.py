@@ -15,7 +15,7 @@ from agentx.controllers.main_controller.commands import (
     GoalCommand,
 )
 from agentx.controllers.main_controller.main_controller import MainController
-
+from agentx.services.ai.service import AIService
 
 load_dotenv()
 
@@ -25,8 +25,8 @@ if not os.getenv("OPENROUTER_API_KEY"):
     )
 
 
-def create_controller() -> MainController:
-    main_controller = MainController()
+def create_controller(ai_service: AIService) -> MainController:
+    main_controller = MainController(ai_service)
     main_controller.add_command(SumCommand("sum", main_controller))
     main_controller.add_command(QuitCommand("quit", main_controller))
     main_controller.add_command(ClearCommand("clear", main_controller))
@@ -48,8 +48,9 @@ def show():
 
 def main():
     show()
-    
-    main_controller = create_controller()
+
+    ai_service = AIService()
+    main_controller = create_controller(ai_service)
     main_controller.run()
 
 

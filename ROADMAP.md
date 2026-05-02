@@ -6,23 +6,6 @@
 
 ---
 
-## Current Priority
-
-**Status**: 🔄 In Progress
-
-**Focus**: Session objectives driven by Petri Net from user prompt
-
-**Documentation**: [.meta/doc/petri-nets-for-session-state.md](.meta/doc/petri-nets-for-session-state.md)
-
-**Progress**:
-- ✅ Knowledge Base queried (PAT-F18D, PAT-2802)
-- ✅ Found existing implementation: `AdaptivePetriNet`, `SessionStateManager`
-- ✅ Created comprehensive documentation explaining Petri Nets for AgentX
-- ✅ Document includes 5 practical examples with Nodes/Transitions/Edges format
-- ⏳ Next: Integration with MainController
-
----
-
 ## Upcoming Steps
 
 | Priority | Area | Task | Status |
@@ -44,42 +27,6 @@
 | 2026-05-01 | Documentation | Petri Nets for Session State | [.meta/doc/petri-nets-for-session-state.md](.meta/doc/petri-nets-for-session-state.md) |
 | 2026-04-19 | Documentation | Lazy Loading Optimization | [VALIDATION_REPORT.md](.meta/sandbox/VALIDATION_REPORT.md) |
 
----
 
-## Roadmap Evolution Rules
 
-### When to Update
-
-1. **Start of task** → Add to "Current Priority"
-2. **Complete task** → Move to "Completed" with reference
-3. **New direction** → Add to "Upcoming Steps"
-4. **KB query** → Always query KB before answering roadmap questions
-
-### Entry Format
-
-```markdown
-| Priority | Area | Task | Status |
-|----------|------|------|--------|
-| High/Med/Low | META HARNESS/AgentX | Brief description | ⏳ Pending / 🔄 In Progress / ✅ Complete |
-```
-
-### Quality Gates
-
-- [ ] KB queried before roadmap changes
-- [ ] Entry follows format
-- [ ] Reference provided for completed tasks
-- [ ] Git log checked for recent changes
-
----
-
-## References
-
-- [META_HARNESS.md](META_HNESS.md) - Master documentation
-- [WORK.md](WORK.md) - Current work reminder
-- [.meta/knowledge_base/](.meta/knowledge_base/) - Knowledge entries
-- [WORK.md](WORK.md) - Current work reminder
-- [.meta/knowledge_base/](.meta/knowledge_base/) - Knowledge entries
-
----
-
-**Version**: 1.1 | **Updated**: 2026-05-01 (Session State Documentation)
+**Version**: 1.1 | **Updated**: 2026-05-01

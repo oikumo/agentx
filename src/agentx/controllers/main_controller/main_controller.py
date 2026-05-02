@@ -1,17 +1,17 @@
 from agentx.controllers.chat_controller.chat_controller import ChatController
 from agentx.controllers.main_controller.commands_base import Command
 from agentx.controllers.main_controller.commands_parser import CommandParser
+from agentx.services.ai.service import AIService
 from agentx.views.main_view.main_view import MainView, IMainViewPartner
 from agentx.model.session.session_manager import SessionManager
-from agentx.model.session.session_petri_net import SessionPetriNet
-from agentx.model.session.llm_petri_net_generator import LLMPetriNetGenerator
 
 
 class MainController(IMainViewPartner):
-    def __init__(self):
+    def __init__(self, ai_service: AIService):
         self.commands: dict[str, Command] = {}
         self.parser = CommandParser()
         self.view = MainView(self)
+        self.ai_service = ai_service
 
         # Initialize session manager (always ensures a session exists)
         self.session_manager = SessionManager()
@@ -19,8 +19,8 @@ class MainController(IMainViewPartner):
         self.database = self.session_manager.get_database()
 
         # Initialize session state with isolated Petri Net module (session objectives)
-        self.session_state: SessionPetriNet = None
-        self.petri_net_generator = LLMPetriNetGenerator("agentx")
+        #self.session_state: SessionPetriNet = None
+        #self.petri_net_generator = LLMPetriNetGenerator(ai_service.openrouter_llm_provider(), "agentx")
 
         # Initialize session state from existing session or create new
         self._initialize_session_state()
@@ -31,57 +31,9 @@ class MainController(IMainViewPartner):
         # Session state will be created when first user query is received
         # This allows the LLM to generate the Petri Net from the actual prompt
         pass
-    
-    def handle_user_query(self, query: str):
-        """
-        Process user query and create/update session state with Petri Net.
 
-        This is the main entry point for integrating session objectives
-        driven by Petri Nets generated from user prompts.
-
-        The LLM dynamically creates the Petri Net structure based on the query.
-        The generated Petri Net is saved to a file with timestamp.
-
-        Args:
-            query: User's natural language query
-        """
-        try:
-            # Generate custom Petri Net from user prompt using LLM
-            # Note: LLMPetriNetGenerator still returns SessionStateManager for now
-            # The session_state can be either SessionStateManager or SessionPetriNet
-            generated_state = self.petri_net_generator.generate_from_prompt(query)
-
-            # Store the generated state (maintains backward compatibility)
-            self.session_state = generated_state
-
-            # Get initial state - works with both SessionStateManager and SessionPetriNet
-            state = self.session_state.get_state()
-
-            # Display initial state to user
-            self.view.print_response(f"📋 Objective: {state.objective}")
-            self.view.print_response(f"🔧 Workflow Type: LLM-generated")
-            self.view.print_response(f"🎯 Status: {state.context.get('objective_status', 'pending')}")
-
-            enabled = state.context.get('enabled_transitions', [])
-            if enabled:
-                self.view.print_response(f"✅ Available actions: {', '.join(enabled)}")
-
-            # Show LLM reasoning if available
-            reasoning = state.context.get('llm_reasoning', '')
-            if reasoning:
-                self.view.print_response(f"💡 Workflow design: {reasoning}")
-
-            # Save to file with timestamp
-            filepath = self.petri_net_generator.save_to_file(self.session_state)
-            self.view.print_response(f"💾 Saved Petri Net to: {filepath}")
-
-        except Exception as e:
-            # If Petri Net generation fails, continue with normal processing
-            self.view.print_response_error(f"Session state setup: {str(e)}")
-    
-    
     def showChat(self, query: str | None):
-        self.chat_controller = ChatController()
+        self.chat_controller = ChatController(self.ai_service.openrouter_llm_provider())
         self.chat_controller.show(query)
 
     def run(self):

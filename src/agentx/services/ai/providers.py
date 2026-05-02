@@ -56,7 +56,7 @@ class OpenAIProvider(LLMProvider):
 class OpenRouterProvider(LLMProvider):
     """Cloud LLM provider using OpenRouter with auto-routing."""
 
-    def __init__(self, model_name: str = "stepfun/step-3.5-flash:free"):
+    def __init__(self, model_name: str = "openrouter/auto"):
         self._model_name = model_name
 
     def create_llm(self) -> BaseChatModel:
