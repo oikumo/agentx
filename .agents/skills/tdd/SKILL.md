@@ -1,7 +1,8 @@
-To practice TDD in the true **Kent Beck style**, you have to shift your mindset: it’s not a testing technique—it’s a **design technique**. Beck’s philosophy is rooted in the mantra: *"Clean code that works."*
-
-Here is a deep dive into the TDD "Skill" for Python, optimized for `uv` and aligned with Beck’s specific patterns.
-
+---
+name: tdd
+description: >
+    To practice TDD in the true **Kent Beck style**, you have to shift your mindset: it’s not a testing technique—it’s a **design technique**. Beck’s philosophy is rooted in the mantra: *"Clean code that works."*
+    Here is a deep dive into the TDD "Skill" for Python, optimized for `uv` and aligned with Beck’s specific patterns.
 ---
 
 ## 1. The Core Philosophy: "The Goal is Courage"
