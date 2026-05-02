@@ -288,7 +288,7 @@ agentx uses the **Meta Harness** - a structured development system optimized for
 1. Read `AGENTS.md` first - it contains mandatory rules
 2. Review `META_HARNESS.md` for complete documentation
 3. Always work in safe spaces (`.meta/sandbox/`, `.meta/experiments/`)
-4. Follow TDD in `.meta/tests_sandbox/` or create unit tests in `tests/unit/`
+4. Follow TDD in `tests/unit/`
 5. Never modify production code directly
 6. Maintain 205+ passing unit tests
 

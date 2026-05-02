@@ -1,515 +1,87 @@
----
-name: tdd
-description: >
-  Start a small feature development following TDD rules as defined by Kent Beck.
-  Implements RED → GREEN → REFACTOR cycle with associated quality practices.
-version: 1.0.0
-author: agentx
----
+To practice TDD in the true **Kent Beck style**, you have to shift your mindset: it’s not a testing technique—it’s a **design technique**. Beck’s philosophy is rooted in the mantra: *"Clean code that works."*
 
-# TDD (Test-Driven Development)
-
-Implement features using Test-Driven Development methodology as defined by Kent Beck. This skill guides you through the RED → GREEN → REFACTOR cycle with strict quality gates.
-
-## Quick Start
-
-**Load**: `skill tdd`
-**Time**: 1-3 hours per feature
-**Outcome**: Working feature with comprehensive test coverage
-
-## Core Philosophy
-
-TDD is not just about testing — it's about **design**. As Kent Beck says:
-
-> "Test-Driven Development is about taking the information you learn from tests and using it to drive the design of your system."
-
-### The Three Rules of TDD
-
-1. **RED**: Write a failing test BEFORE any production code
-2. **GREEN**: Write the minimum code to make the test pass
-3. **REFACTOR**: Clean up while keeping all tests green
-
-### TDD Mantras
-
-- "Red/Green/Refactor" — The core cycle
-- "Fake it till you make it" — Start simple, evolve complexity
-- "Once and only once" — Eliminate duplication
-- "Tell, don't ask" — Object-oriented design principle
-
-## When to Use
-
-### ✅ Ideal For TDD
-
-- New feature development
-- Bug fixes (write test that reproduces bug first)
-- Learning unfamiliar codebases
-- Improving code quality
-- Building confidence in changes
-
-### ❌ Not Suitable For
-
-- UI/visual design work
-- Exploratory prototypes (use `.meta/experiments/` instead)
-- One-off scripts
-- Performance tuning (test after implementation)
-
-## Workflow (TDD Cycle)
-
-### Step 1: Load Skill
-
-```bash
-skill tdd
-```
-
-### Step 2: Query Knowledge Base (MANDATORY)
-
-Before starting, check if pattern exists:
-
-```bash
-meta kb ask "<feature> implementation patterns"
-```
-
-If KB is empty, populate it first:
-```bash
-meta kb populate
-```
-
-### Step 3: RED Phase — Write Failing Test
-
-**Location**: `.meta/tests_sandbox/<date>-<feature>/test_<feature>.py`
-
-Write the SMALLEST failing test:
-
-```python
-# test_feature.py
-def test_should_do_something():
-    """Test one specific behavior"""
-    # Arrange - set up preconditions
-    # Act - perform action  
-    # Result - assert expected outcome
-    assert actual == expected
-```
-
-**RED Phase Rules:**
-- Write ONE test at a time
-- Test must fail (RED)
-- Failure must be meaningful (not syntax error)
-- Test name describes the behavior
-- Use AAA pattern (Arrange-Act-Assert)
-
-**Example RED Test:**
-```python
-# test_calculator.py
-def test_add_two_numbers():
-    """Should add two positive numbers correctly"""
-    # Arrange
-    calc = Calculator()
-    
-    # Act
-    result = calc.add(2, 3)
-    
-    # Assert
-    assert result == 5
-```
-
-### Step 4: GREEN Phase — Implement Minimum Code
-
-**Location**: `.meta/sandbox/<feature>/`
-
-Write the MINIMUM code to pass the test:
-
-```python
-# calculator.py
-class Calculator:
-    def add(self, a, b):
-        return 5  # Fake it - just pass the test
-```
-
-**GREEN Phase Rules:**
-- Write code ONLY for current test
-- Don't anticipate future tests
-- "Fake it" if needed (return constants)
-- Run test immediately after changes
-- Stop when test passes (GREEN)
-
-**GREEN means:**
-- ✅ Test passes
-- ✅ No new failures
-- ✅ Code compiles/runs
-
-### Step 5: REFACTOR Phase — Clean Up
-
-With all tests GREEN, improve the code:
-
-```python
-# calculator.py
-class Calculator:
-    def add(self, a, b):
-        return a + b  # Real implementation
-```
-
-**REFACTOR Phase Rules:**
-- ALL tests must stay GREEN
-- Remove duplication (yours and mine)
-- Improve names
-- Extract methods/classes
-- Apply SOLID principles
-- One refactoring at a time
-
-**Refactoring Checklist:**
-- [ ] Remove code duplication
-- [ ] Improve variable/function names
-- [ ] Extract repeated patterns
-- [ ] Apply design patterns if appropriate
-- [ ] Check for null safety
-- [ ] Verify error handling
-
-### Step 6: Repeat Cycle
-
-```
-RED (new test) → GREEN (implement) → REFACTOR (clean)
-           ↓
-    Next test case
-           ↓
-    Repeat until feature complete
-```
-
-### Step 7: Document in Knowledge Base
-
-After completing feature, add to KB:
-
-```bash
-meta kb add "TDD session: <feature> - <key learnings>"
-```
-
-Query to verify:
-```bash
-meta kb ask "<feature> patterns"
-```
-
-## TDD Session Structure
-
-### Directory Layout
-
-```
-.meta/
-├── tests_sandbox/
-│   ├── META.md
-│   └── 2026-05-02-calculator/
-│       ├── test_calculator.py      # Test file
-│       └── session.log             # Session log (optional)
-├── sandbox/
-│   └── calculator/
-│       ├── calculator.py           # Implementation
-│       └── README                  # Feature info
-└── knowledge_base/
-    ├── META.md
-    └── entries/
-        └── <timestamp>-calculator.md  # KB entry
-```
-
-### Session Log Format (in KB)
-
-After session, record in KB:
-
-```
-Feature: Calculator - Basic arithmetic
-Date: 2026-05-02
-TDD Cycles: 5
-
-Test Cases (RED → GREEN → REFACTOR):
-
-Cycle 1: Add two positive numbers
-- RED: test_add_two_numbers() - FAIL ✓
-- GREEN: Return constant 5 - PASS ✓
-- REFACTOR: Implement real addition - PASS ✓
-
-Cycle 2: Add negative numbers
-- RED: test_add_negative_numbers() - FAIL ✓
-- GREEN: Handle negative values - PASS ✓
-- REFACTOR: No changes needed - PASS ✓
-
-Cycle 3: Add zero
-- RED: test_add_zero() - FAIL ✓
-- GREEN: Handle zero case - PASS ✓
-- REFACTOR: Simplify logic - PASS ✓
-
-Patterns Discovered:
-- Use AAA pattern consistently
-- Test edge cases early
-- Name tests descriptively
-
-Code Quality Metrics:
-- Test coverage: 100%
-- Duplication: 0%
-- Complexity: Low
-```
-
-## Quality Gates
-
-### RED Phase Quality
-
-| Criteria | Pass | Fail |
-|----------|------|------|
-| Test written first | ✓ | ✗ |
-| Test fails meaningfully | ✓ | ✗ |
-| Test describes behavior | ✓ | ✗ |
-| One assertion per test | ✓ | ✗ |
-
-### GREEN Phase Quality
-
-| Criteria | Pass | Fail |
-|----------|------|------|
-| Minimum code written | ✓ | ✗ |
-| No over-engineering | ✓ | ✗ |
-| Test passes | ✓ | ✗ |
-| No new failures | ✓ | ✗ |
-
-### REFACTOR Phase Quality
-
-| Criteria | Pass | Fail |
-|----------|------|------|
-| All tests still green | ✓ | ✗ |
-| Duplication removed | ✓ | ✗ |
-| Names improved | ✓ | ✗ |
-| Code simpler | ✓ | ✗ |
-
-## Kent Beck's TDD Principles
-
-### 1. The Four Rules of Simple Design
-
-1. **Runs all tests** — System must pass all tests
-2. **Reveals intent** — Code clearly expresses purpose
-3. **No duplication** — Once and only once (OAOO)
-4. **Fewest elements** — Minimal complexity
-
-### 2. TDD is Design
-
-> "TDD is not about testing. TDD is about design."
-
-- Tests drive the design
-- Design emerges from tests
-- Refactoring improves design
-
-### 3. Test-First Programming
-
-- Write test BEFORE code
-- Test defines the interface
-- Implementation follows test
-
-### 4. Economic Value of TDD
-
-- Catches bugs early (cheaper to fix)
-- Documents expected behavior
-- Enables confident refactoring
-- Reduces debugging time
-
-## Best Practices
-
-### Writing Good Tests
-
-✅ **DO:**
-- Use descriptive names: `test_should_add_two_positive_numbers()`
-- Follow AAA pattern (Arrange-Act-Assert)
-- Test one thing per test
-- Use meaningful variable names
-- Keep tests independent
-- Test edge cases
-
-❌ **DON'T:**
-- Test multiple behaviors in one test
-- Use vague names: `test1()`, `test_stuff()`
-- Create test dependencies
-- Skip the RED phase
-- Write tests after code
-
-### Managing the Cycle
-
-**Keep cycles short:**
-- RED: 1-5 minutes
-- GREEN: 1-10 minutes
-- REFACTOR: 1-5 minutes
-
-**If cycle takes longer:**
-- Break test into smaller pieces
-- Simplify the test case
-- Don't anticipate future complexity
-
-### Test Organization
-
-```python
-# Group related tests
-class TestCalculator:
-    """Tests for Calculator.add()"""
-    
-    def test_add_two_positive_numbers(self):
-        pass
-    
-    def test_add_positive_and_negative(self):
-        pass
-    
-    def test_add_zeros(self):
-        pass
-
-# Use fixtures for setup
-@pytest.fixture
-def calculator():
-    return Calculator()
-
-def test_add(calculator):
-    assert calculator.add(2, 2) == 4
-```
-
-## Common Patterns
-
-### Pattern 1: Triangulation
-
-When unsure of implementation:
-
-1. Write test for specific case → GREEN
-2. Write test for another case → RED
-3. Generalize implementation → GREEN
-4. Repeat
-
-```python
-# Test 1: Specific case
-def test_add_2_and_3():
-    assert calc.add(2, 3) == 5
-
-# Test 2: Another case (forces generalization)
-def test_add_1_and_1():
-    assert calc.add(1, 1) == 2
-```
-
-### Pattern 2: Fake It Till You Make It
-
-```python
-# Test: Should return sum of 2 and 3
-# GREEN 1: Return constant
-def add(a, b):
-    return 5
-
-# Test 2: Add 1 and 1 (expects 2)
-# GREEN 2: Still fake
-def add(a, b):
-    if a == 1 and b == 1:
-        return 2
-    return 5
-
-# Test 3: Force real implementation
-# GREEN 3: Real code
-def add(a, b):
-    return a + b
-```
-
-### Pattern 3: Transform-by-Expansion
-
-```python
-# Test: Return constant
-# Code: return 5
-
-# Test: Return different constant
-# Code: return 7
-
-# Test: Add two numbers
-# Code: return a + b  # Generalized
-```
-
-## Integration with META HARNESS
-
-### Knowledge Base Commands
-
-**Query before starting:**
-```bash
-meta kb ask "<feature> patterns"
-```
-
-**Add after completion:**
-```bash
-meta kb add "TDD: <feature> - <summary>"
-```
-
-**Verify entry:**
-```bash
-meta kb ask "<feature> implementation"
-```
-
-### With Other Skills
-
-- `python-static-analysis` — Run static analysis after GREEN
-- `meta-health-check` — Verify TDD process health
-- `meta-archive-experiments` — Archive completed TDD sessions
-
-### With Tools
-
-- `pytest` — Test runner
-- `unittest` — Built-in Python testing
-- `coverage` — Measure test coverage
-
-## Troubleshooting
-
-### Problem: Test won't fail (RED phase)
-
-**Causes:**
-- Test has bug
-- Implementation already exists
-- Test doesn't assert anything
-
-**Solution:**
-- Verify test assertions
-- Check if feature already implemented
-- Make test more specific
-
-### Problem: Can't make test pass (GREEN phase)
-
-**Causes:**
-- Test too complex
-- Missing dependencies
-- Unclear requirements
-
-**Solution:**
-- Simplify the test
-- Break into smaller tests
-- Clarify requirements
-
-### Problem: Refactoring breaks tests
-
-**Causes:**
-- Refactoring changed behavior
-- Tests too coupled to implementation
-
-**Solution:**
-- Revert changes
-- Refactor in smaller steps
-- Test behavior, not implementation
-
-## Resources
-
-### Books by Kent Beck
-
-- "Test-Driven Development: By Example" (2002)
-- "Extreme Programming Explained" (1999)
-- "Implementation Patterns" (2007)
-
-### Key Concepts
-
-- **Red/Green/Refactor** — The core TDD cycle
-- **Simple Design** — Four rules of simplicity
-- **Refactoring** — Improving design without changing behavior
-- **Emergent Design** — Design that emerges from TDD
-
-### Online Resources
-
-- Kent Beck's Twitter: @KentBeck
-- TDD Wikipedia: https://en.wikipedia.org/wiki/Test-driven_development
-- Python pytest: https://docs.pytest.org/
-
-## Version History
-
-- **1.0.0** (2026-05-02): Initial version with complete TDD workflow, Kent Beck principles, quality gates, and KB META HARNESS integration
+Here is a deep dive into the TDD "Skill" for Python, optimized for `uv` and aligned with Beck’s specific patterns.
 
 ---
 
-**Maintained by**: agentx  
-**Methodology**: Kent Beck TDD  
-**Target**: Small feature development with test-first approach
+## 1. The Core Philosophy: "The Goal is Courage"
+In Beck's view, the primary bottleneck in software is **fear**. Fear of breaking things, fear of complexity, and fear of change. TDD provides a safety net that gives you the *courage* to refactor aggressively.
+
+### The Two Rules
+1.  **Never** write a single line of production code unless you have a failing automated test.
+2.  **Eliminate duplication.** (Beck defines "clean code" as code that expresses all its ideas and contains no duplication).
+
+---
+
+## 2. Implementation Strategies: How to Move Fast
+Beck identifies three main ways to get to "Green." In a `uv` project, these keep your feedback loop under one second.
+
+
+
+### A. Fake It ('Til You Make It)
+If you aren't sure how to implement the logic, return a hardcoded constant to get the test to green. This proves the test and the interface work.
+
+*   **Test:** `assert add(1, 1) == 2`
+*   **Production Code:** `def add(a, b): return 2`
+*   **The Philosophy:** You shift the burden from "solving the problem" to "making the test pass." Once Green, you refactor the constant into a variable.
+
+### B. Triangulation
+When you are unsure of the correct abstraction, use **two or more** tests to force the generalization.
+*   Test 1: `add(1, 1) == 2` (Code returns `2`)
+*   Test 2: `add(1, 2) == 3` (Code is now forced to actually perform `a + b`)
+
+### C. Obvious Implementation
+If the solution is simple (like a basic getter or a trivial math operation), just write it. Don't waste time faking it if the "Green" path is immediate.
+
+---
+
+## 3. The "Dependency and Duplication" Loop
+Beck’s TDD is a dance between **Dependency** and **Duplication**. 
+*   **Dependency** is when a change here requires a change there.
+*   **Duplication** is a symptom of dependency.
+
+When you write a test like `assert calculate(5) == 10`, and then write code `def calculate(n): return 10`, there is **duplication** between the test and the code. You remove that duplication by changing the code to `return n * 2`.
+
+---
+
+## 4. High-Performance TDD with `uv`
+To maintain the "Beck Rhythm," your environment must be invisible. 
+
+### Instantaneous Test Runs
+Use `uv` to keep your environment hermetic and fast. Use the `--looponfail` equivalent or a watcher to trigger on save:
+
+```bash
+# Install a watcher
+uv add pytest-watch --dev
+
+# Start the 'heartbeat'
+uv run ptw
+```
+
+### Dependency Injection (The Beck Way)
+Beck often favors simple objects. If you need to mock, keep it minimal. Use `uv` to manage `pytest-mock` if needed, but strive for "Plain Old Python Objects" (POPOs) first.
+
+```python
+# test_logic.py
+def test_user_greeting():
+    # Instead of complex mocks, use a simple 'Fake' object or Protocol
+    class MockUser:
+        name = "Kent"
+    
+    assert greet(MockUser()) == "Hello, Kent"
+```
+
+---
+
+## 5. The "TDD Skill" Checklist
+When implementing a feature, run through these Beck-inspired steps:
+1.  **Pick a small story:** What is the smallest thing that could possibly work?
+2.  **Write the test:** Express the intent, not the implementation.
+3.  **Run with `uv run pytest`:** Confirm it fails (Red).
+4.  **Quick Green:** Use "Fake It" or "Obvious Implementation."
+5.  **Refactor:** Look at your code and your test. Is there duplication? Is the intent clear?
+6.  **Repeat:** Smallest possible steps.
+
+> "I'm not a great programmer; I'm just a good programmer with great habits." — Kent Beck
+
+How complex is the feature you're looking to implement with this TDD workflow?

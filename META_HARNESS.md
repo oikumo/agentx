@@ -33,9 +33,7 @@ Need to...
 ├─ Modify code? → .meta/sandbox/
 ├─ Test new idea? → .meta/experiments/
 ├─ Write unit tests? → tests/unit/ (isolated tests for src/agentx/)
-├─ Write TDD tests? → .meta/tests_sandbox/
 ├─ Test agent (automated)? → .meta/tests_automated/ or test_automated/
-├─ Use/create tools? → .meta/tools/
 └─ Check workflows? → .meta/project_development/WORKFLOWS.md (if exists)
 ```
 

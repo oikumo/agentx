@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Optional
+import os
 
 from agentx.controllers.main_controller.commands_base import Command, CommandResult
 from agentx.controllers.main_controller.main_controller import MainController
@@ -206,3 +207,54 @@ class GoalCommand(Command):
     def run(self, arguments: list[str]) -> Optional[CommandResult]:
         Console.log_error("Not implemented yet.")
         return None
+
+
+class LSCommandResult(CommandResult):
+    """Result of listing directory contents."""
+
+    def __init__(self, files: list[str], path: str):
+        self._files = sorted(files)  # Sort for consistent output
+        self._path = path
+
+    def apply(self):
+        if self._files:
+            Console.log_info(f"Directory: {self._path}")
+            for file in self._files:
+                Console.log_info(f"  {file}")
+        else:
+            Console.log_info(f"Directory {self._path} is empty")
+
+
+class LSCommand(Command):
+    """
+    Command to list files in working directory.
+
+    Usage: ls [path]
+    If no path is provided, lists current directory.
+    """
+
+    def __init__(self, key: str, controller: MainController):
+        super().__init__(key, description="List files in directory: ls [path]")
+        self.controller = controller
+
+    def run(self, arguments: list[str]) -> Optional[CommandResult]:
+        # Determine path to list
+        if arguments:
+            path = arguments[0]
+        else:
+            path = os.getcwd()
+
+        try:
+            # List directory contents
+            if os.path.exists(path) and os.path.isdir(path):
+                files = os.listdir(path)
+                return LSCommandResult(files, path)
+            else:
+                Console.log_error(f"Path does not exist or is not a directory: {path}")
+                return None
+        except PermissionError:
+            Console.log_error(f"Permission denied: {path}")
+            return None
+        except Exception as e:
+            Console.log_error(f"Error listing directory: {str(e)}")
+            return None
