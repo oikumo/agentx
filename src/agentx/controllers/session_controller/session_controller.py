@@ -5,7 +5,6 @@ from datetime import datetime
 from agentx.model.session.session import Session, SessionDatabase
 from agentx.common.security import SESSION_DEFAULT_BASE_DIRECTORY
 
-
 class SessionController:
 
     SESSION_DIRECTORIES_RAG = "rag"
@@ -15,12 +14,7 @@ class SessionController:
     _current_session_name: str = "current"  # Always use "current" as the active session name
 
     def __init__(self):
-        # Prevent re-initialization
-        if hasattr(self, '_initialized') and self._initialized:
-            return
-        self._initialized = True
         self._ensure_current_session_exists()
-
         self._ensure_folder_exists(self.SESSION_DIRECTORIES_RAG)
 
     def get_directory_rag(self):
