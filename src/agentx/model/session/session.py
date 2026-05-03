@@ -1,52 +1,48 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from agentx.model.session.session_db import SessionDatabase, TableHistory
 
 from agentx.common.security import SESSION_DEFAULT_NAME, SESSION_DEFAULT_BASE_DIRECTORY
 from agentx.common.utils import create_directory_with_timestamp, create_directory_without_timestamp, directory_exists
-from agentx.model.session.session_db import SessionDatabase
+from agentx.model.session.session_db import SessionDatabase, TableHistory
 
 
 class Session:
-    database: SessionDatabase
-    __directory: str | None
-    __session_name: str
+    session_name: str | None
+    directory: str | None
+    database: SessionDatabase | None = None
+
     __use_timestamp: bool
 
-    @property
-    def name(self) -> str:
-        return self.__session_name
-
-    @property
-    def directory(self) -> str | None:
-        return self.__directory
-
-    def __init__(self, name: str, use_timestamp: bool = True):
-        self.__directory = None
-        self.__session_name = SESSION_DEFAULT_NAME
-        self.__use_timestamp = use_timestamp
+    @classmethod
+    def create_session_name(cls, name: str) -> str:
         if not (name and name.strip()):
-            self.__session_name = SESSION_DEFAULT_NAME
+            return SESSION_DEFAULT_NAME
         elif " " in name:
-            self.__session_name = name.replace(" ", "_").lower()
+            return name.replace(" ", "_").lower()
         else:
-            self.__session_name = name
+            return name
 
-    def create(self):
-        self.__directory = None
-        if self.__use_timestamp:
-            new_directory = create_directory_with_timestamp(
-                self.__session_name, SESSION_DEFAULT_BASE_DIRECTORY
-            )
+    @classmethod
+    def create_session_directory(cls, session_name: str, use_timestamp: bool = False) -> str | None:
+        if use_timestamp:
+            return create_directory_with_timestamp(
+                session_name, SESSION_DEFAULT_BASE_DIRECTORY)
         else:
-            new_directory = create_directory_without_timestamp(
-                self.__session_name, SESSION_DEFAULT_BASE_DIRECTORY
-            )
-        if not new_directory:
+            return create_directory_without_timestamp(
+                session_name, SESSION_DEFAULT_BASE_DIRECTORY)
+
+    def __init__(self):
+        self.session_name = self.create_session_name(SESSION_DEFAULT_NAME)
+        self.create()
+
+    def create(self, time_stamp: bool = False) -> bool:
+        if not self.session_name:
             return False
-        self.__directory = new_directory
+
+        directory = self.create_session_directory(self.session_name, time_stamp)
+        if not directory:
+            return False
+
+        self.directory = directory
         self.database = SessionDatabase(self)
 
         return True
@@ -58,6 +54,7 @@ class Session:
         return self.database.select_history_entry()
 
     def is_created(self):
-        if not self.__directory:
+        if not self.directory:
             return False
-        return directory_exists(self.__directory)
+        return directory_exists(self.directory)
+

@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 from datetime import datetime
+
 from agentx.common.security import SESSION_DEFAULT_BASE_DIRECTORY
 from agentx.model.session.session import Session
 
@@ -8,33 +9,18 @@ SESSION_DIRECTORIES_RAG = "rag"
 SESSION_CURRENT_NAME = "current"
 
 class SessionController:
-    _current_session: Session = None
+    _current_session = Session | None
 
     def __init__(self):
-        self._ensure_current_session_exists()
-        self._ensure_folder_exists(SESSION_DIRECTORIES_RAG)
+        self._current_session = Session()
 
     def get_directory_rag(self):
         return f"{self._current_session.directory}/{SESSION_DIRECTORIES_RAG}"
 
-    def _ensure_current_session_exists(self) -> Session:
-        self._current_session = Session(SESSION_CURRENT_NAME, use_timestamp=False)
-        if not self._current_session.create():
-            raise Exception("Failed to create 'current' session")
+    def get_current_session(self) -> Session | None:
         return self._current_session
 
-    def _ensure_folder_exists(self, session_folder_path: str):
-        """Ensure the 'rag' folder always exists in the session directory."""
-        rag_path = Path(self._current_session.directory) / session_folder_path
-        rag_path.mkdir(exist_ok=True)
-
-    def get_current_session(self) -> Session:
-        """Get the current session. Creates one if it doesn't exist."""
-        if self._current_session is None:
-            self._ensure_current_session_exists()
-        return self._current_session
-
-    def _backup_current_session(self) -> str:
+    def _backup_current_session(self) -> str | None:
         if self._current_session is None or not self._current_session.is_created():
             return None
         
@@ -48,7 +34,6 @@ class SessionController:
         backup_dir = base_path / backup_name
         
         try:
-            # Rename current directory to backup (add timestamp)
             shutil.move(str(current_dir), str(backup_dir))
             return str(backup_dir)
         except Exception as e:
@@ -64,10 +49,8 @@ class SessionController:
                 print("Warning: Could not backup current session")
 
         self._current_session = None
-        self._database = None
-        
-        self._current_session = Session(SESSION_CURRENT_NAME, use_timestamp=False)
-        if not self._current_session.create():
+        self._current_session = Session()
+        if not self._current_session.create(time_stamp=True):
             raise Exception("Failed to create new session")
 
 
@@ -80,9 +63,7 @@ class SessionController:
         return self._current_session.select_history_entry()
 
     def get_session_name(self) -> str:
-        if self._current_session:
-            return self._current_session.name
-        return "none"
-    
-    def has_session(self) -> bool:
-        return self._current_session is not None and self._current_session.is_created()
+        if not self._current_session or not self._current_session.session_name :
+            return "none"
+        return self._current_session.session_name
+
