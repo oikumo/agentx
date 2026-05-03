@@ -4,7 +4,7 @@ from typing import List
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from agentx.services.rag.web_ingestion.helpers import load_docs_from_jsonl
+from agentx.model.rag.web_ingestion.helpers import load_docs_from_jsonl
 from agentx.views.common.console import Console
 
 

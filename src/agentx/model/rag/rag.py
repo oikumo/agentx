@@ -2,8 +2,8 @@ import asyncio
 from urllib.parse import urlparse
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.services.ai.service import AIService
-from agentx.services.rag.web_ingestion.web_extract import WebExtract
-from agentx.services.rag.web_ingestion.web_ingestion_app import WebIngestionApp
+from agentx.model.rag.web_ingestion.web_extract import WebExtract
+from agentx.model.rag.web_ingestion.web_ingestion_app import WebIngestionApp
 from agentx.views.common.console import Console
 
 

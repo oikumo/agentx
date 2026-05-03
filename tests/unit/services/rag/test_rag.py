@@ -1,6 +1,6 @@
 import unittest
 
-from agentx.services.rag.rag import Rag
+from agentx.model.rag import Rag
 
 
 class TestRag(unittest.TestCase):

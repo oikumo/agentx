@@ -5,7 +5,7 @@ import os
 from agentx.controllers.main_controller.commands_base import Command, CommandResult
 from agentx.controllers.main_controller.main_controller import MainController
 from agentx.common.utils import clear_console, safe_int
-from agentx.services.rag.rag import Rag
+from agentx.model.rag.rag import Rag
 from agentx.views.common.console import Console
 
 

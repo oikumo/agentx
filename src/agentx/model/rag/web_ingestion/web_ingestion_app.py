@@ -1,8 +1,8 @@
 from langchain_core.vectorstores import VectorStore
 
-from agentx.services.rag.web_ingestion.documents import process_documents, index_documents_async
-from agentx.services.rag.web_ingestion.helpers import save_docs, chunk_urls
-from agentx.services.rag.web_ingestion.web_extract import WebExtract
+from agentx.model.rag.web_ingestion.documents import process_documents, index_documents_async
+from agentx.model.rag.web_ingestion.helpers import save_docs, chunk_urls
+from agentx.model.rag.web_ingestion.web_extract import WebExtract
 from agentx.views.common.console import Colors, Console
 
 
