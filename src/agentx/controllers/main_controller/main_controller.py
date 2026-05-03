@@ -12,9 +12,12 @@ class MainController(IMainViewPartner):
         self.view = MainView(self)
         self.ai_service = ai_service
 
-        self.session_manager = SessionController()
-        self.session = self.session_manager.get_current_session()
-        self.database = self.session_manager.get_database()
+        self.session_controller = SessionController()
+        self.session = self.session_controller.get_current_session()
+        self.database = self.session_controller.get_database()
+
+    def get_session_manager(self):
+        return self.session_controller
 
     def showChat(self, query: str | None):
         self.chat_controller = ChatController(self.ai_service.openrouter_llm_provider())

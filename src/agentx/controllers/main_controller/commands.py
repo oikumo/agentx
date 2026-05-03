@@ -80,7 +80,7 @@ class RagWebIngestion(Command):
         site_url = arguments[0]
 
         rag = Rag(
-            self.controller.session_manager,
+            self.controller.session_controller,
             self.controller.ai_service
         )
         rag.web_ingestion(site_url)
@@ -163,8 +163,8 @@ class NewCommand(Command):
         session_name = " ".join(arguments).strip() if arguments else f"session_default"
 
         try:
-            session_manager = get_session_manager()
-            new_session = session_manager.create_new_session(session_name)
+            session_controller = self.controller.get_session_manager()
+            new_session = session_controller.create_new_session(session_name)
             return NewSessionResult(new_session.name, f"New session created: {new_session.name}")
 
         except Exception as e:

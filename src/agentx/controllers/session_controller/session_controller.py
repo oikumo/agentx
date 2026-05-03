@@ -10,16 +10,9 @@ class SessionController:
 
     SESSION_DIRECTORIES_RAG = "rag"
 
-    _instance: Optional['SessionController'] = None
     _current_session: Session = None
     _database: Optional[SessionDatabase] = None
     _current_session_name: str = "current"  # Always use "current" as the active session name
-
-    def __new__(cls) -> 'SessionController':
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
 
     def __init__(self):
         # Prevent re-initialization
