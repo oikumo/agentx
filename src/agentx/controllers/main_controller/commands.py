@@ -1,9 +1,14 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from agentx.controllers.main_controller.main_controller import MainController
+
 from typing import Optional
 import os
 
 from agentx.controllers.main_controller.commands_base import Command, CommandResult
-from agentx.controllers.main_controller.main_controller import MainController
+
 from agentx.common.utils import clear_console, safe_int
 from agentx.model.rag.rag import Rag
 from agentx.views.common.console import Console
@@ -79,11 +84,8 @@ class RagWebIngestion(Command):
 
         site_url = arguments[0]
 
-        rag = Rag(
-            self.controller.session_controller,
-            self.controller.ai_service
-        )
-        rag.web_ingestion(site_url)
+        rag = Rag()
+        rag.web_ingestion(site_url, self.controller.session_controller.get_directory_rag())
 
         return CommandResultLogInfo(["Success"])
 
@@ -170,64 +172,6 @@ class NewCommand(Command):
         except Exception as e:
             Console.log_error(f"Failed to create new session: {str(e)}")
             return None
-
-
-class PetriNetStatusCommand(Command):
-    """
-    Command to show current Petri Net session state.
-
-    Usage: status or petri-status
-    """
-
-    def __init__(self, key: str, controller: MainController):
-        super().__init__(key, description="Show current Petri Net session state: status")
-        self.controller = controller
-
-    def _get_status_display(self, status: str) -> str:
-        """Get formatted status string with icon and color."""
-        Console.log_error("Not implemented yet.")
-        return ""
-
-    def run(self, arguments: list[str]) -> Optional[CommandResult]:
-        Console.log_error("Not implemented yet.")
-        return None
-
-class PetriNetPrintCommand(Command):
-    """
-    Command to pretty print the Petri Net structure.
-
-    Usage: petri-print or pp
-    """
-
-    def __init__(self, key: str, controller: MainController):
-        super().__init__(key, description="Pretty print Petri Net: petri-print or pp")
-        self.controller = controller
-
-    def run(self, arguments: list[str]) -> Optional[CommandResult]:
-        Console.log_error("Not implemented yet.")
-        return None
-
-class GoalCommand(Command):
-    """
-    Command to create a new session objective Petri Net from a user prompt.
-    Each time this command is called, a new session objective Petri Net is created.
-
-    Usage: goal {prompt}
-    Example: goal Debug the login issue
-    """
-
-    def __init__(self, key: str, controller: MainController):
-        super().__init__(key, description="Create new session objective Petri Net: goal {prompt}")
-        self.controller = controller
-
-    def _get_status_display(self, status: str) -> str:
-        Console.log_error("Not implemented yet.")
-        return ""
-
-    def run(self, arguments: list[str]) -> Optional[CommandResult]:
-        Console.log_error("Not implemented yet.")
-        return None
-
 
 class LSCommandResult(CommandResult):
     """Result of listing directory contents."""

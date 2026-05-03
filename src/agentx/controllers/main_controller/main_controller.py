@@ -1,24 +1,45 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+from agentx.controllers.main_controller.commands import (
+    QuitCommand,
+    ClearCommand,
+    HelpCommand,
+    AIChat,
+    SumCommand, HistoryCommand,
+    NewCommand, LSCommand, RagWebIngestion,
+)
+
 from agentx.controllers.chat_controller.chat_controller import ChatController
 from agentx.controllers.main_controller.commands_base import Command
 from agentx.controllers.main_controller.commands_parser import CommandParser
 from agentx.controllers.session_controller.session_controller import SessionController
-from agentx.services.ai.service import AIService
 from agentx.views.main_view.main_view import MainView, IMainViewPartner
 
 class MainController(IMainViewPartner):
-    def __init__(self, ai_service: AIService):
+    def __init__(self):
         self.commands: dict[str, Command] = {}
         self.parser = CommandParser()
         self.view = MainView(self)
-        self.ai_service = ai_service
         self.session_controller = SessionController()
+        self.load_commands()
+
+    def load_commands(self):
+        self.add_command(SumCommand("sum", self))
+        self.add_command(QuitCommand("quit", self))
+        self.add_command(ClearCommand("clear", self))
+        self.add_command(HelpCommand("help", self))
+        self.add_command(HistoryCommand("history", self))
+        self.add_command(AIChat("chat", self))
+        self.add_command(NewCommand("new", self))
+        self.add_command(LSCommand("ls", self))
+        self.add_command(RagWebIngestion("ingest", self))
 
     def get_session_manager(self):
         return self.session_controller
 
     def showChat(self, query: str | None):
-        self.chat_controller = ChatController(self.ai_service.openrouter_llm_provider())
-        self.chat_controller.show(query)
+        chat_controller = ChatController()
+        chat_controller.show(query)
 
     def run(self):
         self.view.show()

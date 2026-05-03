@@ -1,13 +1,11 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Optional
 
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 from langchain_openrouter import ChatOpenRouter
 
-from agentx.services.ai.local.llama_cpp.llamacpp_config import LlamaCppConfig
-from agentx.services.ai.local.llama_cpp_factory import model_factory_llamacpp
+from agentx.model.ai.local.llama_cpp.llamacpp_config import LlamaCppConfig
+from agentx.model.ai.local.llama_cpp_factory import model_factory_llamacpp
 
 
 class LLMProvider(ABC):

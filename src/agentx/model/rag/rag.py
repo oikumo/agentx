@@ -1,18 +1,13 @@
 import asyncio
 from urllib.parse import urlparse
-from agentx.controllers.session_controller.session_controller import SessionController
-from agentx.services.ai.service import AIService
+from agentx.model.ai.service import AIService
 from agentx.model.rag.web_ingestion.web_extract import WebExtract
 from agentx.model.rag.web_ingestion.web_ingestion_app import WebIngestionApp
 from agentx.views.common.console import Console
 
 
 class Rag:
-    def __init__(self, session_manager: SessionController, ai_service: AIService):
-        self.session_manager = session_manager
-        self.ai_service = ai_service
-
-    def web_ingestion(self, site_url):
+    def web_ingestion(self, site_url, work_directory: str):
         def is_valid_url(url):
             try:
                 result = urlparse(url)
@@ -36,7 +31,7 @@ class Rag:
         """
         Console.log_info(prompt)
 
-        rag_directory = self.session_manager.get_directory_rag()
+        rag_directory = work_directory
 
         result_json_file_path = f"{rag_directory}/documents.jsonl"
         chroma_dir = f"{rag_directory}/chroma_db"
@@ -44,8 +39,8 @@ class Rag:
         Console.log_info(f"Results folder: {result_json_file_path}")
         Console.log_info(f"Chroma folder: {chroma_dir}")
 
-        vectorstore = self.ai_service.rag_chromadb(chroma_dir)
-
+        ai_service = AIService()
+        vectorstore = ai_service.rag_chromadb(chroma_dir)
 
         web_extractor = WebExtract(1, 2, 100)
         app = WebIngestionApp(vectorstore, web_extractor)

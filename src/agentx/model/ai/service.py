@@ -1,5 +1,5 @@
-from agentx.services.ai.providers import OpenRouterProvider, LlamaCppProvider, OpenAIProvider
-from agentx.services.ai.vectorstores.vectorstore_chroma import vectorstore_chroma_ollama
+from agentx.model.ai.providers import OpenRouterProvider, LlamaCppProvider, OpenAIProvider
+from agentx.model.ai.vectorstores.vectorstore_chroma import vectorstore_chroma_ollama
 
 
 class AIService:

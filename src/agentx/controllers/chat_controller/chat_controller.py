@@ -1,13 +1,12 @@
-from agentx.services.ai.providers import LLMProvider
+from agentx.model.ai.service import AIService
 from agentx.views.chat_view.chat_loop import ChatLoop
 from agentx.views.chat_view.chat_view import ChatViewController
 
 
 class ChatController:
-    def __init__(self, provider: LLMProvider):
+    def __init__(self):
         self.view = ChatViewController()
-        self.provider = provider
-        pass
+        self.provider = AIService().openrouter_llm_provider()
 
     def show(self, query: str | None):
         llm = self.provider.create_llm()
