@@ -150,13 +150,6 @@ class NewSessionResult(CommandResult):
 
 
 class NewCommand(Command):
-    """
-    Command to create a new session.
-
-    Usage: new [session_name]
-    If no name is provided, a default session name will be used.
-    """
-
     def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Create a new session: new [name]")
         self.controller = controller
@@ -166,7 +159,7 @@ class NewCommand(Command):
 
         try:
             session_controller = self.controller.get_session_manager()
-            new_session = session_controller.create_new_session(session_name)
+            new_session = session_controller.create_new_session()
             return NewSessionResult(new_session.name, f"New session created: {new_session.name}")
 
         except Exception as e:
