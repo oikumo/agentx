@@ -1,9 +1,9 @@
 from agentx.controllers.chat_controller.chat_controller import ChatController
 from agentx.controllers.main_controller.commands_base import Command
 from agentx.controllers.main_controller.commands_parser import CommandParser
+from agentx.controllers.session_controller.session_manager import SessionController
 from agentx.services.ai.service import AIService
 from agentx.views.main_view.main_view import MainView, IMainViewPartner
-from agentx.model.session.session_manager import SessionManager
 
 
 class MainController(IMainViewPartner):
@@ -14,7 +14,7 @@ class MainController(IMainViewPartner):
         self.ai_service = ai_service
 
         # Initialize session manager (always ensures a session exists)
-        self.session_manager = SessionManager()
+        self.session_manager = SessionController()
         self.session = self.session_manager.get_current_session()
         self.database = self.session_manager.get_database()
 

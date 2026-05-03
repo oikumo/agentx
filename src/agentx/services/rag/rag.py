@@ -1,9 +1,6 @@
 import asyncio
 from urllib.parse import urlparse
-
-from langchain_core.prompts import ChatPromptTemplate
-
-from agentx.model.session.session_manager import SessionManager
+from agentx.controllers.session_controller.session_manager import SessionController
 from agentx.services.ai.service import AIService
 from agentx.services.rag.web_ingestion.web_extract import WebExtract
 from agentx.services.rag.web_ingestion.web_ingestion_app import WebIngestionApp
@@ -11,7 +8,7 @@ from agentx.views.common.console import Console
 
 
 class Rag:
-    def __init__(self, session_manager: SessionManager, ai_service: AIService):
+    def __init__(self, session_manager: SessionController, ai_service: AIService):
         self.session_manager = session_manager
         self.ai_service = ai_service
 

@@ -1,6 +1,4 @@
-from enum import Enum
 from pathlib import Path
-from pydoc import resolve
 from typing import Optional
 import shutil
 from datetime import datetime
@@ -8,24 +6,16 @@ from agentx.model.session.session import Session, SessionDatabase
 from agentx.common.security import SESSION_DEFAULT_BASE_DIRECTORY
 
 
-class SessionManager:
-    """
-    Manages sessions ensuring a current session always exists.
+class SessionController:
 
-    - The "current" session is ALWAYS maintained - if it doesn't exist, one is created
-    - Users can create a new session with the 'new' command
-    - When creating a new session, the old "current" session is backed up with a timestamp
-    - Only one current session exists at a time
-    - Sessions are NEVER deleted - they are preserved on disk for data safety
-    """
     SESSION_DIRECTORIES_RAG = "rag"
 
-    _instance: Optional['SessionManager'] = None
+    _instance: Optional['SessionController'] = None
     _current_session: Session = None
     _database: Optional[SessionDatabase] = None
     _current_session_name: str = "current"  # Always use "current" as the active session name
 
-    def __new__(cls) -> 'SessionManager':
+    def __new__(cls) -> 'SessionController':
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
@@ -147,8 +137,8 @@ class SessionManager:
 
 
 # Global instance accessor
-def get_session_manager() -> SessionManager:
+def get_session_manager() -> SessionController:
     """Get the global session manager instance."""
-    if SessionManager._instance is None:
-        SessionManager()  # Create instance if it doesn't exist
-    return SessionManager._instance
+    if SessionController._instance is None:
+        SessionController()  # Create instance if it doesn't exist
+    return SessionController._instance

@@ -7,7 +7,6 @@ from agentx.controllers.main_controller.main_controller import MainController
 from agentx.common.utils import clear_console, safe_int
 from agentx.services.rag.rag import Rag
 from agentx.views.common.console import Console
-from agentx.model.session.session_manager import get_session_manager
 
 
 class CommandResultLogInfo(CommandResult):
