@@ -5,7 +5,7 @@ from typing import Any
 
 from agentx.common.security import SESSION_DEFAULT_NAME, SESSION_DEFAULT_BASE_DIRECTORY
 from agentx.common.utils import create_directory_with_timestamp, create_directory_without_timestamp, directory_exists, dangerous_delete_directory
-from agentx.model.db.session_db import TableHistory, TableUser
+from agentx.model.session.session_db import TableUser, TableHistory
 
 
 class Session:
