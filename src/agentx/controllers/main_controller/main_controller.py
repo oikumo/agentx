@@ -5,7 +5,6 @@ from agentx.controllers.session_controller.session_controller import SessionCont
 from agentx.services.ai.service import AIService
 from agentx.views.main_view.main_view import MainView, IMainViewPartner
 
-
 class MainController(IMainViewPartner):
     def __init__(self, ai_service: AIService):
         self.commands: dict[str, Command] = {}
@@ -16,14 +15,6 @@ class MainController(IMainViewPartner):
         self.session_manager = SessionController()
         self.session = self.session_manager.get_current_session()
         self.database = self.session_manager.get_database()
-        self._initialize_session_state()
-    
-    
-    def _initialize_session_state(self):
-        """Initialize or restore session state from user prompt."""
-        # Session state will be created when first user query is received
-        # This allows the LLM to generate the Petri Net from the actual prompt
-        pass
 
     def showChat(self, query: str | None):
         self.chat_controller = ChatController(self.ai_service.openrouter_llm_provider())
