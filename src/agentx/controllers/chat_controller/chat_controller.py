@@ -6,10 +6,9 @@ from agentx.views.chat_view.chat_view import ChatViewController
 class ChatController:
     def __init__(self):
         self.view = ChatViewController()
-        self.provider = AIService().openrouter_llm_provider()
 
     def show(self, query: str | None):
-        llm = self.provider.create_llm()
+        llm = AIService().openrouter_llm_provider().create_llm()
         chat_loop = ChatLoop(llm=llm)
 
         if not query:
