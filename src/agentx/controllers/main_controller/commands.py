@@ -139,8 +139,6 @@ class AIChat(Command):
 
 
 class NewSessionResult(CommandResult):
-    """Result of creating a new session."""
-    
     def __init__(self, session_name: str, message: str):
         self.session_name = session_name
         self.message = message
