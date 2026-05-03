@@ -1,7 +1,7 @@
 from agentx.controllers.chat_controller.chat_controller import ChatController
 from agentx.controllers.main_controller.commands_base import Command
 from agentx.controllers.main_controller.commands_parser import CommandParser
-from agentx.controllers.session_controller.session_manager import SessionController
+from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.services.ai.service import AIService
 from agentx.views.main_view.main_view import MainView, IMainViewPartner
 
