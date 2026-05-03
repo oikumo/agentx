@@ -13,16 +13,9 @@ class MainController(IMainViewPartner):
         self.view = MainView(self)
         self.ai_service = ai_service
 
-        # Initialize session manager (always ensures a session exists)
         self.session_manager = SessionController()
         self.session = self.session_manager.get_current_session()
         self.database = self.session_manager.get_database()
-
-        # Initialize session state with isolated Petri Net module (session objectives)
-        #self.session_state: SessionPetriNet = None
-        #self.petri_net_generator = LLMPetriNetGenerator(ai_service.openrouter_llm_provider(), "agentx")
-
-        # Initialize session state from existing session or create new
         self._initialize_session_state()
     
     
