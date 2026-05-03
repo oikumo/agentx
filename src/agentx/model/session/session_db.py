@@ -1,10 +1,13 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from agentx.model.session.session import Session
+
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-
-from agentx.model.session.session import Session
-
 
 @dataclass
 class HistoryEntry:

@@ -1,17 +1,14 @@
 from pathlib import Path
-from typing import Optional
 import shutil
 from datetime import datetime
 from agentx.common.security import SESSION_DEFAULT_BASE_DIRECTORY
 from agentx.model.session.session import Session
-from agentx.model.session.session_db import SessionDatabase
 
 SESSION_DIRECTORIES_RAG = "rag"
 SESSION_CURRENT_NAME = "current"
 
 class SessionController:
     _current_session: Session = None
-    _database: Optional[SessionDatabase] = None
 
     def __init__(self):
         self._ensure_current_session_exists()
@@ -24,7 +21,6 @@ class SessionController:
         self._current_session = Session(SESSION_CURRENT_NAME, use_timestamp=False)
         if not self._current_session.create():
             raise Exception("Failed to create 'current' session")
-        self._database = SessionDatabase(self._current_session)
         return self._current_session
 
     def _ensure_folder_exists(self, session_folder_path: str):
@@ -74,13 +70,15 @@ class SessionController:
         if not self._current_session.create():
             raise Exception("Failed to create new session")
 
-        self._database = SessionDatabase(self._current_session)
-        
+
         return self._current_session
-    
-    def get_database(self) -> Optional[SessionDatabase]:
-        return self._database
-    
+
+    def insert_history_entry(self, entry: str):
+        self._current_session.insert_history_entry(entry)
+
+    def select_history_entry(self):
+        return self._current_session.select_history_entry()
+
     def get_session_name(self) -> str:
         if self._current_session:
             return self._current_session.name

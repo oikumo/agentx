@@ -11,10 +11,7 @@ class MainController(IMainViewPartner):
         self.parser = CommandParser()
         self.view = MainView(self)
         self.ai_service = ai_service
-
         self.session_controller = SessionController()
-        self.session = self.session_controller.get_current_session()
-        self.database = self.session_controller.get_database()
 
     def get_session_manager(self):
         return self.session_controller
@@ -41,7 +38,7 @@ class MainController(IMainViewPartner):
     def commands_history(self) -> list[str]:
         history: list[str] = []
 
-        entries = self.database.select_history_entry()
+        entries = self.session_controller.select_history_entry()
         if entries:
             for entry in entries:
                 history.append(entry.command)
@@ -64,7 +61,7 @@ class MainController(IMainViewPartner):
             self.view.print_response_error(f"Unknown command: {command_data.key}")
             return
 
-        self.database.insert_history_entry(command_data.key)
+        self.session_controller.insert_history_entry(command_data.key)
 
         try:
             result = command.run(command_data.arguments)
