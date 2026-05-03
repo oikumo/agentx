@@ -2,8 +2,9 @@ from pathlib import Path
 from typing import Optional
 import shutil
 from datetime import datetime
-from agentx.model.session.session import Session, SessionDatabase
 from agentx.common.security import SESSION_DEFAULT_BASE_DIRECTORY
+from agentx.model.session.session import Session
+from agentx.model.session.session_db import SessionDatabase
 
 SESSION_DIRECTORIES_RAG = "rag"
 SESSION_CURRENT_NAME = "current"
