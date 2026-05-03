@@ -6,7 +6,7 @@ from agentx.controllers.main_controller.commands import (
     HelpCommand,
     AIChat,
     SumCommand, HistoryCommand,
-    NewCommand, LSCommand, RagWebIngestion,
+    NewSessionCommand, LSCommand, RagWebIngestion,
 )
 
 from agentx.controllers.chat_controller.chat_controller import ChatController
@@ -30,7 +30,7 @@ class MainController(IMainViewPartner):
         self.add_command(HelpCommand("help", self))
         self.add_command(HistoryCommand("history", self))
         self.add_command(AIChat("chat", self))
-        self.add_command(NewCommand("new", self))
+        self.add_command(NewSessionCommand("new", self))
         self.add_command(LSCommand("ls", self))
         self.add_command(RagWebIngestion("ingest", self))
 

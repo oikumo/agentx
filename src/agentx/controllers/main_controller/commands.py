@@ -147,7 +147,7 @@ class NewSessionResult(CommandResult):
         Console.log_info(self.message)
 
 
-class NewCommand(Command):
+class NewSessionCommand(Command):
     def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Create a new session: new [name]")
         self.controller = controller
