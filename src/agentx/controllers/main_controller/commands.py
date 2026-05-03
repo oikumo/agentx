@@ -167,8 +167,6 @@ class NewCommand(Command):
             return None
 
 class LSCommandResult(CommandResult):
-    """Result of listing directory contents."""
-
     def __init__(self, files: list[str], path: str):
         self._files = sorted(files)  # Sort for consistent output
         self._path = path
@@ -183,13 +181,6 @@ class LSCommandResult(CommandResult):
 
 
 class LSCommand(Command):
-    """
-    Command to list files in working directory.
-
-    Usage: ls [path]
-    If no path is provided, lists current directory.
-    """
-
     def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="List files in directory: ls [path]")
         self.controller = controller
@@ -202,7 +193,6 @@ class LSCommand(Command):
             path = os.getcwd()
 
         try:
-            # List directory contents
             if os.path.exists(path) and os.path.isdir(path):
                 files = os.listdir(path)
                 return LSCommandResult(files, path)
