@@ -15,8 +15,8 @@ class RagView:
         self.console = console
 
     def show(self):
-        self.console.info("RAG").flush()
-        time.sleep(10)
+        self.console.capture_input("(agentx/rag) ")
+        time.sleep(3)
         self.partner.close()
 
     def print_message(self, message: str):

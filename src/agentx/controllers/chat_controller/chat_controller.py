@@ -36,10 +36,10 @@ class ChatController(ChatViewPartner):
             full_response: list[str] = []
 
             for chunk_content in self.get_streaming_response(self.llm, self.history):
-                print(chunk_content, end="", flush=True)
+                self.view.show_partial_text(chunk_content)
                 full_response.append(chunk_content)
 
-            print()
+            self.view.show_partial_text("\n")
             self.history.append(AIMessage(content="".join(full_response)))
 
             return True

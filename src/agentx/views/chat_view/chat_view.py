@@ -16,10 +16,15 @@ class ChatView:
         self.console = console
 
     def show(self):
+        self.show_initial_message()
+
         while True:
-            user_input = input("> ")
-            if not self.partner.process_user_message(user_input):
-                return
+            user_input = self.console.capture_input("(agentx/chat) ")
+            if not user_input: return
+            if not self.partner.process_user_message(user_input): return
+
+    def show_partial_text(self, message: str):
+        self.console.print_now(message)
 
     def show_initial_message(self):
         self.console.info(

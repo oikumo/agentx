@@ -15,6 +15,9 @@ class UIConsoleColors:
 
 class UIConsole(UIConsoleBase):
 
+    def print_now(self, message: str) -> None:
+        print(message, end="", flush=True)
+
     def capture_input(self, mode_text: str) -> str | None:
         try:
             user_input = input(mode_text).strip()

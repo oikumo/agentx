@@ -20,6 +20,9 @@ class UIConsoleBase(ABC):
     lines: list[UIMessage]
 
     @abstractmethod
+    def print_now(self, message: str) -> None: ...
+
+    @abstractmethod
     def print_line(self, line: UIMessage) -> None : ...
 
     @abstractmethod

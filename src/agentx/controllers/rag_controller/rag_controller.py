@@ -9,8 +9,6 @@ class RagController(RagViewPartner):
     def show(self):
         self.view.show()
 
-
-
     def close(self) -> None:
         self.view.print_message("close")
 
@@ -19,7 +17,5 @@ class RagController(RagViewPartner):
 
         rag = Rag()
         rag.web_ingestion(site_url, self.controller.session_controller.get_directory_rag())
-
-        return CommandResultLogInfo(["Success"])
         """
 
