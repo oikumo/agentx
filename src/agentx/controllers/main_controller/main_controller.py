@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import copy
 from typing import TYPE_CHECKING
 from agentx.controllers.main_controller.commands import (
     QuitCommand,
@@ -48,10 +50,7 @@ class MainController(IMainViewPartner):
             self.view.capture_input()
 
     def get_commands(self) -> list[Command]:
-        return list(self.commands.values())
-
-    def find_command(self, key) -> Command | None:
-        return self.commands.get(key)
+        return copy.deepcopy(list(self.commands.values()))
 
     def add_command(self, command: Command):
         self.commands[command.key] = command
@@ -77,7 +76,7 @@ class MainController(IMainViewPartner):
         if not command_data:
             return
 
-        command = self.find_command(command_data.key)
+        command = self.commands[command_data.key]
         if not command:
             self.view.print_response_error(f"Unknown command: {command_data.key}")
             return
