@@ -1,11 +1,12 @@
 from agentx.model.ai.service import AIService
 from agentx.views.chat_view.chat_loop import ChatLoop
 from agentx.views.chat_view.chat_view import ChatViewController
+from agentx.views.ui.ui_console import UIConsole
 
 
 class ChatController:
     def __init__(self):
-        self.view = ChatViewController()
+        self.view = ChatViewController(UIConsole())
 
     def show(self, query: str | None):
         llm = AIService().openrouter_llm_provider().create_llm()

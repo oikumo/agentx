@@ -1,17 +1,17 @@
-from agentx.views.common.console import Console
+from agentx.views.ui.ui import UIConsoleBase
 
 
 class ChatViewController:
-    def __init__(self):
-        pass
+    def __init__(self, console: UIConsoleBase):
+        self.console = console
 
     def showInitialMessage(self):
-        Console.log_info(
-            "Starting interactive chat (type 'quit' or 'exit' to end):"
-        )
+        self.console.info(
+            "starting interactive chat (type 'quit' or 'exit' to end):"
+        ).flush()
 
     def showMessage(self, message):
-        Console.log_info(message)
+        self.console.info(message)
 
     def showMessageChatError(self):
-        Console.log_error("Chat error")
+        self.console.error("chat error")

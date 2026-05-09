@@ -1,38 +1,49 @@
-from agentx.views.common.console import Console
+from agentx.views.ui.ui import UIConsoleBase
+
 
 class IMainViewPartner:
     def run_command(self, user_input: str):
         pass
     def error(self):
         pass
-
+    def print(self):
+        pass
 
 class MainView:
-    def __init__(self, controller: IMainViewPartner):
+    def __init__(self, controller: IMainViewPartner, console: UIConsoleBase):
         self.controller = controller
+        self.console = console
 
     def show(self):
-        Console.log_success("Agent-X")
-        Console.log_info("Type 'help' for commands, Ctrl+C to exit")
+        self.console.success("Agent-X")
+        self.console.info("Type 'help' for commands, Ctrl+C to exit").flush()
+
+    def print_message(self, message: str):
+        self.console.info(message).flush()
+
+    def print_warring_message(self, message: str):
+        self.console.waning(message).flush()
+
+    def print_error_message(self, message: str):
+        self.console.error(message).flush()
 
     def print_response(self, response: str):
-        Console.log_info(response)
+        self.console.info(response).flush()
 
     def print_response_error(self, response: str):
-        Console.log_error(response)
+        self.console.error(response).flush()
 
-    def capture_input(self):
+    def capture_input(self) -> None:
         try:
             user_input = input("(agent-x) > ").strip()
             if not user_input:
-                return None
+                return
 
             self.controller.run_command(user_input)
 
         except KeyboardInterrupt:
-            Console.log_info("\nReceived interrupt, exiting...")
-            self.controller.error()
+            self.console.error("received interrupt, exiting...").flush()
         except EOFError:
-            Console.log_info("\nEOF received, exiting...")
+            self.console.info("EOF received, exiting...").flush()
             self.controller.error()
 

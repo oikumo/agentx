@@ -7,28 +7,9 @@ if TYPE_CHECKING:
 from typing import Optional
 import os
 
-from agentx.controllers.main_controller.commands_base import Command, CommandResult
+from agentx.controllers.main_controller.commands_base import Command
 
 from agentx.common.utils import clear_console, safe_int
-from agentx.model.rag.rag import Rag
-from agentx.views.common.console import Console
-
-
-class CommandResultLogInfo(CommandResult):
-    def __init__(self, messages: list[str]):
-        self._messages = messages
-
-    def apply(self):
-        for message in self._messages:
-            Console.log_info(message)
-
-
-class CommandResultPrint(CommandResult):
-    def __init__(self, message: str):
-        self._message = message
-
-    def apply(self):
-        Console.log_info(self._message)
 
 
 class QuitCommand(Command):
@@ -37,7 +18,7 @@ class QuitCommand(Command):
         self.controller = controller
 
     def run(self, arguments: list[str]):
-        Console.log_info("QUIT COMMAND")
+        self.controller.print_message("QUIT COMMAND")
         self.controller.close()
 
 
@@ -55,10 +36,8 @@ class HistoryCommand(Command):
         self.controller = controller
 
     def run(self, arguments: list[str]):
-        commands: list[str] = []
         for command in self.controller.commands_history()[:-1]:
-            commands.append(f"{command}")
-        return CommandResultLogInfo(commands)
+            self.controller.print_message(f"    {command}")
 
 class HelpCommand(Command):
     def __init__(self, key: str, controller: MainController):
@@ -66,28 +45,21 @@ class HelpCommand(Command):
         self.controller = controller
 
     def run(self, arguments: list[str]):
-        commands: list[str] = []
         for command in self.controller.get_commands():
-            commands.append(f"{command.key} - {command.description}")
-        return CommandResultLogInfo(commands)
+            self.controller.print_message(f"{command.key} - {command.description}")
 
 
-class RagWebIngestionCommand(Command):
+class RagShowCommand(Command):
     def __init__(self, key: str, controller: MainController):
-        super().__init__(key, description="RAG web ingestion of URL: <url>")
+        super().__init__(key, description="Open RAG")
         self.controller = controller
 
     def run(self, arguments: list[str]):
-        if len(arguments) != 1:
-            Console.log_warning("invalid command")
-            return None
+        if len(arguments) != 0:
+            self.controller.print_warring_message("invalid command")
+            return
 
-        site_url = arguments[0]
-
-        rag = Rag()
-        rag.web_ingestion(site_url, self.controller.session_controller.get_directory_rag())
-
-        return CommandResultLogInfo(["Success"])
+        self.controller.show_rag()
 
 class SumCommand(Command):
     def __init__(self, key: str, controller: MainController):
@@ -98,12 +70,12 @@ class SumCommand(Command):
         match arguments:
             case (x, y):
                 if safe_int(x) is not None and safe_int(y) is not None:
-                    result = str(int(x) + int(y))
-                    return CommandResultPrint(result)
+                    self.controller.print_message(str(int(x) + int(y)))
                 else:
-                    Console.log_warning("invalid params for sum command")
+                    self.controller.print_warring_message("invalid params for sum command")
             case _:
-                Console.log_warning("invalid command")
+                self.controller.print_warring_message("invalid command")
+
         return None
 
 
@@ -117,7 +89,7 @@ class AIChat(Command):
 
     def run(self, arguments: list[str]) -> None:
         model_name, query = self.parse_chat_arguments(arguments)
-        self.controller.showChat(query)
+        self.controller.show_chat(query)
 
     @staticmethod
     def parse_chat_arguments(arguments: list[str]) -> tuple[str | None, str]:
@@ -138,44 +110,19 @@ class AIChat(Command):
         return model, query
 
 
-class NewSessionResult(CommandResult):
-    def __init__(self, session_name: str, message: str):
-        self.session_name = session_name
-        self.message = message
-    
-    def apply(self):
-        Console.log_info(self.message)
-
-
 class NewSessionCommand(Command):
     def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Create a new session: new [name]")
         self.controller = controller
 
-    def run(self, arguments: list[str]) -> Optional[CommandResult]:
-        session_name = " ".join(arguments).strip() if arguments else f"session_default"
-
+    def run(self, arguments: list[str]) -> None:
         try:
             session_controller = self.controller.get_session_manager()
             new_session = session_controller.create_new_session()
-            return NewSessionResult(new_session.name, f"New session created: {new_session.name}")
+            self.controller.print_message(f"New session created: {new_session.name}")
 
         except Exception as e:
-            Console.log_error(f"Failed to create new session: {str(e)}")
-            return None
-
-class LSCommandResult(CommandResult):
-    def __init__(self, files: list[str], path: str):
-        self._files = sorted(files)  # Sort for consistent output
-        self._path = path
-
-    def apply(self):
-        if self._files:
-            Console.log_info(f"Directory: {self._path}")
-            for file in self._files:
-                Console.log_info(f"  {file}")
-        else:
-            Console.log_info(f"Directory {self._path} is empty")
+            self.controller.print_error_message(f"Failed to create new session: {str(e)}")
 
 
 class LSCommand(Command):
@@ -183,8 +130,7 @@ class LSCommand(Command):
         super().__init__(key, description="List files in directory: ls [path]")
         self.controller = controller
 
-    def run(self, arguments: list[str]) -> Optional[CommandResult]:
-        # Determine path to list
+    def run(self, arguments: list[str]) -> None:
         if arguments:
             path = arguments[0]
         else:
@@ -192,14 +138,21 @@ class LSCommand(Command):
 
         try:
             if os.path.exists(path) and os.path.isdir(path):
-                files = os.listdir(path)
-                return LSCommandResult(files, path)
+                files = sorted(os.listdir(path))
+                self.print(files, path)
             else:
-                Console.log_error(f"Path does not exist or is not a directory: {path}")
-                return None
+                self.controller.print_error_message(f"Path does not exist or is not a directory: {path}")
+                return
         except PermissionError:
-            Console.log_error(f"Permission denied: {path}")
-            return None
+            self.controller.print_error_message(f"Permission denied: {path}")
+            return
         except Exception as e:
-            Console.log_error(f"Error listing directory: {str(e)}")
-            return None
+            self.controller.print_error_message(f"Error listing directory: {str(e)}")
+
+    def print(self, files: list[str], path: str):
+        if files:
+            self.controller.print_message(f"Directory: {path}")
+            for file in files:
+                self.controller.print_message(f"  {file}")
+        else:
+            self.controller.print_message(f"Directory {path} is empty")

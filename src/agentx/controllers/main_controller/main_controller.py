@@ -2,26 +2,33 @@ from __future__ import annotations
 
 import copy
 from typing import TYPE_CHECKING
+
 from agentx.controllers.main_controller.commands import (
     QuitCommand,
     ClearCommand,
     HelpCommand,
     AIChat,
     SumCommand, HistoryCommand,
-    NewSessionCommand, LSCommand, RagWebIngestionCommand,
+    NewSessionCommand, LSCommand, RagShowCommand,
 )
 
 from agentx.controllers.chat_controller.chat_controller import ChatController
 from agentx.controllers.main_controller.commands_base import Command
 from agentx.controllers.main_controller.commands_parser import CommandParser
+from agentx.controllers.rag_controller.rag_controller import RagController
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.views.main_view.main_view import MainView, IMainViewPartner
+from agentx.views.rag_view.rag_view import RagView
+from agentx.views.ui.ui_console import UIConsole
+
 
 class MainController(IMainViewPartner):
     def __init__(self):
         self.commands: dict[str, Command] = {}
         self.parser = CommandParser()
-        self.view = MainView(self)
+        self.console = UIConsole()
+
+        self.view = MainView(self, self.console)
         self.session_controller = SessionController()
         self.load_commands()
 
@@ -34,14 +41,27 @@ class MainController(IMainViewPartner):
         self.add_command(AIChat("chat", self))
         self.add_command(NewSessionCommand("new", self))
         self.add_command(LSCommand("ls", self))
-        self.add_command(RagWebIngestionCommand("ingest", self))
+        self.add_command(RagShowCommand("rag", self))
 
     def get_session_manager(self):
         return self.session_controller
 
-    def showChat(self, query: str | None):
+    def show_chat(self, query: str | None):
         chat_controller = ChatController()
         chat_controller.show(query)
+
+    def show_rag(self):
+        rag_controller = RagController()
+        rag_controller.show()
+
+    def print_message(self, message: str):
+        self.view.print_message(message)
+
+    def print_warring_message(self, message: str):
+        self.view.print_warring_message(message)
+
+    def print_error_message(self, message: str):
+        self.view.print_error_message(message)
 
     def run(self):
         self.view.show()

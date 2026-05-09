@@ -164,7 +164,7 @@ def cmd_stats(args):
 def cmd_add(args):
     """Execute add command."""
     result = kb_add_entry(
-        args.type,
+        args.message_type,
         args.category,
         args.title,
         args.finding,
