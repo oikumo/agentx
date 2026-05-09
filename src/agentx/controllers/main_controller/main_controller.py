@@ -6,7 +6,7 @@ from agentx.controllers.main_controller.commands import (
     HelpCommand,
     AIChat,
     SumCommand, HistoryCommand,
-    NewSessionCommand, LSCommand, RagWebIngestion,
+    NewSessionCommand, LSCommand, RagWebIngestionCommand,
 )
 
 from agentx.controllers.chat_controller.chat_controller import ChatController
@@ -32,7 +32,7 @@ class MainController(IMainViewPartner):
         self.add_command(AIChat("chat", self))
         self.add_command(NewSessionCommand("new", self))
         self.add_command(LSCommand("ls", self))
-        self.add_command(RagWebIngestion("ingest", self))
+        self.add_command(RagWebIngestionCommand("ingest", self))
 
     def get_session_manager(self):
         return self.session_controller

@@ -72,7 +72,7 @@ class HelpCommand(Command):
         return CommandResultLogInfo(commands)
 
 
-class RagWebIngestion(Command):
+class RagWebIngestionCommand(Command):
     def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="RAG web ingestion of URL: <url>")
         self.controller = controller
