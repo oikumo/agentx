@@ -1,5 +1,6 @@
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, BaseMessage
 from agentx.model.ai.service import AIService
-from agentx.controllers.chat_controller.chat_loop import ChatLoop
 from agentx.views.chat_view.chat_view import ChatView, ChatViewPartner
 from agentx.views.ui.ui_console import UIConsole
 
@@ -7,21 +8,60 @@ from agentx.views.ui.ui_console import UIConsole
 class ChatController(ChatViewPartner):
     def __init__(self):
         self.view = ChatView(self, UIConsole())
+        self.history: list[BaseMessage] = []
+        self.llm = AIService().openrouter_llm_provider().create_llm()
 
-    def show(self, query: str | None):
-        llm = AIService().openrouter_llm_provider().create_llm()
-        chat_loop = ChatLoop(llm=llm)
-
-        if not query:
-            self.view.show_initial_message()
-            chat_loop.start_interactive_streaming()
-        else:
-            try:
-                response, metrics = chat_loop.run_streaming_with_metrics(query)
-                if response is not None:
-                    self.view.show_message(metrics.format())
-            except Exception as e:
-                self.view.show_message_chat_error()
+    def show(self):
+        self.start_interactive_streaming(system_prompt="You are a helpful assistant.")
+        self.view.show()
 
     def close(self) -> None:
         pass
+
+    def start_interactive_streaming(self, system_prompt: str) -> None:
+        self.history.clear()
+        self.history.append(SystemMessage(content=system_prompt))
+
+    def process_user_message(self, user_input: str) -> bool:
+        if user_input.strip().lower() in ("quit", "exit"):
+            return False
+
+        stripped = user_input.strip()
+        if not stripped:
+            return False
+
+        self.history.append(HumanMessage(content=stripped))
+
+        try:
+            full_response: list[str] = []
+
+            for chunk_content in self.get_streaming_response(self.llm, self.history):
+                print(chunk_content, end="", flush=True)
+                full_response.append(chunk_content)
+
+            print()
+            self.history.append(AIMessage(content="".join(full_response)))
+
+            return True
+
+        except Exception as e:
+            self.history.pop()
+            print(f"Error: {e}")
+
+            return True
+
+    def get_streaming_response(self, llm: BaseChatModel, history: list):
+        for chunk in llm.stream(history):
+            content = self._extract_chunk_content(chunk)
+            if content:
+                yield content
+
+    def _extract_chunk_content(self, chunk) -> str:
+        if hasattr(chunk, "text"):
+            return str(chunk.text)
+        if chunk.content is None:
+            return ""
+        if isinstance(chunk.content, list):
+            return " ".join(str(item) for item in chunk.content if item is not None)
+        return str(chunk.content)
+

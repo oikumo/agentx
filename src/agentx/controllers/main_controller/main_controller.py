@@ -45,9 +45,9 @@ class MainController(IMainViewPartner):
     def get_session_manager(self):
         return self.session_controller
 
-    def show_chat(self, query: str | None):
+    def show_chat(self):
         chat_controller = ChatController()
-        chat_controller.show(query)
+        chat_controller.show()
 
     def show_rag(self):
         rag_controller = RagController()
