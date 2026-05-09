@@ -1,17 +1,23 @@
+from abc import ABC, abstractmethod
+
 from agentx.views.ui.ui import UIConsoleBase
 
+class ChatViewPartner(ABC):
+    @abstractmethod
+    def close(self) -> None: ...
 
-class ChatViewController:
-    def __init__(self, console: UIConsoleBase):
+class ChatView:
+    def __init__(self, partner: ChatViewPartner, console: UIConsoleBase):
+        self.partner = partner
         self.console = console
 
-    def showInitialMessage(self):
+    def show_initial_message(self):
         self.console.info(
             "starting interactive chat (type 'quit' or 'exit' to end):"
         ).flush()
 
-    def showMessage(self, message):
+    def show_message(self, message):
         self.console.info(message)
 
-    def showMessageChatError(self):
+    def show_message_chat_error(self):
         self.console.error("chat error")

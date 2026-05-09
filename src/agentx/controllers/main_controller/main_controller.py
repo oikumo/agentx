@@ -96,7 +96,7 @@ class MainController(IMainViewPartner):
         if not command_data:
             return
 
-        command = self.commands[command_data.key]
+        command = self.commands.get(command_data.key)
         if not command:
             self.view.print_response_error(f"Unknown command: {command_data.key}")
             return
