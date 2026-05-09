@@ -15,6 +15,20 @@ class UIConsoleColors:
 
 class UIConsole(UIConsoleBase):
 
+    def capture_input(self, mode_text: str) -> str | None:
+        try:
+            user_input = input(mode_text).strip()
+            if user_input:
+                return user_input
+
+        except KeyboardInterrupt:
+            self.print_line(UIMessage("received interrupt, exiting...", UIMessageType.ERROR))
+        except EOFError:
+            self.print_line(UIMessage("EOF received, exiting...", UIMessageType.ERROR))
+
+        return None
+
+
     def print_line(self, line: UIMessage) -> None :
         match line.message_type:
             case UIMessageType.INFO:

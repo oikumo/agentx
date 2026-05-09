@@ -18,6 +18,14 @@ class MainView:
         self.console.success("Agent-X")
         self.console.info("Type 'help' for commands, Ctrl+C to exit").flush()
 
+        while True:
+            user_input = self.console.capture_input("(agent-x) > ")
+            if not user_input:
+                return
+
+            self.controller.run_command(user_input)
+
+
     def print_message(self, message: str):
         self.console.info(message).flush()
 
@@ -32,18 +40,3 @@ class MainView:
 
     def print_response_error(self, response: str):
         self.console.error(response).flush()
-
-    def capture_input(self) -> None:
-        try:
-            user_input = input("(agent-x) > ").strip()
-            if not user_input:
-                return
-
-            self.controller.run_command(user_input)
-
-        except KeyboardInterrupt:
-            self.console.error("received interrupt, exiting...").flush()
-        except EOFError:
-            self.console.info("EOF received, exiting...").flush()
-            self.controller.error()
-

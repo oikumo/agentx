@@ -1,5 +1,5 @@
 from agentx.model.ai.service import AIService
-from agentx.views.chat_view.chat_loop import ChatLoop
+from agentx.controllers.chat_controller.chat_loop import ChatLoop
 from agentx.views.chat_view.chat_view import ChatView, ChatViewPartner
 from agentx.views.ui.ui_console import UIConsole
 

@@ -22,8 +22,12 @@ class UIConsoleBase(ABC):
     @abstractmethod
     def print_line(self, line: UIMessage) -> None : ...
 
+    @abstractmethod
+    def capture_input(self, mode_text: str) -> str | None: ...
+
     def __init__(self):
         self.lines = []
+
 
     def info(self, message: str) -> UIConsoleBase:
         self.lines.append(UIMessage(message, UIMessageType.INFO))

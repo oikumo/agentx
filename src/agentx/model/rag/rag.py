@@ -3,8 +3,6 @@ from urllib.parse import urlparse
 from agentx.model.ai.service import AIService
 from agentx.model.rag.web_ingestion.web_extract import WebExtract
 from agentx.model.rag.web_ingestion.web_ingestion_app import WebIngestionApp
-from agentx.views.common.console import Console
-
 
 class Rag:
     def web_ingestion(self, site_url, work_directory: str):

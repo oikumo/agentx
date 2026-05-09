@@ -18,7 +18,6 @@ from agentx.controllers.main_controller.commands_parser import CommandParser
 from agentx.controllers.rag_controller.rag_controller import RagController
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.views.main_view.main_view import MainView, IMainViewPartner
-from agentx.views.rag_view.rag_view import RagView
 from agentx.views.ui.ui_console import UIConsole
 
 
@@ -66,9 +65,6 @@ class MainController(IMainViewPartner):
     def run(self):
         self.view.show()
 
-        while True:
-            self.view.capture_input()
-
     def get_commands(self) -> list[Command]:
         return copy.deepcopy(list(self.commands.values()))
 
@@ -104,9 +100,7 @@ class MainController(IMainViewPartner):
         self.session_controller.insert_history_entry(command_data.key)
 
         try:
-            result = command.run(command_data.arguments)
-            if result:
-                result.apply()
+            command.run(command_data.arguments)
 
         except Exception as e:
             self.view.print_response_error(f"Command execution failed")
