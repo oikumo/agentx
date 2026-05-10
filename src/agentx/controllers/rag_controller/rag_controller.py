@@ -1,16 +1,18 @@
-from agentx.views.rag_view.rag_view import RagView, RagViewPartner
+from __future__ import annotations
 from agentx.views.ui.ui_console import UIConsole
+from agentx.views.rag_view.rag_view import RagView
 
+class RagController:
+    view: RagView
 
-class RagController(RagViewPartner):
-    def __init__(self):
+    def __init__(self) -> None:
         self.view = RagView(self, UIConsole())
 
     def show(self):
-        self.view.show()
+        if self.view: self.view.show()
 
     def close(self) -> None:
-        self.view.print_message("close")
+        if self.view: self.view.print_message("close")
 
         """
         site_url = arguments[0]

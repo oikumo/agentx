@@ -1,17 +1,18 @@
-from abc import ABC, abstractmethod
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-import time
+if TYPE_CHECKING:
+    from agentx.controllers.rag_controller.rag_controller import RagController
 
 from agentx.views.ui.ui import UIConsoleBase
-
-class RagViewPartner(ABC):
-    @abstractmethod
-    def close(self) -> None: ...
+import time
 
 
 class RagView:
-    def __init__(self, partner: RagViewPartner, console: UIConsoleBase):
-        self.partner = partner
+    controller: RagController
+
+    def __init__(self, controller: RagController, console: UIConsoleBase):
+        self.partner = controller
         self.console = console
 
     def show(self):
