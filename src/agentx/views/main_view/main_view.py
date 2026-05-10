@@ -1,4 +1,4 @@
-from agentx.views.ui.ui import UIConsoleBase
+from agentx.ui.ui import UIConsoleBase
 
 
 class IMainViewPartner:

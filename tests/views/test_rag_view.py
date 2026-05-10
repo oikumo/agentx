@@ -2,7 +2,7 @@ import unittest
 
 from agentx.controllers.rag_controller.rag_controller import RagController
 from agentx.views.rag_view.rag_view import RagView
-from agentx.views.ui.ui import UIConsoleBase, UIMessage
+from agentx.ui.ui import UIConsoleBase, UIMessage
 
 class TestRagView(unittest.TestCase):
     def test_show(self):

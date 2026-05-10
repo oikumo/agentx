@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING
 
 from agentx.controllers.main_controller.commands import (
     QuitCommand,
@@ -18,7 +17,7 @@ from agentx.controllers.main_controller.commands_parser import CommandParser
 from agentx.controllers.rag_controller.rag_controller import RagController
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.views.main_view.main_view import MainView, IMainViewPartner
-from agentx.views.ui.ui_console import UIConsole
+from agentx.ui.ui_console import UIConsole
 
 
 class MainController(IMainViewPartner):

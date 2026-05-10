@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from agentx.controllers.rag_controller.rag_controller import RagController
 from agentx.views.rag_view.rag_view import RagView
-from agentx.views.ui.ui import UIConsoleBase, UIMessage
+from agentx.ui.ui import UIConsoleBase, UIMessage
 
 
 class TestRagController(unittest.TestCase):

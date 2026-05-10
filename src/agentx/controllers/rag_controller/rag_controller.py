@@ -1,5 +1,5 @@
 from __future__ import annotations
-from agentx.views.ui.ui_console import UIConsole
+from agentx.ui.ui_console import UIConsole
 from agentx.views.rag_view.rag_view import RagView
 
 class RagController:

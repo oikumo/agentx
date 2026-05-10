@@ -1,4 +1,4 @@
-from agentx.views.ui.ui import UIConsoleBase, UIMessage, UIMessageType
+from agentx.ui.ui import UIConsoleBase, UIMessage, UIMessageType
 
 class UIConsoleColors:
     PURPLE = "\033[95m"

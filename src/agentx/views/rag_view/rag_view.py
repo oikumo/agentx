@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from agentx.controllers.rag_controller.rag_controller import RagController
 
-from agentx.views.ui.ui import UIConsoleBase
+from agentx.ui.ui import UIConsoleBase
 import time
 
 
