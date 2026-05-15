@@ -1,8 +1,8 @@
 # KB-First Mandatory Rule
 
 **SESSION STARTUP (First Prompt Only):**
-1. Read `WORK.md` and `PROJECTS.md`
-2. Display both to the user as a reminder
+1. Read `WORK.md` (and `PROJECTS.md` if it exists)
+2. Display to the user as a reminder
 3. Then proceed with KB-First workflow below
 
 **Before answering ANY question about the project** (classes, components, features, architecture, codebase structure, workflows, etc.), you MUST follow this workflow:
@@ -11,7 +11,7 @@
 
 Run this command FIRST:
 ```bash
-python3 .meta/tools/meta-harness-knowledge-base/kb ask "<user_question>" --top-k 3
+meta kb ask "<user_question>" --top-k 3
 ```
 
 ## Step 2: Analyze KB Response
