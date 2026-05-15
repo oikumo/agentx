@@ -2,7 +2,7 @@
 
 **SESSION STARTUP (First Prompt Only):**
 1. Read `WORK.md` (and `PROJECTS.md` if it exists)
-2. Display to the user as a reminder
+2. Allays display to the user the current state of the WORK
 3. Then proceed with KB-First workflow below
 
 **Before answering ANY question about the project** (classes, components, features, architecture, codebase structure, workflows, etc.), you MUST follow this workflow:
