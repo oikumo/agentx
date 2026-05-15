@@ -1,7 +1,7 @@
 # Tools
 
-> **Purpose**: Development tools and utilities  
-> **Target**: AI agents (opencode) and developers  
+> **Purpose**: Development tools and utilities
+> **Target**: AI agents (opencode) and developers
 > **Rule**: Document and test all tools
 
 ---
@@ -14,16 +14,14 @@ Contains:
 - Automation helpers
 - Debugging aids
 
----
-
 ## Structure
 
 ```
-.meta/development_tools/
+.meta/tools/
 ├── META.md          # This file
-└── <tool-name>      # Tools
+└── <tool-name>/     # Individual tools
 ```
 
 ---
 
-**Version**: 2.0.0 (lazy-optimized) | **Lines**: 50 (reduced from 109)\n\n
+**Version**: 3.0.0 (Simplified) | **Lines**: ~15
