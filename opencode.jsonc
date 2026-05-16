@@ -9,7 +9,7 @@
         "description": "Reviews code for best practices and potential issues",
         "mode": "primary",
         "model": "openrouter/openrouter/auto",
-        "prompt": "{file:./.agents_prompts/code-reviewer.txt}",
+        "prompt": "{file:./.agents_prompts/code-reviewer.md}",
         "tools": {
           "write": false,
           "edit": false
