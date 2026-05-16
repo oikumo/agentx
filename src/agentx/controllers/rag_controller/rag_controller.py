@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.model.rag.rag import Rag
-from agentx.ui.ui_console import UIConsole
 from agentx.views.rag_view.rag_view import RagView
 
 class RagController:
     view: RagView
 
-    def __init__(self, console: UIConsole) -> None:
-        self.view = RagView(self, console)
+    def __init__(self) -> None:
+        self.view = RagView(self)
         self.session_controller = SessionController()
-        self.site_url = None
+        self.site_url = ""
 
     def show(self):
         if self.view: self.view.show()

@@ -6,8 +6,8 @@ from agentx.ui.ui_console import UIConsole
 
 
 class ChatController(ChatViewPartner):
-    def __init__(self, console: UIConsole) -> None:
-        self.view = ChatView(self, console)
+    def __init__(self) -> None:
+        self.view = ChatView(self)
         self.history: list[BaseMessage] = []
         self.llm = AIService().openrouter_llm_provider().create_llm()
 

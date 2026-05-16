@@ -46,24 +46,23 @@ class UIPrompt:
 class UIConsole:
     lines: list[UIMessage]
 
-    def __init__(self, ui_prompt: UIPrompt):
+    def __init__(self, prompt: str = ""):
         super().__init__()
-        self.ui_prompt = ui_prompt
+        self.ui_prompt = prompt
         self.lines = []
 
     def reset_prompt(self) -> None:
-        self.ui_prompt.reset_prompt()
+        self.ui_prompt = ""
 
     def set_prompt_additional(self, part: str):
-        self.ui_prompt.parts.append(part)
-
+        self.ui_prompt += part
 
     def print_now(self, message: str) -> None:
         print(message, end="", flush=True)
 
     def capture_input(self) -> str | None:
         try:
-            user_input = input(self.ui_prompt.prompt()).strip()
+            user_input = input(f"{self.ui_prompt} ").strip()
             if user_input:
                 return user_input
 
@@ -73,7 +72,6 @@ class UIConsole:
             self.print_line(UIMessage("EOF received, exiting...", UIMessageType.ERROR))
 
         return None
-
 
     def print_line(self, line: UIMessage) -> None :
         match line.message_type:

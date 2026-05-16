@@ -10,9 +10,9 @@ class IMainViewPartner:
         pass
 
 class MainView:
-    def __init__(self, controller: IMainViewPartner, console: UIConsole):
+    def __init__(self, controller: IMainViewPartner):
         self.controller = controller
-        self.console = console
+        self.console = UIConsole("(agentx)")
 
     def show(self):
         self.console.success("Agent-X")

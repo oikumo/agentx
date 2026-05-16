@@ -12,9 +12,9 @@ class ChatViewPartner(ABC):
     def close(self) -> None: ...
 
 class ChatView:
-    def __init__(self, partner: ChatViewPartner, console: UIConsole):
-        self.partner = partner
-        self.console = console
+    def __init__(self, controller: ChatViewPartner):
+        self.controller = controller
+        self.console = UIConsole("(chat)")
 
     def show(self):
         self.show_initial_message()
@@ -22,7 +22,7 @@ class ChatView:
         while True:
             user_input = self.console.capture_input()
             if not user_input: return
-            if not self.partner.process_user_message(user_input): return
+            if not self.controller.process_user_message(user_input): return
 
     def show_partial_text(self, message: str):
         self.console.print_now(message)

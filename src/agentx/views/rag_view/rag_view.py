@@ -12,19 +12,17 @@ import time
 class RagView:
     controller: RagController
 
-    def __init__(self, controller: RagController, console: UIConsole):
+    def __init__(self, controller: RagController):
         self.controller = controller
-        self.console = console
+        self.console = UIConsole("(rag)")
 
     def show(self):
-        self.console.set_prompt_additional("rag")
-
         while True:
             user_input = self.console.capture_input()
             self.controller.do_web_ingestion()
             time.sleep(3)
             self.controller.close()
-            break
+            return
 
     def print_message(self, message: str):
         self.console.info(message).flush()
