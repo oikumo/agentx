@@ -1,24 +1,30 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from agentx.ui.ui_console import UIConsole
+
 if TYPE_CHECKING:
     from agentx.controllers.rag_controller.rag_controller import RagController
 
-from agentx.ui.ui import UIConsoleBase
 import time
 
 
 class RagView:
     controller: RagController
 
-    def __init__(self, controller: RagController, console: UIConsoleBase):
-        self.partner = controller
+    def __init__(self, controller: RagController, console: UIConsole):
+        self.controller = controller
         self.console = console
 
     def show(self):
-        self.console.capture_input()
-        time.sleep(3)
-        self.partner.close()
+        self.console.set_prompt_additional("rag")
+
+        while True:
+            user_input = self.console.capture_input()
+            self.controller.do_web_ingestion()
+            time.sleep(3)
+            self.controller.close()
+            break
 
     def print_message(self, message: str):
         self.console.info(message).flush()

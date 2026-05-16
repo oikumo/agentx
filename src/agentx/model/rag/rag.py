@@ -15,7 +15,7 @@ class Rag:
                 return False
 
         if not is_valid_url(site_url):
-            Console.log_info("Invalid URL")
+            print("Invalid URL")
             return False
 
         prompt = """
@@ -27,15 +27,15 @@ class Rag:
 
         Question: {question}
         """
-        Console.log_info(prompt)
+        print(prompt)
 
         rag_directory = work_directory
 
         result_json_file_path = f"{rag_directory}/documents.jsonl"
         chroma_dir = f"{rag_directory}/chroma_db"
 
-        Console.log_info(f"Results folder: {result_json_file_path}")
-        Console.log_info(f"Chroma folder: {chroma_dir}")
+        print(f"Results folder: {result_json_file_path}")
+        print(f"Chroma folder: {chroma_dir}")
 
         ai_service = AIService()
         vectorstore = ai_service.rag_chromadb(chroma_dir)

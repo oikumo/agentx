@@ -1,4 +1,4 @@
-from agentx.ui.ui import UIConsoleBase
+from agentx.ui.ui_console import UIConsole
 
 
 class IMainViewPartner:
@@ -10,7 +10,7 @@ class IMainViewPartner:
         pass
 
 class MainView:
-    def __init__(self, controller: IMainViewPartner, console: UIConsoleBase):
+    def __init__(self, controller: IMainViewPartner, console: UIConsole):
         self.controller = controller
         self.console = console
 

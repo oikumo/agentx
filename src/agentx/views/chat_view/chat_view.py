@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
-from agentx.ui.ui import UIConsoleBase
+from agentx.ui.ui_console import UIConsole
+
 
 class ChatViewPartner(ABC):
 
@@ -11,7 +12,7 @@ class ChatViewPartner(ABC):
     def close(self) -> None: ...
 
 class ChatView:
-    def __init__(self, partner: ChatViewPartner, console: UIConsoleBase):
+    def __init__(self, partner: ChatViewPartner, console: UIConsole):
         self.partner = partner
         self.console = console
 

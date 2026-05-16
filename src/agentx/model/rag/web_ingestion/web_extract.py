@@ -4,8 +4,6 @@ from typing import List, Dict, Any
 from langchain_core.documents import Document
 from langchain_tavily import TavilyExtract, TavilyMap
 
-from agentx.views.common.console import Console, Colors
-
 
 class WebExtract:
     def __init__(self, max_depth: int, max_breadth: int, max_pages: int):
@@ -18,32 +16,32 @@ class WebExtract:
     async def extract_batch(self, urls: List[str], batch_num: int) -> List[Dict[str, Any]]:
         """Extract documents from a batch of URLs."""
         try:
-            Console.log_info(f"🔄 Processing batch {batch_num} with {len(urls)} URLs", Colors.BLUE)
+            print(f"🔄 Processing batch {batch_num} with {len(urls)} URLs")
             docs = await self.tavily_extract.ainvoke(input={"urls": urls})
             results = docs.get('results', [])
-            Console.log_info(f"✅ Batch {batch_num} completed - extracted {len(results)} documents", Colors.PURPLE)
+            print(f"✅ Batch {batch_num} completed - extracted {len(results)} documents")
             return results
         except Exception as e:
-            Console.log_error(f"❌ Batch {batch_num} failed: {e}", Colors.RED)
+            print(f"❌ Batch {batch_num} failed: {e}")
             return []
 
 
     async def async_extract(self, urls_batches: List[List[str]]):
-        Console.log_info("DOCUMENT EXTRACTION")
-        Console.log_info(f"Concurrent extraction of {len(urls_batches)}", Colors.GREEN)
+        print("DOCUMENT EXTRACTION")
+        print(f"Concurrent extraction of {len(urls_batches)}")
 
         tasks = [self.extract_batch(batch, i + 1) for i, batch in enumerate(urls_batches)]
 
-        Console.log_info("EXTRACT BEGIN", Colors.GREEN)
+        print("EXTRACT BEGIN")
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        Console.log_info("EXTRACT END", Colors.GREEN)
+        print("EXTRACT END")
 
         all_pages = []
         failed_batches = 0
 
         for result in results:
             if isinstance(result, Exception):
-                Console.log_error("Error")
+                print("Error")
                 failed_batches += 1
             else:
                 for extracted_page in result:

@@ -1,4 +1,19 @@
-from agentx.ui.ui import UIConsoleBase, UIMessage, UIMessageType
+from dataclasses import dataclass
+from enum import IntEnum
+
+class UIMessageType(IntEnum):
+    INFO = 0
+    SUCCESS = 1
+    WARNING = 2
+    ERROR = 3
+    HEADER = 4
+
+
+@dataclass
+class UIMessage:
+    message: str
+    message_type: UIMessageType = UIMessageType.INFO
+
 
 class UIConsoleColors:
     PURPLE = "\033[95m"
@@ -28,11 +43,13 @@ class UIPrompt:
     def reset_prompt(self) -> None:
         self.parts.clear()
 
-class UIConsole(UIConsoleBase):
+class UIConsole:
+    lines: list[UIMessage]
 
     def __init__(self, ui_prompt: UIPrompt):
         super().__init__()
         self.ui_prompt = ui_prompt
+        self.lines = []
 
     def reset_prompt(self) -> None:
         self.ui_prompt.reset_prompt()
@@ -77,6 +94,30 @@ class UIConsole(UIConsoleBase):
                 print(f"{UIConsoleColors.BOLD}{UIConsoleColors.PURPLE}🚀 {line.message}{UIConsoleColors.END}")
                 print(f"{UIConsoleColors.BOLD}{UIConsoleColors.PURPLE}{'=' * 60}{UIConsoleColors.END}\n")
 
+    def info(self, message: str) -> UIConsole:
+        self.lines.append(UIMessage(message, UIMessageType.INFO))
+        return self
+
+    def waning(self, message: str) -> UIConsole:
+        self.lines.append(UIMessage(message, UIMessageType.WARNING))
+        return self
+
+    def success(self, message: str) -> UIConsole:
+        self.lines.append(UIMessage(message, UIMessageType.SUCCESS))
+        return self
+
+    def error(self, message: str) -> UIConsole:
+        self.lines.append(UIMessage(message, UIMessageType.ERROR))
+        return self
+
+    def header(self, message: str) -> UIConsole:
+        self.lines.append(UIMessage(message, UIMessageType.HEADER))
+        return self
+
+    def flush(self):
+        for line in self.lines:
+            self.print_line(line)
+        self.lines.clear()
 
 
 
