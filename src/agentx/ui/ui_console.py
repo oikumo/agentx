@@ -13,14 +13,40 @@ class UIConsoleColors:
     END = "\033[0m"
 
 
+class UIPrompt:
+    base: str
+    parts: list[str]
+
+    def __init__(self, base: str, parts: list[str] | None = None) -> None:
+        self.base = base or ""
+        self.parts = list(parts or [])
+
+    def prompt(self) -> str:
+        suffix = "/" + "/".join(self.parts) if self.parts else ""
+        return f"({self.base}{suffix}) "
+
+    def reset_prompt(self) -> None:
+        self.parts.clear()
+
 class UIConsole(UIConsoleBase):
+
+    def __init__(self, ui_prompt: UIPrompt):
+        super().__init__()
+        self.ui_prompt = ui_prompt
+
+    def reset_prompt(self) -> None:
+        self.ui_prompt.reset_prompt()
+
+    def set_prompt_additional(self, part: str):
+        self.ui_prompt.parts.append(part)
+
 
     def print_now(self, message: str) -> None:
         print(message, end="", flush=True)
 
-    def capture_input(self, mode_text: str) -> str | None:
+    def capture_input(self) -> str | None:
         try:
-            user_input = input(mode_text).strip()
+            user_input = input(self.ui_prompt.prompt()).strip()
             if user_input:
                 return user_input
 

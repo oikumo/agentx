@@ -1,12 +1,13 @@
 from __future__ import annotations
-from agentx.ui.ui_console import UIConsole
+
+from agentx.ui.ui import UIConsoleBase
 from agentx.views.rag_view.rag_view import RagView
 
 class RagController:
     view: RagView
 
-    def __init__(self) -> None:
-        self.view = RagView(self, UIConsole())
+    def __init__(self, console: UIConsoleBase) -> None:
+        self.view = RagView(self, console)
 
     def show(self):
         if self.view: self.view.show()

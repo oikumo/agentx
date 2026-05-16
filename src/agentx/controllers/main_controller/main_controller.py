@@ -17,14 +17,14 @@ from agentx.controllers.main_controller.commands_parser import CommandParser
 from agentx.controllers.rag_controller.rag_controller import RagController
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.views.main_view.main_view import MainView, IMainViewPartner
-from agentx.ui.ui_console import UIConsole
+from agentx.ui.ui_console import UIConsole, UIPrompt
 
 
 class MainController(IMainViewPartner):
     def __init__(self):
         self.commands: dict[str, Command] = {}
         self.parser = CommandParser()
-        self.console = UIConsole()
+        self.console = UIConsole(UIPrompt("agentx"))
 
         self.view = MainView(self, self.console)
         self.session_controller = SessionController()
@@ -45,12 +45,14 @@ class MainController(IMainViewPartner):
         return self.session_controller
 
     def show_chat(self):
-        chat_controller = ChatController()
+        chat_controller = ChatController(self.console)
         chat_controller.show()
+        self.console.reset_prompt()
 
     def show_rag(self):
-        rag_controller = RagController()
+        rag_controller = RagController(self.console)
         rag_controller.show()
+        self.console.reset_prompt()
 
     def print_message(self, message: str):
         self.view.print_message(message)

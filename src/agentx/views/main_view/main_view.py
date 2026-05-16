@@ -19,7 +19,7 @@ class MainView:
         self.console.info("Type 'help' for commands, Ctrl+C to exit").flush()
 
         while True:
-            user_input = self.console.capture_input("(agentx) ")
+            user_input = self.console.capture_input()
             if not user_input:
                 return
 

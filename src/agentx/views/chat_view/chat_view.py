@@ -19,7 +19,7 @@ class ChatView:
         self.show_initial_message()
 
         while True:
-            user_input = self.console.capture_input("(agentx/chat) ")
+            user_input = self.console.capture_input()
             if not user_input: return
             if not self.partner.process_user_message(user_input): return
 
