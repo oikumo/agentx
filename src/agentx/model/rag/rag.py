@@ -6,7 +6,6 @@ from agentx.model.ai.service import AIService
 from agentx.model.rag.rag_db import RagDatabase
 from agentx.model.rag.web_ingestion.web_extract import WebExtract
 from agentx.model.rag.web_ingestion.web_ingestion_app import WebIngestionApp
-from src import rag_add_entry
 
 RAG_PROMPT="""
 Answer the following question based only on the provided context:
