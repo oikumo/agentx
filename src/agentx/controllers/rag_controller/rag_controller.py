@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
+from agentx.controllers.rag_controller.input_url_controller import InputUrlController
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.model.rag.rag import Rag
 from agentx.views.rag_view.rag_view import RagView
+
+@dataclass
+class RagState:
+    url: str | None
 
 class RagController:
     view: RagView
@@ -10,7 +17,8 @@ class RagController:
     def __init__(self) -> None:
         self.view = RagView(self)
         self.session_controller = SessionController()
-        self.site_url = ""
+        rag_working_directory = self.session_controller.get_directory_rag()
+        self.rag = Rag(rag_working_directory)
 
     def show(self):
         if self.view: self.view.show()
@@ -18,18 +26,23 @@ class RagController:
     def close(self) -> None:
         if self.view: self.view.print_message("close")
 
+    def ask_user_site_url(self):
+        input_controller = InputUrlController()
+        input_controller.show()
+        self.rag.site_url = input_controller.url
+
     def set_site_url(self, site_url: str):
-        self.site_url = site_url
+        self.rag.site_url = site_url
+
+    def get_rag_state(self):
+        return RagState(url=self.rag.site_url)
 
     def do_web_ingestion(self):
-        if not self.site_url:
+        if not self.rag.site_url:
             self.view.print_message("missing site url")
             return
 
-        rag_directory = self.session_controller.get_directory_rag()
-        self.view.print_message(f"{self.site_url}")
-        self.view.print_message(f"{rag_directory}")
-
-        rag = Rag()
-        rag.web_ingestion(self.site_url, rag_directory)
+        self.view.print_message(f"{self.rag.site_url}")
+        self.view.print_message(f"{self.rag.working_directory}")
+        self.rag.web_ingestion()
 

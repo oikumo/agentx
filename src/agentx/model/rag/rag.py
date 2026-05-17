@@ -5,17 +5,15 @@ from agentx.model.rag.web_ingestion.web_extract import WebExtract
 from agentx.model.rag.web_ingestion.web_ingestion_app import WebIngestionApp
 
 class Rag:
-    def web_ingestion(self, site_url, work_directory: str):
-        def is_valid_url(url):
-            try:
-                result = urlparse(url)
-                # Check if both scheme (http/https) and netloc (domain) are present
-                return all([result.scheme, result.netloc])
-            except ValueError:
-                return False
+    working_directory: str
+    site_url = str | None
 
-        if not is_valid_url(site_url):
-            print("Invalid URL")
+    def __init__(self, working_directory: str):
+        self.working_directory = working_directory
+        self.site_url = None
+
+    def web_ingestion(self) -> bool:
+        if not self.is_valid_url():
             return False
 
         prompt = """
@@ -29,10 +27,8 @@ class Rag:
         """
         print(prompt)
 
-        rag_directory = work_directory
-
-        result_json_file_path = f"{rag_directory}/documents.jsonl"
-        chroma_dir = f"{rag_directory}/chroma_db"
+        result_json_file_path = f"{self.working_directory}/documents.jsonl"
+        chroma_dir = f"{self.working_directory}/chroma_db"
 
         print(f"Results folder: {result_json_file_path}")
         print(f"Chroma folder: {chroma_dir}")
@@ -44,7 +40,17 @@ class Rag:
         app = WebIngestionApp(vectorstore, web_extractor)
 
         asyncio.run(app.run(
-            site_url=site_url,
-            result_json_file_path=result_json_file_path
+            site_url= self.site_url,
+            result_json_file_path= result_json_file_path
         ))
-        return None
+        return False
+
+    def is_valid_url(self):
+        if not self.site_url:
+            return False
+        try:
+            result = urlparse(self.site_url)
+            # Check if both scheme (http/https) and netloc (domain) are present
+            return all([result.scheme, result.netloc])
+        except ValueError:
+            return False

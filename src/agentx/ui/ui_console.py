@@ -44,21 +44,15 @@ class UIPrompt:
         self.parts.clear()
 
 class UIConsole:
-    lines: list[UIMessage]
-
     def __init__(self, prompt: str = ""):
         super().__init__()
         self.ui_prompt = prompt
-        self.lines = []
 
     def reset_prompt(self) -> None:
         self.ui_prompt = ""
 
     def set_prompt_additional(self, part: str):
         self.ui_prompt += part
-
-    def print_now(self, message: str) -> None:
-        print(message, end="", flush=True)
 
     def capture_input(self) -> str | None:
         try:
@@ -67,55 +61,28 @@ class UIConsole:
                 return user_input
 
         except KeyboardInterrupt:
-            self.print_line(UIMessage("received interrupt, exiting...", UIMessageType.ERROR))
+            self.error("received interrupt, exiting...")
         except EOFError:
-            self.print_line(UIMessage("EOF received, exiting...", UIMessageType.ERROR))
+            self.error("EOF received, exiting...")
 
         return None
 
-    def print_line(self, line: UIMessage) -> None :
-        match line.message_type:
-            case UIMessageType.INFO:
-                print(f"{UIConsoleColors.DARKCYAN} {line.message}{UIConsoleColors.END}")
+    def info(self, message: str) -> None:
+        print(f"{UIConsoleColors.DARKCYAN}{message}{UIConsoleColors.END}")
 
-            case UIMessageType.SUCCESS:
-                print(f"{UIConsoleColors.GREEN}✅ {line.message}{UIConsoleColors.END}")
+    def success(self, message: str) -> None:
+        print(f"{UIConsoleColors.GREEN}{message}{UIConsoleColors.END}")
 
-            case UIMessageType.ERROR:
-                print(f"{UIConsoleColors.RED}❌ {line.message}{UIConsoleColors.END}")
+    def waning(self, message: str) -> None:
+        print(f"{UIConsoleColors.YELLOW}{message}{UIConsoleColors.END}")
 
-            case UIMessageType.WARNING:
-                print(f"{UIConsoleColors.YELLOW}⚠️ {line.message}{UIConsoleColors.END}")
+    def error(self, message: str) -> None:
+        print(f"{UIConsoleColors.RED}❌ {message}{UIConsoleColors.END}")
 
-            case UIMessageType.HEADER:
-                print(f"\n{UIConsoleColors.BOLD}{UIConsoleColors.PURPLE}{'=' * 60}{UIConsoleColors.END}")
-                print(f"{UIConsoleColors.BOLD}{UIConsoleColors.PURPLE}🚀 {line.message}{UIConsoleColors.END}")
-                print(f"{UIConsoleColors.BOLD}{UIConsoleColors.PURPLE}{'=' * 60}{UIConsoleColors.END}\n")
-
-    def info(self, message: str) -> UIConsole:
-        self.lines.append(UIMessage(message, UIMessageType.INFO))
-        return self
-
-    def waning(self, message: str) -> UIConsole:
-        self.lines.append(UIMessage(message, UIMessageType.WARNING))
-        return self
-
-    def success(self, message: str) -> UIConsole:
-        self.lines.append(UIMessage(message, UIMessageType.SUCCESS))
-        return self
-
-    def error(self, message: str) -> UIConsole:
-        self.lines.append(UIMessage(message, UIMessageType.ERROR))
-        return self
-
-    def header(self, message: str) -> UIConsole:
-        self.lines.append(UIMessage(message, UIMessageType.HEADER))
-        return self
-
-    def flush(self):
-        for line in self.lines:
-            self.print_line(line)
-        self.lines.clear()
+    def header(self, message: str) -> None:
+        print(f"\n{UIConsoleColors.BOLD}{UIConsoleColors.PURPLE}{'=' * 60}{UIConsoleColors.END}")
+        print(f"{UIConsoleColors.BOLD}{UIConsoleColors.PURPLE}{message}{UIConsoleColors.END}")
+        print(f"{UIConsoleColors.BOLD}{UIConsoleColors.PURPLE}{'=' * 60}{UIConsoleColors.END}\n")
 
 
 

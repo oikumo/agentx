@@ -16,7 +16,7 @@ class MainView:
 
     def show(self):
         self.console.success("Agent-X")
-        self.console.info("Type 'help' for commands, Ctrl+C to exit").flush()
+        self.console.info("Type 'help' for commands, Ctrl+C to exit")
 
         while True:
             user_input = self.console.capture_input()
@@ -27,16 +27,16 @@ class MainView:
 
 
     def print_message(self, message: str):
-        self.console.info(message).flush()
+        self.console.info(message)
 
     def print_warring_message(self, message: str):
-        self.console.waning(message).flush()
+        self.console.waning(message)
 
     def print_error_message(self, message: str):
-        self.console.error(message).flush()
+        self.console.error(message)
 
     def print_response(self, response: str):
-        self.console.info(response).flush()
+        self.console.info(response)
 
     def print_response_error(self, response: str):
-        self.console.error(response).flush()
+        self.console.error(response)

@@ -20,9 +20,6 @@ class CommandParser:
     def parse(self, text: str) -> CommandData | None:
         raw_command = self._parse_text_command(text)
         if raw_command is None:
-            from agentx.views.common.console import Console
-
-            Console.log_error("command process INVALID COMMAND")
             return None
         return raw_command
 

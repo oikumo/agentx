@@ -1,13 +1,17 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-
 from agentx.ui.ui_console import UIConsole
 
 if TYPE_CHECKING:
     from agentx.controllers.rag_controller.rag_controller import RagController
 
-import time
+INGESTION_MENU="""
+OPTIONS
+    (1) Set ingestion URL
+    (2) Ingest
+    (3) Query
 
+"""
 
 class RagView:
     controller: RagController
@@ -18,11 +22,28 @@ class RagView:
 
     def show(self):
         while True:
+            self._show_rag_main_menu()
             user_input = self.console.capture_input()
-            self.controller.do_web_ingestion()
-            time.sleep(3)
-            self.controller.close()
-            return
+            match user_input:
+                case "1":
+                    self.controller.ask_user_site_url()
+                case "2":
+                    self.controller.do_web_ingestion()
+                case "quit":
+                    self.controller.close()
+                case _  : self.print_message("Invalid option")
+
+
+    def _show_rag_main_menu(self):
+        self.console.header("RAG")
+        state = self.controller.get_rag_state()
+        if not state.url:
+            self.console.info(f"url: MISSING\n")
+        else:
+            self.console.info(f"url: {state.url}\n")
+
+        self.console.info(INGESTION_MENU)
 
     def print_message(self, message: str):
-        self.console.info(message).flush()
+        self.console.info(message)
+
