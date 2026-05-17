@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agentx.controllers.rag_controller.input_url_controller import InputUrlController
+from agentx.controllers.common.input_controllers.input_url_controller import InputUrlController
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.model.rag.rag import Rag
 from agentx.views.rag_view.rag_view import RagView
@@ -30,6 +30,8 @@ class RagController:
         input_controller = InputUrlController()
         input_controller.show()
         self.rag.site_url = input_controller.url
+        if not self.rag.site_url:
+            self.view.print_message_error("INVALID URL")
 
     def set_site_url(self, site_url: str):
         self.rag.site_url = site_url

@@ -38,12 +38,15 @@ class RagView:
         self.console.header("RAG")
         state = self.controller.get_rag_state()
         if not state.url:
-            self.console.info(f"url: MISSING\n")
+            self.console.waning(f"url: MISSING\n")
         else:
-            self.console.info(f"url: {state.url}\n")
+            self.console.success(f"url: {state.url}\n")
 
         self.console.info(INGESTION_MENU)
 
     def print_message(self, message: str):
         self.console.info(message)
+
+    def print_message_error(self, message: str):
+        self.console.error(message)
 
