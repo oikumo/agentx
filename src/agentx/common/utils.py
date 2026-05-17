@@ -64,6 +64,8 @@ def create_directory_without_timestamp(name: str, base_directory) -> str | None:
     
     return str(directory_path.absolute().resolve())
 
+def file_exists(path: str | Path) -> bool:
+    return Path(path).is_file()
 
 def directory_exists(directory: str):
     return os.path.isdir(directory)

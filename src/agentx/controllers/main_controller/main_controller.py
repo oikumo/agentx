@@ -100,3 +100,4 @@ class MainController(IMainViewPartner):
 
         except Exception as e:
             self.view.print_response_error(f"Command execution failed")
+            print(e)

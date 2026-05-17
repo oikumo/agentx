@@ -36,13 +36,20 @@ class RagView:
 
     def _show_rag_main_menu(self):
         self.console.header("RAG")
+        self._show_rag_state()
+        self.console.info(INGESTION_MENU)
+
+    def _show_rag_state(self):
         state = self.controller.get_rag_state()
         if not state.url:
-            self.console.waning(f"url: MISSING\n")
+            self.console.waning(f"url: MISSING")
         else:
-            self.console.success(f"url: {state.url}\n")
+            self.console.success(f"url: {state.url}")
 
-        self.console.info(INGESTION_MENU)
+        if not state.data_base_location:
+            self.console.waning(f"database: MISSING")
+        else:
+            self.console.success(f"database: {state.data_base_location}\n")
 
     def print_message(self, message: str):
         self.console.info(message)

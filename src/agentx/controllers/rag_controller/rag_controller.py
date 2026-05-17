@@ -5,11 +5,14 @@ from dataclasses import dataclass
 from agentx.controllers.common.input_controllers.input_url_controller import InputUrlController
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.model.rag.rag import Rag
+from agentx.model.rag.web_ingestion import documents
 from agentx.views.rag_view.rag_view import RagView
 
 @dataclass
 class RagState:
     url: str | None
+    data_base_location: str | None
+    documents_location: str | None
 
 class RagController:
     view: RagView
@@ -37,7 +40,17 @@ class RagController:
         self.rag.site_url = site_url
 
     def get_rag_state(self):
-        return RagState(url=self.rag.site_url)
+        data_base_path = None
+        documents_path = None
+        if self.rag.is_data():
+            data_base_path = self.rag.vector_db_path
+            documents_path = self.rag.documents_path
+
+        return RagState(
+            url=self.rag.site_url,
+            data_base_location=data_base_path,
+            documents_location=documents_path
+        )
 
     def do_web_ingestion(self):
         if not self.rag.site_url:
