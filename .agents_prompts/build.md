@@ -1,20 +1,13 @@
 # KB-First Mandatory Rule
 
 **SESSION STARTUP (First Prompt Only):**
-1. Read `WORK.md` (and `PROJECTS.md` if it exists)
+1. Read `WORK.md`
 2. Allays display to the user the current state of the WORK
 3. Then proceed with KB-First workflow below
 
 **Before answering ANY question about the project** (classes, components, features, architecture, codebase structure, workflows, etc.), you MUST follow this workflow:
 
-## Step 1: Query Knowledge Base (MANDATORY)
-
-Run this command FIRST:
-```bash
-meta kb ask "<user_question>" --top-k 3
-```
-
-## Step 2: Analyze KB Response
+## Step 1: Query Knowledge Base and Analyze KB Response (MANDATORY)
 
 **If KB returns synthesized answer** (look for "✓ Answer synthesized from X sources"):
 - Use the KB answer as your PRIMARY source
@@ -27,7 +20,7 @@ meta kb ask "<user_question>" --top-k 3
 - Inform the user that KB has no specific information
 - Then you may search the codebase using grep, glob, read
 
-## Step 3: Answer
+## Step 2: Answer
 
 - Base your answer on KB results when available
 - Always cite KB sources

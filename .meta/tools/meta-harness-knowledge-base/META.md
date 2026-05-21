@@ -31,23 +31,23 @@ The Meta Harness Knowledge Base is a Retrieval-Augmented Generation (RAG) system
 
 ```bash
 # Advanced search with query expansion
-python .meta/tools/meta-harness-knowledge-base/kb search "TDD workflow" -k 5
+python3 .meta/tools/meta-harness-knowledge-base/kb search "TDD workflow" -k 5
 
 # Ask with answer synthesis
-python .meta/tools/meta-harness-knowledge-base/kb ask "Where should I write tests?"
+python3 .meta/tools/meta-harness-knowledge-base/kb ask "Where should I write tests?"
 
 # Explore by category
-python .meta/tools/meta-harness-knowledge-base/kb explore
-python .meta/tools/meta-harness-knowledge-base/kb explore workflow
+python3 .meta/tools/meta-harness-knowledge-base/kb explore
+python3 .meta/tools/meta-harness-knowledge-base/kb explore workflow
 
 # Interactive chat mode
-python .meta/tools/meta-harness-knowledge-base/kb chat
+python3 .meta/tools/meta-harness-knowledge-base/kb chat
 
 # Get statistics
-python .meta/tools/meta-harness-knowledge-base/kb stats
+python3 .meta/tools/meta-harness-knowledge-base/kb stats
 
 # Add new entry
-python .meta/tools/meta-harness-knowledge-base/kb add pattern workflow "Feature Implementation" "Work in .meta/sandbox/" "Copy → Modify → Test"
+python3 .meta/tools/meta-harness-knowledge-base/kb add pattern workflow "Feature Implementation" "Work in .meta/sandbox/" "Copy → Modify → Test"
 ```
 
 ### Python API (Advanced)

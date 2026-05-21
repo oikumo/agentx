@@ -372,10 +372,10 @@ Located in `test_kb_performance.py`:
 ### Common Issues
 
 **Issue**: Tests fail with "No results found"  
-**Solution**: Run `meta kb populate` first
+**Solution**: Run python3 .meta/tools/meta-harness-knowledge-base/kb populate` first
 
 **Issue**: Slow query performance  
-**Solution**: Check database size, run `meta kb evolve`
+**Solution**: Check database size, run python3 .meta/tools/meta-harness-knowledge-base/kb evolve`
 
 **Issue**: Memory concerns  
 **Solution**: Tests show +2MB after 20 queries (normal)

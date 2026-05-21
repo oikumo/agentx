@@ -109,7 +109,7 @@ result = rag.synthesize_answer(
 Interactive chat mode with context tracking:
 
 ```bash
-python kb chat
+python3 kb chat
 
 You: What is MainController?
 KB: [Synthesized answer with sources]
@@ -124,39 +124,39 @@ KB: [Contextual answer]
 
 ```bash
 # Basic search
-python kb search "query"
+python3 kb search "query"
 
 # With options
-python kb search "query" -k 10 --simple --no-color
+python3 kb search "query" -k 10 --simple --no-color
 
 # Advanced (default)
-python kb search "TDD workflow in sandbox"
+python3 kb search "TDD workflow in sandbox"
 ```
 
 ### Ask
 
 ```bash
 # Ask with synthesis
-python kb ask "How do I implement TDD?"
+python3 kb ask "How do I implement TDD?"
 
 # Simple retrieval
-python kb ask "TDD" --simple
+python3 kb ask "TDD" --simple
 ```
 
 ### Explore
 
 ```bash
 # Explore all categories
-python kb explore
+python3 kb explore
 
 # Explore specific category
-python kb explore workflow
+python3 kb explore workflow
 ```
 
 ### Chat Mode
 
 ```bash
-python kb chat
+python3 kb chat
 ```
 
 ## API Reference
@@ -233,7 +233,7 @@ Typical retrieval times:
 ### Example 1: Simple Query
 
 ```bash
-python kb ask "What is MainController?"
+python3 kb ask "What is MainController?"
 ```
 
 **Output:**
@@ -245,7 +245,7 @@ python kb ask "What is MainController?"
 ### Example 2: Complex Query
 
 ```bash
-python kb ask "How do I add a new command to the REPL?"
+python3 kb ask "How do I add a new command to the REPL?"
 ```
 
 **Process:**
@@ -257,7 +257,7 @@ python kb ask "How do I add a new command to the REPL?"
 ### Example 3: Exploration
 
 ```bash
-python kb explore workflow
+python3 kb explore workflow
 ```
 
 **Output:**

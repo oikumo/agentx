@@ -10,30 +10,30 @@
 
 ```bash
 # Query KB (MANDATORY first step)
-meta kb ask "Where should I write tests?"
+python3 .meta/tools/meta-harness-knowledge-base/kb ask "Where should I write tests?"
 
 # Search entries
-meta kb search "TDD workflow" -k 3
+python3 .meta/tools/meta-harness-knowledge-base/kb search "TDD workflow" -k 3
 
 # Show statistics
-meta kb stats
+python3 .meta/tools/meta-harness-knowledge-base/kb stats
 
 # Populate KB
-meta kb populate
+python3 .meta/tools/meta-harness-knowledge-base/kb populate
 ```
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `meta kb populate` | Populate KB from codebase |
-| `meta kb ask` | RAG-augmented Q&A |
-| `meta kb search` | Search entries |
-| `meta kb stats` | Show statistics |
+| python3 .meta/tools/meta-harness-knowledge-base/kb populate` | Populate KB from codebase |
+| python3 .meta/tools/meta-harness-knowledge-base/kb ask` | RAG-augmented Q&A |
+| python3 .meta/tools/meta-harness-knowledge-base/kb search` | Search entries |
+| python3 .meta/tools/meta-harness-knowledge-base/kb stats` | Show statistics |
 
 ## Workflow (MANDATORY)
 
-1. Query KB: `meta kb ask "<question>"`
+1. Query KB: python3 .meta/tools/meta-harness-knowledge-base/kb ask "<question>"`
 2. Review results (confidence scores)
 3. Answer based on KB + codebase
 4. If KB missing info → Add entry after completion

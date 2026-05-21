@@ -2,7 +2,7 @@
 
 > **⚠️ MANDATORY FIRST STEP:** On the **first prompt**, read `WORK.md` and display it.
 >
-> **⚠️ MANDATORY SECOND STEP:** Before ANY task, query the KB: `meta kb ask <query>`.
+> **⚠️ MANDATORY SECOND STEP:** Before ANY task, query the KB: `python3 .meta/tools/meta-harness-knowledge-base/kb ask <query>`.
 
 ---
 
@@ -25,7 +25,7 @@
 
 ## Quick Start
 
-1. **Query KB** → `meta kb ask "How does X work?"`
+1. **Query KB** → `python3 .meta/tools/meta-harness-knowledge-base/kb ask "How does X work?"`
 2. **Check git** → `git log --oneline -5`
 3. **Work in correct directory** (see Decision Tree)
 4. **Log changes** → Update `.meta/LOG.md`

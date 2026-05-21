@@ -166,22 +166,22 @@ def test_agent_rag_augmentation():
 #### CLI Commands
 ```bash
 # Search
-meta kb search "MainController" -k 3
+python3 .meta/tools/meta-harness-knowledge-base/kb search "MainController" -k 3
 
 # Ask
-meta kb ask "What is MainController?" --top-k 3
+python3 .meta/tools/meta-harness-knowledge-base/kb ask "What is MainController?" --top-k 3
 
 # Stats
-meta kb stats
+python3 .meta/tools/meta-harness-knowledge-base/kb stats
 
 # Add
-meta kb add finding test "Title" "Finding" "Solution" --confidence 0.9
+python3 .meta/tools/meta-harness-knowledge-base/kb add finding test "Title" "Finding" "Solution" --confidence 0.9
 
 # Explore
-meta kb explore
+python3 .meta/tools/meta-harness-knowledge-base/kb explore
 
 # Correct
-meta kb correct <id> "reason" "new finding"
+python3 .meta/tools/meta-harness-knowledge-base/kb correct <id> "reason" "new finding"
 ```
 
 #### Python API
@@ -312,10 +312,10 @@ kb_add_entry(
 ### Common Issues
 
 #### Issue: Tests fail with "No results found"
-**Solution**: Run `meta kb populate` to ensure KB has entries
+**Solution**: Run python3 .meta/tools/meta-harness-knowledge-base/kb populate` to ensure KB has entries
 
 #### Issue: Slow query performance
-**Solution**: Check database size, consider running `meta kb evolve`
+**Solution**: Check database size, consider running python3 .meta/tools/meta-harness-knowledge-base/kb evolve`
 
 #### Issue: Memory leak
 **Solution**: Verify database connections are closed properly

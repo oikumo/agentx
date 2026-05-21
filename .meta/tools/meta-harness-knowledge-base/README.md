@@ -6,16 +6,16 @@
 
 ```bash
 # Search
-python .meta/tools/meta-harness-knowledge-base/kb search "your query"
+python3 .meta/tools/meta-harness-knowledge-base/kb search "your query"
 
 # Ask
-python .meta/tools/meta-harness-knowledge-base/kb ask "your question?"
+python3 .meta/tools/meta-harness-knowledge-base/kb ask "your question?"
 
 # Explore
-python .meta/tools/meta-harness-knowledge-base/kb explore
+python3 .meta/tools/meta-harness-knowledge-base/kb explore
 
 # Chat
-python .meta/tools/meta-harness-knowledge-base/kb chat
+python3 .meta/tools/meta-harness-knowledge-base/kb chat
 ```
 
 ## What's New
@@ -52,10 +52,10 @@ Advanced search with automatic query expansion and diversification:
 
 ```bash
 # Basic search
-python kb search "MainController"
+python3 kb search "MainController"
 
 # With options
-python kb search "TDD workflow" -k 10 --simple --no-color
+python3 kb search "TDD workflow" -k 10 --simple --no-color
 ```
 
 **Output:**
@@ -69,7 +69,7 @@ python kb search "TDD workflow" -k 10 --simple --no-color
 Question answering with answer synthesis:
 
 ```bash
-python kb ask "How do I implement TDD in the sandbox?"
+python3 kb ask "How do I implement TDD in the sandbox?"
 ```
 
 **Output:**
@@ -84,10 +84,10 @@ Browse knowledge base by category:
 
 ```bash
 # All categories
-python kb explore
+python3 kb explore
 
 # Specific category
-python kb explore workflow
+python3 kb explore workflow
 ```
 
 **Output:**
@@ -100,7 +100,7 @@ python kb explore workflow
 Interactive conversational mode:
 
 ```bash
-python kb chat
+python3 kb chat
 ```
 
 **Features:**
@@ -114,7 +114,7 @@ python kb chat
 Show knowledge base statistics:
 
 ```bash
-python kb stats
+python3 kb stats
 ```
 
 ### Add
@@ -122,7 +122,7 @@ python kb stats
 Add new knowledge entries:
 
 ```bash
-python kb add pattern workflow "Title" "Finding" "Solution" \
+python3 kb add pattern workflow "Title" "Finding" "Solution" \
   --context "When to use" --confidence 0.9 --example "Example"
 ```
 
@@ -230,7 +230,7 @@ Final Score =
 ### Example 1: Simple Query
 
 ```bash
-python kb ask "What is MainController?"
+python3 kb ask "What is MainController?"
 ```
 
 **Output:**
@@ -251,7 +251,7 @@ Based on 3 relevant entries...
 ### Example 2: Complex Query
 
 ```bash
-python kb ask "How do I add a new command to the REPL?"
+python3 kb ask "How do I add a new command to the REPL?"
 ```
 
 Process:
@@ -263,7 +263,7 @@ Process:
 ### Example 3: Exploration
 
 ```bash
-python kb explore workflow
+python3 kb explore workflow
 ```
 
 **Output:**

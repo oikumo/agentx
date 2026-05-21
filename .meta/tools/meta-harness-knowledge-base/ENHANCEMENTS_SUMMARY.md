@@ -61,7 +61,7 @@ Created `ADVANCED_FEATURES.md` with:
 ### Before
 ```bash
 # Basic search
-python kb search "query"
+python3 kb search "query"
 
 # Output: Plain text, no structure
 ID: XXX Type: pattern | Category: workflow | Confidence: 0.85
@@ -73,7 +73,7 @@ Solution: ...
 ### After
 ```bash
 # Advanced search with expansion
-python kb search "query"
+python3 kb search "query"
 
 # Output: Structured, colored, synthesized
 ✓ Answer synthesized from 5 sources
@@ -96,28 +96,28 @@ Sources:
 
 ### 1. Simple Search
 ```bash
-python kb search "MainController" -k 5
+python3 kb search "MainController" -k 5
 ```
 
 ### 2. Advanced Ask
 ```bash
-python kb ask "How do I implement TDD workflow?"
+python3 kb ask "How do I implement TDD workflow?"
 ```
 
 ### 3. Explore Categories
 ```bash
-python kb explore
-python kb explore workflow
+python3 kb explore
+python3 kb explore workflow
 ```
 
 ### 4. Interactive Chat
 ```bash
-python kb chat
+python3 kb chat
 ```
 
 ### 5. Add Entry
 ```bash
-python kb add pattern workflow "My Pattern" "Finding" "Solution"
+python3 kb add pattern workflow "My Pattern" "Finding" "Solution"
 ```
 
 ## API Usage
@@ -220,22 +220,22 @@ rag.close()
 
 1. **Search:**
    ```bash
-   python .meta/tools/meta-harness-knowledge-base/kb search "your query"
+  python3 .meta/tools/meta-harness-knowledge-base/kb search "your query"
    ```
 
 2. **Ask:**
    ```bash
-   python .meta/tools/meta-harness-knowledge-base/kb ask "your question"
+  python3 .meta/tools/meta-harness-knowledge-base/kb ask "your question"
    ```
 
 3. **Explore:**
    ```bash
-   python .meta/tools/meta-harness-knowledge-base/kb explore
+  python3 .meta/tools/meta-harness-knowledge-base/kb explore
    ```
 
 4. **Chat:**
    ```bash
-   python .meta/tools/meta-harness-knowledge-base/kb chat
+  python3 .meta/tools/meta-harness-knowledge-base/kb chat
    ```
 
 ## Conclusion
