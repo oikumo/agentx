@@ -1,6 +1,6 @@
 # .meta Directory
 
-> **Purpose**: Safe spaces for experiments, knowledge, and tools
+> **Purpose**: Safe spaces for experiments, knowledge, tools, and project planning
 
 ---
 
@@ -8,15 +8,17 @@
 
 | Directory | Purpose |
 |-----------|---------|
-| `experiments/` | Test new libraries, prototype |
-| `knowledge_base/` | RAG knowledge storage |
-| `reflection/` | Test logs & assessments |
-| `tools/` | Development tools |
-| `doc/` | Documentation archives |
-| `data/` | Data storage |
+| `experiments/` | Test new libraries, prototype features |
+| `projects/` | Project plans and design documents |
+| `doc/` | Documentation archives and references |
+| `data/` | Data storage (knowledge base, embeddings) |
 
 ## Rules
 
-- **Each subdirectory** has its own `META.md`
-- **All structural changes** are logged in `LOG.md`
-- **Agents** read the relevant `META.md` before working in a directory
+- Each subdirectory has its own `META.md`
+- All structural changes are logged in `LOG.md`
+- Agents read the relevant `META.md` before working in a directory
+
+---
+
+**Version**: 3.1.0 (Simplified) | **Lines**: ~20

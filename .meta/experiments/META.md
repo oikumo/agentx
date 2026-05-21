@@ -19,6 +19,10 @@
 4. **DECIDE**: Integrate / discard
 5. **CLEAN**: Remove or archive
 
+## Contents
+
+- `session_management_objective_petri_nets/` - Petri Net integration tests
+
 ---
 
-**Version**: 3.0.0 (Simplified) | **Lines**: ~20
+**Version**: 3.1.0 (Simplified) | **Lines**: ~25

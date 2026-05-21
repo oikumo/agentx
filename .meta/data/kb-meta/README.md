@@ -121,6 +121,6 @@ The KB facade and implementation are in:
 
 ## See Also
 
-- [Meta Harness Documentation](../../../META_HARNESS.md)
+- [Meta Harness Documentation](../../../META.md)
 - [agentx README](../../../README.md)
 - [Meta Tools Usage](../../../.meta/tools/USAGE.md)
