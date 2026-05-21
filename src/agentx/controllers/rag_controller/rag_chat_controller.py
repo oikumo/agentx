@@ -28,7 +28,10 @@ class RagChatController:
     def process_user_message(self, user_input: str) -> bool:
         if user_input.strip().lower() in ("quit", "exit"):
             return False
-        self.rag_chat_history = self.rag.ask(user_input, self.rag_chat_history)
+        self.rag_chat_history = self.rag.query(user_input, self.rag_chat_history)
+
+        for text in self.rag_chat_history.chat_answers_history:
+            self.view.show_message(text)
 
         for text in self.rag_chat_history.chat_history:
             self.view.show_message(text)
