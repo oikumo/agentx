@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from agentx.controllers.common.input_controllers.input_url_controller import InputUrlController
+from agentx.controllers.rag_controller.rag_chat_controller import RagChatController
 from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.model.rag.rag import Rag
-from agentx.model.rag.web_ingestion import documents
 from agentx.views.rag_view.rag_view import RagView
 
 @dataclass
@@ -28,6 +28,10 @@ class RagController:
 
     def close(self) -> None:
         if self.view: self.view.print_message("close")
+
+    def show_chat(self):
+        chat = RagChatController()
+        chat.show()
 
     def ask_user_site_url(self):
         input_controller = InputUrlController()

@@ -9,7 +9,8 @@ INGESTION_MENU="""
 OPTIONS
     (1) Set ingestion URL
     (2) Ingest
-    (3) Query
+    (3) RAG Chat
+    (4) Quit
 
 """
 
@@ -29,8 +30,14 @@ class RagView:
                     self.controller.ask_user_site_url()
                 case "2":
                     self.controller.do_web_ingestion()
+                case "3":
+                    self.controller.show_chat()
+                case "4":
+                    self.controller.close()
+                    return
                 case "quit":
                     self.controller.close()
+                    return
                 case _  : self.print_message("Invalid option")
 
 

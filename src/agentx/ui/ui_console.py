@@ -67,6 +67,9 @@ class UIConsole:
 
         return None
 
+    def partial_info(self, message: str) -> None:
+        print(f"{UIConsoleColors.DARKCYAN}{message}{UIConsoleColors.END}", end="", flush=True)
+
     def info(self, message: str) -> None:
         print(f"{UIConsoleColors.DARKCYAN}{message}{UIConsoleColors.END}")
 
