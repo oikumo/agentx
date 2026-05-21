@@ -11,7 +11,6 @@
 | `experiments/` | Test new libraries, prototype features |
 | `projects/` | Project plans and design documents |
 | `doc/` | Documentation archives and references |
-| `data/` | Data storage (knowledge base, embeddings) |
 
 ## Rules
 

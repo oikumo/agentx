@@ -6,14 +6,45 @@ This module provides a clean, MCP-friendly API for the Meta Harness Knowledge Ba
 It wraps the ChromaDB-based RAG system with proper error handling and return types.
 """
 
+import os
 import sys
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
-# Add parent path to import from the original KB location
-KB_TOOLS_PATH = Path(__file__).parent.parent.parent.parent / ".meta" / "tools" / "meta-harness-knowledge-base"
+# ---------------------------------------------------------------------------
+# Import path setup
+# ---------------------------------------------------------------------------
+# The MCP wheel ships ``meta_harness_knowledge_base/src/`` alongside this
+# module (see ``pyproject.toml``). When installed by ``uvx`` this lives at
+# ``<site-packages>/meta_harness_knowledge_base/src/rag_tool.py``. When
+# running from the in-tree source it lives at
+# ``mcp_servers/knowledge_base/meta_harness_knowledge_base/src/rag_tool.py``.
+# In both cases ``Path(__file__).parent.parent / "meta_harness_knowledge_base"``
+# resolves correctly, and adding it to ``sys.path`` lets us do
+# ``from src.rag_tool import ...``.
+KB_TOOLS_PATH = Path(__file__).parent.parent / "meta_harness_knowledge_base"
 sys.path.insert(0, str(KB_TOOLS_PATH))
+
+
+# ---------------------------------------------------------------------------
+# ChromaDB persistence directory resolution
+# ---------------------------------------------------------------------------
+# ``rag_tool.get_chroma_client`` honours ``KB_CHROMA_DB_PATH`` /
+# ``KB_PROJECT_ROOT`` env vars. When this MCP server is launched by opencode
+# (see opencode.jsonc), the cwd is the project root, so we can default the
+# project root to ``Path.cwd()`` if the user did not set anything explicitly.
+# ChromaDB is now located inside the MCP folder at mcp_servers/knowledge_base/chroma_db
+def _ensure_kb_paths_env() -> None:
+    if os.environ.get("KB_CHROMA_DB_PATH") or os.environ.get("KB_PROJECT_ROOT"):
+        return
+    candidate_root = Path.cwd()
+    # Check if ChromaDB exists in the new MCP location
+    if (candidate_root / "mcp_servers" / "knowledge_base" / "chroma_db").exists():
+        os.environ["KB_PROJECT_ROOT"] = str(candidate_root)
+
+
+_ensure_kb_paths_env()
 
 @dataclass
 class KBEntry:

@@ -24,4 +24,16 @@
 - Added note pointing agents to read each subdir's `META.md` before working there
 - Bumped to v4.1.0 (MCP-First + META consistency)
 
+### KB MCP Server Fix (affects `mcp_servers/knowledge_base/`)
+
+- **Symptom**: All KB MCP tools failed with `No module named 'src'`.
+- **Root causes**:
+  1. `pyproject.toml` `only-include` shipped only `server.py` + `kb_module/` in the wheel; the actual RAG implementation (`meta_harness_knowledge_base/src/rag_tool.py`) was missing from every uvx install, so `from src.rag_tool import …` blew up.
+  2. `rag_tool.get_chroma_client` resolved the project root by walking 5 parents from `__file__`. That works for the in-tree `kb` CLI but, once installed in a venv, pointed at a random site-packages path, silently creating an empty ChromaDB instead of using `.meta/data/kb-meta/chroma_db`.
+- **Fix**:
+  - `mcp_servers/knowledge_base/pyproject.toml`: added `meta_harness_knowledge_base/src/` to the wheel's `only-include`.
+  - `meta_harness_knowledge_base/src/rag_tool.py`: `get_chroma_client` now honours `KB_CHROMA_DB_PATH` / `KB_PROJECT_ROOT` env vars, falling back to the legacy 5-parents walk (preserves CLI behavior).
+  - `kb_module/core.py`: on import, sets `KB_PROJECT_ROOT=Path.cwd()` when `.meta/data/kb-meta/` exists there and no env var is already set, so the opencode-launched MCP server auto-targets the project's real KB.
+- **Verified**: built wheel, installed in fresh venv, `kb_stats` returns the real 5 entries; legacy in-tree CLI behavior unchanged.
+
 ---
