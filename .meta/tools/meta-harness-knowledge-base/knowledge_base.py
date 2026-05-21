@@ -1,30 +1,24 @@
 #!/usr/bin/env python3
+"""META HARNESS Knowledge Base - ChromaDB Backend"""
+
 import sys
 from pathlib import Path
 
-# Path to knowledge base (go up from .meta/development_tools/mcp/meta-harness-knowledge-base to project root)
 KB_PATH = Path(__file__).parent.parent.parent / ".meta" / "data" / "kb-meta"
 DB_PATH = KB_PATH / "knowledge-meta.db"
 
-# Add KB to path for imports
 sys.path.insert(0, str(KB_PATH))
 
 
 def kb_search(query: str, top_k: int = 5, category: str = None) -> str:
-    """Search knowledge base for relevant entries.
-    
-    Args:
-        query: Search query
-        top_k: Number of results (default: 5)
-        category: Optional category filter
-    """
+    """Search knowledge base for relevant entries."""
     from src.rag_tool import rag_search
     result = rag_search(query, top_k, category)
-    
+
     if result.get("success"):
         if result["count"] == 0:
             return "No results found"
-        
+
         formatted = []
         for entry in result["results"]:
             formatted.append(
@@ -40,15 +34,10 @@ def kb_search(query: str, top_k: int = 5, category: str = None) -> str:
 
 
 def kb_ask(question: str, top_k: int = 3) -> str:
-    """Ask a question and get RAG-augmented response.
-    
-    Args:
-        question: Question to ask
-        top_k: Number of context entries (default: 3)
-    """
+    """Ask a question and get RAG-augmented response."""
     from src.rag_tool import rag_ask
     result = rag_ask(question, top_k)
-    
+
     if result.get("success"):
         return result["augmented_prompt"]
     else:
@@ -65,21 +54,10 @@ def kb_add_entry(
     confidence: float = 0.5,
     example: str = ""
 ) -> str:
-    """Add new knowledge entry to the knowledge base.
-    
-    Args:
-        entry_type: Type of entry (pattern, finding, correction, decision)
-        category: Category (workflow, code, test, docs, tool, architecture)
-        title: Concise title
-        finding: What was discovered
-        solution: How to solve it
-        context: When/where this applies
-        confidence: Confidence score (0.0-1.0)
-        example: Optional example
-    """
+    """Add new knowledge entry to the knowledge base."""
     from src.rag_tool import rag_add_entry
     result = rag_add_entry(entry_type, category, title, finding, solution, context, confidence, example)
-    
+
     if result.get("success"):
         return result["message"]
     else:
@@ -87,16 +65,10 @@ def kb_add_entry(
 
 
 def kb_correct(entry_id: str, reason: str, new_finding: str) -> str:
-    """Add correction to existing entry.
-    
-    Args:
-        entry_id: ID of entry to correct
-        reason: Why correction is needed
-        new_finding: Updated information
-    """
+    """Add correction to existing entry."""
     from src.rag_tool import rag_correct
     result = rag_correct(entry_id, reason, new_finding)
-    
+
     if result.get("success"):
         return result["message"]
     else:
@@ -104,10 +76,10 @@ def kb_correct(entry_id: str, reason: str, new_finding: str) -> str:
 
 
 def kb_evolve() -> str:
-    """Run evolution cycle: decay unused entries, archive low confidence."""
+    """Run evolution cycle."""
     from src.rag_tool import rag_evolve
     result = rag_evolve()
-    
+
     if result.get("success"):
         return result["message"]
     else:
@@ -118,25 +90,24 @@ def kb_stats() -> str:
     """Get knowledge base statistics."""
     from src.rag_tool import rag_stats
     result = rag_stats()
-    
+
     if result.get("success"):
         lines = [f"Total entries: {result['total_entries']}"]
         lines.append("\nBy type:")
         for type_name, data in result["by_type"].items():
-            lines.append(f"  {type_name}: {data['count']} (avg confidence: {data['avg_confidence']:.2f})")
-        
+            lines.append(f" {type_name}: {data['count']} (avg confidence: {data['avg_confidence']:.2f})")
+
         lines.append("\nBy category:")
         for cat, count in result["by_category"].items():
-            lines.append(f"  {cat}: {count}")
-        
+            lines.append(f" {cat}: {count}")
+
         lines.append(f"\nConfidence distribution:")
-        lines.append(f"  High (>=0.9): {result['confidence_distribution']['high']}")
-        lines.append(f"  Medium (0.6-0.9): {result['confidence_distribution']['medium']}")
-        lines.append(f"  Low (<0.6): {result['confidence_distribution']['low']}")
-        
+        lines.append(f" High (>=0.9): {result['confidence_distribution']['high']}")
+        lines.append(f" Medium (0.6-0.9): {result['confidence_distribution']['medium']}")
+        lines.append(f" Low (<0.6): {result['confidence_distribution']['low']}")
+
         lines.append(f"\nPending corrections: {result['pending_corrections']}")
-        
+
         return "\n".join(lines)
     else:
         return f"Error: {result.get('error', 'Unknown error')}"
-

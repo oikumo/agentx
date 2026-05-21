@@ -1,326 +1,116 @@
-# Meta Harness Knowledge Base - Enhanced
+# Meta Harness KB - ChromaDB RAG
 
-> **Next-Generation RAG System** with advanced retrieval, synthesis, and conversational capabilities.
+**ChromaDB-powered RAG** for project knowledge. Vector search, query expansion, multi-hop retrieval, answer synthesis.
+
+## ⚠️ IMPORTANT: Dependency Management
+
+**⛔ NEVER use `pip` to install dependencies.** This will break the isolated environment.
+
+**✅ ONLY use `uv` for all dependency management:**
+
+- All dependencies are managed via `pyproject.toml`
+- Use `uv add <package>` to install dependencies
+- The virtual environment is managed automatically by `uv`
+- Always run commands using the venv Python: `.venv/bin/python kb ...`
+
+**Why not `pip`?** Using `pip` directly will install packages to the wrong environment and cause import errors.
 
 ## Quick Start
 
 ```bash
-# Search
-python3 .meta/tools/meta-harness-knowledge-base/kb search "your query"
+cd .meta/tools/meta-harness-knowledge-base
 
-# Ask
-python3 .meta/tools/meta-harness-knowledge-base/kb ask "your question?"
+# Install dependencies (REQUIRED - first time only)
+uv sync
 
-# Explore
-python3 .meta/tools/meta-harness-knowledge-base/kb explore
-
-# Chat
-python3 .meta/tools/meta-harness-knowledge-base/kb chat
+# Run commands (use the venv Python)
+.venv/bin/python kb search "query"
+.venv/bin/python kb ask "question?"
 ```
-
-## What's New
-
-### 🚀 Advanced Features
-
-1. **Query Expansion** - Automatically generates multiple query variations
-2. **Multi-Hop Retrieval** - Iterative search for complex questions
-3. **Semantic Clustering** - Ensures diverse, non-redundant results
-4. **Answer Synthesis** - Combines sources into comprehensive answers
-5. **Conversational Interface** - Interactive chat with context
-6. **Rich Formatting** - Colored output with metadata
-
-### 📊 Performance
-
-- **Simple search**: <50ms
-- **Multi-hop (2 hops)**: <100ms  
-- **With synthesis**: <150ms
-- **Query expansion**: 5x variations
-
-### 📈 Knowledge Base Stats
-
-- **Total entries**: 1,444
-- **Findings**: 729
-- **Patterns**: 715
-- **Categories**: 5 (documentation, workflow, directives, test, code)
-- **Average confidence**: 0.89
 
 ## CLI Commands
 
-### Search
+**Note:** Always use `.venv/bin/python` to run KB commands.
 
-Advanced search with automatic query expansion and diversification:
-
-```bash
-# Basic search
-python3 kb search "MainController"
-
-# With options
-python3 kb search "TDD workflow" -k 10 --simple --no-color
-```
-
-**Output:**
-- Formatted results with colors
-- Confidence scores (color-coded)
-- Source citations
-- Metadata (timing, variations)
-
-### Ask
-
-Question answering with answer synthesis:
-
-```bash
-python3 kb ask "How do I implement TDD in the sandbox?"
-```
-
-**Output:**
-- Synthesized answer from multiple sources
-- Structured by type (patterns, findings, decisions)
-- Source citations with confidence
-- Summary with key insights
-
-### Explore
-
-Browse knowledge base by category:
-
-```bash
-# All categories
-python3 kb explore
-
-# Specific category
-python3 kb explore workflow
-```
-
-**Output:**
-- Category breakdown
-- Entry counts by type
-- Average confidence scores
-
-### Chat
-
-Interactive conversational mode:
-
-```bash
-python3 kb chat
-```
-
-**Features:**
-- Context tracking
-- Multi-turn conversations
-- Source citations
-- Easy exit with 'quit' or 'exit'
-
-### Stats
-
-Show knowledge base statistics:
-
-```bash
-python3 kb stats
-```
-
-### Add
-
-Add new knowledge entries:
-
-```bash
-python3 kb add pattern workflow "Title" "Finding" "Solution" \
-  --context "When to use" --confidence 0.9 --example "Example"
-```
+| Command | Description | Example |
+|---------|-------------|---------|
+| `search` | Vector search with query expansion | `.venv/bin/python kb search "TDD" -k 5` |
+| `ask` | Synthesized answer with citations | `.venv/bin/python kb ask "Where write tests?"` |
+| `stats` | KB statistics | `.venv/bin/python kb stats` |
+| `add` | Add entry | `.venv/bin/python kb add pattern code "Title" "Finding" "Solution"` |
+| `chat` | Interactive mode | `.venv/bin/python kb chat` |
 
 ## Python API
 
-### Basic Usage
+**Note:** Run Python code using `.venv/bin/python` or ensure you're in the virtual environment.
 
 ```python
-from src.advanced_rag import AdvancedRAG
-
-rag = AdvancedRAG()
+from src.rag_tool import rag_search, rag_ask
+from src.advanced_rag import ChromaDBAdvancedRAG
 
 # Search
-result = rag.advanced_search("query", top_k=5)
+result = rag_search("query", top_k=5)
 
 # Ask
-result = rag.ask("question?", top_k=5)
+result = rag_ask("question?", top_k=3)
 
-rag.close()
-```
-
-### Advanced Usage
-
-```python
-from src.advanced_rag import AdvancedRAG
-
-rag = AdvancedRAG()
-
-# Query expansion
-variations = rag.rewrite_query("complex query")
-print(f"Generated {len(variations)} variations")
-
-# Multi-hop retrieval
-results = rag.multi_hop_retrieval("query", max_hops=2)
-
-# Diversification
-diversified = rag.cluster_and_diversify(results)
-
-# Answer synthesis
-synthesis = rag.synthesize_answer("question?", results)
-
-rag.close()
-```
-
-### Convenience Functions
-
-```python
-from src.advanced_rag import advanced_search, advanced_ask
-
-# Search
-result = advanced_search("query", top_k=5)
-
-# Ask
-result = advanced_ask("question?", top_k=5)
+# Advanced
+rag = ChromaDBAdvancedRAG()
+result = rag.advanced_search("query", top_k=5, use_multi_hop=True)
 ```
 
 ## Architecture
 
-### Components
+**Components:**
+- `rag_tool.py` - ChromaDB search, ask, add (rag_search, rag_ask, rag_add_entry)
+- `rag_ingest.py` - Python/Markdown ingestion
+- `advanced_rag.py` - Query expansion, multi-hop, clustering, synthesis
+- `knowledge_base.py` - High-level API (kb_search, kb_ask, kb_stats)
+- `kb` - CLI tool
 
-1. **Query Expansion Module**
-   - Keyword extraction
-   - Query decomposition
-   - Statement conversion
-   - Synonym expansion (rule-based)
+**Scoring:** 30% vector + 20% keyword + 15% semantic + 15% confidence + 10% recency + 10% title match
 
-2. **Retrieval Engine**
-   - FTS5 full-text search
-   - BM25 scoring
-   - Keyword matching (TF-IDF-like)
-   - Semantic boost
-   - Confidence weighting
-   - Recency adjustment
+**Storage:** `.meta/data/kb-meta/chroma_db/`
 
-3. **Multi-Hop System**
-   - Iterative retrieval
-   - Entity/concept extraction
-   - Result merging
-   - Deduplication
+## Entry Types & Categories
 
-4. **Clustering & Diversification**
-   - Category-based grouping
-   - Diversity scoring
-   - Redundancy reduction
+**Types:** pattern, finding, decision, correction  
+**Categories:** code, class, method, function, workflow, documentation, architecture
 
-5. **Synthesis Engine**
-   - Multi-source combination
-   - Type-based organization
-   - Citation generation
-   - Confidence aggregation
+## Performance
 
-### Scoring Formula
-
-```
-Final Score = 
-  0.30 * BM25 +              # Textual relevance
-  0.25 * Keyword +           # Semantic overlap
-  0.20 * Semantic Boost +    # Field importance
-  0.15 * Confidence +        # Quality signal
-  0.10 * Recency            # Freshness
-```
-
-## Examples
-
-### Example 1: Simple Query
-
-```bash
-python3 kb ask "What is MainController?"
-```
-
-**Output:**
-```
-✓ Answer synthesized from 3 sources
-Confidence: 0.95
-
-## Summary
-Based on 3 relevant entries...
-
-## Patterns Found: 2
-1. Integration Guide (PAT-5B77)
-   Type: pattern | Category: documentation
-   Finding: Documentation file
-   Solution: Step-by-step guide...
-```
-
-### Example 2: Complex Query
-
-```bash
-python3 kb ask "How do I add a new command to the REPL?"
-```
-
-Process:
-1. Expands to 5+ query variations
-2. Multi-hop: "command" → "REPL" → "main.py"
-3. Retrieves patterns, findings, examples
-4. Synthesizes comprehensive answer
-
-### Example 3: Exploration
-
-```bash
-python3 kb explore workflow
-```
-
-**Output:**
-```
-Category: WORKFLOW (250 entries)
-  - pattern: 249 (avg conf: 0.90)
-  - finding: 1 (avg conf: 0.98)
-```
-
-## Best Practices
-
-1. **Use specific queries** for better results
-2. **Try ask vs search** for different needs
-3. **Check source citations** for verification
-4. **Monitor confidence scores** (>=0.7 recommended)
-5. **Use chat mode** for exploratory questions
-6. **Explore categories** to discover patterns
+- Search: ~0.4s
+- Multi-hop: ~0.8s  
+- Storage: ~5MB/1000 entries
 
 ## Troubleshooting
 
-### No results
-- Try simpler query
-- Use different keywords
-- Check spelling
+- **No results:** Simplify query, check spelling
+- **Low confidence:** Verify sources, add documentation
+- **Import error / ModuleNotFoundError:** Run `uv sync` to install dependencies
+- **Command not found:** Ensure you're using `.venv/bin/python kb` not just `python kb`
+- **Used `pip install`?** This will break the environment. Run `uv sync` to fix it.
 
-### Low confidence
-- Topic may be under-documented
-- Consider adding new entry
-- Look at multiple sources
+**⛔ NEVER run `pip install` in this directory. Always use `uv add` or `uv sync`.**
 
-### Too many results
-- Increase specificity
-- Add category filter
-- Reduce top_k
+---
 
-## Documentation
+## Development
 
-- [ADVANCED_FEATURES.md](ADVANCED_FEATURES.md) - Detailed feature docs
-- [ENHANCEMENTS_SUMMARY.md](ENHANCEMENTS_SUMMARY.md) - What's new
-- [META.md](META.md) - Basic usage
-- [USAGE.md](../USAGE.md) - General KB operations
+**Adding new dependencies:**
+```bash
+uv add <package-name>
+```
 
-## Future Enhancements
+**Running tests:**
+```bash
+uv run pytest
+```
 
-- [ ] LLM-powered query rewriting
-- [ ] Embedding-based semantic search
-- [ ] Cross-encoder re-ranking
-- [ ] Conversational memory
-- [ ] Temporal reasoning
-- [ ] Multi-document summarization
+**Syncing dependencies:**
+```bash
+uv sync
+```
 
-## License
-
-Part of the Meta Project Harness system.
-
-## See Also
-
-- [agentx](../../README.md) - Main project
-- [Meta Harness](../../META_HARNESS.md) - Master documentation
-- [Advanced RAG](src/advanced_rag.py) - Implementation
+---
+**v3.0.0** \| ChromaDB backend \| 2026-05-21

@@ -17,16 +17,11 @@ Structured project organization for AI-assisted development:
 
 ## Directory Quick Reference
 
-| Directory | Purpose | Link |
-|-----------|---------|------|
-| `src/` | Production code | - |
-| `tests/` | Unit and integration tests | - |
-| `.meta/experiments/` | Test new libraries, prototype | [META.md](.meta/experiments/META.md) |
-| `.meta/knowledge_base/` | RAG knowledge storage | [META.md](.meta/knowledge_base/META.md) |
-| `.meta/reflection/` | Test logs & capability assessment | [META.md](.meta/reflection/META.md) |
-| `.meta/tools/` | Development tools, scripts | [META.md](.meta/tools/META.md) |
-| `.meta/doc/` | Documentation archives | - |
-| `.meta/data/` | Data storage | - |
+| Directory | Purpose                           | Link |
+|----------|-----------------------------------|------|
+| `src/` | Production code                   | - |
+| `tests/` | Unit and integration tests        | - |
+| `.meta/` | META HARNESS current state        | [META.md](.meta/) |
 
 ---
 
@@ -39,14 +34,3 @@ Structured project organization for AI-assisted development:
 5. **REPORT**: Summarize + document + cleanup
 
 ---
-
-## AI Agent Responsibilities
-
-**MUST**: Read META.md first, work in correct directories, follow TDD, test thoroughly, document, respect directives
-**SHOULD**: Be proactive, suggest improvements, keep clean, share learnings
-**MUST NOT**: Modify production without permission, skip tests, ignore META.md, leave mess
-
----
-
-**Version**: 3.0.0 (Simplified) | **Lines**: ~60
-**Updated**: 2026-05-15 | **Maintained By**: opencode AI agent

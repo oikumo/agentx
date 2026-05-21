@@ -30,5 +30,17 @@
     "list": "allow",
     "lsp": "allow",
     "skill": "allow"
+  },
+  "mcp": {
+    "knowledge_base": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "uvx",
+        "--from",
+        "./mcp_servers/knowledge_base",
+        "knowledge_base"
+      ]
+    }
   }
 }

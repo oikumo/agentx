@@ -107,13 +107,13 @@ If `OPENROUTER_API_KEY` is not set, the application will prompt for it on startu
 ### Starting the Application
 
 ```bash
-python main.py
+python3 main.py
 ```
 
 You will see the agentx banner and the prompt:
 
 ```
-(agent-x) >
+(agentx)
 ```
 
 Type `help` to see all available commands, or `quit` to exit.
@@ -125,7 +125,7 @@ Type `help` to see all available commands, or `quit` to exit.
 agentx uses an interactive command loop. Each line you enter is parsed as a command with optional arguments:
 
 ```
-(agent-x) > command arg1 arg2
+(agentx) command arg1 arg2
 ```
 
 After each command, agentx prints the command history for the current session.
@@ -167,25 +167,7 @@ After each command, agentx prints the command history for the current session.
 
 ### AI Chat
 
-The `chat` command is the primary way to interact with LLMs. It supports model selection and interactive conversations:
-
-```
-(agent-x) > chat [query]
-(agent-x) > chat --model <model_name> [query]
-```
-
-**Features:**
-- Single-query chat: `chat What is Python?`
-- Model selection: `chat --model gpt-4 Explain quantum computing`
-- Interactive mode: `chat` (then conversation loop)
-- The `--model` flag can appear anywhere in the command
-- When multiple `--model` flags are given, the last one wins
-
-**Streaming Metrics:** After each response, agentx displays performance metrics:
-
-```
-150 tokens in 3.2s (46.9 tok/s)
-```
+The `chat` command is the primary way to interact with LLMs. It supports model selection and interactive conversations.
 
 ---
 
@@ -245,18 +227,6 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 
 ---
 
-## Architecture Overview
-
-```
-main.py
-└── create_controller()
-    └── MainController
-        └── ReplApp(controller).run()
-            ├── Session management
-            ├── Command parsing & execution
-            └── Exit on quit / Ctrl+C / Ctrl+D
-```
-
 ### Design Patterns
 
 - **Command Pattern**: Every REPL command implements a consistent `run()` interface
@@ -271,17 +241,6 @@ main.py
 
 agentx uses the **Meta Harness** - a structured development system optimized for AI-assisted development.
 
-### Key Directories
-
-| Directory | Purpose |
-|-----------|---------|
-| `.meta/project_development/` | Rules, standards, workflows |
-| `.meta/sandbox/` | Safe workspace for code modifications |
-| `.meta/tests_sandbox/` | TDD workspace |
-| `tests/unit/` | **Unit tests for all src/agentx/ modules (205+ tests)** |
-| `.meta/experiments/` | Experimental features |
-| `.meta/development_tools/` | Development utilities |
-| `.meta/knowledge_base/` | Knowledge storage |
 
 ### For AI Agents
 
