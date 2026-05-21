@@ -1,7 +1,7 @@
 # Meta Harness - Agent X
 
 > **Purpose**: Master guide for project organization
-> **Target**: AI agents (opencode)
+> **Target**: AI agents
 
 ---
 
