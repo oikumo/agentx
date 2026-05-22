@@ -6,7 +6,6 @@ This module provides a clean, MCP-friendly API for the Meta Harness Knowledge Ba
 It wraps the ChromaDB-based RAG system with proper error handling and return types.
 """
 
-import os
 import sys
 from pathlib import Path
 from typing import Optional, List, Dict, Any
@@ -30,21 +29,10 @@ sys.path.insert(0, str(KB_TOOLS_PATH))
 # ---------------------------------------------------------------------------
 # ChromaDB persistence directory resolution
 # ---------------------------------------------------------------------------
-# ``rag_tool.get_chroma_client`` honours ``KB_CHROMA_DB_PATH`` /
-# ``KB_PROJECT_ROOT`` env vars. When this MCP server is launched by opencode
-# (see opencode.jsonc), the cwd is the project root, so we can default the
-# project root to ``Path.cwd()`` if the user did not set anything explicitly.
-# ChromaDB is now located inside the MCP folder at mcp_servers/knowledge_base/chroma_db
-def _ensure_kb_paths_env() -> None:
-    if os.environ.get("KB_CHROMA_DB_PATH") or os.environ.get("KB_PROJECT_ROOT"):
-        return
-    candidate_root = Path.cwd()
-    # Check if ChromaDB exists in the new MCP location
-    if (candidate_root / "mcp_servers" / "knowledge_base" / "chroma_db").exists():
-        os.environ["KB_PROJECT_ROOT"] = str(candidate_root)
-
-
-_ensure_kb_paths_env()
+# Path resolution is now fully relative - no environment variables needed.
+# The ChromaDB directory is located at mcp_servers/knowledge_base/chroma_db
+# relative to this file's location in the MCP server folder.
+# This is handled entirely by rag_tool.get_chroma_client()
 
 @dataclass
 class KBEntry:

@@ -6,7 +6,6 @@ This tool allows opencode to query the Meta Project Harness Knowledge Base
 using RAG (Retrieval-Augmented Generation) with ChromaDB as the vector store.
 """
 
-import os
 import sys
 import hashlib
 import re
@@ -88,26 +87,15 @@ def semantic_boost(entry: Dict, query: str) -> float:
 def get_chroma_client(persist_directory: Optional[Path] = None):
     """Get ChromaDB client with persistence.
 
-    Resolution order for the persist directory:
-    1. Explicit ``persist_directory`` argument.
-    2. ``KB_CHROMA_DB_PATH`` environment variable (absolute path to the
-       ChromaDB directory). Used by the MCP server wrapper so the installed
-       wheel can locate the project's KB regardless of where it was
-       installed.
-    3. ``KB_PROJECT_ROOT`` environment variable (project root containing
-       ``mcp_servers/knowledge_base/chroma_db``).
-    4. Default: MCP server folder (``mcp_servers/knowledge_base/chroma_db``).
+    The persist directory is resolved using only relative paths:
+    1. Explicit ``persist_directory`` argument (if provided)
+    2. Default: ``mcp_servers/knowledge_base/chroma_db`` relative to this file's location
+    
+    No environment variables are used.
     """
     if persist_directory is None:
-        env_db = os.environ.get("KB_CHROMA_DB_PATH")
-        env_root = os.environ.get("KB_PROJECT_ROOT")
-        if env_db:
-            persist_directory = Path(env_db)
-        elif env_root:
-            persist_directory = Path(env_root) / "mcp_servers" / "knowledge_base" / "chroma_db"
-        else:
-            # Default: inside the MCP knowledge_base folder
-            persist_directory = Path(__file__).parent.parent / "chroma_db"
+        # Always use relative path from this file's location
+        persist_directory = Path(__file__).parent.parent / "chroma_db"
 
     persist_directory.mkdir(parents=True, exist_ok=True)
     client = chromadb.PersistentClient(path=str(persist_directory))
