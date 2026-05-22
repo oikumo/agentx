@@ -1,6 +1,6 @@
 [project]
 name = "knowledge_base"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local MCP server for Meta Project Harness Knowledge Base with ChromaDB RAG"
 requires-python = ">=3.10"
 dependencies = [
@@ -19,6 +19,5 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 only-include = [
     "server.py",
-    "kb_module/",
-    "meta_harness_knowledge_base/src/",
+    "kb/",
 ]
