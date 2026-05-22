@@ -10,7 +10,7 @@
 
 **NEVER:**
 1. Commit/push code
-2. Modify `.env` or secrets
+2. Read nor Modify `.env` or secrets
 3. Add dependencies (approval required)
 4. Modify `tests/` dir (use canary tests, requires approval)
 5. Change `README.md` (unless explicitly asked)
@@ -73,7 +73,6 @@ The Knowledge Base is **exclusively** accessed through the MCP server:
   - `knowledge_base_stats_tool` - Get KB statistics
   - `knowledge_base_list_categories` - List valid categories/types
 
-**Deprecated**: The old CLI command `python3 .meta/tools/meta-harness-knowledge-base/kb ask` is no longer the primary access method.
 
 ---
 

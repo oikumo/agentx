@@ -11,10 +11,6 @@
 **DO**: Folder per project, document scope, link to experiments
 **DON'T**: Include code, mix unrelated projects, leave outdated
 
-## Contents
-
-- `petri-net-session-management/` - Petri Net session state design
-
 ---
 
 **Version**: 3.0.0 (Simplified) | **Lines**: ~20
