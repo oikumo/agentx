@@ -379,6 +379,51 @@ def rag_evolve() -> Dict[str, Any]:
     }
 
 
+def rag_reset() -> Dict[str, Any]:
+    """Reset the knowledge base by deleting and recreating the ChromaDB collection.
+    
+    This removes ALL entries from the knowledge base. Use with caution.
+    
+    Returns:
+        Dict with success status and message.
+    """
+    global _chroma_client, _chroma_collection
+    try:
+        if _chroma_client is None:
+            _chroma_client = get_chroma_client()
+        
+        collection_name = "knowledge_base"
+        # Delete existing collection if present
+        try:
+            existing = _chroma_client.list_collections()
+            if any(c.name == collection_name for c in existing):
+                _chroma_client.delete_collection(name=collection_name)
+        except Exception as e:
+            # Collection may not exist; continue
+            pass
+        
+        # Force-recreate fresh collection
+        _chroma_collection = _chroma_client.create_collection(
+            name=collection_name,
+            metadata={
+                "description": "Meta Project Harness Knowledge Base",
+                "created_at": datetime.now().isoformat()
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": "Knowledge base reset successfully. All entries deleted.",
+            "total_entries": 0
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": f"Reset failed: {str(e)}"
+        }
+
+
 def rag_stats() -> Dict[str, Any]:
     """Get knowledge base statistics from ChromaDB."""
     try:
@@ -426,6 +471,7 @@ chroma_rag_stats = rag_stats
 
 __all__ = [
     "rag_search", "rag_ask", "rag_add_entry", "rag_correct", "rag_evolve", "rag_stats",
+    "rag_reset",
     "simple_tokenize", "escape_fts5_query", "keyword_score", "semantic_boost",
     "get_chroma_collection", "hybrid_search_with_chroma"
 ]
