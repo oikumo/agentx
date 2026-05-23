@@ -1,4 +1,6 @@
 import asyncio
+from dataclasses import dataclass
+
 from agentx.common import utils
 from agentx.common.input_utils import InputUtils
 from agentx.model.ai.service import AIService
@@ -6,6 +8,14 @@ from agentx.model.rag.query.rag_query import RagQuery, RagChatHistory
 from agentx.model.rag.rag_db import RagDatabase
 from agentx.model.rag.web_ingestion.web_extract import WebExtract
 from agentx.model.rag.web_ingestion.web_ingestion_app import WebIngestionApp
+
+
+@dataclass
+class RagWebExtractLevel:
+    label: str
+    max_depth: int
+    max_breadth: int
+    max_pages: int
 
 
 class Rag:
@@ -34,7 +44,7 @@ class Rag:
                 utils.file_exists(self.rag_db_path)
         )
 
-    def web_ingestion(self) -> bool:
+    def web_ingestion(self, extract_level: RagWebExtractLevel) -> bool:
         if not InputUtils.is_valid_url(self.site_url):
             return False
 
@@ -42,7 +52,11 @@ class Rag:
         ai_service = AIService()
         vectorstore = ai_service.rag_chromadb(self.vector_db_path)
 
-        web_extractor = WebExtract(1, 2, 100)
+        web_extractor = WebExtract(
+            extract_level.max_depth,
+            extract_level.max_breadth,
+            extract_level.max_pages)
+
         app = WebIngestionApp(vectorstore, web_extractor)
 
         asyncio.run(app.run(

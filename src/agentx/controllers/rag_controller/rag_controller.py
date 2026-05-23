@@ -4,8 +4,9 @@ from dataclasses import dataclass
 
 from agentx.controllers.common.input_controllers.input_url_controller import InputUrlController
 from agentx.controllers.rag_controller.rag_chat_controller import RagChatController
+from agentx.controllers.rag_controller.rag_web_ingestion_controller import RagWebIngestionController
 from agentx.controllers.session_controller.session_controller import SessionController
-from agentx.model.rag.rag import Rag
+from agentx.model.rag.rag import Rag, RagWebExtractLevel
 from agentx.views.rag_view.rag_view import RagView
 
 @dataclass
@@ -26,22 +27,16 @@ class RagController:
     def show(self):
         if self.view: self.view.show()
 
-    def close(self) -> None:
-        if self.view: self.view.print_message("close")
-
     def show_chat(self):
         chat = RagChatController()
         chat.show()
 
-    def ask_user_site_url(self):
-        input_controller = InputUrlController()
-        input_controller.show()
-        self.rag.site_url = input_controller.url
-        if not self.rag.site_url:
-            self.view.print_message_error("INVALID URL")
+    def show_web_ingestion(self):
+        ingestion = RagWebIngestionController()
+        ingestion.show()
 
-    def set_site_url(self, site_url: str):
-        self.rag.site_url = site_url
+    def close(self) -> None:
+        if self.view: self.view.print_message("close")
 
     def get_rag_state(self):
         data_base_path = None
@@ -55,13 +50,4 @@ class RagController:
             data_base_location=data_base_path,
             documents_location=documents_path
         )
-
-    def do_web_ingestion(self):
-        if not self.rag.site_url:
-            self.view.print_message("missing site url")
-            return
-
-        self.view.print_message(f"{self.rag.site_url}")
-        self.view.print_message(f"{self.rag.working_directory}")
-        self.rag.web_ingestion()
 

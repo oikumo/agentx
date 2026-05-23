@@ -5,12 +5,11 @@ from agentx.ui.ui_console import UIConsole
 if TYPE_CHECKING:
     from agentx.controllers.rag_controller.rag_controller import RagController
 
-INGESTION_MENU="""
+RAG_MENU= """
 OPTIONS
-    (1) Set ingestion URL
-    (2) Ingest
-    (3) RAG Chat
-    (4) Quit
+    (1) Web Ingestion
+    (2) RAG Chat
+    (3) Quit
 
 """
 
@@ -27,12 +26,10 @@ class RagView:
             user_input = self.console.capture_input()
             match user_input:
                 case "1":
-                    self.controller.ask_user_site_url()
+                    self.controller.show_web_ingestion()
                 case "2":
-                    self.controller.do_web_ingestion()
-                case "3":
                     self.controller.show_chat()
-                case "4":
+                case "3":
                     self.controller.close()
                     return
                 case "quit":
@@ -44,7 +41,7 @@ class RagView:
     def _show_rag_main_menu(self):
         self.console.header("RAG")
         self._show_rag_state()
-        self.console.info(INGESTION_MENU)
+        self.console.info(RAG_MENU)
 
     def _show_rag_state(self):
         state = self.controller.get_rag_state()
