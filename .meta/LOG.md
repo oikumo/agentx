@@ -87,3 +87,29 @@
 - **Verified**: built wheel, installed in fresh venv, `kb_stats` returns the real 5 entries; legacy in-tree CLI behavior unchanged.
 
 ---
+
+---
+
+## 2026-05-23 — KB Population v2.0 (Full Project Scan)
+
+- **Action**: Knowledge Base populated (full project scan with quality gates)
+- **Strategy**: RESET (0 entries at session start — auto-triggered per populate-kb skill)
+- **Results**: 797 entries across 7 categories
+- **Quality**: Mean confidence 0.999 | Median 0.999
+- **Gates**: 5/5 passed
+  - Completeness: PASS (797 entries, target ≥25)
+  - Diversity: PASS (7/7 categories)
+  - Confidence: PASS (mean 0.999, target ≥0.75)
+  - Coverage: PASS (all src/ dirs indexed)
+  - Coherence: PASS (3/3 queries returned relevant answers ≥0.6 confidence)
+- **Files**: Python ✓ (792 auto-extracted) | Markdown ✓ (5 manual entries)
+- **Manual entries**: 5 added (META System PAT-584C, KB-First Workflow PAT-5CBF, MainController PAT-967F, RAG/ChromaDB DEC-6A48, Petri Net DEC-6182)
+- **Excluded**: .venv, .git, .pytest_cache, local_sessions, .agents, .agents_prompts, .idea, .meta, __pycache__
+- **MCP Operations**:
+  - `kb_reset_tool`: 1 call
+  - `kb_populate_workspace_tool`: 1 call (succeeded after timeout retry)
+  - `kb_add_tool`: 5 calls (parallel batch)
+  - `kb_stats_tool`: 3 calls
+  - `kb_list_categories`: 2 calls
+  - `kb_ask_tool`: 3 calls (verification queries)
+  - `kb_search_tool`: 1 call (verification query)
