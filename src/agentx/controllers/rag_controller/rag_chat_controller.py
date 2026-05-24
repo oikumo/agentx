@@ -1,22 +1,17 @@
 from __future__ import annotations
-
-from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
-
-from agentx.controllers.session_controller.session_controller import SessionController
+from langchain_core.messages import BaseMessage
 from agentx.model.ai.service import AIService
 from agentx.model.rag.rag import Rag, RagChatHistory
+from agentx.model.rag.rag_repository import RagRepository
 from agentx.views.rag_view.rag_chat_view import RagChatView
 
 
 class RagChatController:
-    def __init__(self) -> None:
+    def __init__(self, rag_repository: RagRepository) -> None:
         self.view = RagChatView(self)
         self.history: list[BaseMessage] = []
         self.llm = AIService().openrouter_llm_provider().create_llm()
-        self.session_controller = SessionController()
-        rag_working_directory = self.session_controller.get_directory_rag()
-        self.rag = Rag(rag_working_directory)
+        self.rag = Rag(rag_repository.path)
         self.rag_chat_history = RagChatHistory()
 
     def show(self):

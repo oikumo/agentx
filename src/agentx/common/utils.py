@@ -70,6 +70,15 @@ def file_exists(path: str | Path) -> bool:
 def directory_exists(directory: str):
     return os.path.isdir(directory)
 
+def get_directories_start_with(base_directory: str, prefix: str) -> list[Path]:
+    if not directory_exists(base_directory):
+        return []
+
+    base_path = Path(base_directory)
+    directories = [d for d in base_path.iterdir() if d.is_dir() and d.name.startswith(prefix)]
+
+    return directories
+
 
 def save_to_output(text: str):
     with open("local/output.txt", "w") as file:

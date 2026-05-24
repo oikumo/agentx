@@ -3,18 +3,16 @@ from __future__ import annotations
 from agentx.controllers.common.input_controllers.input_options_controller import InputOptionsController
 from agentx.controllers.common.input_controllers.input_url_controller import InputUrlController
 from agentx.controllers.rag_controller.constants import WEB_EXTRACT_LEVEL_LOW, WEB_EXTRACT_LEVEL_MID, WEB_EXTRACT_LEVEL_HIGH
+from agentx.model.rag.rag_repository import RagRepository
 from agentx.views.rag_view.rag_web_ingestion_view import RagWebIngestionView
-from agentx.controllers.session_controller.session_controller import SessionController
 from agentx.model.rag.rag import Rag, RagWebExtractLevel
 
 class RagWebIngestionController:
     web_extract_level: RagWebExtractLevel = WEB_EXTRACT_LEVEL_LOW
 
-    def __init__(self) -> None:
+    def __init__(self, rag_repository: RagRepository) -> None:
         self.view = RagWebIngestionView(self)
-        self.session_controller = SessionController()
-        self.rag_working_directory = self.session_controller.get_directory_rag()
-        self.rag = Rag(self.rag_working_directory)
+        self.rag = Rag(rag_repository.path)
 
     def show(self):
         self.view.show()

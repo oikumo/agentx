@@ -7,9 +7,10 @@ if TYPE_CHECKING:
 
 RAG_MENU= """
 OPTIONS
-    (1) Web Ingestion
-    (2) RAG Chat
-    (3) Quit
+    (1) Select RAG repository
+    (2) Web Ingestion
+    (3) RAG Chat
+    (4) Quit
 
 """
 
@@ -26,10 +27,12 @@ class RagView:
             user_input = self.console.capture_input()
             match user_input:
                 case "1":
-                    self.controller.show_web_ingestion()
+                    self.controller.select_repository()
                 case "2":
-                    self.controller.show_chat()
+                    self.controller.show_web_ingestion()
                 case "3":
+                    self.controller.show_chat()
+                case "4":
                     self.controller.close()
                     return
                 case "quit":
@@ -43,8 +46,11 @@ class RagView:
         self._show_rag_state()
         self.console.info(RAG_MENU)
 
-    def _show_rag_state(self):
+    def _show_rag_state(self) -> None:
         state = self.controller.get_rag_state()
+        if not state:
+            self.console.waning(f"NO SELECTED REPOSITORY")
+            return
         if not state.url:
             self.console.waning(f"url: MISSING")
         else:
