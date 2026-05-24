@@ -48,17 +48,6 @@ When you write a test like `assert calculate(5) == 10`, and then write code `def
 ## 4. High-Performance TDD with `uv`
 To maintain the "Beck Rhythm," your environment must be invisible. 
 
-### Instantaneous Test Runs
-Use `uv` to keep your environment hermetic and fast. Use the `--looponfail` equivalent or a watcher to trigger on save:
-
-```bash
-# Install a watcher
-uv add pytest-watch --dev
-
-# Start the 'heartbeat'
-uv run ptw
-```
-
 ### Dependency Injection (The Beck Way)
 Beck often favors simple objects. If you need to mock, keep it minimal. Use `uv` to manage `pytest-mock` if needed, but strive for "Plain Old Python Objects" (POPOs) first.
 
