@@ -13,8 +13,8 @@ class RagWebIngestionController:
     def __init__(self) -> None:
         self.view = RagWebIngestionView(self)
         self.session_controller = SessionController()
-        rag_working_directory = self.session_controller.get_directory_rag()
-        self.rag = Rag(rag_working_directory)
+        self.rag_working_directory = self.session_controller.get_directory_rag()
+        self.rag = Rag(self.rag_working_directory)
 
     def show(self):
         self.view.show()
