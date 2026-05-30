@@ -3,6 +3,10 @@
 > **⚠️ MANDATORY FIRST STEP:** On the **first prompt**, read `WORK.md` and display it.
 >
 > **⚠️ MANDATORY SECOND STEP:** Before ANY task, query the KB using the MCP `knowledge_base` tools.
+>
+> **⚠️ MANDATORY THIRD STEP:** Read `AGENTS.md` in full (you're reading it now).
+>
+> **⚠️ MANDATORY FOURTH STEP (ARCHITECTURE):** Before modifying any source code, read `.meta/doc/omt_agent_guide.md` — the **OMT++ Agent Guide**. All code must follow its rules.
 
 ---
 
@@ -20,15 +24,18 @@
 7. Follow META rules (read `.meta/META.md`)
 8. Log structural changes in `.meta/LOG.md`
 9. Query KB first using MCP tools, cite sources in every response
+10. **Follow OMT++ methodology** (`.meta/doc/omt_agent_guide.md`) — all code must conform to MVC++, Abstract Partner, and phase rules
 
 ---
 
 ## Quick Start
 
-1. **Query KB** → Use MCP tool `knowledge_base_ask_tool` or `knowledge_base_search_tool`
-2. **Check git** → `git log --oneline -5`
-3. **Work in correct directory** (see Decision Tree)
-4. **Log changes** → Update `.meta/LOG.md`
+1. **Read OMT++ guide** (first time only) → `.meta/doc/omt_agent_guide.md`
+2. **Query KB** → Use MCP tool `knowledge_base_ask_tool` or `knowledge_base_search_tool`
+3. **Check git** → `git log --oneline -5`
+4. **Work in correct directory** (see Decision Tree)
+5. **Identify OMT++ phase** — Analysis? Design? Programming? Testing? State it explicitly.
+6. **Log changes** → Update `.meta/LOG.md`
 
 ---
 
@@ -37,7 +44,7 @@
 ```
 Need to...
 ├─ Understand something?  → Query KB via MCP tools first
-├─ Modify code?           → Work on source code directly
+├─ Modify code?           → Read OMT++ guide → follow MVC++ / phases
 ├─ Prototype/test idea?   → `.meta/experiments/`
 ├─ Write tests?           → `tests/unit/` (with approval) or `.meta/experiments/`
 ├─ Plan a project?        → `.meta/projects/`
@@ -50,13 +57,40 @@ Need to...
 
 ---
 
-## Workflow (5 Steps)
+## Workflow (OMT++ 5+5 Steps)
 
-1. **UNDERSTAND** - Query KB via MCP + check git log
-2. **PLAN** - Identify correct directory
-3. **EXECUTE** - Work in safe space, test frequently
-4. **VALIDATE** - Tests pass, no production break
-5. **REPORT** - Summarize + document + cleanup
+Every task follows the OMT++ Phase Model. State which phase you are in.
+
+### Pre-Step: Feasibility
+```
+0. FEASIBILITY — Before any phase, answer:
+   • Do I understand the requirements?
+   • Is the scope clear?
+   • Do I know the files affected?
+   • What is the risk level?
+   • Which OMT++ phase am I entering?
+```
+
+### Main Steps (OMT++ Integrated)
+
+| # | Step | OMT++ Phase | Action |
+|---|---|---|---|
+| 1 | **UNDERSTAND** | Analysis | Query KB + git log. Write use case if new feature. Identify domain concepts. |
+| 2 | **DESIGN** | Design | Define interfaces (Abstract Partner ABCs), class structures, operation specs. |
+| 3 | **EXECUTE** | Programming | Implement following MVC++ layers: Model first, then View (with ABC), then Controller. |
+| 4 | **VALIDATE** | Testing | Unit → Integration → System tests. Mock interfaces, not concretions. |
+| 5 | **REPORT** | Close | Summarize, log changes, update KB if new architecture patterns emerged. |
+
+### Artifact Rules
+
+| Task Type | Required Artifacts |
+|---|---|
+| Bug fix (1 file) | Tests |
+| Minor feature (2-3 files) | Operation spec + tests |
+| New screen | Use case, operation list, dialog diagram, design class diagram, operation specs, unit tests, integration tests |
+| New project | Full methodology — all analysis, design, and testing artifacts |
+
+> See `.meta/doc/omt_agent_guide.md§12` for the full Essential vs Optional matrix.
 
 ---
 
@@ -76,4 +110,4 @@ The Knowledge Base is **exclusively** accessed through the MCP server:
 
 ---
 
-**Version:** 4.1.0 (MCP-First + META consistency) | **Updated:** 2026-05-21
+**Version:** 5.0.0 (OMT++ integrated) | **Updated:** 2026-05-30

@@ -189,6 +189,23 @@
 - **Pattern**: Controller owns all validation/business logic; View is pure I/O (prompt, display messages)
 - **Verification**: All components import cleanly; utils_directories syntax + imports verified; text_list tested with stdin piping across multiple edge cases
 
+## 2026-05-30 — OMT++ Agent Guide Integrated Into META Harness
+
+- **Action**: Integrated `.meta/doc/omt_agent_guide.md` into the META Harness rule system
+- **Files modified** (3):
+  - `AGENTS.md` — v4.1.0 → v5.0.0
+    - Added MANDATORY FOURTH STEP: read OMT++ Agent Guide before modifying code
+    - Added Core Directive #10: follow OMT++ methodology
+    - Added Quick Start step: read OMT++ guide + identify phase
+    - Replaced 5-step workflow with OMT++ 5+5 Steps (Feasibility + Understand/Design/Execute/Validate/Report)
+    - Added Artifact Rules table (bug fix / minor feature / new screen / new project)
+    - Updated Decision Tree to include OMT++ guide
+  - `.meta/META.md` — v3.1.0 → v3.2.0
+    - Added "MANDATORY: OMT++ Methodology" section with rules summary
+  - `.meta/doc/META.md` — v3.0.0 → v3.0.1
+    - Updated Contents to include `omt_agent_guide.md`, `omt_methodology.md`, `omt_methodology_continued.md`
+    - Fixed stale entry `meta-harness-evolution.md` → `meta-harness.md`
+
 ## 2026-05-30 — New ReAct Screen (LangChain ReAct Agent) Following OMT++
 
 - **Action**: Created new ReAct screen MVC triad (LangChain Reasoning + Acting pattern)

@@ -13,9 +13,9 @@
 
 ## Contents
 
-- `meta-harness-evolution.md` - META Harness history
+- `omt_agent_guide.md` - **OMT++ Methodology — mandatory reading for all coding agents** (MVC++, Abstract Partner, Command Pattern, phases, testing)
+- `meta-harness.md` - META Harness system architecture and evolution
 - `petri-nets-for-session-state.md` - Petri Net research
-- `think_anywhere_langchain.md` - LangChain integration notes
 
 ---
 
