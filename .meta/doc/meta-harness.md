@@ -51,7 +51,6 @@ agentx/
 │
 ├── .meta/
 │   ├── META.md                  # META directory rules
-│   ├── LOG.md                   # Structural change log
 │   ├── doc/
 │   │   ├── META.md              # doc/ directory rules
 │   │   └── meta-harness.md      # This document
