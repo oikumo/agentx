@@ -162,4 +162,15 @@
   - `kb_stats_tool`: 3 calls
   - `kb_list_categories`: 2 calls
   - `kb_ask_tool`: 3 calls (verification queries)
-  - `kb_search_tool`: 1 call (verification query)
+   - `kb_search_tool`: 1 call (verification query)
+
+## 2026-05-30 — meta-harness.md: Stripped to Current State Only
+
+- **Action**: Rewrote `.meta/doc/meta-harness.md` from 757 lines → 360 lines
+- **Removed**: All future/aspirational content (Phases 3-5, deprecated tools, confidence decay, evolution cycle diagrams with non-existent tools)
+- **Removed**: Legacy references to `agent-x/` directory, `.meta/tools/`, `.meta/data/kb-meta/`, SQLite KB
+- **Removed**: Deprecated tool references (`kb_correct()`, `kb_evolve()`, `rag_evolve()`)
+- **Removed**: Duplicate physical structure diagram
+- **Kept**: Current MCP server architecture with verified line counts
+- **Kept**: Live KB stats matching `kb_stats_tool` output (170 entries, 100% high confidence)
+- **Validation**: All line counts (server.py: 320, api.py: 266, store.py: 135, etc.) verified against actual files
