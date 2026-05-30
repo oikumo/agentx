@@ -4,10 +4,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from agentx.controllers.main_controller.main_controller import MainController
 
-from typing import Optional
 import os
 
-from agentx.controllers.main_controller.commands_base import Command
+from agentx.controllers.main_controller.commands.commands_base import Command
 
 from agentx.common.utils import clear_console, safe_int
 
