@@ -8,7 +8,7 @@ from agentx.app.main_controller.commands.commands import SumCommand, QuitCommand
 from agentx.app.main_controller.commands.commands_base import Command
 from agentx.app.main_controller.commands.commands_parser import CommandParser
 from agentx.app.rag_controller.rag_controller import RagController
-from agentx.app.session_controller.session_controller import SessionController
+from agentx.model.session.session_manager import SessionController
 from agentx.app.main_controller.main_view import MainView, IMainViewPartner
 
 

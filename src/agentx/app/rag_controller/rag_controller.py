@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from agentx.app.rag_controller.rag_chat_controller import RagChatController
 from agentx.app.rag_controller.rag_repository_selection_controller import RagRepositorySelectionController
 from agentx.app.rag_controller.rag_web_ingestion_controller import RagWebIngestionController
-from agentx.app.session_controller.session_controller import SessionController
+from agentx.model.session.session_manager import SessionController
 from agentx.model.rag.rag_repository import RagRepository
 from agentx.app.rag_controller.rag_view import RagView
 
