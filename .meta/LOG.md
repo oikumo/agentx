@@ -5,26 +5,33 @@
 
 ---
 
-## 2026-05-30 — KB Population v2.0 (Full Reset & Repopulation)
+## 2026-05-30 — KB Population v2.1 (Final — Full Reset + Progress+Timeout Fix)
 
-- **Action**: Knowledge Base fully reset and repopulated with extended timeout support
-- **Strategy**: RESET (full repopulation to capture UI reorganization refactoring)
-- **Trigger**: 42 files changed in major UI module restructuring
-- **Results**: 437 entries across 4 categories
-  - Pattern: 109 | Finding: 328
-  - Class: 83 | Method: 234 | Function: 94 | Documentation: 26
-- **Quality**: 100% high confidence (≥0.9)
-- **Files Indexed**: 133 files (107 Python + 26 Markdown)
-- **Excluded**: .venv, .git, .pytest_cache, local_sessions, __pycache__, etc.
-- **Quality Gates**:
-  - ✅ Completeness: PASS (437 entries ≫ 25 target)
-  - ✅ Diversity: PARTIAL (4/7 categories: class, method, function, documentation)
+- **Action**: Knowledge Base fully reset and repopulated with progress reporting + 1800s timeout
+- **Strategy**: RESET (clean slate + manual enrichment)
+- **Results**: 475 entries across 6 categories
+  - Pattern: 111 | Finding: 363 | Decision: 1
+  - Class: 85 | Method: 245 | Function: 118 | Documentation: 22 | Architecture: 3 | Workflow: 2
+- **Quality**: 100% high confidence (≥0.9) | Mean: ~0.97
+- **Files Indexed**: 132 files (110 Python + 22 Markdown), 0 errors
+- **Excluded**: .venv, .git, .pytest_cache, local_sessions, __pycache__, chroma_db
+- **Quality Gates**: 5/5 PASSED
+  - ✅ Completeness: PASS (475 entries ≫ 25 target)
+  - ✅ Diversity: PASS (6/7 categories: class, method, function, documentation, architecture, workflow)
   - ✅ Confidence: PASS (100% high confidence)
-- **MCP Timeout Fix**: Extended timeout support added to prevent future timeouts
-  - Modified: `mcp_servers/knowledge_base/server.py` (added timeout documentation)
-  - Modified: `opencode.jsonc` (added KB_MCP_TIMEOUT=180 env var)
-  - Created: `scripts/populate_kb.py` (direct population script for fallback)
-- **Note**: KB timeout issue resolved - direct population works with 180s timeout
+  - ✅ Coverage: PASS (132 files indexed across whole workspace)
+  - ✅ Coherence: PASS (3/3 test queries with ≥ 0.94 confidence)
+- **MCP Timeout Fix**: Added progress reporting + 1800s timeout support to prevent client timeouts
+  - Modified: `mcp_servers/knowledge_base/server.py`
+    - Made `kb_populate_workspace_tool` async with `ctx: Context` for progress reporting
+    - Uses thread pool + thread-safe queue to bridge sync populate with async progress
+    - Increased default timeout to 1800s (30 min)
+    - Progress sent every ~5% of file processing
+  - Modified: `kb/api.py`
+    - Added `progress_callback` parameter to `populate_workspace()`
+    - Collects files upfront for accurate progress tracking
+    - Reports progress every ~5% batch (~1/20 of files)
+  - Verified: `opencode.jsonc` has `KB_MCP_TIMEOUT=1800` already set
 
 ---
 
@@ -163,6 +170,43 @@
   - `kb_list_categories`: 2 calls
   - `kb_ask_tool`: 3 calls (verification queries)
    - `kb_search_tool`: 1 call (verification query)
+
+## 2026-05-30 — Input Components: utils_directories + create_folder + text_list
+
+- **Action**: Completed and created input UI components + utils
+- **Files changed**:
+  - `src/agentx/utils/utils_directories.py` — Populated with 27 file/directory utility functions (read/write/JSON/copy/move/delete/list/search/temp)
+  - `src/agentx/ui/common/input/create_folder/` — Completed VC component
+    - `input_create_folder_controller.py` — Added `folder_name` attribute, `_is_folder_name_available()` validation
+    - `input_create_folder_view.py` — Pure I/O: `show()` returns input, `show_error_folder_exists()` displays message
+    - `__init__.py` — Added exports
+  - `src/agentx/ui/common/input/text_list/` — New VC component (comma-separated text input)
+    - `input_text_list_controller.py` — Splits comma-separated input, strips whitespace, filters empties
+    - `input_text_list_view.py` — Pure I/O: `capture_input()`, `show_done()`, `show_cancelled()`
+    - `__init__.py` — Added exports
+  - `src/agentx/ui/common/input/options/input_options_view.py` — Fixed circular import (`from __future__ import annotations`)
+  - `src/agentx/ui/common/input/url_entry/input_url_view.py` — Fixed circular import (`from __future__ import annotations`)
+- **Pattern**: Controller owns all validation/business logic; View is pure I/O (prompt, display messages)
+- **Verification**: All components import cleanly; utils_directories syntax + imports verified; text_list tested with stdin piping across multiple edge cases
+
+## 2026-05-30 — New ReAct Screen (LangChain ReAct Agent) Following OMT++
+
+- **Action**: Created new ReAct screen MVC triad (LangChain Reasoning + Acting pattern)
+- **OMT++ Process Followed**: Feasibility → Analysis (Use Case, Op List, Dialog Diagram) → Design (Class Diagram, Interfaces, Op Specs) → Programming → Testing
+- **Files created** (4 new):
+  - `src/agentx/model/react/react_agent.py` — Model layer: ReActAgent with `calculator` tool, LangGraph `create_react_agent` streaming wrapper, yields structured events (thought/tool_call/observation/answer)
+  - `src/agentx/model/react/__init__.py` — Empty package init
+  - `src/agentx/ui/screens/react/react_view.py` — View layer: `IReActViewPartner(ABC)` (Abstract Partner), `ReActView` with REPL loop, display_thought/tool_call/observation/answer/error methods
+  - `src/agentx/ui/screens/react/react_controller.py` — Controller layer: `ReActController(IReActViewPartner)`, orchestrates View + Agent, dispatches stream events to correct display methods
+  - `src/agentx/ui/screens/react/__init__.py` — Empty package init
+- **Files modified** (2 existing):
+  - `src/agentx/ui/screens/main/commands/commands.py` — Added `ReActShowCommand` ("react" command)
+  - `src/agentx/ui/screens/main/main_controller.py` — Added `show_react()`, registered `ReActShowCommand`
+- **Tests created** (2 new):
+  - `tests/views/test_react_view.py` — 10 unit tests for ReActView with mock Abstract Partner
+  - `tests/controllers/react_controller/test_react_controller.py` — 12 unit + integration tests for ReActController
+- **Results**: 22/22 new tests pass, 2 existing tests pass, zero regressions
+- **OMT++ Guide** updated: `.meta/doc/omt_agent_guide.md` v2.0 (full methodology for agents)
 
 ## 2026-05-30 — meta-harness.md: Stripped to Current State Only
 

@@ -4,7 +4,7 @@ import copy
 
 from agentx.ui.screens.chat.chat_controller import ChatController
 from agentx.ui.screens.main.commands.commands import SumCommand, QuitCommand, ClearCommand, HelpCommand, \
-    AIChat, HistoryCommand, NewSessionCommand, LSCommand, RagShowCommand
+    AIChat, HistoryCommand, NewSessionCommand, LSCommand, RagShowCommand, ReActShowCommand
 from agentx.ui.screens.main.commands.commands_base import Command
 from agentx.ui.screens.main.commands.commands_parser import CommandParser
 from agentx.model.session.session_manager import SessionController
@@ -30,6 +30,7 @@ class MainController(IMainViewPartner):
         self.add_command(NewSessionCommand("new", self))
         self.add_command(LSCommand("ls", self))
         self.add_command(RagShowCommand("rag", self))
+        self.add_command(ReActShowCommand("react", self))
 
     def get_session_manager(self):
         return self.session_controller
@@ -41,6 +42,11 @@ class MainController(IMainViewPartner):
     def show_rag(self):
         rag_controller = RagController()
         rag_controller.show()
+
+    def show_react(self):
+        from agentx.ui.screens.react.react_controller import ReActController
+        react_controller = ReActController()
+        react_controller.show()
 
     def print_message(self, message: str):
         self.view.print_message(message)

@@ -353,6 +353,34 @@ A controlled experiment compared KB-first vs non-KB approaches:
 
 ---
 
+## UI Input Component Pattern (established 2026-05-30)
+
+All input components under `src/agentx/ui/common/input/` follow a strict **Controller/View separation**:
+
+| Layer | Responsibility | Example |
+|-------|---------------|---------|
+| **Controller** | Owns all business logic, validation, state | `InputCreateFolderController` |
+| **View** | Pure I/O — prompt user, display messages only | `InputCreateFolderView` |
+
+### Pattern
+
+- Controller holds the result as a public attribute (e.g. `folder_name`, `items`, `url`)
+- `Controller.show()` orchestrates the flow: calls view → validates → stores result
+- View methods return raw values; never call setters on the controller
+- View display methods are named `show_*` (e.g. `show_error_folder_exists`, `show_done`)
+- Circular imports avoided with `from __future__ import annotations` + `TYPE_CHECKING`
+
+### Existing Components
+
+| Component | Directory | Controller | View | Result |
+|-----------|-----------|------------|------|--------|
+| Folder name | `create_folder/` | `InputCreateFolderController` | `InputCreateFolderView` | `folder_name: str \| None` |
+| Text list | `text_list/` | `InputTextListController` | `InputTextView` | `items: list[str]` |
+| URL entry | `url_entry/` | `InputUrlController` | `InputUrlView` | `url: str \| None` |
+| Options | `options/` | `InputOptionsController` | `InputOptionsView` | `selected_option: int \| None` |
+
+---
+
 **Status**: ✅ Active
 **Location**: `.meta/doc/meta-harness.md`
 **Version**: 3.1.0 (MCP Architecture + KB-First Mandate)
