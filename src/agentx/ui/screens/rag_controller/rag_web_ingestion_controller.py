@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from agentx.ui.common.input_controllers.input_options_controller import InputOptionsController
-from agentx.ui.common.input_controllers.input_url_controller import InputUrlController
+from agentx.ui.common.input.input_options_controller import InputOptionsController
+from agentx.ui.common.input.input_url_controller import InputUrlController
 from agentx.ui.screens.rag_controller.constants import WEB_EXTRACT_LEVEL_LOW, WEB_EXTRACT_LEVEL_MID, WEB_EXTRACT_LEVEL_HIGH
 from agentx.model.rag.rag_repository import RagRepository
 from agentx.ui.screens.rag_controller.rag_web_ingestion_view import RagWebIngestionView

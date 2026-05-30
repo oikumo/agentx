@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from agentx.utils.utils import safe_int
 
 if TYPE_CHECKING:
-    from agentx.ui.common.input_controllers.input_options_controller import InputOptionsController
+    from agentx.ui.common.input.input_options_controller import InputOptionsController
 from agentx.ui.common.ui_console import UIConsole
 
 class InputOptionsView:
