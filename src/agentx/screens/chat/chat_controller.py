@@ -1,7 +1,7 @@
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, BaseMessage
 from agentx.model.ai.service import AIService
-from agentx.screens.chat_controller.chat_view import ChatView, ChatViewPartner
+from agentx.screens.chat.chat_view import ChatView, ChatViewPartner
 
 
 class ChatController(ChatViewPartner):

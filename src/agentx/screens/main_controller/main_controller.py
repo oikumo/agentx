@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 
-from agentx.screens.chat_controller.chat_controller import ChatController
+from agentx.screens.chat.chat_controller import ChatController
 from agentx.screens.main_controller.commands.commands import SumCommand, QuitCommand, ClearCommand, HelpCommand, \
     AIChat, HistoryCommand, NewSessionCommand, LSCommand, RagShowCommand
 from agentx.screens.main_controller.commands.commands_base import Command
