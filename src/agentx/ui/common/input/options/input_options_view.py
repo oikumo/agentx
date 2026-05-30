@@ -25,7 +25,7 @@ class InputOptionsView:
         self.console.info("")
 
         user_input = self.console.capture_input()
-        option = safe_int(user_input);
+        option = safe_int(user_input)
 
         if not option or option not in self.options:
             self.console.error(f"Invalid option: {option}")

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from agentx.ui.screens.main_controller.commands.commands_base import Command
+from agentx.ui.screens.main.commands.commands_base import Command
 
 
 @dataclass

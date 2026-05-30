@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from agentx.ui.common.ui_console import UIConsole
 
 if TYPE_CHECKING:
-    from agentx.ui.screens.rag_controller.rag_chat_controller import RagChatController
+    from agentx.ui.screens.rag.rag_chat_controller import RagChatController
 
 class RagChatView:
     def __init__(self, controller: RagChatController):
