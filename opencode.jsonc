@@ -42,7 +42,7 @@
         "knowledge_base"
       ],
       "env": {
-        "KB_MCP_TIMEOUT": "180"
+        "KB_MCP_TIMEOUT": "1800"
       }
     }
   }
