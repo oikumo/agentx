@@ -36,7 +36,7 @@ class RagWebIngestionView:
                 case "quit":
                     self.controller.close()
                     return
-                case _  : self.print_message(f"Invalid option: {user_input}")
+                case _  : self.console.error(f"Invalid option: {user_input}")
 
     def show_web_extraction_level(self):
         self.console.info(f"Web extraction level: {self.controller.get_web_extract_level().label}")

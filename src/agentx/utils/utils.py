@@ -5,6 +5,9 @@ import shutil
 import warnings
 from pathlib import Path
 
+from agentx.utils import utils_directories
+from agentx.utils.utils_directories import is_directory_exists
+
 
 def safe_int(value: str) -> int | None:
     try:
@@ -64,14 +67,8 @@ def create_directory_without_timestamp(name: str, base_directory) -> str | None:
     
     return str(directory_path.absolute().resolve())
 
-def file_exists(path: str | Path) -> bool:
-    return Path(path).is_file()
-
-def directory_exists(directory: str):
-    return os.path.isdir(directory)
-
 def get_directories_start_with(base_directory: str, prefix: str) -> list[Path]:
-    if not directory_exists(base_directory):
+    if not is_directory_exists(base_directory):
         return []
 
     base_path = Path(base_directory)
@@ -86,7 +83,7 @@ def save_to_output(text: str):
 
 
 def is_directory_allowed_to_deletion(directory_path: str) -> bool:
-    from agentx.utils.security import DIRECTORIES_DELETION_ALLOWED
+    from agentx.utils.constants import DIRECTORIES_DELETION_ALLOWED
 
     if not DIRECTORIES_DELETION_ALLOWED:
         raise PermissionError(

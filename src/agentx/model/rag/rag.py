@@ -1,13 +1,13 @@
 import asyncio
 from dataclasses import dataclass
 
-from agentx.utils import utils
-from agentx.utils.input_utils import InputUtils
 from agentx.model.ai.service import AIService
 from agentx.model.rag.query.rag_query import RagQuery, RagChatHistory
 from agentx.model.rag.rag_db import RagDatabase
 from agentx.model.rag.web_ingestion.web_extract import WebExtract
 from agentx.model.rag.web_ingestion.web_ingestion_app import WebIngestionApp
+from agentx.utils.utils_directories import is_directory_exists, is_file_exists
+from agentx.utils.utils_input import is_valid_url
 
 
 @dataclass
@@ -39,13 +39,13 @@ class Rag:
 
     def is_data(self) -> bool:
         return (
-                utils.directory_exists(self.vector_db_path) and
-                utils.file_exists(self.documents_path) and
-                utils.file_exists(self.rag_db_path)
+                is_directory_exists(self.vector_db_path) and
+                is_file_exists(self.documents_path) and
+                is_file_exists(self.rag_db_path)
         )
 
     def web_ingestion(self, extract_level: RagWebExtractLevel) -> bool:
-        if not InputUtils.is_valid_url(self.site_url):
+        if not is_valid_url(self.site_url):
             return False
 
         self.rag_db.insert_ingestion_entry(self.vector_db_path)

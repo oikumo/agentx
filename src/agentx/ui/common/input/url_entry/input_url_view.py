@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from agentx.utils.input_utils import InputUtils
+from agentx.utils import utils_input
 
 if TYPE_CHECKING:
     from agentx.ui.common.input.url_entry.input_url_controller import InputUrlController
@@ -18,7 +18,7 @@ class InputUrlView:
             self.controller.url = None
             return
 
-        if not InputUtils.is_valid_url(user_input):
+        if not input_utils.is_valid_url(user_input):
             self.controller.url = None
             return
 

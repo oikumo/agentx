@@ -4,8 +4,9 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-from agentx.utils.security import SESSION_DEFAULT_BASE_DIRECTORY
-from agentx.utils.utils import create_directory_with_timestamp, create_directory_without_timestamp, directory_exists
+from agentx.utils import utils_directories
+from agentx.utils.constants import SESSION_DEFAULT_BASE_DIRECTORY
+from agentx.utils.utils import create_directory_with_timestamp, create_directory_without_timestamp
 from agentx.model.session.session_db import SessionDatabase, TableHistory
 
 SESSION_CURRENT_NAME = "current"
@@ -44,7 +45,7 @@ class Session:
     def is_created(self):
         if not self.directory:
             return False
-        return directory_exists(self.directory)
+        return is_directory_exists(self.directory)
 
     def create_new_session(self) -> Session:
         backup_path = self.backup_current_session()

@@ -2,6 +2,7 @@ from pathlib import Path
 
 from agentx.utils import utils
 from agentx.model.rag.rag_repository import RagRepository
+from agentx.utils.utils_directories import is_file_exists
 
 RAG_DIR_NAME_REPOSITORY_PREFIX = "rag_"
 
@@ -13,7 +14,7 @@ class RagProvider:
         directories = self._get_repositories_locations()
         if not directories: return None
         repositories = [RagRepository(path=str(d.absolute().resolve()), id=d.name)
-                        for d in directories if utils.file_exists(d / "rag.db")]
+                        for d in directories if is_file_exists(d / "rag.db")]
 
         return repositories
 

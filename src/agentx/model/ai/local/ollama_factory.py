@@ -1,4 +1,4 @@
-from llm_models.local.ollama.ollama import Ollama
+from agentx.model.ai.local.ollama.ollama import Ollama
 
 LOCAL_OLLAMA_MODEL_QWEN_3_5 = "qwen3.5:0.8b"
 

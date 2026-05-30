@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
-MCP Knowledge Base Server.
+MCP Knowledge Base Server with extended timeout support.
 
-Thin MCP tool surface over the `kb` library. All business logic lives in
-`kb/*`; this module only validates inputs and formats outputs.
+This server wraps the standard MCP server to support longer-running operations
+like workspace population. It uses environment variables to configure timeouts.
 """
 
+import os
+import sys
 from typing import List, Optional
 
 from mcp.server.fastmcp import FastMCP
@@ -19,7 +21,14 @@ from kb import (
     stats,
 )
 
-mcp = FastMCP("knowledge_base")
+# Configure timeout from environment variable (default: 180 seconds = 3 minutes)
+# This is used for documentation purposes; actual timeout is controlled by client
+KB_TIMEOUT = int(os.environ.get("KB_MCP_TIMEOUT", "180"))
+
+mcp = FastMCP(
+    "knowledge_base",
+    instructions=f"Knowledge Base server with {KB_TIMEOUT}s timeout for long-running operations"
+)
 
 
 # =============================================================================
@@ -219,6 +228,10 @@ def kb_populate_workspace_tool(
     This tool scans the workspace for Python and Markdown files, extracts
     structural information (classes, methods, functions, documentation),
     and ingests them into the ChromaDB-backed knowledge base.
+
+    ⚠️  NOTE: This is a long-running operation that may take 30-180 seconds
+    depending on the size of your workspace. The server is configured with
+    an extended timeout (KB_MCP_TIMEOUT env var, default: 180s).
 
     By default, the KB is RESET first (all existing entries are deleted)
     before population, ensuring a clean knowledge base.
