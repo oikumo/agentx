@@ -1,8 +1,8 @@
 import asyncio
 from dataclasses import dataclass
 
-from agentx.common import utils
-from agentx.common.input_utils import InputUtils
+from agentx.utils import utils
+from agentx.utils.input_utils import InputUtils
 from agentx.model.ai.service import AIService
 from agentx.model.rag.query.rag_query import RagQuery, RagChatHistory
 from agentx.model.rag.rag_db import RagDatabase

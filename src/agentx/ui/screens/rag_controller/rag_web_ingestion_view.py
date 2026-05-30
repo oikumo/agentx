@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from agentx.ui_common.ui_console import UIConsole
+from agentx.ui.common.ui_console import UIConsole
 
 if TYPE_CHECKING:
-    from agentx.ui.rag_controller.rag_web_ingestion_controller import RagWebIngestionController
+    from agentx.ui.screens.rag_controller.rag_web_ingestion_controller import RagWebIngestionController
 
 RAG_WEB_INGESTION_MENU= """
 OPTIONS

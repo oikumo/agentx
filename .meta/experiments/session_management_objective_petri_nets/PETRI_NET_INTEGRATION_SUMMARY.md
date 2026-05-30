@@ -51,7 +51,7 @@ uv run python test_agentx_with_petri.py
 ## Example Usage
 
 ```python
-from agentx.ui.main_controller.main_controller import MainController
+from agentx.ui.screens.main_controller.main_controller import MainController
 from agentx.model.session.session_state_manager import SessionStateBuilder
 
 # Create controller

@@ -1,10 +1,8 @@
 from typing import TYPE_CHECKING
 
-from agentx.common.input_utils import InputUtils
-
 if TYPE_CHECKING:
     from agentx.ui.common.input_controllers.input_create_folder_controller import InputCreateFolderController
-from agentx.ui_common.ui_console import UIConsole
+from agentx.ui.common.ui_console import UIConsole
 
 class InputCreateFolderView:
 

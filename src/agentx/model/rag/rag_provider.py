@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from agentx.common import utils
+from agentx.utils import utils
 from agentx.model.rag.rag_repository import RagRepository
 
 RAG_DIR_NAME_REPOSITORY_PREFIX = "rag_"

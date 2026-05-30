@@ -4,8 +4,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-from agentx.common.security import SESSION_DEFAULT_BASE_DIRECTORY
-from agentx.common.utils import create_directory_with_timestamp, create_directory_without_timestamp, directory_exists
+from agentx.utils.security import SESSION_DEFAULT_BASE_DIRECTORY
+from agentx.utils.utils import create_directory_with_timestamp, create_directory_without_timestamp, directory_exists
 from agentx.model.session.session_db import SessionDatabase, TableHistory
 
 SESSION_CURRENT_NAME = "current"

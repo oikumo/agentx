@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from agentx.ui_common.ui_console import UIConsole
+from agentx.ui.common.ui_console import UIConsole
 
 
 class ChatViewPartner(ABC):
