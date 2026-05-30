@@ -4,7 +4,7 @@ from agentx.common.input_utils import InputUtils
 from agentx.common.utils import safe_int
 
 if TYPE_CHECKING:
-    from agentx.controllers.common.input_controllers.input_options_controller import InputOptionsController
+    from agentx.app.common.input_controllers.input_options_controller import InputOptionsController
 from agentx.ui.ui_console import UIConsole
 
 class InputOptionsView:

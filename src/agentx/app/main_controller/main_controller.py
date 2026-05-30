@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import copy
 
-from agentx.controllers.chat_controller.chat_controller import ChatController
-from agentx.controllers.main_controller.commands.commands import SumCommand, QuitCommand, ClearCommand, HelpCommand, \
+from agentx.app.chat_controller.chat_controller import ChatController
+from agentx.app.main_controller.commands.commands import SumCommand, QuitCommand, ClearCommand, HelpCommand, \
     AIChat, HistoryCommand, NewSessionCommand, LSCommand, RagShowCommand
-from agentx.controllers.main_controller.commands.commands_base import Command
-from agentx.controllers.main_controller.commands.commands_parser import CommandParser
-from agentx.controllers.rag_controller.rag_controller import RagController
-from agentx.controllers.session_controller.session_controller import SessionController
-from agentx.controllers.main_controller.main_view import MainView, IMainViewPartner
+from agentx.app.main_controller.commands.commands_base import Command
+from agentx.app.main_controller.commands.commands_parser import CommandParser
+from agentx.app.rag_controller.rag_controller import RagController
+from agentx.app.session_controller.session_controller import SessionController
+from agentx.app.main_controller.main_view import MainView, IMainViewPartner
 
 
 class MainController(IMainViewPartner):

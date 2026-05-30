@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from agentx.ui.ui_console import UIConsole
 
 if TYPE_CHECKING:
-    from agentx.controllers.rag_controller.rag_web_ingestion_controller import RagWebIngestionController
+    from agentx.app.rag_controller.rag_web_ingestion_controller import RagWebIngestionController
 
 RAG_WEB_INGESTION_MENU= """
 OPTIONS

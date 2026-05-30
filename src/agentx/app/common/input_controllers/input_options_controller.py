@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agentx.controllers.common.input_controllers.input_options_view import InputOptionsView
+from agentx.app.common.input_controllers.input_options_view import InputOptionsView
 
 
 class InputOptionsController:

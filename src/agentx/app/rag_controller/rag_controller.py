@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from agentx.controllers.rag_controller.rag_chat_controller import RagChatController
-from agentx.controllers.rag_controller.rag_repository_selection_controller import RagRepositorySelectionController
-from agentx.controllers.rag_controller.rag_web_ingestion_controller import RagWebIngestionController
-from agentx.controllers.session_controller.session_controller import SessionController
+from agentx.app.rag_controller.rag_chat_controller import RagChatController
+from agentx.app.rag_controller.rag_repository_selection_controller import RagRepositorySelectionController
+from agentx.app.rag_controller.rag_web_ingestion_controller import RagWebIngestionController
+from agentx.app.session_controller.session_controller import SessionController
 from agentx.model.rag.rag_repository import RagRepository
-from agentx.controllers.rag_controller.rag_view import RagView
+from agentx.app.rag_controller.rag_view import RagView
 
 @dataclass
 class RagState:

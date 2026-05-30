@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from agentx.common.input_utils import InputUtils
 
 if TYPE_CHECKING:
-    from agentx.controllers.common.input_controllers.input_url_controller import InputUrlController
+    from agentx.app.common.input_controllers.input_url_controller import InputUrlController
 from agentx.ui.ui_console import UIConsole
 
 
