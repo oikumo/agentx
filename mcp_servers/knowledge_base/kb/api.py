@@ -7,7 +7,7 @@ layer never has to deal with raw tracebacks.
 
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from .ids import make_entry_id
 from .ingest import WorkspaceIngestor
@@ -176,13 +176,30 @@ _DEFAULT_EXCLUDES = {
 }
 
 
+# Type alias for progress callback: fn(current, total, message) -> None
+ProgressCallback = Optional[Callable[[int, int, str], None]]
+
+
 def populate_workspace(workspace_root: Optional[str] = None,
                        include_python: bool = True,
                        include_markdown: bool = True,
                        exclude_dirs: Optional[List[str]] = None,
                        reset_first: bool = True,
-                       store: Optional[KBStore] = None) -> PopulateResult:
-    """Walk a workspace and ingest its Python / Markdown files."""
+                       store: Optional[KBStore] = None,
+                       progress_callback: ProgressCallback = None,
+                       ) -> PopulateResult:
+    """Walk a workspace and ingest its Python / Markdown files.
+
+    Args:
+        workspace_root: Root directory to scan.
+        include_python: Whether to ingest Python files.
+        include_markdown: Whether to ingest Markdown files.
+        exclude_dirs: Additional directory names to exclude.
+        reset_first: If True, reset the KB before population.
+        store: KBStore instance (uses default if None).
+        progress_callback: Optional callback fn(current, total, message)
+                           called periodically to report progress.
+    """
     try:
         store = store or get_default_store()
 
@@ -231,23 +248,50 @@ def populate_workspace(workspace_root: Optional[str] = None,
                     return True
             return False
 
-        by_pattern: dict = {}
-        files_processed = 0
-        errors: List[str] = []
+        # Collect all matching file paths upfront so we can report progress
+        all_files: List[Path] = []
         for pattern in patterns:
-            count = 0
             for file_path in root_path.rglob(pattern):
                 if is_excluded(file_path) or not file_path.is_file():
                     continue
-                try:
-                    ids_out = ingestor.ingest_file(file_path)
-                    count += len(ids_out)
-                    files_processed += 1
-                except Exception as exc:  # pragma: no cover - belt-and-braces
-                    errors.append(f"{file_path}: {exc}")
-            by_pattern[pattern] = count
+                all_files.append(file_path)
+
+        total_files = len(all_files)
+        if progress_callback:
+            progress_callback(0, total_files, f"Scanning {total_files} files...")
+
+        by_pattern: dict = {}
+        files_processed = 0
+        errors: List[str] = []
+
+        # Process in batches, reporting progress each time
+        PROGRESS_INTERVAL = max(1, total_files // 20)  # ~20 updates total
+
+        for idx, file_path in enumerate(all_files):
+            pattern_key = file_path.suffix
+            try:
+                ids_out = ingestor.ingest_file(file_path)
+                count = len(ids_out)
+                by_pattern[pattern_key] = by_pattern.get(pattern_key, 0) + count
+                files_processed += 1
+            except Exception as exc:  # pragma: no cover - belt-and-braces
+                errors.append(f"{file_path}: {exc}")
+
+            # Report progress periodically
+            if progress_callback and (idx % PROGRESS_INTERVAL == 0 or idx == total_files - 1):
+                progress_callback(
+                    min(idx + 1, total_files),
+                    total_files,
+                    f"Processed {files_processed} files, {sum(by_pattern.values())} entries...",
+                )
 
         total = sum(by_pattern.values())
+        if progress_callback:
+            progress_callback(
+                total_files, total_files,
+                f"Done: {total} entries from {files_processed} files",
+            )
+
         return PopulateResult(
             success=True,
             workspace_root=str(root_path),

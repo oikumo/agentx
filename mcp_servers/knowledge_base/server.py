@@ -6,11 +6,15 @@ This server wraps the standard MCP server to support longer-running operations
 like workspace population. It uses environment variables to configure timeouts.
 """
 
+import asyncio
 import os
 import sys
 from typing import List, Optional
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.server import Context
+
+import anyio
 
 from kb import (
     add_entry,
@@ -20,10 +24,11 @@ from kb import (
     search,
     stats,
 )
+from kb.models import PopulateResult
 
-# Configure timeout from environment variable (default: 180 seconds = 3 minutes)
-# This is used for documentation purposes; actual timeout is controlled by client
-KB_TIMEOUT = int(os.environ.get("KB_MCP_TIMEOUT", "180"))
+# Timeout for long-running operations (default: 1800s = 30 minutes)
+# The server sends progress notifications to keep the client connection alive
+KB_TIMEOUT = int(os.environ.get("KB_MCP_TIMEOUT", "1800"))
 
 mcp = FastMCP(
     "knowledge_base",
@@ -215,7 +220,8 @@ def kb_reset_tool() -> str:
 
 
 @mcp.tool()
-def kb_populate_workspace_tool(
+async def kb_populate_workspace_tool(
+    ctx: Context,
     workspace_root: Optional[str] = None,
     include_python: bool = True,
     include_markdown: bool = True,
@@ -229,9 +235,9 @@ def kb_populate_workspace_tool(
     structural information (classes, methods, functions, documentation),
     and ingests them into the ChromaDB-backed knowledge base.
 
-    ⚠️  NOTE: This is a long-running operation that may take 30-180 seconds
-    depending on the size of your workspace. The server is configured with
-    an extended timeout (KB_MCP_TIMEOUT env var, default: 180s).
+    ⚠️  NOTE: This is a long-running operation that may take 30-300 seconds
+    depending on the size of your workspace. Progress notifications are sent
+    periodically to keep the client informed.
 
     By default, the KB is RESET first (all existing entries are deleted)
     before population, ensuring a clean knowledge base.
@@ -246,34 +252,92 @@ def kb_populate_workspace_tool(
     Returns:
         Formatted population report with counts and any errors.
     """
-    result = populate_workspace(
-        workspace_root=workspace_root,
-        include_python=include_python,
-        include_markdown=include_markdown,
-        exclude_dirs=exclude_dirs,
-        reset_first=reset_first,
-    )
+    from queue import Queue as ThreadQueue
 
-    if not result.success:
-        return f"❌ Population failed: {result.error or 'Unknown error'}"
+    TOTAL_STEPS = 100
+    await ctx.report_progress(0, TOTAL_STEPS, "Starting workspace scan...")
+
+    # Thread-safe queue to receive progress updates from the worker thread
+    progress_queue: "ThreadQueue[tuple[int, int, str]]" = ThreadQueue()
+
+    # Sentinel to signal "done"
+    _SENTINEL: tuple[int, int, str] = (-1, -1, "")
+
+    def on_progress(current: int, total: int, message: str) -> None:
+        """Called from populate_workspace (runs in a thread)."""
+        pct = int((current / max(total, 1)) * TOTAL_STEPS) if total > 0 else 0
+        try:
+            progress_queue.put_nowait((pct, TOTAL_STEPS, message))
+        except Exception:
+            pass  # Queue full or closed — ignore
+
+    # Run the synchronous populate_workspace in a thread pool
+    async def run_populate() -> PopulateResult:
+        try:
+            return await anyio.to_thread.run_sync(
+                lambda: populate_workspace(
+                    workspace_root=workspace_root,
+                    include_python=include_python,
+                    include_markdown=include_markdown,
+                    exclude_dirs=exclude_dirs,
+                    reset_first=reset_first,
+                    progress_callback=on_progress,
+                ),
+            )
+        finally:
+            # Signal the progress drainer that we're done
+            try:
+                progress_queue.put_nowait(_SENTINEL)
+            except Exception:
+                pass
+
+    # Drain progress queue and report to client
+    async def drain_progress() -> None:
+        last_pct = -1
+        while True:
+            # Poll the thread-safe queue (non-blocking)
+            try:
+                pct, total_pct, msg = progress_queue.get_nowait()
+            except Exception:
+                # Queue empty — yield control briefly, then retry
+                await anyio.sleep(0.5)
+                continue
+
+            if (pct, total_pct, msg) == _SENTINEL:
+                progress_queue.task_done()
+                break
+            if pct != last_pct:
+                last_pct = pct
+                await ctx.report_progress(pct, total_pct, msg)
+            progress_queue.task_done()
+
+    # Run both concurrently
+    async with anyio.create_task_group() as tg:
+        tg.start_soon(drain_progress)
+        p_result = await run_populate()
+
+    await ctx.report_progress(TOTAL_STEPS, TOTAL_STEPS, "Population complete!")
+
+    if not p_result.success:
+        return f"❌ Population failed: {p_result.error or 'Unknown error'}"
 
     lines: List[str] = []
     lines.append("✅ Knowledge Base Population Complete\n")
-    lines.append(f"Workspace root: {result.workspace_root}")
-    lines.append(f"Reset performed: {result.reset_performed}")
-    lines.append(f"Files processed: {result.files_processed}")
-    lines.append(f"Total entries created: {result.total_entries}")
+    lines.append(f"Workspace root: {p_result.workspace_root}")
+    lines.append(f"Reset performed: {p_result.reset_performed}")
+    lines.append(f"Files processed: {p_result.files_processed}")
+    lines.append(f"Total entries created: {p_result.total_entries}")
 
     lines.append("\n📁 Entries by file pattern:")
-    for pattern, count in result.by_pattern.items():
+    for pattern, count in p_result.by_pattern.items():
         lines.append(f"  • {pattern}: {count}")
 
     lines.append("\n🚫 Excluded directories:")
-    lines.append(f"  {', '.join(result.excluded_dirs)}")
+    lines.append(f"  {', '.join(p_result.excluded_dirs)}")
 
-    if result.error_count:
-        lines.append(f"\n⚠️  Errors encountered: {result.error_count} (showing first 20):")
-        for err in result.errors:
+    if p_result.error_count:
+        lines.append(f"\n⚠️  Errors encountered: {p_result.error_count} (showing first 20):")
+        for err in p_result.errors:
             lines.append(f"  • {err}")
 
     return "\n".join(lines)
