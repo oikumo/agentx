@@ -22,9 +22,8 @@
 **ALWAYS:**
 6. Check `git log` before changes
 7. Follow META rules (read `.meta/META.md`)
-8. Log structural changes in `.meta/LOG.md`
-9. Query KB first using MCP tools, cite sources in every response
-10. **Follow OMT++ methodology** (`.meta/doc/omt_agent_guide.md`) — all code must conform to MVC++, Abstract Partner, and phase rules
+8. Query KB first using MCP tools, cite sources in every response
+9. **Follow OMT++ methodology** (`.meta/doc/omt_agent_guide.md`) — all code must conform to MVC++, Abstract Partner, and phase rules
 
 ---
 
@@ -35,7 +34,7 @@
 3. **Check git** → `git log --oneline -5`
 4. **Work in correct directory** (see Decision Tree)
 5. **Identify OMT++ phase** — Analysis? Design? Programming? Testing? State it explicitly.
-6. **Log changes** → Update `.meta/LOG.md`
+
 
 ---
 
