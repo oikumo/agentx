@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from agentx.app.common.input_controllers.input_options_controller import InputOptionsController
-from agentx.app.common.input_controllers.input_url_controller import InputUrlController
-from agentx.app.rag_controller.constants import WEB_EXTRACT_LEVEL_LOW, WEB_EXTRACT_LEVEL_MID, WEB_EXTRACT_LEVEL_HIGH
+from agentx.screens.common.input_controllers.input_options_controller import InputOptionsController
+from agentx.screens.common.input_controllers.input_url_controller import InputUrlController
+from agentx.screens.rag_controller.constants import WEB_EXTRACT_LEVEL_LOW, WEB_EXTRACT_LEVEL_MID, WEB_EXTRACT_LEVEL_HIGH
 from agentx.model.rag.rag_repository import RagRepository
-from agentx.app.rag_controller.rag_web_ingestion_view import RagWebIngestionView
+from agentx.screens.rag_controller.rag_web_ingestion_view import RagWebIngestionView
 from agentx.model.rag.rag import Rag, RagWebExtractLevel
 
 class RagWebIngestionController:

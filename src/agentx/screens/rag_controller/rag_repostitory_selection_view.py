@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from agentx.ui.ui_console import UIConsole
 
 if TYPE_CHECKING:
-    from agentx.app.rag_controller.rag_repository_selection_controller import RagRepositorySelectionController
+    from agentx.screens.rag_controller.rag_repository_selection_controller import RagRepositorySelectionController
 
 class RagRepositorySelectionView:
     def __init__(self, controller: RagRepositorySelectionController):
