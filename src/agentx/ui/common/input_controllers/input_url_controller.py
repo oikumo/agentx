@@ -1,5 +1,5 @@
 from __future__ import annotations
-from agentx.screens.common.input_controllers.input_url_view import InputUrlView
+from agentx.ui.common.input_controllers.input_url_view import InputUrlView
 
 
 class InputUrlController:

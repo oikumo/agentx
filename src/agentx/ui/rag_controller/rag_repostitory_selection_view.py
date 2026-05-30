@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pprint
 from typing import TYPE_CHECKING
-from agentx.ui.ui_console import UIConsole
+from agentx.ui_common.ui_console import UIConsole
 
 if TYPE_CHECKING:
-    from agentx.screens.rag_controller.rag_repository_selection_controller import RagRepositorySelectionController
+    from agentx.ui.rag_controller.rag_repository_selection_controller import RagRepositorySelectionController
 
 class RagRepositorySelectionView:
     def __init__(self, controller: RagRepositorySelectionController):

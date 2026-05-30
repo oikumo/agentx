@@ -4,7 +4,7 @@ import os
 
 from dotenv import load_dotenv
 
-from agentx.screens.main_controller.main_controller import MainController
+from agentx.ui.main_controller.main_controller import MainController
 
 load_dotenv()
 

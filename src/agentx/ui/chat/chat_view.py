@@ -1,27 +1,30 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
-from agentx.ui.ui_console import UIConsole
+from abc import ABC, abstractmethod
 
-if TYPE_CHECKING:
-    from agentx.screens.rag_controller.rag_chat_controller import RagChatController
+from agentx.ui_common.ui_console import UIConsole
 
-class RagChatView:
-    def __init__(self, controller: RagChatController):
+
+class ChatViewPartner(ABC):
+
+    @abstractmethod
+    def process_user_message(self, user_message: str) -> bool: ...
+
+    @abstractmethod
+    def close(self) -> None: ...
+
+class ChatView:
+    def __init__(self, controller: ChatViewPartner):
         self.controller = controller
-        self.console = UIConsole("(rag/chat)")
+        self.console = UIConsole("(chat)")
 
     def show(self):
         self.show_initial_message()
 
         while True:
             user_input = self.console.capture_input()
-            if user_input is "quit":
-                self.controller.close()
-                return
             if not user_input: return
             if not self.controller.process_user_message(user_input): return
 
-    def show_partial_text(self, message: str):
+    def show_partial_message(self, message: str):
         self.console.partial_info(message)
 
     def show_initial_message(self):

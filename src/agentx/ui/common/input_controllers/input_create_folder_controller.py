@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agentx.screens.common.input_controllers.input_create_folder_view import InputCreateFolderView
+from agentx.ui.common.input_controllers.input_create_folder_view import InputCreateFolderView
 
 
 class InputCreateFolderController:

@@ -1,6 +1,6 @@
-from agentx.screens.rag_controller.rag_create_repository_controller import RagCreateRepositoryController
+from agentx.ui.rag_controller.rag_create_repository_controller import RagCreateRepositoryController
 from agentx.model.rag.rag_provider import RagRepository, RagProvider
-from agentx.screens.rag_controller.rag_repostitory_selection_view import RagRepositorySelectionView
+from agentx.ui.rag_controller.rag_repostitory_selection_view import RagRepositorySelectionView
 
 
 class RagRepositorySelectionController:

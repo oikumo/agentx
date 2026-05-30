@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from agentx.common.input_utils import InputUtils
 
 if TYPE_CHECKING:
-    from agentx.screens.common.input_controllers.input_url_controller import InputUrlController
-from agentx.ui.ui_console import UIConsole
+    from agentx.ui.common.input_controllers.input_url_controller import InputUrlController
+from agentx.ui_common.ui_console import UIConsole
 
 
 class InputUrlView:
