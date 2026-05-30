@@ -1,3 +1,4 @@
+/mcp_servers/knowledge_base/chroma_db/
 local_sessions/
 uv.lock
 
@@ -217,3 +218,4 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
