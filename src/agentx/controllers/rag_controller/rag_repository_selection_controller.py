@@ -1,5 +1,6 @@
+from agentx.controllers.rag_controller.rag_create_repository_controller import RagCreateRepositoryController
 from agentx.model.rag.rag_provider import RagRepository, RagProvider
-from agentx.views.rag_view.rag_repostitory_selection_view import RagRepositorySelectionView
+from agentx.controllers.rag_controller.rag_repostitory_selection_view import RagRepositorySelectionView
 
 
 class RagRepositorySelectionController:
@@ -13,6 +14,11 @@ class RagRepositorySelectionController:
     def get_repositories(self) -> list[str] | None:
         if not self.rag_provider.get_repositories(): return None
         return [r.id for r in self.rag_provider.get_repositories()]
+
+    def createRepository(self) -> None:
+        new_repository = RagCreateRepositoryController()
+        new_repository.show()
+
 
     def get_selected_repository(self) -> RagRepository | None:
         return None

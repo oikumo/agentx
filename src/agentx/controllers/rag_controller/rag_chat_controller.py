@@ -3,7 +3,7 @@ from langchain_core.messages import BaseMessage
 from agentx.model.ai.service import AIService
 from agentx.model.rag.rag import Rag, RagChatHistory
 from agentx.model.rag.rag_repository import RagRepository
-from agentx.views.rag_view.rag_chat_view import RagChatView
+from agentx.controllers.rag_controller.rag_chat_view import RagChatView
 
 
 class RagChatController:

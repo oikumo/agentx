@@ -171,6 +171,8 @@ _DEFAULT_EXCLUDES = {
     "__pycache__", ".venv", "venv", ".git", "node_modules",
     "chroma_db", ".pytest_cache", ".mypy_cache", ".ruff_cache",
     "dist", "build", ".tox", ".eggs", "site-packages",
+    # Note: .env directories and files are also excluded via special handling
+    # in the is_excluded() function to catch .env, .env.local, .env.production, etc.
 }
 
 
@@ -220,7 +222,14 @@ def populate_workspace(workspace_root: Optional[str] = None,
         ingestor = WorkspaceIngestor(store=store, workspace_root=root_path)
 
         def is_excluded(p: Path) -> bool:
-            return any(part in excludes for part in p.parts)
+            # Check if any path part matches an exclude directory
+            for part in p.parts:
+                if part in excludes:
+                    return True
+                # Also check for .env directories and files (exact match or starts with .env.)
+                if part == ".env" or part.startswith(".env."):
+                    return True
+            return False
 
         by_pattern: dict = {}
         files_processed = 0

@@ -40,6 +40,23 @@ Names and signatures are stable across the v0.2.0 refactor; only the
 `kb_ask_tool` text output changed (now a real synthesised answer, no longer
 a prompt skeleton).
 
+## Directory Exclusions
+
+The `kb_populate_workspace_tool` automatically excludes sensitive and unnecessary directories:
+
+**Default Exclusions:**
+- Build/artifact dirs: `__pycache__`, `build`, `dist`, `.tox`, `.eggs`, `site-packages`
+- Virtual environments: `.venv`, `venv`
+- Version control: `.git`, `node_modules`
+- Cache dirs: `.pytest_cache`, `.mypy_cache`, `.ruff_cache`
+- KB data: `chroma_db`
+
+**Sensitive Files Protection:**
+- `.env` directories and files (exact match)
+- `.env.*` patterns (e.g., `.env.local`, `.env.production`, `.env.test`)
+
+Additional directories can be excluded via the `exclude_dirs` parameter.
+
 ## Entry-ID scheme
 
 `make_entry_id(entry_type, category, title)` returns:

@@ -16,7 +16,7 @@ from agentx.controllers.main_controller.commands_base import Command
 from agentx.controllers.main_controller.commands_parser import CommandParser
 from agentx.controllers.rag_controller.rag_controller import RagController
 from agentx.controllers.session_controller.session_controller import SessionController
-from agentx.views.main_view.main_view import MainView, IMainViewPartner
+from agentx.controllers.main_controller.main_view import MainView, IMainViewPartner
 
 
 class MainController(IMainViewPartner):

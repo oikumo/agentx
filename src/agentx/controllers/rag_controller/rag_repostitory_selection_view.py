@@ -33,9 +33,8 @@ class RagRepositorySelectionView:
             for index, r in enumerate(repositories):
                 self.console.info(f"    ({index + 1}) {r}")
 
-        self.console.success("(0) **Create new repository**")
-
+        self.console.info("(0) **Create new repository**")
 
 
     def _create_new_repository(self) -> None:
-        pass
+        self.controller.createRepository()
