@@ -41,9 +41,7 @@
         "./mcp_servers/knowledge_base",
         "knowledge_base"
       ],
-      "env": {
-        "KB_MCP_TIMEOUT": "1800"
-      }
+      "timeout": 180000000
     }
   }
 }
