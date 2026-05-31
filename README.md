@@ -244,8 +244,8 @@ agentx uses the **Meta Harness** - a structured development system optimized for
 
 ### For AI Agents
 
-1. Read `AGENTS.md` first - it contains mandatory rules
-2. Review `META_HARNESS.md` for complete documentation
+1. Read `./AGENTS.md` first - it contains mandatory rules
+2. Review `./META.md` for complete documentation
 3. Always work in safe spaces (`.meta/sandbox/`, `.meta/experiments/`)
 4. Follow TDD in `tests/unit/`
 5. Never modify production code directly
