@@ -162,7 +162,6 @@ Each phase is small, individually verifiable, and leaves the MCP working.
 - Replace both READMEs with one `mcp_servers/knowledge_base/README.md`.
 - Document actual MCP tool surface, ID scheme, scoring formula, persistence path.
 - Do **not** change `AGENTS.md` (MCP tool names are preserved).
-- Log structural change in `.meta/LOG.md`.
 - **Exit criteria:** docs match the code.
 
 ### Phase 8 — KB self-population
@@ -206,7 +205,7 @@ All other tools preserve exact input/output contracts.
 - [ ] Phase 4 — `kb_ask` produces real synthesis
 - [ ] Phase 5 — stderr-only logging in library
 - [ ] Phase 6 — Test suite at `mcp_servers/knowledge_base/tests/`, ≥80 % coverage of public API
-- [ ] Phase 7 — Single accurate README; `.meta/LOG.md` updated
+- [ ] Phase 7 — Single accurate README
 - [ ] Phase 8 — KB self-populated; `kb_stats_tool` > 0 entries
 
 ---

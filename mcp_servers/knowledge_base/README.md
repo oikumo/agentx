@@ -136,9 +136,3 @@ uv run --with chromadb --with pytest --with 'mcp[cli]==1.27.1' --with fastmcp==3
 
 41 tests, 86 % line coverage of `kb/` at the time of the v0.2.0 refactor.
 
-## History
-
-Refactored 2026-05-21 from a three-layer wrapper stack
-(`server.py` → `kb_module/` → `meta_harness_knowledge_base/`) to the single
-flat `kb/` package shown above. See `.meta/projects/kb-mcp-refactor/PLAN.md`
-and the `2026-05-21` entry in `.meta/LOG.md` for the full rationale.

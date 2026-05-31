@@ -15,7 +15,6 @@
 ## Rules
 
 - Each subdirectory has its own `META.md`
-- All structural changes are logged in `LOG.md`
 - Agents read the relevant `META.md` before working in a directory
 
 ## MANDATORY: OMT++ Methodology

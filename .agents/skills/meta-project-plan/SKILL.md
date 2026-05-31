@@ -105,17 +105,7 @@ Create `<project-name>/<project-name>.md` or `<project-name>/PLAN.md` with this 
 **Version:** 1.0.0
 ```
 
-### Step 4: Update LOG.md
-
-Log the structural change in `.meta/LOG.md`:
-
-```markdown
-## {YYYY-MM-DD}
-
-- **Added**: `.meta/projects/{project-name}/` — {brief description}
-```
-
-### Step 5: Update Knowledge Base
+### Step 4: Update Knowledge Base
 
 Add a KB entry documenting the project plan:
 
@@ -173,13 +163,11 @@ After creation, provide:
 **Next steps:**
 1. Review and approve the plan structure
 2. Add implementation details
-3. Update .meta/LOG.md
-4. Begin Phase 1 when ready
+3. Begin Phase 1 when ready
 ```
 
 ## Related Patterns
 
 - `.meta/META.md` — Parent directory structure
 - `.meta/projects/META.md` — Projects directory rules
-- `.meta/LOG.md` — Change log for all structural changes
 - `WORK.md` — Active work items
