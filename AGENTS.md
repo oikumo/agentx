@@ -100,11 +100,11 @@ The Knowledge Base is **exclusively** accessed through the MCP server:
 - **Server**: `mcp_servers/knowledge_base/server.py`
 - **Configuration**: `opencode.jsonc` (MCP section)
 - **Tools Available**:
-  - `knowledge_base_ask_tool` - RAG-augmented Q&A with citations
-  - `knowledge_base_search_tool` - Search KB entries
-  - `knowledge_base_add_tool` - Add new KB entries
-  - `knowledge_base_stats_tool` - Get KB statistics
-  - `knowledge_base_list_categories` - List valid categories/types
+  - `knowledge_base_kb_ask_tool` - RAG-augmented Q&A with citations
+  - `knowledge_base_kb_search_tool` - Search KB entries
+  - `knowledge_base_kb_add_tool` - Add new KB entries
+  - `knowledge_base_kb_stats_tool` - Get KB statistics
+  - `knowledge_base_kb_list_categories` - List valid categories/types
 
 
 ---

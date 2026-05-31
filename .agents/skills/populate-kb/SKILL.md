@@ -26,7 +26,7 @@ This skill is **NOT for humans**. It is designed exclusively for AI coding agent
 **Required MCP Tools (7):**
 | # | Tool | Purpose | Phase |
 |---|------|---------|-------|
-| 1 | `knowledge_base_stats_tool` | KB state check & final metrics | Phase 0, 4, 6 |
+| 1 | `knowledge_base_kb_stats_tool` | KB state check & final metrics | Phase 0, 4, 6 |
 | 2 | `knowledge_base_kb_populate_workspace_tool` | Automated extraction from files | Phase 2 |
 | 3 | `knowledge_base_kb_ask_tool` | RAG synthesis quality testing | Phase 5 |
 | 4 | `knowledge_base_kb_search_tool` | Gap analysis & coverage check | Phase 5 |
@@ -77,7 +77,7 @@ This skill is **NOT for humans**. It is designed exclusively for AI coding agent
 ```json
 [
   {
-    "tool": "knowledge_base_stats_tool",
+    "tool": "knowledge_base_kb_stats_tool",
     "parameters": {},
     "purpose": "Check current KB state"
   },
@@ -157,7 +157,7 @@ This skill is **NOT for humans**. It is designed exclusively for AI coding agent
 
 **Agent Notes:**
 - This is the **slowest** single call — expect 10-60s depending on project size
-- The tool auto-excludes `__pycache__`, `*.pyc`, `.git`, `node_modules` by default
+- The server has built-in default excludes (`__pycache__`, `.venv`, `venv`, `.git`, `node_modules`, `chroma_db`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `dist`, `build`, `.tox`, `.eggs`, `site-packages`, `.env*` patterns). The `exclude_dirs` parameter is **additive** on top of these defaults.
 - Always use absolute path for `workspace_root`
 - Set `reset_first=false` here (Phase 1 decides reset separately)
 
@@ -209,17 +209,20 @@ Run these MCP calls **in parallel** (they don't depend on each other):
 ### Phase 4: VALIDATE — Quality Gate (Parallel)
 
 **Agent Tool Calls (IN PARALLEL):**
+
+> 💡 **Optimization:** If Phase 0 already retrieved valid categories, the `kb_list_categories` call below can be skipped — reuse the Phase 0 result instead. Only call it here if Phase 0 was skipped or is stale.
+
 ```json
 [
   {
-    "tool": "knowledge_base_stats_tool",
+    "tool": "knowledge_base_kb_stats_tool",
     "parameters": {},
     "purpose": "Get final population metrics"
   },
   {
     "tool": "knowledge_base_kb_list_categories",
     "parameters": {},
-    "purpose": "Confirm schema coverage"
+    "purpose": "Confirm schema coverage (optional — reuse from Phase 0)"
   }
 ]
 ```

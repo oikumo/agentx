@@ -132,12 +132,26 @@ def stats(store: Optional[KBStore] = None) -> StatsResult:
         medium = sum(1 for c in confidences if 0.6 <= c < 0.9)
         low = sum(1 for c in confidences if c < 0.6)
 
+        # Compute mean and median confidence
+        mean_conf = 0.0
+        median_conf = 0.0
+        if confidences:
+            mean_conf = sum(confidences) / len(confidences)
+            sorted_confs = sorted(confidences)
+            n = len(sorted_confs)
+            if n % 2 == 1:
+                median_conf = sorted_confs[n // 2]
+            else:
+                median_conf = (sorted_confs[n // 2 - 1] + sorted_confs[n // 2]) / 2.0
+
         return StatsResult(
             success=True,
             total_entries=total,
             by_type=by_type,
             by_category=by_category,
             confidence_distribution={"high": high, "medium": medium, "low": low},
+            mean_confidence=round(mean_conf, 4),
+            median_confidence=round(median_conf, 4),
         )
     except Exception as exc:
         get_logger().error("stats failed: %s", exc)

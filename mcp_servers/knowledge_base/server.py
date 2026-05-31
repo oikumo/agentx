@@ -192,9 +192,11 @@ def kb_stats_tool() -> str:
 
     cd = result.confidence_distribution
     lines.append("\n📈 Confidence Distribution:")
-    lines.append(f"  • High (≥0.9): {cd.get('high', 0)}")
+    lines.append(f"  • High   (≥0.9):   {cd.get('high', 0)}")
     lines.append(f"  • Medium (0.6-0.9): {cd.get('medium', 0)}")
-    lines.append(f"  • Low (<0.6): {cd.get('low', 0)}")
+    lines.append(f"  • Low    (<0.6):   {cd.get('low', 0)}")
+    lines.append(f"  • Mean:   {result.mean_confidence:.4f}")
+    lines.append(f"  • Median: {result.median_confidence:.4f}")
 
     return "\n".join(lines)
 

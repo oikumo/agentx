@@ -70,6 +70,8 @@ class StatsResult:
     by_type: Dict[str, int] = field(default_factory=dict)
     by_category: Dict[str, int] = field(default_factory=dict)
     confidence_distribution: Dict[str, int] = field(default_factory=dict)
+    mean_confidence: float = 0.0
+    median_confidence: float = 0.0
     error: Optional[str] = None
 
 

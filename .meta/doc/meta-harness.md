@@ -81,13 +81,13 @@ agentx/
 │ LAYER 2: MCP SERVER LAYER                               │
 │ - server.py (FastMCP wrapper, 320 lines)               │
 │ - 7 MCP tools exposed:                                 │
-│   • knowledge_base_ask_tool        (RAG Q&A)           │
-│   • knowledge_base_search_tool     (Search)            │
-│   • knowledge_base_add_tool        (Add entry)         │
-│   • knowledge_base_stats_tool      (Statistics)        │
-│   • knowledge_base_reset_tool      (Reset)             │
-│   • knowledge_base_populate_workspace_tool (Population)│
-│   • knowledge_base_list_categories (Categories)        │
+│   • knowledge_base_kb_ask_tool        (RAG Q&A)        │
+│   • knowledge_base_kb_search_tool     (Search)         │
+│   • knowledge_base_kb_add_tool        (Add entry)      │
+│   • knowledge_base_kb_stats_tool      (Statistics)     │
+│   • knowledge_base_kb_reset_tool      (Reset)          │
+│   • knowledge_base_kb_populate_workspace_tool (Pop.)   │
+│   • knowledge_base_kb_list_categories (Categories)     │
 │ - Extended timeout: 1800s                              │
 └─────────────────────────────────────────────────────────┘
 │
@@ -204,7 +204,7 @@ result = knowledge_base_add_tool(
 ### 3. KB Statistics
 
 ```python
-stats = knowledge_base_stats_tool()
+stats = knowledge_base_kb_stats_tool()
 # Output:
 # Total Entries: 170
 # By Type: pattern (41), finding (129)
