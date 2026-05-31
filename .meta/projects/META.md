@@ -11,6 +11,3 @@
 **DO**: Folder per project, document scope, link to experiments
 **DON'T**: Include code, mix unrelated projects, leave outdated
 
----
-
-**Version**: 3.0.0 (Simplified) | **Lines**: ~20
