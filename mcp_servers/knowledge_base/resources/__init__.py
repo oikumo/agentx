@@ -12,6 +12,7 @@ from .flows import FlowResources
 from .api import APIResources
 from .code import CodeResources
 from .session import SessionResources
+from .quality import QualityResources
 
 __all__ = [
     "ResourceHandler",
@@ -22,4 +23,5 @@ __all__ = [
     "APIResources",
     "CodeResources",
     "SessionResources",
+    "QualityResources",
 ]

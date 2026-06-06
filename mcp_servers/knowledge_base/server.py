@@ -33,9 +33,9 @@ from graph.models import Entity, Relationship, ImpactResult, EntityKind, Relatio
 from resources import (
     ResourceRegistry,
     ProjectResources,
-    ArchResources,
+    ArchitectureResources,
     FlowResources,
-    ApiResources,
+    APIResources,
     CodeResources,
     SessionResources,
     QualityResources,
@@ -62,9 +62,9 @@ _graph_store: Optional[GraphStore] = None
 _resource_registry: Optional[ResourceRegistry] = None
 _prompt_engine: Optional[PromptEngine] = None
 _project_resources: Optional[ProjectResources] = None
-_arch_resources: Optional[ArchResources] = None
+_arch_resources: Optional[ArchitectureResources] = None
 _flow_resources: Optional[FlowResources] = None
-_api_resources: Optional[ApiResources] = None
+_api_resources: Optional[APIResources] = None
 _code_resources: Optional[CodeResources] = None
 _session_resources: Optional[SessionResources] = None
 _quality_resources: Optional[QualityResources] = None
@@ -90,9 +90,9 @@ def get_v4_components():
     if _resource_registry is None:
         _resource_registry = ResourceRegistry()
         _project_resources = ProjectResources(_graph)
-        _arch_resources = ArchResources(_graph)
+        _arch_resources = ArchitectureResources(_graph)
         _flow_resources = FlowResources(_graph)
-        _api_resources = ApiResources(_graph)
+        _api_resources = APIResources(_graph)
         _code_resources = CodeResources(_graph)
         _session_resources = SessionResources()
         _quality_resources = QualityResources(_graph)
@@ -683,7 +683,7 @@ def get_arch_components() -> str:
     except Exception as e:
         return f"❌ {e}"
 
-@mcp.resource("knowledge-base://arch/dependencies")
+@mcp.resource("knowledge-base://arch/dependencies?format={format}")
 def get_arch_dependencies(format: str = "json") -> str:
     """Dependencies."""
     try:
@@ -764,7 +764,7 @@ def get_public_api() -> str:
     except Exception as e:
         return f"❌ {e}"
 
-@mcp.resource("knowledge-base://code/search")
+@mcp.resource("knowledge-base://code/search?query={query}")
 def search_code(query: str = "") -> str:
     """Search code."""
     try:
