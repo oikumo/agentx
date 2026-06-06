@@ -5,16 +5,23 @@ This module owns the single copy of:
 * tokenisation
 * keyword scoring (`keyword_score`)
 * semantic field-weighted boost (`semantic_boost`)
-* the final `hybrid_search` combination
+* the v2 fallback ``hybrid_search`` function
+* the new v3 ``hybrid_search_v3`` pipeline
 
-These functions are pure (collection in, list-of-dicts out) so they are
+The v2 functions are pure (collection in, list-of-dicts out) so they are
 straightforward to unit-test without touching ChromaDB internals.
 """
 
 import re
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import Any, Dict, List, Optional
 
+from .logging import get_logger
+
+
+# ---------------------------------------------------------------------------
+# Tokenisation helpers
+# ---------------------------------------------------------------------------
 
 def simple_tokenize(text: str) -> List[str]:
     """Lowercase word-level tokeniser."""
@@ -92,15 +99,21 @@ def _recency_bonus(created_at: str) -> float:
         return 1.0
 
 
+# ---------------------------------------------------------------------------
+# V2: Legacy hybrid search (backward-compatible)
+# ---------------------------------------------------------------------------
+
 def hybrid_search(collection, query: str, category: Optional[str] = None,
                   top_k: int = 5) -> List[Dict]:
     """Run a hybrid vector + lexical search against a Chroma collection.
 
+    This is the **v2 pipeline** — pure ChromaDB ANN + post-hoc scoring.
+    Kept as a backward-compatible fallback. New code should use
+    ``hybrid_search_v3`` instead.
+
     Returns a list of plain dicts already sorted by descending combined score.
-    Errors are swallowed and logged through `kb.logging` (Phase 5); a search
-    failure returns an empty list so callers can degrade gracefully.
+    Errors are swallowed and logged; a search failure returns an empty list.
     """
-    from .logging import get_logger
     logger = get_logger()
 
     try:
@@ -164,3 +177,138 @@ def hybrid_search(collection, query: str, category: Optional[str] = None,
     except Exception as exc:
         logger.error("ChromaDB search error: %s", exc)
         return []
+
+
+# ---------------------------------------------------------------------------
+# V3: New hybrid pipeline (dense + sparse + RRF + optional reranker)
+# ---------------------------------------------------------------------------
+
+def hybrid_search_v3(
+    query: str,
+    dense_retriever: Any,  # DenseRetriever from kb.retrieval
+    sparse_retriever: Any = None,  # SparseRetriever from kb.sparse_index
+    reranker: Any = None,  # CrossEncoderReranker from kb.reranking
+    top_k: int = 5,
+    category: Optional[str] = None,
+    dense_top_k: Optional[int] = None,
+    sparse_top_k: Optional[int] = None,
+    rerank: bool = True,
+    fusion_k: int = 60,
+) -> List[Dict]:
+    """V3 hybrid search: dense → sparse → RRF fusion → optional reranker.
+
+    This is the new pipeline that replaces the v2 ``hybrid_search``.
+    It produces output dicts with the same schema as v2 for callers
+    that consume search results (``api.py``, ``synthesis.py``).
+
+    Args:
+        query: The search query.
+        dense_retriever: A configured ``DenseRetriever`` instance.
+        sparse_retriever: Optional ``SparseRetriever`` instance. If None,
+                          only dense search is used.
+        reranker: Optional ``CrossEncoderReranker`` instance. If None,
+                  skipping reranking.
+        top_k: Final number of results to return.
+        category: Optional category filter for dense retrieval.
+        dense_top_k: Candidates from dense (default: top_k * 2).
+        sparse_top_k: Candidates from sparse (default: top_k * 2).
+        rerank: Whether to apply reranking (if reranker is available).
+        fusion_k: RRF constant.
+
+    Returns:
+        List of dicts with the same shape as ``hybrid_search`` output.
+    """
+    from .retrieval import DenseRetriever, FusionRetriever, RetrievalResult, hybrid_retrieve
+    from .sparse_index import SparseRetriever
+
+    try:
+        # Step 1: Dense + sparse retrieval + RRF fusion
+        fused = hybrid_retrieve(
+            query=query,
+            dense_retriever=dense_retriever,
+            sparse_retriever=sparse_retriever,
+            top_k=top_k,
+            dense_top_k=dense_top_k or top_k * 2,
+            sparse_top_k=sparse_top_k or top_k * 2,
+            category=category,
+            fusion_k=fusion_k,
+        )
+
+        if not fused:
+            return []
+
+        # Step 2: Optional reranking
+        if rerank and reranker is not None:
+            try:
+                reranked = reranker.rerank(
+                    query=query,
+                    candidates=fused,
+                    top_k=top_k,
+                    text_fn=lambda r: r.text,
+                )
+                # Map reranked results back to our dict format
+                reranked_ids = {r.id for r in reranked}
+                # Keep reranked results in order, fill remaining from fused
+                result_map = {r.id: r for r in fused}
+                final_results: List[Dict] = []
+                seen_ids: set = set()
+
+                for rr in reranked:
+                    if rr.id in result_map:
+                        final_results.append(
+                            _retrieval_result_to_dict(result_map[rr.id], rr.score)
+                        )
+                        seen_ids.add(rr.id)
+
+                # Fill any remaining slots from fused (non-reranked)
+                for fr in fused:
+                    if len(final_results) >= top_k:
+                        break
+                    if fr.id not in seen_ids:
+                        final_results.append(
+                            _retrieval_result_to_dict(fr, fr.score)
+                        )
+                        seen_ids.add(fr.id)
+
+                return final_results
+
+            except ImportError:
+                get_logger().warning(
+                    "Reranker not available (sentence-transformers missing). "
+                    "Falling back to fused results."
+                )
+            except Exception as exc:
+                get_logger().warning("Reranking failed (falling back): %s", exc)
+
+        # Step 3: No reranking — return fused results as-is
+        return [
+            _retrieval_result_to_dict(r, r.score)
+            for r in fused
+        ]
+
+    except Exception as exc:
+        get_logger().error("hybrid_search_v3 failed: %s", exc)
+        return []
+
+
+# ---------------------------------------------------------------------------
+# V3 → V2 dict conversion helper
+# ---------------------------------------------------------------------------
+
+def _retrieval_result_to_dict(rr: Any, score: float) -> Dict[str, Any]:
+    """Convert a ``RetrievalResult`` (or similar) to the v2 dict format."""
+    meta = rr.metadata if hasattr(rr, 'metadata') else {}
+    return {
+        "id": rr.id if hasattr(rr, 'id') else "unknown",
+        "type": meta.get("type", "unknown"),
+        "category": meta.get("category", "general"),
+        "title": meta.get("title", rr.id),
+        "confidence": float(meta.get("confidence", 0.5)),
+        "context": meta.get("context", ""),
+        "finding": meta.get("finding", ""),
+        "solution": meta.get("solution", ""),
+        "example": meta.get("example", ""),
+        "created_at": meta.get("created_at", datetime.now().isoformat()),
+        "combined_score": score,
+        "source": rr.source if hasattr(rr, 'source') else "v3",
+    }

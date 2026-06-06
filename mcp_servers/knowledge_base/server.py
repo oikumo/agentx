@@ -41,7 +41,16 @@ mcp = FastMCP(
 # =============================================================================
 
 @mcp.tool()
-def kb_search_tool(query: str, top_k: int = 5, category: Optional[str] = None) -> str:
+def kb_search_tool(
+    query: str,
+    top_k: int = 5,
+    category: Optional[str] = None,
+    search_mode: str = "v2",
+    embedding_model: str = "bge-small-en",
+    rerank: bool = True,
+    reranker_model: str = "ms-marco-MiniLM-L6-v2",
+    query_mode: str = "direct",
+) -> str:
     """
     Search the knowledge base for relevant entries.
 
@@ -49,11 +58,23 @@ def kb_search_tool(query: str, top_k: int = 5, category: Optional[str] = None) -
         query: Search query string
         top_k: Maximum number of results to return (default: 5)
         category: Optional category filter (code, class, method, function, workflow, documentation, architecture)
+        search_mode: "v2" (legacy), "hybrid" (dense+sparse+RRF), "dense", or "sparse" (default: "v2")
+        embedding_model: Embedding model for dense retrieval (default: "bge-small-en")
+        rerank: Whether to apply cross-encoder reranking (default: True)
+        reranker_model: Cross-encoder model name (default: "ms-marco-MiniLM-L6-v2")
+        query_mode: Query preprocessing mode: "direct", "rewrite", "hyde", "multi_query", "decompose" (default: "direct")
 
     Returns:
         Formatted search results with entries and metadata
     """
-    result = search(query, top_k, category)
+    result = search(
+        query, top_k, category,
+        search_mode=search_mode,
+        embedding_model=embedding_model,
+        rerank=rerank,
+        reranker_model=reranker_model,
+        query_mode=query_mode,
+    )
 
     if not result.success:
         return f"❌ Search failed: {result.error}"
@@ -83,7 +104,16 @@ def kb_search_tool(query: str, top_k: int = 5, category: Optional[str] = None) -
 
 
 @mcp.tool()
-def kb_ask_tool(question: str, top_k: int = 3) -> str:
+def kb_ask_tool(
+    question: str,
+    top_k: int = 3,
+    search_mode: str = "v2",
+    embedding_model: str = "bge-small-en",
+    rerank: bool = True,
+    reranker_model: str = "ms-marco-MiniLM-L6-v2",
+    query_mode: str = "direct",
+    synthesis_mode: str = "template",
+) -> str:
     """
     Ask a question and get a synthesized answer from the knowledge base.
 
@@ -93,11 +123,25 @@ def kb_ask_tool(question: str, top_k: int = 3) -> str:
     Args:
         question: The question to ask
         top_k: Number of context entries to retrieve (default: 3)
+        search_mode: "v2" (legacy), "hybrid" (dense+sparse+RRF), "dense", or "sparse" (default: "v2")
+        embedding_model: Embedding model for dense retrieval (default: "bge-small-en")
+        rerank: Whether to apply cross-encoder reranking (default: True)
+        reranker_model: Cross-encoder model name (default: "ms-marco-MiniLM-L6-v2")
+        query_mode: Query preprocessing mode: "direct", "rewrite", "hyde", "multi_query", "decompose" (default: "direct")
+        synthesis_mode: "template" (default) or "llm" (requires LLM support)
 
     Returns:
         Synthesized answer with citations
     """
-    result = ask(question, top_k)
+    result = ask(
+        question, top_k,
+        search_mode=search_mode,
+        embedding_model=embedding_model,
+        rerank=rerank,
+        reranker_model=reranker_model,
+        query_mode=query_mode,
+        synthesis_mode=synthesis_mode,
+    )
 
     if not result.success:
         return f"❌ Query failed: {result.error}"

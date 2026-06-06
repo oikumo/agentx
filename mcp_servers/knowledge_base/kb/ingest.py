@@ -3,8 +3,9 @@
 Python files are analysed with `ast` to produce one entry per class, method,
 and top-level function. Markdown files become a single documentation entry.
 
-This module only depends on `kb.store`, `kb.ids`, `kb.logging` — it does not
-import anything from the legacy `meta_harness_knowledge_base` package.
+This module only depends on `kb.store`, `kb.ids`, `kb.logging`, `kb.chunking`
+— it does not import anything from the legacy `meta_harness_knowledge_base`
+package.
 """
 
 import ast
@@ -14,6 +15,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from .chunking import (
+    CodeElementChunker,
+    MarkdownSectionChunker,
+    RecursiveCharacterChunker,
+    chunk_entry_text,
+)
 from .ids import make_entry_id
 from .logging import get_logger
 from .store import KBStore, get_default_store
@@ -156,9 +163,11 @@ class WorkspaceIngestor:
     """Walks files, converts them to entries, writes them through `KBStore`."""
 
     def __init__(self, store: Optional[KBStore] = None,
-                 workspace_root: Optional[Path] = None):
+                 workspace_root: Optional[Path] = None,
+                 enable_chunking: bool = True):
         self.store = store if store is not None else get_default_store()
         self.workspace_root = workspace_root
+        self.enable_chunking = enable_chunking
 
     # ---- single-file dispatch -----------------------------------------
 
@@ -281,12 +290,76 @@ class WorkspaceIngestor:
                 "example": entry.example,
                 "confidence": entry.confidence,
                 "created_at": datetime.now().isoformat(),
+                "is_chunked": False,
             }
             self.store.add(entry_id=entry_id, document_text=document_text, metadata=metadata)
+
+            # Optionally create and store chunks
+            if self.enable_chunking:
+                self._create_and_store_chunks(entry, entry_id)
+
             return entry_id
         except Exception as exc:
             logger.warning("Error adding entry: %s", exc)
             return None
+
+    def _create_and_store_chunks(self, entry: _IngestEntry, entry_id: str) -> None:
+        """Create chunks from an entry and store them.
+
+        Chunks are stored in the same collection with chunk-specific metadata.
+        The parent entry's ``is_chunked`` metadata flag is set to True.
+        """
+        try:
+            text = " ".join([
+                entry.title, entry.finding, entry.solution,
+                entry.context, entry.example,
+            ])
+            if not text.strip():
+                return
+
+            chunks = chunk_entry_text(
+                text=text,
+                parent_id=entry_id,
+                source_type="kb_entry",
+                chunk_size=512,
+                chunk_overlap=64,
+                metadata={
+                    "type": entry.entry_type.value,
+                    "category": entry.category.value,
+                    "title": entry.title,
+                    "confidence": entry.confidence,
+                },
+            )
+
+            if len(chunks) > 1:
+                # Store chunks and update parent's is_chunked flag
+                self.store.add_chunks(chunks=chunks)
+                # Update the parent entry to mark it as chunked
+                # ChromaDB doesn't support partial metadata update directly,
+                # so we mark it in the chunk metadata for retrieval filtering
+                self.store.add(
+                    entry_id=entry_id,
+                    document_text=" ".join([
+                        entry.title, entry.finding, entry.solution,
+                        entry.context, entry.example,
+                    ]),
+                    metadata={
+                        "entry_id": entry_id,
+                        "type": entry.entry_type.value,
+                        "category": entry.category.value,
+                        "title": entry.title,
+                        "finding": entry.finding,
+                        "solution": entry.solution,
+                        "context": entry.context,
+                        "example": entry.example,
+                        "confidence": entry.confidence,
+                        "created_at": datetime.now().isoformat(),
+                        "is_chunked": True,
+                        "chunk_count": len(chunks),
+                    },
+                )
+        except Exception as exc:
+            get_logger().warning("Error chunking entry %s: %s", entry_id, exc)
 
     # ---- helpers ------------------------------------------------------
 

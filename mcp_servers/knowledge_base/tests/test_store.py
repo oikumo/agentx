@@ -118,7 +118,7 @@ def test_populate_workspace_on_tiny_python_dir(tmp_path):
     assert r.files_processed == 1
     # Widget class + Widget.hello method + standalone function = 3 entries
     assert r.total_entries == 3
-    assert r.by_pattern["*.py"] == 3
+    assert r.by_pattern[".py"] == 3
 
 
 def test_populate_workspace_rejects_missing_root(tmp_path):

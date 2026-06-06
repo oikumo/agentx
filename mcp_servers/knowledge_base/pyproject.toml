@@ -9,6 +9,12 @@ dependencies = [
     "chromadb>=0.4.0",
 ]
 
+[project.optional-dependencies]
+sparse = ["bm25s>=0.3"]
+rerank = ["sentence-transformers>=3.0", "torch>=2.0"]
+llm = ["transformers>=4.36"]
+all = ["knowledge-base[sparse,rerank,llm]"]
+
 [project.scripts]
 knowledge_base = "server:main"
 

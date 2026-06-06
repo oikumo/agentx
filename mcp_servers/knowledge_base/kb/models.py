@@ -25,6 +25,19 @@ class KBEntry:
 
 
 @dataclass
+class ChunkInfo:
+    """Metadata about a chunk within an entry.
+
+    Stored alongside entries in ChromaDB for parent-child tracking.
+    """
+    parent_id: str
+    chunk_index: int
+    chunk_type: str  # "full", "section", "recursive_chunk", "docstring"
+    section_hierarchy: List[str] = field(default_factory=list)
+    chunk_count: int = 1
+
+
+@dataclass
 class SearchResult:
     """Result of a `kb.search` call."""
     success: bool
