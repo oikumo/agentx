@@ -23,108 +23,12 @@ from .models import (
     SearchResult,
     StatsResult,
 )
-from .search import hybrid_search, hybrid_search_v3
+from .search import hybrid_search
 from .store import KBStore, get_default_store
 from .synthesis import synthesize
 from .query_engine import QueryEngine
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers for building v3 pipeline components
-# ---------------------------------------------------------------------------
-
-def _build_dense_retriever(
-    embedding_model: str = "bge-small-en",
-    store: Optional[KBStore] = None,
-):
-    """Create a DenseRetriever for the v3 pipeline."""
-    from .retrieval import DenseRetriever
-    return DenseRetriever(model_name=embedding_model, store=store)
-
-
-def _build_sparse_retriever():
-    """Create a SparseRetriever if bm25s is available."""
-    from .sparse_index import get_default_retriever
-    return get_default_retriever()
-
-
-def _build_reranker(
-    reranker_model: str = "ms-marco-MiniLM-L6-v2",
-):
-    """Create a CrossEncoderReranker if sentence-transformers is available."""
-    try:
-        from .reranking import CrossEncoderReranker
-        return CrossEncoderReranker(model_name=reranker_model)
-    except ImportError:
-        return None
-
-
-def _run_v3_search(
-    query: str,
-    top_k: int = 5,
-    category: Optional[str] = None,
-    embedding_model: str = "bge-small-en",
-    search_mode: str = "hybrid",
-    rerank: bool = True,
-    reranker_model: str = "ms-marco-MiniLM-L6-v2",
-    query_engine: Optional[QueryEngine] = None,
-    store: Optional[KBStore] = None,
-):
-    """Run the v3 hybrid search pipeline.
-
-    Handles optional components (sparse, reranker) gracefully when their
-    dependencies are not installed.
-    """
-    from .retrieval import DenseRetriever
-    from .sparse_index import get_default_retriever
-
-    store = store or get_default_store()
-
-    # Dense retriever (always available — uses ChromaDB)
-    dense_retriever = DenseRetriever(model_name=embedding_model, store=store)
-
-    # Sparse retriever (optional — needs bm25s)
-    sparse_retriever = None
-    if search_mode in ("hybrid", "sparse"):
-        sparse_retriever = get_default_retriever()
-
-    # Reranker (optional — needs sentence-transformers)
-    reranker = None
-    if rerank:
-        try:
-            from .reranking import CrossEncoderReranker
-            reranker = CrossEncoderReranker(model_name=reranker_model)
-        except ImportError:
-            reranker = None
-
-    # Query preprocessing
-    queries = [query]
-    if query_engine is not None:
-        queries = query_engine.process(query)
-
-    # Run search for each query variant and merge results
-    all_results = []
-    seen_ids = set()
-    for q in queries:
-        if not q.strip():
-            continue
-        results = hybrid_search_v3(
-            query=q,
-            dense_retriever=dense_retriever,
-            sparse_retriever=sparse_retriever,
-            reranker=reranker,
-            top_k=top_k,
-            category=category,
-            rerank=rerank,
-        )
-        for r in results:
-            if r["id"] not in seen_ids:
-                seen_ids.add(r["id"])
-                all_results.append(r)
-
-    # Re-sort merged results by combined_score descending
-    all_results.sort(key=lambda r: float(r.get("combined_score", 0)), reverse=True)
-    return all_results[:top_k]
+from .retrieval import DenseRetriever
+from .sparse_index import get_default_retriever
 
 
 # ---------------------------------------------------------------------------
@@ -133,20 +37,20 @@ def _run_v3_search(
 
 def search(query: str, top_k: int = 5, category: Optional[str] = None,
            store: Optional[KBStore] = None,
-           search_mode: str = "v2",
+           search_mode: str = "hybrid",
            embedding_model: str = "bge-small-en",
            rerank: bool = True,
            reranker_model: str = "ms-marco-MiniLM-L6-v2",
            query_mode: str = "direct",
            ) -> SearchResult:
-    """Search the KB.
+    """Search the KB using hybrid retrieval.
 
     Args:
         query: The search query.
         top_k: Maximum number of results.
         category: Optional category filter.
         store: KBStore instance (uses default if None).
-        search_mode: ``"v2"`` (legacy), ``"hybrid"`` (dense+sparse+RRF),
+        search_mode: ``"hybrid"`` (dense+sparse+RRF),
                      ``"dense"`` (dense-only), ``"sparse"`` (sparse-only).
         embedding_model: Embedding model for dense retrieval.
         rerank: Whether to apply cross-encoder reranking.
@@ -162,25 +66,53 @@ def search(query: str, top_k: int = 5, category: Optional[str] = None,
 
         # Build query engine if needed
         qe: Optional[QueryEngine] = None
-        if query_mode != "direct" and search_mode != "v2":
+        if query_mode != "direct":
             qe = QueryEngine(mode=query_mode)
 
-        if search_mode == "v2":
-            # Legacy v2 pipeline
-            raw = hybrid_search(store.collection, query, category, top_k)
-        else:
-            # v3 pipeline
-            raw = _run_v3_search(
-                query=query,
+        # Setup retrievers
+        dense_retriever = DenseRetriever(model_name=embedding_model, store=store)
+        
+        sparse_retriever = None
+        if search_mode in ("hybrid", "sparse"):
+            sparse_retriever = get_default_retriever()
+
+        # Setup reranker
+        reranker = None
+        if rerank:
+            try:
+                from .reranking import CrossEncoderReranker
+                reranker = CrossEncoderReranker(model_name=reranker_model)
+            except ImportError:
+                reranker = None
+
+        # Query preprocessing
+        queries = [query]
+        if qe is not None:
+            queries = qe.process(query)
+
+        # Run search for each query variant and merge results
+        all_results = []
+        seen_ids = set()
+        for q in queries:
+            if not q.strip():
+                continue
+            results = hybrid_search(
+                query=q,
+                dense_retriever=dense_retriever,
+                sparse_retriever=sparse_retriever,
+                reranker=reranker,
                 top_k=top_k,
                 category=category,
-                embedding_model=embedding_model,
-                search_mode=search_mode,
                 rerank=rerank,
-                reranker_model=reranker_model,
-                query_engine=qe,
-                store=store,
             )
+            for r in results:
+                if r["id"] not in seen_ids:
+                    seen_ids.add(r["id"])
+                    all_results.append(r)
+
+        # Re-sort merged results by combined_score descending
+        all_results.sort(key=lambda r: float(r.get("combined_score", 0)), reverse=True)
+        raw = all_results[:top_k]
 
         entries = [KBEntry(
             id=r.get("id", "unknown"),
@@ -210,7 +142,7 @@ def search(query: str, top_k: int = 5, category: Optional[str] = None,
 
 def ask(question: str, top_k: int = 3,
         store: Optional[KBStore] = None,
-        search_mode: str = "v2",
+        search_mode: str = "hybrid",
         embedding_model: str = "bge-small-en",
         rerank: bool = True,
         reranker_model: str = "ms-marco-MiniLM-L6-v2",
@@ -223,14 +155,14 @@ def ask(question: str, top_k: int = 3,
         question: The question to answer.
         top_k: Number of context entries to retrieve.
         store: KBStore instance (uses default if None).
-        search_mode: ``"v2"`` (legacy), ``"hybrid"`` (dense+sparse+RRF),
+        search_mode: ``"hybrid"`` (dense+sparse+RRF),
                      ``"dense"``, ``"sparse"``.
         embedding_model: Embedding model for dense retrieval.
         rerank: Whether to apply cross-encoder reranking.
         reranker_model: Cross-encoder model name.
         query_mode: Query preprocessing mode (``"direct"``, ``"rewrite"``,
                     ``"hyde"``, ``"multi_query"``, ``"decompose"``).
-        synthesis_mode: ``"template"`` (v2 compatible) or ``"llm"``
+        synthesis_mode: ``"template"`` or ``"llm"``
                         (LLM-based generation, requires llm callable).
 
     Returns:
@@ -241,24 +173,53 @@ def ask(question: str, top_k: int = 3,
 
         # Build query engine if needed
         qe: Optional[QueryEngine] = None
-        if query_mode != "direct" and search_mode != "v2":
+        if query_mode != "direct":
             qe = QueryEngine(mode=query_mode)
 
-        # Retrieve results
-        if search_mode == "v2":
-            raw = hybrid_search(store.collection, question, None, top_k)
-        else:
-            raw = _run_v3_search(
-                query=question,
+        # Setup retrievers
+        dense_retriever = DenseRetriever(model_name=embedding_model, store=store)
+        
+        sparse_retriever = None
+        if search_mode in ("hybrid", "sparse"):
+            sparse_retriever = get_default_retriever()
+
+        # Setup reranker
+        reranker = None
+        if rerank:
+            try:
+                from .reranking import CrossEncoderReranker
+                reranker = CrossEncoderReranker(model_name=reranker_model)
+            except ImportError:
+                reranker = None
+
+        # Query preprocessing
+        queries = [question]
+        if qe is not None:
+            queries = qe.process(question)
+
+        # Run search for each query variant and merge results
+        all_results = []
+        seen_ids = set()
+        for q in queries:
+            if not q.strip():
+                continue
+            results = hybrid_search(
+                query=q,
+                dense_retriever=dense_retriever,
+                sparse_retriever=sparse_retriever,
+                reranker=reranker,
                 top_k=top_k,
                 category=None,
-                embedding_model=embedding_model,
-                search_mode=search_mode,
                 rerank=rerank,
-                reranker_model=reranker_model,
-                query_engine=qe,
-                store=store,
             )
+            for r in results:
+                if r["id"] not in seen_ids:
+                    seen_ids.add(r["id"])
+                    all_results.append(r)
+
+        # Re-sort merged results by combined_score descending
+        all_results.sort(key=lambda r: float(r.get("combined_score", 0)), reverse=True)
+        raw = all_results[:top_k]
 
         # Synthesize answer
         if synthesis_mode == "template":

@@ -3,7 +3,7 @@
 Provides a ``QueryEngine`` that transforms raw user queries before they
 enter the retrieval pipeline. Supports multiple modes:
 
-- ``direct``: No transformation (v2-compatible pass-through).
+- ``direct``: No transformation (passthrough).
 - ``rewrite``: LLM-based query rewriting for clarity/expansion.
 - ``hyde``: Hypothetical Document Embedding — generates a synthetic
   answer document and appends it as a second query.

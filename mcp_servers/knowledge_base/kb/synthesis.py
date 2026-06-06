@@ -49,7 +49,7 @@ Answer:"""
 
 
 # ---------------------------------------------------------------------------
-# Template-based synthesis (v2-compatible)
+# Template-based synthesis
 # ---------------------------------------------------------------------------
 
 def synthesize(question: str, results: List[Dict]) -> AskResult:
@@ -57,8 +57,7 @@ def synthesize(question: str, results: List[Dict]) -> AskResult:
 
     Args:
         question: the original user question (echoed for context, not required).
-        results: list of result dicts as produced by ``kb.search.hybrid_search``
-                 or ``kb.search.hybrid_search_v3``.
+        results: list of result dicts as produced by ``kb.search.hybrid_search``.
 
     Returns:
         An ``AskResult`` with a markdown answer, citation sources, and the

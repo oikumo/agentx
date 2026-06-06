@@ -1,15 +1,13 @@
 """Hybrid retrieval and scoring against a ChromaDB collection.
 
-This module owns the single copy of:
+This module provides the hybrid search pipeline for the Knowledge Base:
 
 * tokenisation
 * keyword scoring (`keyword_score`)
 * semantic field-weighted boost (`semantic_boost`)
-* the v2 fallback ``hybrid_search`` function
-* the new v3 ``hybrid_search_v3`` pipeline
+* the ``hybrid_search`` function (dense + sparse + RRF fusion + optional reranker)
 
-The v2 functions are pure (collection in, list-of-dicts out) so they are
-straightforward to unit-test without touching ChromaDB internals.
+All search operations use the v4 retrieval pipeline with hybrid scoring.
 """
 
 import re
@@ -100,90 +98,10 @@ def _recency_bonus(created_at: str) -> float:
 
 
 # ---------------------------------------------------------------------------
-# V2: Legacy hybrid search (backward-compatible)
+# Hybrid search pipeline (v4)
 # ---------------------------------------------------------------------------
 
-def hybrid_search(collection, query: str, category: Optional[str] = None,
-                  top_k: int = 5) -> List[Dict]:
-    """Run a hybrid vector + lexical search against a Chroma collection.
-
-    This is the **v2 pipeline** — pure ChromaDB ANN + post-hoc scoring.
-    Kept as a backward-compatible fallback. New code should use
-    ``hybrid_search_v3`` instead.
-
-    Returns a list of plain dicts already sorted by descending combined score.
-    Errors are swallowed and logged; a search failure returns an empty list.
-    """
-    logger = get_logger()
-
-    try:
-        where_filter = {"category": category} if category else None
-
-        results = collection.query(
-            query_texts=[query],
-            n_results=top_k * 3,
-            where=where_filter,
-            include=["documents", "metadatas", "distances"],
-        )
-
-        if not (results and results["ids"] and results["ids"][0]):
-            return []
-
-        ids = results["ids"][0]
-        documents = results["documents"][0] if results["documents"] else []
-        metadatas = results["metadatas"][0] if results["metadatas"] else []
-        distances = results["distances"][0] if results["distances"] else []
-
-        scored = []
-        for i, doc_id in enumerate(ids):
-            if i >= len(documents):
-                continue
-            metadata = metadatas[i] if i < len(metadatas) else {}
-            distance = distances[i] if i < len(distances) else 1.0
-            similarity_score = 1.0 / (1.0 + distance) if distance else 1.0
-            doc_text = documents[i]
-            kw = keyword_score(doc_text, query)
-
-            entry = {
-                "id": metadata.get("entry_id", doc_id),
-                "type": metadata.get("type", "unknown"),
-                "category": metadata.get("category", "general"),
-                "title": metadata.get("title", doc_id),
-                "confidence": float(metadata.get("confidence", 0.5)),
-                "context": metadata.get("context", ""),
-                "finding": metadata.get("finding", ""),
-                "solution": metadata.get("solution", ""),
-                "example": metadata.get("example", ""),
-                "created_at": metadata.get("created_at", datetime.now().isoformat()),
-            }
-
-            sem = semantic_boost(entry, query)
-            recency = _recency_bonus(entry["created_at"])
-            tmb = _title_match_bonus(entry["title"], query)
-
-            combined = (
-                0.30 * similarity_score
-                + 0.20 * kw
-                + 0.15 * sem
-                + 0.15 * entry["confidence"]
-                + 0.10 * recency
-                + 0.10 * tmb
-            )
-            entry["combined_score"] = combined
-            scored.append((combined, entry))
-
-        scored.sort(key=lambda x: x[0], reverse=True)
-        return [e for _, e in scored[:top_k]]
-    except Exception as exc:
-        logger.error("ChromaDB search error: %s", exc)
-        return []
-
-
-# ---------------------------------------------------------------------------
-# V3: New hybrid pipeline (dense + sparse + RRF + optional reranker)
-# ---------------------------------------------------------------------------
-
-def hybrid_search_v3(
+def hybrid_search(
     query: str,
     dense_retriever: Any,  # DenseRetriever from kb.retrieval
     sparse_retriever: Any = None,  # SparseRetriever from kb.sparse_index
@@ -195,11 +113,10 @@ def hybrid_search_v3(
     rerank: bool = True,
     fusion_k: int = 60,
 ) -> List[Dict]:
-    """V3 hybrid search: dense → sparse → RRF fusion → optional reranker.
+    """Hybrid search: dense → sparse → RRF fusion → optional reranker.
 
-    This is the new pipeline that replaces the v2 ``hybrid_search``.
-    It produces output dicts with the same schema as v2 for callers
-    that consume search results (``api.py``, ``synthesis.py``).
+    This is the v4 search pipeline using hybrid retrieval with reciprocal
+    rank fusion and optional cross-encoder reranking.
 
     Args:
         query: The search query.
@@ -216,10 +133,9 @@ def hybrid_search_v3(
         fusion_k: RRF constant.
 
     Returns:
-        List of dicts with the same shape as ``hybrid_search`` output.
+        List of dicts with search results sorted by relevance.
     """
-    from .retrieval import DenseRetriever, FusionRetriever, RetrievalResult, hybrid_retrieve
-    from .sparse_index import SparseRetriever
+    from .retrieval import hybrid_retrieve
 
     try:
         # Step 1: Dense + sparse retrieval + RRF fusion
@@ -247,8 +163,6 @@ def hybrid_search_v3(
                     text_fn=lambda r: r.text,
                 )
                 # Map reranked results back to our dict format
-                reranked_ids = {r.id for r in reranked}
-                # Keep reranked results in order, fill remaining from fused
                 result_map = {r.id: r for r in fused}
                 final_results: List[Dict] = []
                 seen_ids: set = set()
@@ -287,16 +201,16 @@ def hybrid_search_v3(
         ]
 
     except Exception as exc:
-        get_logger().error("hybrid_search_v3 failed: %s", exc)
+        get_logger().error("hybrid_search failed: %s", exc)
         return []
 
 
 # ---------------------------------------------------------------------------
-# V3 → V2 dict conversion helper
+# Result conversion helper
 # ---------------------------------------------------------------------------
 
 def _retrieval_result_to_dict(rr: Any, score: float) -> Dict[str, Any]:
-    """Convert a ``RetrievalResult`` (or similar) to the v2 dict format."""
+    """Convert a ``RetrievalResult`` (or similar) to dict format."""
     meta = rr.metadata if hasattr(rr, 'metadata') else {}
     return {
         "id": rr.id if hasattr(rr, 'id') else "unknown",
@@ -310,5 +224,5 @@ def _retrieval_result_to_dict(rr: Any, score: float) -> Dict[str, Any]:
         "example": meta.get("example", ""),
         "created_at": meta.get("created_at", datetime.now().isoformat()),
         "combined_score": score,
-        "source": rr.source if hasattr(rr, 'source') else "v3",
+        "source": rr.source if hasattr(rr, 'source') else "hybrid",
     }
