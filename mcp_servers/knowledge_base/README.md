@@ -8,7 +8,7 @@ The KB v4 implementation consists of four main layers:
 
 ```
 mcp_servers/knowledge_base/
-├── server.py                 ← MCP tool surface (10 tools + 15 resources + 10 prompts)
+├── server.py                 ← MCP tool surface (14 tools + 15 resources + 10 prompts)
 ├── pyproject.toml            ← hatchling wheel, uvx entry point
 ├── README.md                 ← this file
 ├── chroma_db/                ← ChromaDB persistence (auto-created)
@@ -95,15 +95,20 @@ mcp_servers/knowledge_base/
 | `kb_populate_workspace_tool` | Walk workspace and ingest `.py` + `.md` files | `reset_first=True` |
 | `kb_list_categories` | List valid entry types and categories | — |
 
-### Knowledge Graph Tools (v4)
+### Knowledge Graph / Extended Tools (7)
+
+> Names match `server.py` exactly. Via opencode they are namespaced as
+> `knowledge_base_<tool>` (e.g. `knowledge_base_kb_graph_tool`).
 
 | Tool | Purpose |
 |------|---------|
-| `kb_graph_analyze` | Analyze Python code and build knowledge graph |
-| `kb_graph_query` | Query the knowledge graph for entities/relationships |
-| `kb_graph_impact` | Analyze impact of code changes via graph traversal |
-| `kb_graph_export` | Export knowledge graph to various formats |
-| `kb_graph_sync` | Synchronize graph with current codebase state |
+| `kb_graph_tool` | Graph operations: `list`, `traverse`, `layers`, `entry_points` |
+| `kb_impact_tool` | Analyze impact of changing an entity (risk-scored) |
+| `kb_visualize_tool` | Render the graph as `mermaid` / `dot` / `ascii` |
+| `kb_trace_flow_tool` | Find a path between two entities |
+| `kb_code_location_tool` | Locate file/line for a symbol |
+| `kb_find_pattern_tool` | Find design patterns in the graph |
+| `kb_session_tool` | Session context: `get` / `set` / `clear` |
 
 ### MCP Resources (v4)
 

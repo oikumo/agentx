@@ -146,3 +146,45 @@ def test_add_entry_with_invalid_confidence_via_api_still_succeeds(store):
     """`kb.api.add_entry` does not validate confidence; the MCP layer does."""
     r = add_entry("pattern", "class", "T", "f", "s", confidence=2.5, store=store)
     assert r.success  # api.add_entry is permissive; server.kb_add_tool is the gate
+
+
+def test_iter_metadata_walks_entire_collection_across_pages(store):
+    """`iter_metadata` must page past its batch_size.
+
+    Regression guard: `stats()` previously read a 1000-row sample, so any KB with
+    more than 1000 entries produced breakdowns that did not match the total.
+    """
+    n = 25
+    for i in range(n):
+        add_entry("finding", "method", f"Entry{i:03d}", f"f{i}", "s", store=store)
+
+    assert store.count() == n
+    # batch_size deliberately smaller than n -> forces multi-page traversal
+    metas = list(store.iter_metadata(batch_size=10))
+    assert len(metas) == n  # every row visited exactly once, across 3 pages
+
+
+def test_stats_breakdowns_reconcile_with_total(store):
+    """Regression: by_type / by_category / confidence buckets must sum to total."""
+    for i in range(12):
+        add_entry("pattern", "class", f"P{i:03d}", "f", "s",
+                  confidence=0.95, store=store)
+    for i in range(8):
+        add_entry("finding", "method", f"M{i:03d}", "f", "s",
+                  confidence=0.95, store=store)
+    for i in range(5):
+        add_entry("decision", "function", f"F{i:03d}", "f", "s",
+                  confidence=0.5, store=store)
+
+    s = stats(store=store)
+    assert s.success
+    assert s.total_entries == 25
+    # The core invariant the old sampling-based stats violated:
+    assert sum(s.by_type.values()) == s.total_entries
+    assert sum(s.by_category.values()) == s.total_entries
+    assert sum(s.confidence_distribution.values()) == s.total_entries
+    # Exact distribution
+    assert s.by_type == {"pattern": 12, "finding": 8, "decision": 5}
+    assert s.by_category == {"class": 12, "method": 8, "function": 5}
+    assert s.confidence_distribution["high"] == 20
+    assert s.confidence_distribution["low"] == 5

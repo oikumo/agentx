@@ -115,15 +115,19 @@ The Knowledge Base is **exclusively** accessed through the MCP server:
 | `knowledge_base_kb_populate_workspace_tool` | Walk workspace and ingest `.py` + `.md` files | `reset_first=True`, `include_python=True` |
 | `knowledge_base_kb_list_categories` | List valid entry types and categories | — |
 
-### Knowledge Graph Tools (v4 - 5 tools)
+### Knowledge Graph / Extended Tools (v4 - 7 tools)
+
+> Names match `server.py`. Via opencode they are namespaced `knowledge_base_<tool>`.
 
 | Tool | Purpose |
 |------|---------|
-| `kb_graph_analyze` | Analyze Python code and build knowledge graph |
-| `kb_graph_query` | Query the knowledge graph for entities/relationships |
-| `kb_graph_impact` | Analyze impact of code changes via graph traversal |
-| `kb_graph_export` | Export knowledge graph to various formats (Mermaid, DOT, JSON, ASCII) |
-| `kb_graph_sync` | Synchronize graph with current codebase state |
+| `kb_graph_tool` | Graph operations: `list`, `traverse`, `layers`, `entry_points` |
+| `kb_impact_tool` | Analyze impact of changing an entity (risk-scored) |
+| `kb_visualize_tool` | Render the graph as Mermaid / DOT / ASCII |
+| `kb_trace_flow_tool` | Find a path between two entities |
+| `kb_code_location_tool` | Locate file/line for a symbol |
+| `kb_find_pattern_tool` | Find design patterns in the graph |
+| `kb_session_tool` | Session context: `get` / `set` / `clear` |
 
 ### Search Modes
 

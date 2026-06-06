@@ -20,7 +20,7 @@ Multi-collection support:
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Iterator
 
 from .logging import get_logger
 
@@ -237,7 +237,11 @@ class KBStore:
 
     def sample_metadata(self, limit: int = 1000,
                         collection_name: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Return up to ``limit`` metadata dicts from a collection."""
+        """Return up to ``limit`` metadata dicts from a collection.
+
+        This is a *capped* preview. For exact, whole-collection aggregates
+        (e.g. ``kb.stats``) use :meth:`iter_metadata`, which walks every entry.
+        """
         col = self.get_or_create_collection(
             collection_name or self._collection_name
         )
@@ -245,6 +249,41 @@ class KBStore:
         if not sample or "metadatas" not in sample or not sample["metadatas"]:
             return []
         return [m for m in sample["metadatas"] if m]
+
+    def iter_metadata(self, batch_size: int = 1000,
+                      collection_name: Optional[str] = None
+                      ) -> Iterator[Dict[str, Any]]:
+        """Yield every metadata dict in a collection, paged by (limit, offset).
+
+        Unlike :meth:`sample_metadata` (capped at ``limit`` rows), this walks the
+        *entire* collection so callers get exact aggregates rather than a biased,
+        storage-order sample. Pagination keeps peak memory bounded to one
+        ``batch_size`` page regardless of collection size.
+
+        Args:
+            batch_size: Rows fetched per page (coerced to >= 1).
+            collection_name: Target collection (default: primary).
+
+        Yields:
+            Each non-empty metadata dict, exactly once.
+        """
+        batch_size = max(1, batch_size)
+        col = self.get_or_create_collection(
+            collection_name or self._collection_name
+        )
+        offset = 0
+        while True:
+            page = col.get(limit=batch_size, offset=offset,
+                           include=["metadatas"])
+            metas = page.get("metadatas") if page else None
+            if not metas:
+                break
+            for m in metas:
+                if m:
+                    yield m
+            if len(metas) < batch_size:
+                break
+            offset += batch_size
 
     def reset(self, collection_name: Optional[str] = None) -> None:
         """Delete and recreate a collection. All entries are lost.

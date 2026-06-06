@@ -328,19 +328,32 @@ def add_entry(entry_type: str, category: str, title: str, finding: str,
 # ---------------------------------------------------------------------------
 
 def stats(store: Optional[KBStore] = None) -> StatsResult:
-    """Compute aggregate KB statistics from a metadata sample."""
+    """Compute exact aggregate KB statistics over the whole collection.
+
+    Walks every entry via ``store.iter_metadata()`` so the by-type / by-category /
+    confidence breakdowns reconcile with ``total_entries`` (previously they were
+    computed from a capped 1000-row sample and diverged once the KB grew larger).
+    """
     try:
         store = store or get_default_store()
         total = store.count()
         by_type: dict = {}
         by_category: dict = {}
         confidences: List[float] = []
-        for metadata in store.sample_metadata(limit=1000):
+        for metadata in store.iter_metadata():
             t = metadata.get("type", "unknown")
             c = metadata.get("category", "unknown")
             by_type[t] = by_type.get(t, 0) + 1
             by_category[c] = by_category.get(c, 0) + 1
             confidences.append(float(metadata.get("confidence", 0.5)))
+
+        # Invariant: a full scan must visit exactly `total` entries.
+        counted = sum(by_type.values())
+        if counted != total:
+            get_logger().warning(
+                "stats mismatch: counted %s entries but count() reports %s",
+                counted, total,
+            )
 
         high = sum(1 for c in confidences if c >= 0.9)
         medium = sum(1 for c in confidences if 0.6 <= c < 0.9)
