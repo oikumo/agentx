@@ -15,7 +15,7 @@ class RagChatView:
 
         while True:
             user_input = self.console.capture_input()
-            if user_input is "quit":
+            if user_input and user_input == "quit":
                 self.controller.close()
                 return
             if not user_input: return

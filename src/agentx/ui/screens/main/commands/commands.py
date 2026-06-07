@@ -60,18 +60,6 @@ class RagShowCommand(Command):
 
         self.controller.show_rag()
 
-class ReActShowCommand(Command):
-    def __init__(self, key: str, controller: MainController):
-        super().__init__(key, description="Start ReAct agent session (reason + act loop)")
-        self.controller = controller
-
-    def run(self, arguments: list[str]):
-        if len(arguments) != 0:
-            self.controller.print_warring_message("invalid command")
-            return
-        self.controller.show_react()
-
-
 class SumCommand(Command):
     def __init__(self, key: str, controller: MainController):
         super().__init__(key, description="Add two integers: sum <a> <b>")
