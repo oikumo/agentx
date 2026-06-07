@@ -1,6 +1,6 @@
 [project]
 name = "knowledge_base"
-version = "0.4.0"
+version = "0.4.1"
 description = "Local MCP server for Meta Project Harness Knowledge Base with ChromaDB RAG + Knowledge Graph"
 requires-python = ">=3.10"
 dependencies = [

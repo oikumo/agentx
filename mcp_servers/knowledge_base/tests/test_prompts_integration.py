@@ -77,12 +77,12 @@ class TestAllPromptsRegistered:
         """Test all prompts have descriptions."""
         prompts = registry_with_prompts.list_prompts()
         for prompt_info in prompts:
-            assert "description" in prompt_info
-            assert len(prompt_info["description"]) > 0
-    
+            assert prompt_info.description, f"Prompt {prompt_info.name} missing description"
+            assert len(prompt_info.description) > 0
+
     def test_all_prompts_have_templates(self, registry_with_prompts):
         """Test all prompts have templates."""
-        for prompt_name in [p["name"] for p in registry_with_prompts.list_prompts()]:
+        for prompt_name in [p.name for p in registry_with_prompts.list_prompts()]:
             template = registry_with_prompts.get_template(prompt_name)
             assert template is not None
             assert len(template) > 0
@@ -261,14 +261,14 @@ class TestPromptTemplates:
     def test_all_templates_are_strings(self, registry_with_prompts):
         """Test all templates are strings."""
         for prompt_info in registry_with_prompts.list_prompts():
-            template = registry_with_prompts.get_template(prompt_info["name"])
+            template = registry_with_prompts.get_template(prompt_info.name)
             assert isinstance(template, str)
-    
+
     def test_templates_contain_jinja_syntax(self, registry_with_prompts):
         """Test templates use Jinja2 syntax."""
         templates_with_syntax = 0
         for prompt_info in registry_with_prompts.list_prompts():
-            template = registry_with_prompts.get_template(prompt_info["name"])
+            template = registry_with_prompts.get_template(prompt_info.name)
             if "{{" in template or "{%" in template:
                 templates_with_syntax += 1
         
@@ -307,7 +307,7 @@ class TestPromptErrorHandling:
     def test_list_prompts_by_unknown_category(self, prompt_engine):
         """Test listing prompts by unknown category."""
         result = prompt_engine.list_prompts(category="nonexistent")
-        assert "Available Prompts" in result
+        assert "No prompts found." in result
     
     def test_render_with_none_args(self, prompt_engine):
         """Test rendering with None args."""

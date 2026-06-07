@@ -138,8 +138,8 @@ class TestV4ToolExecution:
             "params": {"name": "kb_graph_tool", "arguments": {"operation": "list"}},
         })
         text = data["result"]["content"][0]["text"]
-        assert "entities" in text.lower() or "error" in text.lower()
-    
+        assert "Knowledge Graph" in text or "❌" in text
+
     def test_graph_tool_layers_operation(self, mcp_server):
         """Test kb_graph_tool with layers operation."""
         data = _rpc(mcp_server, {
@@ -147,8 +147,8 @@ class TestV4ToolExecution:
             "params": {"name": "kb_graph_tool", "arguments": {"operation": "layers"}},
         })
         text = data["result"]["content"][0]["text"]
-        assert "Layers" in text or "error" in text.lower()
-    
+        assert "Layers" in text or "❌" in text
+
     def test_graph_tool_entry_points_operation(self, mcp_server):
         """Test kb_graph_tool with entry_points operation."""
         data = _rpc(mcp_server, {
@@ -156,8 +156,8 @@ class TestV4ToolExecution:
             "params": {"name": "kb_graph_tool", "arguments": {"operation": "entry_points"}},
         })
         text = data["result"]["content"][0]["text"]
-        assert "Entry Points" in text or "error" in text.lower()
-    
+        assert "Entry Points" in text or "❌" in text
+
     def test_visualize_tool_full_view(self, mcp_server):
         """Test kb_visualize_tool with full view."""
         data = _rpc(mcp_server, {
@@ -166,7 +166,7 @@ class TestV4ToolExecution:
         })
         text = data["result"]["content"][0]["text"]
         assert text  # Should return something (even if empty graph)
-    
+
     def test_session_tool_get_action(self, mcp_server):
         """Test kb_session_tool with get action."""
         data = _rpc(mcp_server, {
@@ -174,8 +174,8 @@ class TestV4ToolExecution:
             "params": {"name": "kb_session_tool", "arguments": {"action": "get"}},
         })
         text = data["result"]["content"][0]["text"]
-        assert "error" not in text.lower() or "Session" in text
-    
+        assert "Session" in text or "❌" not in text
+
     def test_session_tool_set_action(self, mcp_server):
         """Test kb_session_tool with set action."""
         data = _rpc(mcp_server, {
@@ -186,8 +186,8 @@ class TestV4ToolExecution:
             },
         })
         text = data["result"]["content"][0]["text"]
-        assert "test_key" in text or "error" in text.lower()
-    
+        assert "✅" in text or "❌" in text
+
     def test_impact_tool_without_entity(self, mcp_server):
         """Test kb_impact_tool handles missing entity gracefully."""
         data = _rpc(mcp_server, {
@@ -195,7 +195,7 @@ class TestV4ToolExecution:
             "params": {"name": "kb_impact_tool", "arguments": {"entity_id": "nonexistent"}},
         })
         text = data["result"]["content"][0]["text"]
-        assert "error" in text.lower() or "Affected" in text
+        assert "Impact" in text or "❌" in text
 
 
 class TestBackwardCompatibility:

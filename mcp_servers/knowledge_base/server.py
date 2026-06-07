@@ -29,6 +29,7 @@ from kb.models import PopulateResult
 # v4 imports
 from analyzer import PythonASTAnalyzer
 from graph import KnowledgeGraph, GraphBuilder, GraphStore, GraphQueries
+from graph.export import export_mermaid, export_dot, export_ascii
 from graph.models import Entity, Relationship, ImpactResult, EntityKind, RelationshipKind
 from resources import (
     ResourceRegistry,
@@ -81,21 +82,26 @@ def get_v4_components():
     
     if _graph is None:
         _graph = KnowledgeGraph()
-        _graph_store = GraphStore()
+        _graph_store = GraphStore(
+            db_path=Path(__file__).resolve().parent / "chroma_db" / "graph.sqlite",
+        )
         try:
-            _graph_store.load_into(_graph)
+            loaded = _graph_store.load()
+            if loaded is not None:
+                _graph = loaded
         except Exception:
             pass
     
     if _resource_registry is None:
         _resource_registry = ResourceRegistry()
-        _project_resources = ProjectResources(_graph)
-        _arch_resources = ArchitectureResources(_graph)
-        _flow_resources = FlowResources(_graph)
-        _api_resources = APIResources(_graph)
-        _code_resources = CodeResources(_graph)
+        _resource_registry.set_graph(_graph)
+        _project_resources = ProjectResources()
+        _arch_resources = ArchitectureResources()
+        _flow_resources = FlowResources()
+        _api_resources = APIResources()
+        _code_resources = CodeResources()
         _session_resources = SessionResources()
-        _quality_resources = QualityResources(_graph)
+        _quality_resources = QualityResources()
     
     if _prompt_engine is None:
         _prompt_engine = PromptEngine()
@@ -518,19 +524,20 @@ def kb_graph_tool(
         queries = GraphQueries(graph)
         
         if operation == "list":
-            entities = list(graph.entities.keys())[:100]
-            return f"📊 Knowledge Graph: {len(entities)} entities\n\n" + "\n".join(entities[:20])
-        elif operation == "traverse":
-            if not entity_id:
-                return "❌ entity_id required"
-            result = queries.traverse(entity_id, direction, depth)
-            return f"🔍 Traversal from {entity_id}:\n\n" + str(result)
+            entities = graph.get_all_entities()
+            names = [f"  • {e.name} @ {e.file_path}:{e.line_start}" for e in entities[:20]]
+            return f"📊 Knowledge Graph: {len(entities)} entities\n\n" + "\n".join(names)
         elif operation == "layers":
-            layers = queries.get_layers()
-            return "🏗️  Layers:\n\n" + "\n".join(f"{k}: {len(v)} entities" for k, v in layers.items())
+            layers = queries.find_components_by_layer("controller")
+            counts = {}
+            for e in graph.get_all_entities():
+                layer = e.metadata.get("layer", "unknown")
+                counts[layer] = counts.get(layer, 0) + 1
+            return "🏗️  Layers:\n\n" + "\n".join(f"  {k}: {v}" for k, v in sorted(counts.items()))
         elif operation == "entry_points":
             eps = queries.find_entry_points()
-            return f"🚪 Entry Points ({len(eps)}):\n\n" + "\n".join(eps[:20])
+            names = [f"  • {e.name} @ {e.file_path}" for e in eps[:20]]
+            return f"🚪 Entry Points ({len(eps)}):\n\n" + "\n".join(names)
         else:
             return f"❌ Unknown operation: {operation}"
     except Exception as e:
@@ -566,11 +573,11 @@ def kb_visualize_tool(view: str = "full", format: str = "mermaid", root: Optiona
         components = get_v4_components()
         graph = components['graph']
         if view == "full":
-            if format == "mermaid": return graph.to_mermaid()
-            elif format == "dot": return graph.to_dot()
-            elif format == "ascii": return graph.to_ascii()
+            if format == "mermaid": return export_mermaid(graph)
+            elif format == "dot": return export_dot(graph)
+            elif format == "ascii": return export_ascii(graph)
         elif view == "tree" and root:
-            return graph.to_ascii(root_id=root, max_depth=depth)
+            return export_ascii(graph, root_id=root, max_depth=depth)
         return f"❌ Unknown view: {view}"
     except Exception as e:
         return f"❌ Visualization failed: {e}"
@@ -584,8 +591,8 @@ def kb_trace_flow_tool(source: str, target: str, max_depth: int = 5) -> str:
         graph = components['graph']
         path = graph.find_path(source, target)
         if not path: return f"❌ No path from {source} to {target}"
-        lines = [f"🔀 Flow: {source} → {target}", f"Length: {len(path)}\n"]
-        for i, eid in enumerate(path): lines.append(f"{i+1}. {eid}")
+        lines = [f"🔀 Flow: {source} → {target}", f"Length: {len(path.entities)}\n"]
+        for i, eid in enumerate(path.entities): lines.append(f"{i+1}. {eid}")
         return "\n".join(lines)
     except Exception as e:
         return f"❌ Flow tracing failed: {e}"
@@ -597,11 +604,11 @@ def kb_code_location_tool(symbol: str, include_code: bool = False, context_lines
     try:
         components = get_v4_components()
         graph = components['graph']
-        matches = [eid for eid in graph.entities.keys() if symbol in eid]
+        all_entities = graph.get_all_entities()
+        matches = [e for e in all_entities if symbol.lower() in e.name.lower()]
         if not matches: return f"❌ Symbol '{symbol}' not found"
         lines = [f"📍 Found {len(matches)} match(es):\n"]
-        for m in matches[:10]:
-            e = graph.entities[m]
+        for e in matches[:10]:
             lines.append(f"• {e.name} @ {e.file_path}:{e.line_start}")
         return "\n".join(lines)
     except Exception as e:
@@ -614,10 +621,12 @@ def kb_find_pattern_tool(pattern: str, language: str = "python") -> str:
     try:
         components = get_v4_components()
         graph = components['graph']
-        matches = [(eid, e) for eid, e in graph.entities.items() if pattern.lower() in [p.lower() for p in e.metadata.get('pattern', [])]]
+        from graph.queries import GraphQueries
+        queries = GraphQueries(graph)
+        matches = queries.find_patterns(pattern)
         if not matches: return f"❌ Pattern '{pattern}' not found"
         lines = [f"🔍 Found {len(matches)} match(es):\n"]
-        for eid, e in matches[:20]:
+        for e in matches[:20]:
             lines.append(f"🟢 {e.name} @ {e.file_path}:{e.line_start}")
         return "\n".join(lines)
     except Exception as e:
@@ -631,12 +640,13 @@ def kb_session_tool(action: str = "get", key: Optional[str] = None, value: Optio
         components = get_v4_components()
         session = components['session_resources']
         if action == "get":
-            return f"📝 {key}={session.context.get(key)}" if key else "📝 " + ", ".join(f"{k}={v}" for k,v in session.context.items())
+            result = session.read_resource("context", {"session_id": "default"})
+            return result.content
         elif action == "set":
-            session.context[key] = value
+            session.update_context("default", {key: value})
             return f"✅ {key}={value}"
         elif action == "clear":
-            session.context.clear()
+            session.clear_session("default")
             return "✅ Cleared"
         return f"❌ Unknown action: {action}"
     except Exception as e:
@@ -779,7 +789,9 @@ def get_health() -> str:
     try:
         components = get_v4_components()
         g = components['graph']
-        return f"💚 Entities: {len(g.entities)}\nRelationships: {g.graph.number_of_edges()}\nUpdated: {g.metadata.updated_at}"
+        entities = g.get_all_entities()
+        rels = g.get_all_relationships()
+        return f"💚 Entities: {len(entities)}\nRelationships: {len(rels)}\nUpdated: {g.metadata.updated_at}"
     except Exception as e:
         return f"❌ {e}"
 

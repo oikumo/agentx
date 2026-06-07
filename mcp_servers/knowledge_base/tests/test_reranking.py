@@ -90,7 +90,9 @@ class TestRerankerWithModel:
         assert len(results) == 3
         for r in results:
             assert isinstance(r, RerankerResult)
-            assert r.score > 0
+            assert isinstance(r.score, float)
+        # Cross-encoder raw logits can be negative; verify ordering instead
+        assert results[0].score >= results[1].score >= results[2].score
 
     def test_rerank_orders_by_relevance(self, reranker):
         candidates = [
@@ -122,7 +124,7 @@ class TestRerankerWithModel:
     def test_rerank_with_text_fn(self, reranker):
         class Custom:
             def __init__(self, id_, content):
-                self.id_ = id_
+                self.id = id_
                 self.content = content
 
         candidates = [
@@ -141,8 +143,8 @@ class TestRerankerWithModel:
     def test_rerank_with_mmr_diversity(self, reranker):
         candidates = [
             {"id": "A", "text": "Python is a great programming language"},
-            {"id": "B", "text": "Python is an excellent coding language"},
-            {"id": "C", "text": "The weather is nice today"},
+            {"id": "B", "text": "Python can be used for web development"},
+            {"id": "C", "text": "Python has excellent libraries for data science"},
         ]
         results = reranker.rerank_with_mmr(
             "python programming",

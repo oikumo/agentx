@@ -35,7 +35,8 @@ def dense_retriever(store):
 
 @pytest.fixture
 def sparse_retriever():
-    """Fresh SparseRetriever per test."""
+    """Fresh SparseRetriever per test (skip if bm25s not installed)."""
+    pytest.importorskip("bm25s", reason="bm25s is required for sparse retrieval")
     from kb.sparse_index import SparseRetriever
     return SparseRetriever()
 

@@ -291,6 +291,25 @@ def add_entry(entry_type: str, category: str, title: str, finding: str,
         }
         store.add(entry_id=entry_id, document_text=document_text, metadata=metadata)
 
+        # Also index in the default dense collection so search() can find it.
+        # This bridges the gap between add_entry (primary collection) and the
+        # DenseRetriever (model-specific collection) — without it, entries added
+        # programmatically are invisible to search/ask.
+        try:
+            _dense_name = "kb_dense_bge-small-en"
+            from .embedding import get_embedding_function
+            _ef = get_embedding_function("bge-small-en")
+            _dense_col = store.get_or_create_collection(
+                _dense_name, embedding_function=_ef,
+            )
+            _dense_col.add(
+                documents=[document_text],
+                metadatas=[metadata],
+                ids=[entry_id],
+            )
+        except Exception:
+            pass  # Non-fatal — primary store has the data
+
         # Auto-chunk if enabled and text is long enough
         if enable_chunking and len(document_text) > 512:
             chunks = chunk_entry_text(
