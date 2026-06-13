@@ -1,7 +1,6 @@
 # AgentX - Current Work Notebook
 
-> **Purpose**: Simple and quick reminder of what the User are working on and him next planned work for AgentX
-> **Updated by**: User only
+> **Purpose**: Active development plan just for AgentX application only, **not for** META HARNESS
 > **Shown**: Once at the start of each session
 
 ---
@@ -13,10 +12,16 @@
 
 ---
 
-## TODO list
+## Projects
+Located at `.meta/projects/` organized per folder.
 
-[*] Implement RAG feature (2026-06-06)
-    [*] Implement RAG model
+[*] P1.session_user_objectives_driven_by_Petri_Net 
+    [*] Define scope 
 
+[*] P2.rag_retrieval_augmented_generation
+    [*] Implement RAG model    
+    [*] Implement RAG ui
+
+## Tasks
 
 ---
