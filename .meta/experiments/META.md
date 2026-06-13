@@ -1,7 +1,7 @@
 # Experiments
 
 > **Purpose**: Test new libraries, prototype features
-> **Target**: AI agents (opencode)
+> **Target**: AI agents
 > **Rule**: Document and integrate or clean up
 
 ---
@@ -19,10 +19,3 @@
 4. **DECIDE**: Integrate / discard
 5. **CLEAN**: Remove or archive
 
-## Contents
-
-- `session_management_objective_petri_nets/` - Petri Net integration tests
-
----
-
-**Version**: 3.1.0 (Simplified) | **Lines**: ~25
