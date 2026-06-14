@@ -8,19 +8,24 @@
 # Legend
 [ ] - Not started
 [*] - Work in progress
+[-] - Stopped
 [x] - Done
+
 
 ---
 
 ## Projects
 Located at `.meta/projects/` organized per folder.
 
-[*] P1.session_user_objectives_driven_by_Petri_Net 
+[-] P1.session_user_objectives_driven_by_Petri_Net 
     [*] Define scope 
 
-[*] P2.rag_retrieval_augmented_generation
+[-] P2.rag_retrieval_augmented_generation
     [*] Implement RAG model    
     [*] Implement RAG ui
+
+[ ] P3.agentx_program
+
 
 ## Tasks
 
