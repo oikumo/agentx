@@ -13,6 +13,15 @@ from pathlib import Path
 from typing import Generator, List, Optional, Union
 
 
+def create_directory_if_not_exists(path: str) -> Path | None:
+    directory = Path(path)
+    directory.mkdir(parents=True, exist_ok=True)
+
+    if not is_directory_exists(path):
+        return None
+
+    return directory
+
 # ---------------------------------------------------------------------------
 # Path coercion
 # ---------------------------------------------------------------------------
@@ -369,3 +378,4 @@ def get_relative_path(
         get_relative_path("/a/b/c/d.txt", "/a/b")  # -> Path("c/d.txt")
     """
     return _resolve_path(path).relative_to(_resolve_path(start))
+
