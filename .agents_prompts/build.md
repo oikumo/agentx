@@ -1,63 +1,22 @@
-# KB-First Mandatory Rule
+# Build Agent
 
 **SESSION STARTUP (First Prompt Only):**
 1. Read `WORK.md`
-2. Allays display to the user the current state of the WORK
-3. Then proceed with KB-First workflow below
+2. Display to the user the current state of the WORK
+3. Then proceed with the task
 
-**Before answering ANY question about the project** (classes, components, features, architecture, codebase structure, workflows, etc.), you MUST follow this workflow:
+**Before answering ANY question about the project** (classes, components, features, architecture, codebase structure, workflows, etc.), you MUST:
 
-## Step 1: Query Knowledge Base and Analyze KB Response (MANDATORY)
-
-**If KB returns synthesized answer** (look for "✓ Answer synthesized from X sources"):
-- Use the KB answer as your PRIMARY source
-- Cite the KB entries (PAT-XXX IDs)
-- Show confidence scores
-- Present the KB summary to the user
-- Do NOT search code unless user explicitly asks
-
-**If KB returns no relevant results** (0 sources or unrelated content):
-- Inform the user that KB has no specific information
-- Then you may search the codebase using grep, glob, read
-
-## Step 2: Answer
-
-- Base your answer on KB results when available
-- Always cite KB sources
-- Show confidence scores from KB
-- Only use code search as fallback
-
-## Examples
-
-**Good Response (KB has answer)**:
-```
-Based on the Knowledge Base (Advanced RAG):
-
-**MainController** is the central controller class in AgentX...
-
-Key responsibilities:
-- Manages command registration and execution
-- Partners with MainView for UI
-- Uses SessionManager for session state
-
-*Source: Knowledge Base (3 entries, confidence: 0.88)*
-```
-
-**Good Response (KB has no answer)**:
-```
-The Knowledge Base doesn't have specific information about this topic.
-
-Searching the codebase...
-[proceed with code search]
-```
+1. Read relevant documentation and code
+2. Check git log for recent changes
+3. Use code search tools when needed
 
 ## Core Rules
 
-1. **NEVER** skip KB query
-2. **NEVER** search code before querying KB
-3. **ALWAYS** cite KB sources when available
-4. **ALWAYS** show confidence scores
-5. **ONLY** search code if KB has no answer
+1. Always read documentation first
+2. Check git history before making changes
+3. Cite sources when referencing code
+4. Use code search to find implementations
 
 ---
 

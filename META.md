@@ -11,7 +11,6 @@ Structured project organization for AI-assisted development:
 - **Safe spaces** - Experiment without affecting production
 - **Clear separation** - Production / experimentation / testing
 - **Structured workflows** - Consistent, high-quality output
-- **Knowledge base** - RAG for project context
 
 ---
 

@@ -1,6 +1,6 @@
 # .meta Directory
 
-> **Purpose**: Safe spaces for experiments, knowledge, tools, and project planning
+> **Purpose**: Safe spaces for experiments, tools, and project planning
 
 ---
 
