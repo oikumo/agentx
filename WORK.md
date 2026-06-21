@@ -14,9 +14,11 @@ Active development plan for Agentx software development tracking
 
 ## Tasks
 
+[ ] Implement feature_004.modern_ui
+
 [-] Implement feature_001.session_user_objectives_driven_by_Petri_Net 
     [*] Define scope
 
-[*] Implement feature_002.rag_retrieval_augmented_generation
+[x] Implement feature_002.rag_retrieval_augmented_generation
 
 ---
