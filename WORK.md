@@ -1,7 +1,6 @@
-# AgentX - Current Work Notebook
+# WORK
 
-> **Purpose**: Active development plan just for AgentX application only, **not for** META HARNESS
-> **Shown**: Once at the start of each session
+Active development plan for Agentx software development tracking
 
 ---
 
@@ -11,22 +10,15 @@
 [-] - Stopped
 [x] - Done
 
-
 ---
 
-## Projects
-Located at `.meta/projects/` organized per folder.
+## Tasks
 
-[-] P1.session_user_objectives_driven_by_Petri_Net 
-    [*] Define scope 
+[-] Implement feature_001.session_user_objectives_driven_by_Petri_Net 
+    [*] Define scope
 
-[-] P2.rag_retrieval_augmented_generation
+[-] Implement feature_003.rag_retrieval_augmented_generation
     [*] Implement RAG model    
     [*] Implement RAG ui
-
-[ ] P3.agentx_program
-
-
-## Tasks
 
 ---

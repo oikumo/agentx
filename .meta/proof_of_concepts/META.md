@@ -1,5 +1,6 @@
-# .meta 
+# Proof of concepts
 
 ---
 
 ## Folder structure 
+
