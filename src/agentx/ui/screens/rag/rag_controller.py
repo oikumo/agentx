@@ -32,6 +32,22 @@ class RagController:
         repository_selection = RagRepositorySelectionController(self.rag_working_directory)
         repository_selection.show()
         self.current_rag_repository = repository_selection.get_selected_repository()
+        
+        if self.current_rag_repository:
+            self.view.print_message(f"Selected repository: {self.current_rag_repository.id}")
+        else:
+            self.view.print_message("No repository selected.")
+    
+    def create_repository(self) -> None:
+        """Create new repository."""
+        from agentx.ui.screens.rag.rag_create_repository_controller import RagCreateRepositoryController
+        
+        creator = RagCreateRepositoryController(self.rag_working_directory)
+        new_repo = creator.show()
+        
+        if new_repo:
+            self.view.print_message(f"Repository '{new_repo.id}' created successfully!")
+            self.view.print_message("Please select it from the repository list to use.")
 
     def show_chat(self):
         if not self.current_rag_repository: return
@@ -47,21 +63,45 @@ class RagController:
         if self.view: self.view.print_message("close")
 
     def get_rag_state(self) -> RagState | None:
+        """
+        Get current repository state.
+        Returns RagState with repository information or None if no repository selected.
+        """
         if not self.current_rag_repository:
             return None
-
-        return None
-        """
-        data_base_path = None
-        documents_path = None
-        if self.rag.is_data():
-            data_base_path = self.rag.vector_db_path
-            documents_path = self.rag.documents_path
-
-        return RagState(
-            url=self.rag.site_url,
-            data_base_location=data_base_path,
-            documents_location=documents_path
-        )
-        """
+        
+        # Check repository has a path
+        if not self.current_rag_repository.path:
+            return None
+        
+        try:
+            # Import Rag class
+            from agentx.model.rag.rag import Rag
+            
+            # Create Rag instance for this repository
+            rag = Rag(working_directory=self.current_rag_repository.path)
+            
+            # Initialize state variables
+            data_base_path: str | None = None
+            documents_path: str | None = None
+            url: str | None = None
+            
+            # Check database
+            if rag.database_exists():
+                data_base_path = rag.vector_db_path
+                url = rag.get_ingested_url()
+            
+            # Check documents
+            if rag.documents_exist():
+                documents_path = rag.documents_path
+            
+            return RagState(
+                url=url,
+                data_base_location=data_base_path,
+                documents_location=documents_path
+            )
+            
+        except Exception as e:
+            print(f"Error retrieving repository state: {e}")
+            return None
 

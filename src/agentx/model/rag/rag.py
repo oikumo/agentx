@@ -65,4 +65,29 @@ class Rag:
         ))
 
         return True
+    
+    def database_exists(self) -> bool:
+        """Check if SQLite database exists."""
+        return is_file_exists(self.rag_db_path)
+    
+    def documents_exist(self) -> bool:
+        """Check if documents file exists."""
+        return is_file_exists(self.documents_path)
+    
+    def get_ingested_url(self) -> str | None:
+        """
+        Get the most recently ingested URL.
+        Returns None if no ingestion history.
+        """
+        if not self.database_exists():
+            return None
+        
+        try:
+            ingestions = self.rag_db.select_ingestion_entries()
+            if ingestions:
+                # Return the most recent URL (last entry)
+                return ingestions[-1].vector_db_path
+            return None
+        except Exception:
+            return None
 

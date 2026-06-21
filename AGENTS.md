@@ -6,6 +6,7 @@
 >
 > **⚠️ MANDATORY THIRD STEP:** At the startup follow the software development process reference in `.meta/software_development_process/omt_agent_guide.md, that define the OMT++ methodology that MUST be used for any programming task execution.
 
+> **⚠️ MANDATORY:** Allways use uv for Python code execution, including automated test
 ---
 
 ## 🚨 PROCESS ENFORCEMENT MECHANISM
@@ -71,7 +72,7 @@ Output this final checkpoint:
    - Say: `"No [phase] artifacts found. Should I create them first?"`
 
 4. **Task involves test modifications**
-   - Tests require **explicit approval** per Core Directives
+   - Tests require usage of uv
    - Say: `"Test modification requires approval. Proceed with canary tests?"`
 
 ---

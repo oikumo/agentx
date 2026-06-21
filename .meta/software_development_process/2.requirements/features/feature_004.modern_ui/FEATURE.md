@@ -1,0 +1,3 @@
+- Agentx must have a modern console UI.
+- UI must be unified, same look and feel.
+- UI must be simple but allways informative about Agentx session context

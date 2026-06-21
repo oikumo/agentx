@@ -20,7 +20,7 @@ class InputUrlView:
             self.controller.url = None
             return
 
-        if not input_utils.is_valid_url(user_input):
+        if not utils_input.is_valid_url(user_input):
             self.controller.url = None
             return
 
