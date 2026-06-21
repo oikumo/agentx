@@ -107,7 +107,7 @@ If `OPENROUTER_API_KEY` is not set, the application will prompt for it on startu
 ### Starting the Application
 
 ```bash
-python3 main.py
+uv run main.py
 ```
 
 You will see the agentx banner and the prompt:
@@ -187,30 +187,6 @@ Sessions are isolated and command history is persisted per session.
 
 If no name is provided, a default session name will be used.
 
-### Session State with Petri Nets
-
-agentx uses **Petri Nets** to formally model and track the semantic state of user queries throughout a session. This provides:
-
-- **Formal State Tracking**: Mathematically rigorous session progression
-- **Semantic Representation**: User intent captured as network structure
-- **Verifiable Properties**: Provable boundedness, liveness, and deadlock-freedom
-- **Progress Visualization**: Clear view of workflow completion status
-
-**Example**: A query like *"I want to analyze the project structure"* creates a Petri Net where tokens flow through semantic states:
-
-```
-[analysis_pending] → [understanding_layout] → [identifying_components] → [analysis_completed]
-```
-
-The system automatically:
-1. Extracts the objective from your query
-2. Classifies the task type (analysis, debug, implementation, etc.)
-3. Generates an appropriate workflow template
-4. Tracks progress through token movement
-
-This enables the agent to maintain context, show progress, and resume sessions from saved states. For detailed technical documentation, see `.meta/doc/petri-nets-for-session-state.md`.
-
----
 
 ## Troubleshooting
 
@@ -224,38 +200,6 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - Verify your API key is valid
 - Check your internet connection
 - For local models, ensure Ollama or LlamaCpp is properly configured
-
----
-
-### Design Patterns
-
-- **Command Pattern**: Every REPL command implements a consistent `run()` interface
-- **Strategy Pattern**: LLM providers (OpenRouter, OpenAI, Google Gemini, Ollama) are interchangeable
-- **Session Pattern**: Isolated command history per session with SQLite persistence
-- **Petri Net Pattern**: Formal semantic state tracking for user query workflows
-- **Test Coverage**: 205+ isolated unit tests with comprehensive mocking
-
----
-
-## Development with Meta Harness
-
-agentx uses the **Meta Harness** - a structured development system optimized for AI-assisted development.
-
-
-### For AI Agents
-
-1. Read `./AGENTS.md` first - it contains mandatory rules
-2. Review `./META.md` for complete documentation
-3. Always work in safe spaces (`.meta/sandbox/`, `.meta/experiments/`)
-4. Follow TDD in `tests/unit/`
-5. Never modify production code directly
-6. Maintain 205+ passing unit tests
-
-### For Human Developers
-
-- **Getting Started**: See `META_HARNESS.md`
-- **Quick Reference**: `.meta/project_development/QUICK_REFERENCE.md`
-- **Standards**: `.meta/project_development/` directory
 
 ---
 
