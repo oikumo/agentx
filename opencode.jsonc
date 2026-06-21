@@ -1,6 +1,7 @@
 // THIS OPENCODE CONFIGURATION FILE IS JUST FOR REFERENCE PURPOSE
 {
   "$schema": "https://opencode.ai/config.json",
+  "lsp": true,
   "agent": {
       "build": {
         "prompt": "{file:./.agents_prompts/build.md}"
