@@ -1,6 +1,4 @@
 # 4. Analysis
 
----
-
-## Folder structure
+> Domain concepts, analysis class diagrams, and UI specifications per OMT++ Analysis Phase (§1-4).
 

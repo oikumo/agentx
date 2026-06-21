@@ -1,6 +1,4 @@
 # 8. Integration
 
----
-
-## Folder structure
+> Full workflow validation against use cases per OMT++ System Testing (§11).
 

@@ -1,6 +1,4 @@
 # 6. Implementation
 
----
-
-## Folder structure
+> Source code following MVC++ architecture, Abstract Partner pattern, and Command Pattern per OMT++ §5-9.
 

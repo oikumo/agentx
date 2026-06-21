@@ -1,6 +1,4 @@
 # 1. Project
 
----
-
-## Folder structure
+> Project scoping and feasibility studies per OMT++ §4 — answer "should we do this?" before any phase.
 
