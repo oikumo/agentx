@@ -4,7 +4,7 @@
 >
 > **⚠️ MANDATORY SECOND STEP:** Read `AGENTS.md` in full (you're reading it now).
 >
-> **⚠️ MANDATORY THIRD STEP (ARCHITECTURE):** Before modifying any source code, follow the Software development process in `.meta/software_development_process`.
+> **⚠️ MANDATORY THIRD STEP:** At the startup follow the software development process reference in `.meta/software_development_process/omt_agent_guide.md, that define the OMT++ methodology that MUST be used for any programming task execution.
 
 ---
 
