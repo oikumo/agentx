@@ -1,0 +1,7 @@
+# Project Summary: agentx
+
+agentx is a Python-based LLM agent framework with a REPL (Read-Eval-Print Loop) interface, created strictly for educational purposes under the Apache 2.0 License. It provides a command-line shell for interacting with language models, supporting chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows. The project requires Python 3.14+ and uses `uv` as its package manager.
+
+The architecture centers around an interactive command loop where each input is parsed as a command with optional arguments. Key features include session management (creating timestamped directories with SQLite databases for command history), multiple AI model integrations (OpenRouter, OpenAI, Ollama, LlamaCpp), and comprehensive unit testing (205+ tests) covering Petri nets, session management, commands, views, and utilities. All tests are isolated with mocking and require no external dependencies.
+
+The development follows a structured SDLC using OMT++ methodology, progressing through Analysis → Design → Programming → Testing phases with visible artifacts. The project is assisted by the opencode coding agent and maintains strict separation between educational experimentation and production use, as emphasized in the legal disclaimers regarding third-party trademarks and API service compliance.
