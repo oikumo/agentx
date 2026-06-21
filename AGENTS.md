@@ -136,12 +136,14 @@ Output this final checkpoint:
 
 ## 📖 References
 
-- **OMT++ Methodology:** `.meta/software_development_process/2.methodology/omt_agent_guide.md`
-- **Requirements:** `.meta/software_development_process/3.requirements/`
-- **Analysis:** `.meta/software_development_process/4.analysis/`
-- **Design:** `.meta/software_development_process/5.design/`
-- **Implementation:** `.meta/software_development_process/6.implementation/`
-- **Testing:** `.meta/software_development_process/7.testing/`
+- **OMT++ Methodology:** `.meta/software_development_process/omt_agent_guide.md`
+- **Project definition:** `.meta/software_development_process/1.project/`
+- **Requirements:** `.meta/software_development_process/2.requirements/`
+- **Analysis:** `.meta/software_development_process/3.analysis/`
+- **Design:** `.meta/software_development_process/4.design/`
+- **Implementation:** `.meta/software_development_process/5.implementation/`
+- **Testing:** `.meta/software_development_process/6.testing/`
+- - **Testing:** `.meta/software_development_process/7.integration/`
 
 **When in doubt: Read omt_agent_guide.md, Section 2 "Phase Model"**
 
@@ -165,7 +167,7 @@ Output this final checkpoint:
 - Missing artifacts: Analysis docs, Design docs for fixes
 - Action: Creating analysis/design documents first
 
-[Creates documents in .meta/software_development_process/3-5/]
+[Creates documents in .meta/software_development_process/2-7/]
 
 ✅ PROCESS COMPLIANCE: 
 - Phase: Design complete
