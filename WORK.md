@@ -9,26 +9,27 @@ Active development plan for Agentx software development tracking
 [*] - Work in progress
 [-] - Stopped
 [x] - Done
-[!] - Blocked/Failing
+[!] - Failing
 
 ---
 
 ## Tasks
+
+
+[*] Implement feature_004.modern_ui
+    [x] Infrastructure complete (TUI module, providers, adapters)
+    [x] MainTUIScreen implemented with all widgets
+    [x] Integration with main.py complete
+    [x] Create tui automated end to end tests using pilot in `test_automated/tui/` python module folder
+    [!] User acceptance testing PASSED (Chat working, RAG working)
+    [ ] Summarize feature implementation in the feature documentation in a single file in `.meta/software_development_process/2.requirements/features/feature_004.modern_ui/FEATURE.md`
+
 
 [x] Update the main README.md file, including feature_006.opencode_process_enforcement and opencode agentic workflow development process description
 
 [x] Update application design overview in `.meta/software_development_process/4.design/`
     [x] Update application design structure documentation
     [x] Update application design behavior documentation
-
-[*] Implement feature_004.modern_ui
-    [x] Infrastructure complete (TUI module, providers, adapters)
-    [x] MainTUIScreen implemented with all widgets
-    [x] Integration with main.py complete
-    [!] User acceptance testing PASSED (Chat working, RAG working)
-    [x] Create tui automated end to end tests using pilot in `test_automated/tui/` python module folder
-    [ ] Summarize feature implementation in the feature documentation in a single file in `.meta/software_development_process/2.requirements/features/feature_004.modern_ui/FEATURE.md`
-
 
 [-] Implement feature_001.session_user_objectives_driven_by_Petri_Net 
     [*] Define scope
