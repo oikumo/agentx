@@ -287,42 +287,56 @@ class MainTUIScreen(Screen):
         self.app.exit()
 
     def action_open_chat(self) -> None:
-        """Open chat screen via controller."""
+        """Open chat screen via controller and direct navigation.
+        
+        Calls controller.show_chat() for side effects (recording, logging),
+        then pushes the TUI screen directly for proper navigation.
+        """
+        # Call controller for side effects (recording in tests, logging, etc.)
         if self._controller:
             try:
-                # Delegate to controller - it will use the appropriate view (TUI or console)
                 self._controller.show_chat()
             except Exception as e:
                 try:
-                    self.notify(f"Error opening Chat: {str(e)}", severity="error", timeout=None)
+                    self.notify(f"Controller error: {str(e)}", severity="error", timeout=None)
                 except Exception:
                     pass
-        else:
-            # Fallback: direct navigation (for testing without controller)
+        
+        # Always push the TUI screen directly for proper navigation
+        try:
+            from agentx.ui.tui.screens.chat_screen import ChatTUIScreen
+            if hasattr(self, 'app') and self.app is not None:
+                self.app.push_screen(ChatTUIScreen())
+        except Exception as e:
             try:
-                from agentx.ui.tui.screens.chat_screen import ChatTUIScreen
-                if hasattr(self, 'app') and self.app is not None:
-                    self.app.push_screen(ChatTUIScreen())
+                self.notify(f"Error opening Chat: {str(e)}", severity="error", timeout=None)
             except Exception:
                 pass
 
     def action_open_rag(self) -> None:
-        """Open RAG screen via controller."""
+        """Open RAG screen via controller and direct navigation.
+        
+        Calls controller.show_rag() for side effects (recording, logging),
+        then pushes the TUI screen directly for proper navigation.
+        """
+        # Call controller for side effects (recording in tests, logging, etc.)
         if self._controller:
             try:
-                # Delegate to controller - it will use the appropriate view (TUI or console)
                 self._controller.show_rag()
             except Exception as e:
                 try:
-                    self.notify(f"Error opening RAG: {str(e)}", severity="error", timeout=None)
+                    self.notify(f"Controller error: {str(e)}", severity="error", timeout=None)
                 except Exception:
                     pass
-        else:
-            # Fallback: direct navigation (for testing without controller)
+        
+        # Always push the TUI screen directly for proper navigation
+        try:
+            from agentx.ui.tui.screens.rag_screen import RagTUIScreen
+            if hasattr(self, 'app') and self.app is not None:
+                self.app.push_screen(RagTUIScreen())
+        except Exception as e:
             try:
-                from agentx.ui.tui.screens.rag_screen import RagTUIScreen
-                if hasattr(self, 'app') and self.app is not None:
-                    self.app.push_screen(RagTUIScreen())
+                self.notify(f"Error opening RAG: {str(e)}", severity="error", timeout=None)
             except Exception:
                 pass
 
