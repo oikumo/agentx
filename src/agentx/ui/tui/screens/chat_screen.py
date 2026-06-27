@@ -20,10 +20,8 @@ from textual.containers import Container, Vertical, Horizontal, ScrollableContai
 from textual.binding import Binding
 from textual.message import Message
 
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-
 if TYPE_CHECKING:
-    from agentx.model.ai.service import AIService
+    from agentx.ui.interfaces import IChatViewPartner
 
 
 class ChatMessage(Static):
@@ -106,21 +104,15 @@ class ChatTUIScreen(Screen):
     }
     """
 
-    def __init__(self) -> None:
-        """Initialize chat screen."""
+    def __init__(self, controller: "IChatViewPartner | None" = None) -> None:
+        """Initialize chat screen.
+        
+        Args:
+            controller: Optional IChatViewPartner for message processing
+        """
         super().__init__()
+        self._controller = controller
         self.history: list = []
-        self.llm = None
-        self._initialize_llm()
-
-    def _initialize_llm(self) -> None:
-        """Initialize LLM from AI service."""
-        try:
-            from agentx.model.ai.service import AIService
-            self.llm = AIService().openrouter_llm_provider().create_llm()
-        except Exception as e:
-            self.llm = None
-            print(f"Warning: Could not initialize LLM: {e}")
 
     def compose(self) -> ComposeResult:
         """Compose chat screen layout."""
@@ -140,8 +132,9 @@ class ChatTUIScreen(Screen):
 
     def on_mount(self) -> None:
         """Called when screen is mounted."""
-        # Add system message to history
-        self.history.append(SystemMessage(content="You are a helpful assistant."))
+        # Initialize controller if provided
+        if self._controller:
+            self._controller.start_interactive_streaming(system_prompt="You are a helpful assistant.")
         
         # Show welcome message
         self._add_message("Welcome to AgentX Chat! Ask me anything.", "assistant")
@@ -170,12 +163,19 @@ class ChatTUIScreen(Screen):
             self.action_quit()
             return
         
-        # Add user message to UI and history
+        # Add user message to UI
         self._add_message(message, "user")
-        self.history.append(HumanMessage(content=message))
         
-        # Get response
-        self._get_response()
+        # Process through controller if available
+        if self._controller:
+            try:
+                # Process user message via controller
+                self._controller.process_user_message(message)
+            except Exception as e:
+                self._add_message(f"Error: {str(e)}", "assistant")
+        else:
+            # Fallback: show placeholder
+            self._add_message("(No controller connected)", "assistant")
 
     def _add_message(self, message: str, role: str = "user") -> None:
         """Add a message to the chat display.
@@ -194,31 +194,6 @@ class ChatTUIScreen(Screen):
         except Exception:
             pass
 
-    def _get_response(self) -> None:
-        """Get response from LLM."""
-        if not self.llm:
-            self._add_message("Error: LLM not available. Please check your API key.", "assistant")
-            return
-        
-        try:
-            full_response = ""
-            
-            # Stream response
-            for chunk in self.llm.stream(self.history):
-                if hasattr(chunk, 'content') and chunk.content:
-                    full_response += chunk.content
-                    # Update display incrementally (could be improved with streaming widget)
-            
-            # Add assistant response to history and display
-            if full_response:
-                self.history.append(AIMessage(content=full_response))
-                self._add_message(full_response, "assistant")
-            else:
-                self._add_message("No response received.", "assistant")
-                
-        except Exception as e:
-            self._add_message(f"Error: {str(e)}", "assistant")
-
     def action_quit(self) -> None:
         """Quit the application."""
         self.app.exit()
@@ -232,8 +207,8 @@ class ChatTUIScreen(Screen):
         try:
             input_widget = self.query_one("#chat-input", Input)
             if input_widget.value.strip():
-                # Simulate submission
-                from textual.events import Submit
-                input_widget.post_message(Input.Submitted(input_widget.value))
+                # Call handler directly
+                event = type('InputSubmitted', (), {'value': input_widget.value, 'input': input_widget})()
+                self.on_input_submitted(event)
         except Exception:
             pass

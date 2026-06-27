@@ -809,10 +809,10 @@ class TestMainTUIScreenLifecycle:
         screen.action_show_help()
         assert screen.notify.call_count >= 2
     
-        # 3. Press 'c' - should push screen, not notify
+        # 3. Press 'c' - should call controller.show_chat()
         screen.action_open_chat()
-        # Verify push_screen was called (not notify)
-        mock_app_instance.push_screen.assert_called()
+        # Verify controller.show_chat was called (not push_screen)
+        screen._controller.show_chat.assert_called_once()
     
         # 4. Type command
         mock_submit = MagicMock()

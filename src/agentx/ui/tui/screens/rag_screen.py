@@ -27,6 +27,7 @@ from textual.binding import Binding
 
 if TYPE_CHECKING:
     from agentx.model.rag.rag_repository import RagRepository
+    from agentx.ui.interfaces import IRagViewPartner
 
 
 class RagTUIScreen(Screen):
@@ -103,9 +104,14 @@ class RagTUIScreen(Screen):
     }
     """
 
-    def __init__(self) -> None:
-        """Initialize RAG screen."""
+    def __init__(self, controller: "IRagViewPartner | None" = None) -> None:
+        """Initialize RAG screen.
+        
+        Args:
+            controller: Optional IRagViewPartner for repository operations
+        """
         super().__init__()
+        self._controller = controller
         self.current_repository = None
         self.chat_history = []
         self.rag_working_directory = self._get_rag_directory()
@@ -199,10 +205,15 @@ class RagTUIScreen(Screen):
 
     def _select_repository(self) -> None:
         """Open repository selection screen."""
-        from agentx.ui.tui.screens.rag_screens import RepositorySelectionScreen
-        
-        # Push the selection screen
-        self.app.push_screen(RepositorySelectionScreen(self.rag_working_directory))
+        if self._controller:
+            # Use controller for selection
+            self._controller.select_repository()
+        else:
+            # Fallback to internal logic
+            from agentx.ui.tui.screens.rag_screens import RepositorySelectionScreen
+            
+            # Push the selection screen
+            self.app.push_screen(RepositorySelectionScreen(self.rag_working_directory))
     
     def on_mount(self) -> None:
         """Called when screen is mounted."""
@@ -258,20 +269,25 @@ class RagTUIScreen(Screen):
     
     def _create_repository(self) -> None:
         """Open repository creation screen."""
-        from agentx.ui.tui.screens.rag_screens import RepositoryCreateScreen
-        
-        def on_created(repository):
-            """Handle repository creation."""
-            if repository:
-                self.notify(f"Created repository: {repository.id}", severity="information", timeout=2)
-                # Auto-select the created repository
-                self.current_repository = repository
-                self._update_repository_ui()
-        
-        self.app.push_screen(
-            RepositoryCreateScreen(self.rag_working_directory),
-            callback=on_created
-        )
+        if self._controller:
+            # Use controller for creation
+            self._controller.create_repository()
+        else:
+            # Fallback to internal logic
+            from agentx.ui.tui.screens.rag_screens import RepositoryCreateScreen
+            
+            def on_created(repository):
+                """Handle repository creation."""
+                if repository:
+                    self.notify(f"Created repository: {repository.id}", severity="information", timeout=2)
+                    # Auto-select the created repository
+                    self.current_repository = repository
+                    self._update_repository_ui()
+            
+            self.app.push_screen(
+                RepositoryCreateScreen(self.rag_working_directory),
+                callback=on_created
+            )
 
     def _ingest_documents(self) -> None:
         """Open web ingestion screen."""
@@ -279,19 +295,24 @@ class RagTUIScreen(Screen):
             self.notify("Please select a repository first", severity="warning", timeout=2)
             return
         
-        from agentx.ui.tui.screens.rag_screens import WebIngestionScreen
-        
-        def on_ingested(success):
-            """Handle ingestion completion."""
-            if success:
-                self.notify("Documents ingested successfully!", severity="information", timeout=2)
-            else:
-                self.notify("Ingestion cancelled", severity="information", timeout=2)
-        
-        self.app.push_screen(
-            WebIngestionScreen(self.current_repository),
-            callback=on_ingested
-        )
+        if self._controller:
+            # Use controller for ingestion
+            self._controller.show_web_ingestion()
+        else:
+            # Fallback to internal logic
+            from agentx.ui.tui.screens.rag_screens import WebIngestionScreen
+            
+            def on_ingested(success):
+                """Handle ingestion completion."""
+                if success:
+                    self.notify("Documents ingested successfully!", severity="information", timeout=2)
+                else:
+                    self.notify("Ingestion cancelled", severity="information", timeout=2)
+            
+            self.app.push_screen(
+                WebIngestionScreen(self.current_repository),
+                callback=on_ingested
+            )
 
     def _update_repository_ui(self) -> None:
         """Update UI to reflect selected repository."""

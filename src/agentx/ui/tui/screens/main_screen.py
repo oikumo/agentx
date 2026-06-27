@@ -287,38 +287,44 @@ class MainTUIScreen(Screen):
         self.app.exit()
 
     def action_open_chat(self) -> None:
-        """Open chat screen."""
-        # Navigate to ChatTUIScreen
-        try:
-            from agentx.ui.tui.screens.chat_screen import ChatTUIScreen
-            # Check if app is available before trying to push screen
-            if hasattr(self, 'app') and self.app is not None:
-                self.app.push_screen(ChatTUIScreen())
-        except Exception as e:
-            # Only show error if it's not a context error (expected in tests/non-TUI)
-            error_str = str(e)
-            if "active_app" not in error_str and "NoActiveApp" not in error_str:
+        """Open chat screen via controller."""
+        if self._controller:
+            try:
+                # Delegate to controller - it will use the appropriate view (TUI or console)
+                self._controller.show_chat()
+            except Exception as e:
                 try:
                     self.notify(f"Error opening Chat: {str(e)}", severity="error", timeout=None)
                 except Exception:
                     pass
+        else:
+            # Fallback: direct navigation (for testing without controller)
+            try:
+                from agentx.ui.tui.screens.chat_screen import ChatTUIScreen
+                if hasattr(self, 'app') and self.app is not None:
+                    self.app.push_screen(ChatTUIScreen())
+            except Exception:
+                pass
 
     def action_open_rag(self) -> None:
-        """Open RAG screen."""
-        # Navigate to RagTUIScreen
-        try:
-            from agentx.ui.tui.screens.rag_screen import RagTUIScreen
-            # Check if app is available before trying to push screen
-            if hasattr(self, 'app') and self.app is not None:
-                self.app.push_screen(RagTUIScreen())
-        except Exception as e:
-            # Only show error if it's not a context error (expected in tests/non-TUI)
-            error_str = str(e)
-            if "active_app" not in error_str and "NoActiveApp" not in error_str:
+        """Open RAG screen via controller."""
+        if self._controller:
+            try:
+                # Delegate to controller - it will use the appropriate view (TUI or console)
+                self._controller.show_rag()
+            except Exception as e:
                 try:
                     self.notify(f"Error opening RAG: {str(e)}", severity="error", timeout=None)
                 except Exception:
                     pass
+        else:
+            # Fallback: direct navigation (for testing without controller)
+            try:
+                from agentx.ui.tui.screens.rag_screen import RagTUIScreen
+                if hasattr(self, 'app') and self.app is not None:
+                    self.app.push_screen(RagTUIScreen())
+            except Exception:
+                pass
 
     def action_show_help(self) -> None:
         """Show help information."""

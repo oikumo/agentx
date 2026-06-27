@@ -32,9 +32,18 @@ class TUIRagAdapter(IRagView):
 
     def show(self) -> None:
         """Display RAG screen using Textual."""
-        # Get the running app from controller or create new
-        # For now, this is a placeholder - full implementation needs app reference
-        pass
+        # Run the Textual RAG screen
+        from textual.app import App
+        from agentx.ui.tui.screens.rag_screen import RagTUIScreen
+        
+        controller = self._controller
+        
+        class RagApp(App):
+            def on_mount(self) -> None:
+                self.push_screen(RagTUIScreen(controller))
+        
+        app = RagApp()
+        app.run()
 
     def print_message(self, message: str) -> None:
         """Show info message.
@@ -42,7 +51,7 @@ class TUIRagAdapter(IRagView):
         Args:
             message: Message to display
         """
-        # Placeholder - will use notification system
+        # Use print for now, but could use notifications
         print(f"[RAG INFO] {message}")
 
     def print_message_error(self, message: str) -> None:
@@ -51,7 +60,6 @@ class TUIRagAdapter(IRagView):
         Args:
             message: Error message to display
         """
-        # Placeholder - will use notification system
         print(f"[RAG ERROR] {message}")
 
     def show_repository_state(self, state: object) -> None:
@@ -60,10 +68,8 @@ class TUIRagAdapter(IRagView):
         Args:
             state: Repository state object
         """
-        # Placeholder - will update status panel
         print(f"[RAG STATE] {state}")
 
     def show_menu(self) -> None:
         """Display menu options."""
-        # Placeholder - will render menu
         print("[RAG MENU]")

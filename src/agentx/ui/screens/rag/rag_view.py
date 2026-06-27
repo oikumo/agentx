@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from agentx.ui.common.ui_console import UIConsole
+from agentx.ui.interfaces import IRagView
 
 if TYPE_CHECKING:
     from agentx.ui.screens.rag.rag_controller import RagController
@@ -15,7 +16,7 @@ OPTIONS
 
 """
 
-class RagView:
+class RagView(IRagView):
     controller: RagController
 
     def __init__(self, controller: RagController):
@@ -84,4 +85,35 @@ class RagView:
 
     def print_message_error(self, message: str):
         self.console.error(message)
+
+    def show_repository_state(self, state: object) -> None:
+        """Display repository state (IRagView implementation)."""
+        if state is None:
+            self.console.waning("⚠️  NO SELECTED REPOSITORY")
+            return
+        
+        # Use the same logic as _show_rag_state
+        # But state could be a RagState object
+        if hasattr(state, 'url') and hasattr(state, 'data_base_location') and hasattr(state, 'documents_location'):
+            if self.controller.current_rag_repository and self.controller.current_rag_repository.id:
+                self.console.success(f"📁 Repository: {self.controller.current_rag_repository.id}")
+            
+            if not state.url:
+                self.console.waning("   Status: Empty (no data ingested yet)")
+            else:
+                self.console.success(f"   Ingested URL: {state.url}")
+
+            if not state.data_base_location:
+                self.console.waning("   Database: Not initialized")
+            else:
+                self.console.success(f"   Database: {state.data_base_location}")
+
+            if not state.documents_location:
+                self.console.waning("   Documents: No documents ingested")
+            else:
+                self.console.success(f"   Documents: {state.documents_location}")
+
+    def show_menu(self) -> None:
+        """Display menu options (IRagView implementation)."""
+        self.console.info(RAG_MENU)
 

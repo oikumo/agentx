@@ -5,8 +5,8 @@ from agentx.ui.screens.chat.chat_view import ChatView, ChatViewPartner
 
 
 class ChatController(ChatViewPartner):
-    def __init__(self) -> None:
-        self.view = ChatView(self)
+    def __init__(self, view: ChatView | None = None) -> None:
+        self.view = view if view else ChatView(self)
         self.history: list[BaseMessage] = []
         self.llm = AIService().openrouter_llm_provider().create_llm()
 
@@ -21,11 +21,11 @@ class ChatController(ChatViewPartner):
         self.history.clear()
         self.history.append(SystemMessage(content=system_prompt))
 
-    def process_user_message(self, user_input: str) -> bool:
-        if user_input.strip().lower() in ("quit", "exit"):
+    def process_user_message(self, user_message: str) -> bool:
+        if user_message.strip().lower() in ("quit", "exit"):
             return False
 
-        stripped = user_input.strip()
+        stripped = user_message.strip()
         if not stripped:
             return False
 

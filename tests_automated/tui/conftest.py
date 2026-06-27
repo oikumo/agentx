@@ -41,6 +41,7 @@ class RecordingController:
 
     def __init__(self) -> None:
         self.commands: list[str] = []
+        self.screens_pushed: list[str] = []
 
     def run_command(self, user_input: str) -> None:
         self.commands.append(user_input)
@@ -59,6 +60,15 @@ class RecordingController:
 
     def print_response_error(self, message: str) -> None:  # pragma: no cover
         pass
+
+    # New methods for navigation (called by MainTUIScreen)
+    def show_chat(self) -> None:
+        self.screens_pushed.append("ChatTUIScreen")
+        # The actual navigation happens in MainTUIScreen which pushes the screen
+        # This method is called, but the actual push is done by the screen itself
+
+    def show_rag(self) -> None:
+        self.screens_pushed.append("RagTUIScreen")
 
 
 @pytest.fixture

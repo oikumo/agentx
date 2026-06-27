@@ -187,12 +187,65 @@ class IMainViewPartner(ABC):
         """Print output."""
         pass
 
+    @abstractmethod
+    def show_chat(self) -> None:
+        """Show chat screen."""
+        pass
+
+    @abstractmethod
+    def show_rag(self) -> None:
+        """Show RAG screen."""
+        pass
+
 
 class IRagViewPartner(ABC):
-    """Abstract partner for RAG View (defined in rag_controller.py)."""
-    pass
+    """Abstract partner for RAG View (implemented by RagController)."""
+
+    @abstractmethod
+    def select_repository(self) -> None:
+        """Select a repository."""
+        pass
+
+    @abstractmethod
+    def create_repository(self) -> None:
+        """Create a new repository."""
+        pass
+
+    @abstractmethod
+    def show_chat(self) -> None:
+        """Show chat screen."""
+        pass
+
+    @abstractmethod
+    def show_web_ingestion(self) -> None:
+        """Show web ingestion screen."""
+        pass
+
+    @abstractmethod
+    def close(self) -> None:
+        """Close the view."""
+        pass
+
+    @abstractmethod
+    def get_rag_state(self) -> object:
+        """Get RAG repository state."""
+        pass
 
 
 class IChatViewPartner(ABC):
-    """Abstract partner for Chat View (defined in chat_controller.py)."""
-    pass
+    """Abstract partner for Chat View (implemented by ChatController)."""
+
+    @abstractmethod
+    def process_user_message(self, user_message: str) -> bool:
+        """Process a user message."""
+        pass
+
+    @abstractmethod
+    def close(self) -> None:
+        """Close the view."""
+        pass
+
+    @abstractmethod
+    def start_interactive_streaming(self, system_prompt: str) -> None:
+        """Start interactive streaming with system prompt."""
+        pass

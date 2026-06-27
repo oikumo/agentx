@@ -65,17 +65,21 @@ class TestTUIChatAdapterConstruction:
 
 
 # ---------------------------------------------------------------------------
-# show() — placeholder
+# show() — runs Textual app
 # ---------------------------------------------------------------------------
 
 class TestTUIChatAdapterShow:
-    """show() is currently a no-op placeholder."""
+    """show() runs the Textual chat application."""
 
-    def test_show_is_noop(self, mock_chat_controller):
+    def test_show_completes_without_error(self, mock_chat_controller):
+        """Test that show() runs without throwing exceptions."""
         adapter = TUIChatAdapter(mock_chat_controller)
-        # Should not raise any exception
+        
+        # Just verify show() completes without error
+        # The actual app.run() is blocking and hard to test in isolation
+        # This test just ensures the method is callable
         result = adapter.show()
-        assert result is None
+        assert result is None  # show() returns None
 
 
 # ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@ from agentx.ui.screens.rag.rag_web_ingestion_controller import RagWebIngestionCo
 from agentx.model.session.session_manager import SessionManager
 from agentx.model.rag.rag_repository import RagRepository
 from agentx.ui.screens.rag.rag_view import RagView
+from agentx.ui.interfaces import IRagView
 
 @dataclass
 class RagState:
@@ -16,11 +17,11 @@ class RagState:
     documents_location: str | None
 
 class RagController:
-    view: RagView
+    view: IRagView
     current_rag_repository: RagRepository | None
 
-    def __init__(self) -> None:
-        self.view = RagView(self)
+    def __init__(self, view: IRagView | None = None) -> None:
+        self.view = view if view else RagView(self)
         self.session_controller = SessionManager()
         self.rag_working_directory = self.session_controller.get_directory_rag()
         self.current_rag_repository = None

@@ -32,8 +32,20 @@ class TUIChatAdapter(IChatView):
 
     def show(self) -> None:
         """Display chat screen using Textual."""
-        # Placeholder - will show chat screen
-        pass
+        from textual.app import App
+        from agentx.ui.tui.screens.chat_screen import ChatTUIScreen
+        
+        # Create a simple Textual app that runs the chat screen
+        class ChatApp(App):
+            def __init__(self, controller: IChatViewPartner):
+                super().__init__()
+                self._controller = controller
+            
+            def on_mount(self) -> None:
+                self.push_screen(ChatTUIScreen(self._controller))
+        
+        app = ChatApp(self._controller)
+        app.run()
 
     def show_initial_message(self) -> None:
         """Show welcome message."""
