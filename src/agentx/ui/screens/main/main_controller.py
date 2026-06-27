@@ -13,10 +13,10 @@ from agentx.ui.screens.rag.rag_controller import RagController
 
 
 class MainController(IMainViewPartner):
-    def __init__(self):
+    def __init__(self, view: MainView | None = None):
         self.commands: dict[str, Command] = {}
         self.parser = CommandParser()
-        self.view = MainView(self)
+        self.view = view if view else MainView(self)
         self.session_controller = SessionController()
         self.load_commands()
 

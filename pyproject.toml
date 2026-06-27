@@ -27,6 +27,7 @@ dependencies = [
     "aiohttp==3.14.1",
     "numpy>=2.4.6",
     "uuid64>=0.2.0",
+    "textual>=0.89.0",
 ]
 
 [dependency-groups]
