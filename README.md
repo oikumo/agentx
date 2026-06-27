@@ -11,18 +11,19 @@
 
 **agentx** is a Python-based LLM agent framework with a modern **Textual TUI** and **console REPL** interface, created strictly for educational purposes. It lets you interact with language models through chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows.
 
-```
+```text
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
-│  Welcome to AgentX TUI                                       │
+│  Welcome to AgentX TUI                                      │
 │  Press 'c' for Chat, 'r' for RAG, 'q' to quit               │
-│                                                              │
+│                                                             │
 │  [c] Chat  ──→ LLM conversations with streaming responses   │
 │  [r] RAG   ──→ PDF Q&A, document ingestion, vector search   │
 │  [h] Help  ──→ Command reference                            │
 │  [q] Quit  ──→ Exit application                             │
-└──────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
 ```
 
+```
 **Key Features:**
 - 🎨 **Modern TUI** - Textual-based interface with keyboard navigation
 - 💬 **AI Chat** - Multi-provider LLM support (OpenRouter, OpenAI, Ollama, Google GenAI)
@@ -58,21 +59,21 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 
 **Default mode** - A beautiful, keyboard-driven terminal UI:
 
-```
+```text
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
-│  agentx 0.1.1                                                │
-│  Session: session_2026-06-27_18-30-00                        │
+│  agentx 0.1.1                                               │
+│  Session: session_2026-06-27_18-30-00                       │
 ├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  Welcome to AgentX!                                          │
-│                                                              │
-│  Press:                                                      │
-│    [c] Chat  ──→ Start AI conversation                       │
-│    [r] RAG   ──→ Document Q&A and ingestion                  │
-│    [h] Help  ──→ View all commands                           │
-│    [q] Quit  ──→ Exit application                            │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+│                                                             │
+│  Welcome to AgentX!                                         │
+│                                                             │
+│  Press:                                                     │
+│    [c] Chat  ──→ Start AI conversation                      │
+│    [r] RAG   ──→ Document Q&A and ingestion                 │
+│    [h] Help  ──→ View all commands                          │
+│    [q] Quit  ──→ Exit application                           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 **Key Bindings:**
@@ -85,7 +86,7 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 | `Esc` | Go back / Close screen |
 
 **Chat Screen:**
-```
+```text
 ┌─ Chat ──────────────────────────────────────────────────────┐
 │  Type your message (streaming responses enabled)            │
 ├─────────────────────────────────────────────────────────────┤
@@ -94,19 +95,19 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 │  Assistant: A Petri net is a mathematical modeling...       │
 │             (streaming in real-time)                        │
 │                                                             │
-│  > _                                                         │
-└──────────────────────────────────────────────────────────────┘
+│  > _                                                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 **RAG Screen:**
-```
+```text
 ┌─ RAG (Retrieval Augmented Generation) ──────────────────────┐
 │  Repositories:                                              │
 │    > my-pdf-docs/                                           │
 │      langchain-docs/                                        │
 ├─────────────────────────────────────────────────────────────┤
 │  [n] New repo  [s] Select  [i] Ingest URL  [q] Back         │
-└──────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -125,7 +126,7 @@ Multi-provider LLM support with streaming responses:
 | LlamaCpp | Local GGUF models | Manual config |
 
 **Example Conversation:**
-```
+```text
 (agentx) > chat
 
 Welcome to Chat! Type your message or 'quit' to exit.
@@ -157,7 +158,7 @@ You: quit
 Ask questions about your documents, PDFs, and web pages using vector search.
 
 **RAG Workflow:**
-```
+```text
 1. Create Repository
    └─→ (agentx) > rag
        └─→ [n] New repository: "my-docs"
@@ -188,7 +189,7 @@ Ask questions about your documents, PDFs, and web pages using vector search.
 **feature_001**: Session and user objectives are modeled using **Petri nets** for graph-based state management.
 
 **Session Lifecycle:**
-```
+```text
 ┌──────────────┐
 │  NO SESSION  │
 └──────┬───────┘
@@ -209,7 +210,7 @@ Ask questions about your documents, PDFs, and web pages using vector search.
 ```
 
 **Persistence:**
-```
+```text
 local_sessions/
 └── 2026-06-27_18-30-00_my-session/
     ├── session.db          # SQLite: command history
@@ -348,8 +349,8 @@ uv run main.py
 ```
 
 **TUI Mode (default):**
-```
-🎨 Starting modern TUI... (press 'q' to quit, 'h' for help)
+```text
+🎨 Starting modern TUI... (press \'q\' to quit, \'h\' for help)
 
 agentx 0.1.1
 
@@ -363,7 +364,7 @@ agentx 0.1.1
 ```bash
 uv run main.py --no-tui
 ```
-```
+```text
 💻 Using console mode...
 
 agentx 0.1.1
@@ -398,7 +399,7 @@ agentx 0.1.1
 | `version` | `version` | Shows application version |
 
 **Examples:**
-```
+```text
 (agentx) > help
 (agentx) > sum 42 58
 100
@@ -411,7 +412,7 @@ agentx 0.1.1
 
 #### AI Chat Command
 
-```
+```text
 (agentx) > chat
 Welcome to Chat! Type your message or 'quit' to exit.
 
@@ -424,7 +425,7 @@ You: quit
 
 #### RAG Command
 
-```
+```text
 (agentx) > rag
 
 RAG Menu:
@@ -459,7 +460,7 @@ Based on the ingested documents, authentication is described as...
 
 agentx follows a strict **MVC++** (Model-View-Controller) architecture with dependency inversion through **Abstract Partner** interfaces:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      ENTRY POINT                            │
 │  main.py — Bootstrap, provider selection, lifecycle         │
@@ -564,7 +565,7 @@ The enforcement lives in two layers:
 
 Before editing any file under `src/`, you **must** declare your OMT++ phase using the `omt_phase` tool:
 
-```
+```text
 omt_phase{ task_type: "bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs", 
            phase: "Analysis|Design|Programming|Testing",
            scope: "one sentence: what 'done' looks like" }
