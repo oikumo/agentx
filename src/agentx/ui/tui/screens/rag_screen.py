@@ -113,8 +113,8 @@ class RagTUIScreen(Screen):
     def _get_rag_directory(self) -> str:
         """Get RAG working directory from session."""
         try:
-            from agentx.model.session.session_manager import SessionController
-            session_controller = SessionController()
+            from agentx.model.session.session_manager import SessionManager
+            session_controller = SessionManager()
             return session_controller.get_directory_rag()
         except Exception:
             # Default fallback

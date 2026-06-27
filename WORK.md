@@ -25,8 +25,8 @@ Active development plan for Agentx software development tracking
     [x] Step 0 spike: opencode plugin API confirmed in a live session (test successful)
     [x] Tuning: agent self-skip (logged); hard-errors block / soft warn (introduced-only)
     [x] Harden: auto-detect feature design artifact from slug
-    [ ] Dogfood one bug_fix + one feature through the gate
-    [ ] (optional) Fix 2 legacy MVC++ errors so the gate guards a clean baseline
+    [x] Dogfood one bug_fix + one feature through the gate
+    [x] (optional) Fix 2 legacy MVC++ errors so the gate guards a clean baseline
 
 [*] Implement feature_004.modern_ui
     [x] Infrastructure complete (TUI module, providers, adapters)

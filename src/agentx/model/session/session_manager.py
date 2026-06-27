@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 from agentx.model.session.session import Session
 
 SESSION_DIRECTORIES_RAG = "rag"
 
-class SessionController:
-    _current_session = Session | None
 
+class SessionManager:
     def __init__(self):
-        self._current_session = Session()
+        self._current_session: Session | None = Session()
 
-    def get_directory_rag(self):
+    def get_directory_rag(self) -> str:
+        if not self._current_session:
+            return ""
         return f"{self._current_session.directory}/{SESSION_DIRECTORIES_RAG}"
 
     def get_current_session(self) -> Session | None:
@@ -26,13 +29,16 @@ class SessionController:
         return self._current_session
 
     def insert_history_entry(self, entry: str):
-        self._current_session.insert_history_entry(entry)
+        if self._current_session:
+            self._current_session.insert_history_entry(entry)
 
     def select_history_entry(self):
-        return self._current_session.select_history_entry()
+        if self._current_session:
+            return self._current_session.select_history_entry()
+        return None
 
     def get_session_name(self) -> str:
-        if not self._current_session or not self._current_session.name :
+        if not self._current_session or not self._current_session.name:
             return "none"
         return self._current_session.name
 

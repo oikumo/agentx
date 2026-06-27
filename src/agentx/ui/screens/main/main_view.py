@@ -1,13 +1,6 @@
 from agentx.ui.common.ui_console import UIConsole
+from agentx.ui.interfaces import IMainViewPartner
 
-
-class IMainViewPartner:
-    def run_command(self, user_input: str):
-        pass
-    def error(self):
-        pass
-    def print(self):
-        pass
 
 class MainView:
     def __init__(self, controller: IMainViewPartner):

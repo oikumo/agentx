@@ -41,10 +41,10 @@ class RagRepositorySelectionController:
 
     def createRepository(self) -> None:
         """Create a new repository."""
-        from agentx.model.session.session_manager import SessionController
+        from agentx.model.session.session_manager import SessionManager
         from agentx.ui.common.ui_console import UIConsole
         
-        session_controller = SessionController()
+        session_controller = SessionManager()
         working_directory = session_controller.get_directory_rag()
         
         creator = RagCreateRepositoryController(working_directory)

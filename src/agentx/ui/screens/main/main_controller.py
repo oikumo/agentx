@@ -4,11 +4,12 @@ import copy
 
 from agentx.ui.screens.chat.chat_controller import ChatController
 from agentx.ui.screens.main.commands.commands import SumCommand, QuitCommand, ClearCommand, HelpCommand, \
-    AIChat, HistoryCommand, NewSessionCommand, LSCommand, RagShowCommand
+    AIChat, HistoryCommand, NewSessionCommand, LSCommand, RagShowCommand, VersionCommand
 from agentx.ui.screens.main.commands.commands_base import Command
 from agentx.ui.screens.main.commands.commands_parser import CommandParser
-from agentx.model.session.session_manager import SessionController
-from agentx.ui.screens.main.main_view import MainView, IMainViewPartner
+from agentx.model.session.session_manager import SessionManager
+from agentx.ui.screens.main.main_view import MainView
+from agentx.ui.interfaces import IMainViewPartner
 from agentx.ui.screens.rag.rag_controller import RagController
 
 
@@ -17,7 +18,7 @@ class MainController(IMainViewPartner):
         self.commands: dict[str, Command] = {}
         self.parser = CommandParser()
         self.view = view if view else MainView(self)
-        self.session_controller = SessionController()
+        self.session_controller = SessionManager()
         self.load_commands()
 
     def load_commands(self):
@@ -30,6 +31,7 @@ class MainController(IMainViewPartner):
         self.add_command(NewSessionCommand("new", self))
         self.add_command(LSCommand("ls", self))
         self.add_command(RagShowCommand("rag", self))
+        self.add_command(VersionCommand("version", self))
 
     def get_session_manager(self):
         return self.session_controller
@@ -79,6 +81,9 @@ class MainController(IMainViewPartner):
         exit(0)
 
     def error(self):
+        pass
+
+    def print(self):
         pass
 
     def run_command(self, user_input: str):

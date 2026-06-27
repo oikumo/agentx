@@ -9,6 +9,7 @@ import os
 from agentx.ui.screens.main.commands.commands_base import Command
 
 from agentx.utils.utils import clear_console, safe_int
+from agentx.utils.constants import APP_VERSION
 
 
 class QuitCommand(Command):
@@ -138,3 +139,12 @@ class LSCommand(Command):
                 self.controller.print_message(f"  {file}")
         else:
             self.controller.print_message(f"Directory {path} is empty")
+
+
+class VersionCommand(Command):
+    def __init__(self, key: str, controller: MainController):
+        super().__init__(key, description="Show application version")
+        self.controller = controller
+
+    def run(self, arguments: list[str]) -> None:
+        self.controller.print_message(f"Agent-X version {APP_VERSION}")

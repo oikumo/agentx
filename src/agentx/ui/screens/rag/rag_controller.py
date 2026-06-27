@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from agentx.ui.screens.rag.rag_chat_controller import RagChatController
 from agentx.ui.screens.rag.rag_repository_selection_controller import RagRepositorySelectionController
 from agentx.ui.screens.rag.rag_web_ingestion_controller import RagWebIngestionController
-from agentx.model.session.session_manager import SessionController
+from agentx.model.session.session_manager import SessionManager
 from agentx.model.rag.rag_repository import RagRepository
 from agentx.ui.screens.rag.rag_view import RagView
 
@@ -21,7 +21,7 @@ class RagController:
 
     def __init__(self) -> None:
         self.view = RagView(self)
-        self.session_controller = SessionController()
+        self.session_controller = SessionManager()
         self.rag_working_directory = self.session_controller.get_directory_rag()
         self.current_rag_repository = None
 

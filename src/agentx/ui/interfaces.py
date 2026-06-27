@@ -170,8 +170,22 @@ class IUIProvider(ABC):
 # Forward declarations for type hints
 # These interfaces are defined in controller files to avoid circular imports
 class IMainViewPartner(ABC):
-    """Abstract partner for Main View (defined in main_controller.py)."""
-    pass
+    """Abstract partner for Main View (implemented by MainController)."""
+
+    @abstractmethod
+    def run_command(self, user_input: str) -> None:
+        """Execute a user command."""
+        pass
+
+    @abstractmethod
+    def error(self) -> None:
+        """Handle error state."""
+        pass
+
+    @abstractmethod
+    def print(self) -> None:
+        """Print output."""
+        pass
 
 
 class IRagViewPartner(ABC):
