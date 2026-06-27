@@ -354,9 +354,9 @@ uv run main.py
 agentx 0.1.1
 
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
-│  Welcome to AgentX TUI                                       │
+│  Welcome to AgentX TUI                                      │
 │  Press 'c' for Chat, 'r' for RAG, 'q' to quit               │
-└──────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
 ```
 
 **Console Mode (fallback or `--no-tui`):**
@@ -461,13 +461,13 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      ENTRY POINT                             │
+│                      ENTRY POINT                            │
 │  main.py — Bootstrap, provider selection, lifecycle         │
 └─────────────────────────────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   CONTROLLER LAYER                           │
+│                   CONTROLLER LAYER                          │
 │  MainController, RagController, ChatController              │
 │  Implements: IMainViewPartner, IRagViewPartner, ...         │
 └─────────────────────────────────────────────────────────────┘
@@ -475,14 +475,14 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
                             │ Uses (ABC interfaces)
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    INTERFACE LAYER                           │
-│  IMainView, IRagView, IChatView, IUIProvider (ABCs)        │
+│                    INTERFACE LAYER                          │
+│  IMainView, IRagView, IChatView, IUIProvider (ABCs)         │
 └─────────────────────────────────────────────────────────────┘
                             │
                             │ Implemented By
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     VIEW LAYER                               │
+│                     VIEW LAYER                              │
 │  Console: MainView, RagView, ChatView                       │
 │  TUI:     TUIAdapter, TUIRagAdapter, TUIChatAdapter         │
 └─────────────────────────────────────────────────────────────┘
@@ -490,7 +490,7 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
                             │ Depends On
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    MODEL LAYER                               │
+│                    MODEL LAYER                              │
 │  model/ai/     — LLM providers (OpenAI, Ollama, etc.)       │
 │  model/rag/    — RAG orchestration, vector stores           │
 │  model/session/ — Session management, SQLite persistence    │
