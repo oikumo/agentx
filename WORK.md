@@ -15,7 +15,24 @@ Active development plan for Agentx software development tracking
 
 ## Tasks
 
-[*] Implement feature_006.opencode_process_enforcement
+[*] Update application design overview in `.meta/software_development_process/4.design/`
+    [ ] Update application design structure documentation
+    [ ] Update application design behavior documentation
+
+[*] Implement feature_004.modern_ui
+    [x] Infrastructure complete (TUI module, providers, adapters)
+    [x] MainTUIScreen implemented with all widgets
+    [x] Integration with main.py complete
+    [!] User acceptance testing PASSED (Chat working, RAG working)
+    [x] Create tui automated end to end tests using pilot in `test_automated/tui/` python module folder
+    [ ] Summarize feature implementation in the feature documentation in a single file in `.meta/software_development_process/2.requirements/features/feature_004.modern_ui/FEATURE.md`
+
+
+[-] Implement feature_001.session_user_objectives_driven_by_Petri_Net 
+    [*] Define scope
+
+
+[x] Implement feature_006.opencode_process_enforcement
     [x] Plan -> `.meta/.../features/feature_006.opencode_process_enforcement/plan/PLAN.md`
     [x] MVC++ linter -> `scripts/omt/mvc_check.py`
     [x] Feature scaffolder + templates -> `scripts/omt/new_feature.py`, `.meta/templates/`
@@ -27,21 +44,6 @@ Active development plan for Agentx software development tracking
     [x] Harden: auto-detect feature design artifact from slug
     [x] Dogfood one bug_fix + one feature through the gate
     [x] (optional) Fix 2 legacy MVC++ errors so the gate guards a clean baseline
-
-[*] Implement feature_004.modern_ui
-    [x] Infrastructure complete (TUI module, providers, adapters)
-    [x] MainTUIScreen implemented with all widgets
-    [x] Integration with main.py complete
-    [!] User acceptance testing PASSED (Chat working, RAG working)
-    [x] Create tui automated end to end tests using pilot in `test_automated/tui/` python module folder
-    [ ] Summarize feature implementation in the feature documentation in a single file in `.meta/software_development_process/2.requirements/features/feature_004.modern_ui/FEATURE.md`
-
-[ ] Update application design overview in `.meta/software_development_process/4.design/`
-    [ ] Update application design structure documentation
-    [ ] Update application design behavior documentation
-
-[-] Implement feature_001.session_user_objectives_driven_by_Petri_Net 
-    [*] Define scope
 
 [x] Implement feature_002.rag_retrieval_augmented_generation
 
