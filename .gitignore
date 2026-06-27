@@ -2,6 +2,13 @@
 local_sessions/
 uv.lock
 
+# OMT++ process enforcer runtime state (feature_006) — not an artifact
+.meta/.omt/
+
+# Out-of-harness: this project is opencode-only. Claude Code config is not part
+# of the META HARNESS and should not be committed.
+.claude/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

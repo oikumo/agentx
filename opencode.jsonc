@@ -1,22 +1,28 @@
-// THIS OPENCODE CONFIGURATION FILE IS JUST FOR REFERENCE PURPOSE
+// agentx — LIVE opencode configuration (authoritative).
+// Coarse, declarative enforcement of the AGENTS.md "NEVER" rules. Fine-grained,
+// teaching enforcement of the OMT++ process lives in .opencode/plugin/omt_enforcer.ts.
 {
   "$schema": "https://opencode.ai/config.json",
   "lsp": true,
+
   "agent": {
-      "build": {
-        "prompt": "{file:./.agents_prompts/build.md}"
-      },
-      "code-reviewer": {
-        "description": "Reviews code for best practices and potential issues",
-        "mode": "primary",
-        "model": "openrouter/openrouter/auto",
-        "prompt": "{file:./.agents_prompts/code-reviewer.md}",
-        "tools": {
-          "write": false,
-          "edit": false
-        }
-      }
+    "build": {
+      "prompt": "{file:./.agents_prompts/build.md}"
     },
+    "code-reviewer": {
+      "description": "Reviews code for best practices and potential issues",
+      "mode": "primary",
+      "model": "openrouter/openrouter/auto",
+      "prompt": "{file:./.agents_prompts/code-reviewer.md}",
+      "tools": {
+        "write": false,
+        "edit": false
+      }
+    }
+  },
+
+  // Last matching pattern wins. Defaults stay permissive for a solo dev; the
+  // hard rules below are the ones AGENTS.md marks as NEVER.
   "permission": {
     "edit": "allow",
     "read": {
@@ -24,7 +30,28 @@
       "*.env": "deny",
       "*.env.*": "deny"
     },
-    "bash": "allow",
+    "bash": {
+      "*": "ask",
+      "uv *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "git status": "allow",
+      "git log *": "allow",
+      "git diff *": "allow",
+      "git show *": "allow",
+      "grep *": "allow",
+
+      // AGENTS.md MANDATORY: Python must run through uv (never bare python/pip/pytest).
+      "python *": "deny",
+      "python3 *": "deny",
+      "pip *": "deny",
+      "pip3 *": "deny",
+      "pytest *": "deny",
+
+      // AGENTS.md Core Directive #1: never commit/push.
+      "git commit *": "deny",
+      "git push *": "deny"
+    },
     "webfetch": "deny",
     "grep": "allow",
     "glob": "allow",

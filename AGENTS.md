@@ -2,185 +2,90 @@
 
 > **⚠️ MANDATORY FIRST STEP:** On the **first prompt**, read `WORK.md` and display it.
 >
-> **⚠️ MANDATORY SECOND STEP:** Read `AGENTS.md` in full (you're reading it now).
+> **⚠️ MANDATORY SECOND STEP:** Read this `AGENTS.md` in full.
 >
-> **⚠️ MANDATORY THIRD STEP:** At the startup follow the software development process reference in `.meta/software_development_process/omt_agent_guide.md, that define the OMT++ methodology that MUST be used for any programming task execution.
+> **⚠️ MANDATORY THIRD STEP:** Follow the OMT++ methodology in
+> `.meta/software_development_process/omt_agent_guide.md` for any programming task.
+>
+> **⚠️ MANDATORY:** Always use `uv` to run Python (including tests). Bare
+> `python`/`pip`/`pytest` are denied by `opencode.jsonc`.
 
-> **⚠️ MANDATORY:** Allways use uv for Python code execution, including automated test
----
-
-## 🚨 PROCESS ENFORCEMENT MECHANISM
-
-**Before ANY source code modification**, you MUST complete these steps **IN ORDER**:
-
-### Step 1: Phase Identification (REQUIRED OUTPUT)
-Output this checkpoint:
-```
-📋 PROCESS CHECK:
-- Task type: [bug fix | new feature | refactor | test | documentation]
-- Current phase: [Analysis | Design | Implementation | Testing]
-- Reasoning: [why this phase per OMT++ methodology]
-```
-
-**If you cannot complete this checkpoint, DO NOT PROCEED.** Ask the user for clarification.
-
-### Step 2: Artifact Verification (REQUIRED OUTPUT)
-Output this checkpoint:
-```
-📄 ARTIFACT CHECK:
-- Required artifacts: [list from OMT++ phase requirements]
-- Existing artifacts: [list found files in .meta/software_development_process/]
-- Missing artifacts: [list what needs creation]
-- Action: [create artifacts | request skip approval]
-```
-
-**If artifacts are missing:**
-- **OPTION A:** Create missing analysis/design documents first (preferred)
-- **OPTION B:** Ask user: `"⚠️ Process artifacts missing. Skip process for this change? (Y/N)"`
-- **DO NOT PROCEED** without explicit user approval for skip
-
-### Step 3: Compliance Statement (REQUIRED BEFORE CODING)
-Output this final checkpoint:
-```
-✅ PROCESS COMPLIANCE: 
-- Phase: [X]
-- Artifacts: [complete | approved-skip-with-date]
-- Ready to code: YES
-```
-
-**❌ VIOLATION CONSEQUENCES:**
-- Code changes will be **reverted entirely**
-- You must **restart from the correct phase**
-- Time wasted > time to follow process initially
-- **No exceptions** for "urgent" or "critical" tasks
+> **Harness:** This project is driven by **opencode only**. Enforcement lives in
+> `opencode.jsonc` (permissions) and `.opencode/plugin/omt_enforcer.ts` (the OMT++ gate).
 
 ---
 
-## 🛑 MANDATORY STOP POINTS
+## 🚦 HOW ENFORCEMENT ACTUALLY WORKS
 
-**Stop and ask user before proceeding if:**
+This process is **mechanically enforced**, not advisory. The `omt_enforcer` plugin gates
+your tool calls:
 
-1. **Task is marked "CRITICAL" or "URGENT"**
-   - These are when process matters MOST, not least
-   - Say: `"Critical task detected. Creating analysis/design artifacts first per OMT++."`
+1. **Before you edit anything under `src/`, declare your phase** by calling the
+   **`omt_phase`** tool:
+   ```
+   omt_phase{ task_type: "...", scope: "<one sentence: what 'done' looks like>", phase: "..." }
+   ```
+   `task_type` ∈ `bug_fix | minor_feature | major_feature | new_screen | refactor | test | docs`.
+   This *is* the real version of the old "PROCESS CHECK" — it records to the process ledger
+   and unlocks `src/` edits for the session.
 
-2. **You feel tempted to skip process**
-   - Ask yourself: "Am I being lazy or truly efficient?"
-   - If skipping, MUST get explicit user approval
+2. **The gate scales rigor to task size** (per `omt_agent_guide.md §12`):
+   - `bug_fix` / `minor_feature` / `refactor` → a phase declaration is enough.
+   - `major_feature` / `new_screen` → you must also pass `design_doc: "<path>"` to an
+     artifact that **exists on disk**, or `src/` stays blocked. Scaffold one with:
+     `uv run scripts/omt/new_feature.py "<name>" --type major_feature`.
 
-3. **No existing analysis/design documents**
-   - Say: `"No [phase] artifacts found. Should I create them first?"`
+3. **If you edit `src/` without a phase, the edit is blocked** with a message telling you
+   exactly what to run. This is not reversible by ignoring it — satisfy the gate.
 
-4. **Task involves test modifications**
-   - Tests require usage of uv
-   - Say: `"Test modification requires approval. Proceed with canary tests?"`
+4. **Architecture is checked automatically.** After each `src/` edit and on idle, the gate
+   runs `uv run scripts/omt/mvc_check.py` and surfaces MVC++ violations (View↔Model leaks,
+   non-ABC Abstract Partners, SQL outside DP classes, god controllers, …). Run it yourself
+   anytime: `uv run scripts/omt/mvc_check.py [path]`.
 
----
-
-## 📋 PRE-CODING CHECKLIST
-
-**Before writing ANY code, verify:**
-
-- [ ] Read `.meta/software_development_process/` directory structure
-- [ ] Identified current OMT++ phase (Analysis/Design/Implementation/Testing)
-- [ ] Listed required artifacts for this phase (per omt_agent_guide.md)
-- [ ] Confirmed artifacts exist OR created them OR got skip approval
-- [ ] Output all three checkpoints (Phase, Artifact, Compliance)
-- [ ] Stated explicit phase: `"Following OMT++ phase [X]"`
-
-**If any box is unchecked, DO NOT CODE. Stop and ask the user.**
-
----
-
-## 💡 PROCESS ENFORCEMENT TIPS
-
-### When You See These Triggers, STOP:
-
-| Trigger | Required Action |
-|---------|----------------|
-| "CRITICAL", "URGENT", "ASAP" | Create analysis docs first |
-| "fix", "bug", "broken" | Still requires process - not exempt |
-| "just", "simple", "quick" | Red flag - you're rationalizing shortcuts |
-| No .meta/docs for feature | Create artifacts before coding |
-| Test modifications | Get explicit approval first |
-
-### Remember:
-
-🚨 **Fast wrong work is slower than slow right work.**
-
-🚨 **The process exists because agents (and humans) make bad snap judgments.**
-
-🚨 **"Critical" tasks need process MOST - high stakes = high rigor.**
-
-🚨 **If you can't justify skipping process to a reviewer, don't skip it.**
+5. **Escape hatch (logged).** Genuine emergencies or approved canary tests:
+   `omt_skip{ reason: "...", scope: "src|tests|all" }`. Every skip is recorded in
+   `.meta/.omt/ledger.jsonl` for audit. Prefer doing the process over skipping it.
 
 ---
 
 ## Core Directives
 
-**NEVER:**
-1. Commit/push code
-2. Read nor Modify `.env` or secrets
-3. Add dependencies (approval required)
-4. Modify `tests/` dir (use canary tests, requires approval)
-5. Change `README.md` (unless explicitly asked)
-6. **Skip the software development process (automatic revert)**
+**NEVER** (enforced by `opencode.jsonc` / the gate — the action is blocked):
+1. Commit or push code (`git commit` / `git push` are denied).
+2. Read or modify `.env` / secrets.
+3. Add dependencies without approval.
+4. Modify `tests/` without approval (use canary tests + `omt_skip{scope:"tests"}`).
+5. Change `README.md`, `uv.lock`, or `LICENSE` (unless explicitly asked).
+6. Edit `src/` without first declaring a phase via `omt_phase`.
 
 **ALWAYS:**
-7. Check `git log` before changes
-8. Understand the project full context reading META.md files per each directory
-9. **Follow OMT++ methodology for ALL code changes**
-10. **Output process checkpoints before ANY code modification**
-11. **Create analysis/design artifacts when missing (or ask for skip approval)**
+7. Check `git log` / `git status` before changes.
+8. Understand the project by reading the `META.md` file in each directory.
+9. Follow OMT++ (`omt_agent_guide.md`) for all code changes.
+10. Declare your phase (`omt_phase`) before touching `src/`.
+11. Produce the phase artifacts your task size requires (guide §12); scaffold features with
+    `scripts/omt/new_feature.py` so artifacts stay consistently named (no ad-hoc `*_PROOF.md`).
+
+---
+
+## Tooling (opencode-native)
+
+| Tool | Purpose |
+|------|---------|
+| `omt_phase` | Declare OMT++ phase; unlocks `src/` edits (plugin) |
+| `omt_skip` | Logged process-override escape hatch (plugin) |
+| `uv run scripts/omt/mvc_check.py` | MVC++ architecture linter (guide §16) |
+| `uv run scripts/omt/new_feature.py "<name>"` | Scaffold a feature's artifacts from `.meta/templates/` |
 
 ---
 
 ## 📖 References
 
-- **OMT++ Methodology:** `.meta/software_development_process/omt_agent_guide.md`
-- **Project definition:** `.meta/software_development_process/1.project/`
-- **Requirements:** `.meta/software_development_process/2.requirements/`
-- **Analysis:** `.meta/software_development_process/3.analysis/`
-- **Design:** `.meta/software_development_process/4.design/`
-- **Implementation:** `.meta/software_development_process/5.implementation/`
-- **Testing:** `.meta/software_development_process/6.testing/`
-- - **Testing:** `.meta/software_development_process/7.integration/`
+- **OMT++ methodology:** `.meta/software_development_process/omt_agent_guide.md` (source of truth)
+- **Project / requirements / analysis / design / impl / testing:**
+  `.meta/software_development_process/{1.project … 7.integration}/`
+- **Process enforcement plan:**
+  `.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/plan/PLAN.md`
 
-**When in doubt: Read omt_agent_guide.md, Section 2 "Phase Model"**
-
----
-
-## Example Workflow
-
-**User says:** "Fix the RAG repository selection - it returns None"
-
-**You respond:**
-
-```
-📋 PROCESS CHECK:
-- Task type: bug fix
-- Current phase: Analysis → Design (feature marked STOPPED with architectural issues)
-- Reasoning: Per evaluation report, this requires architectural fixes, not just code changes
-
-📄 ARTIFACT CHECK:
-- Required artifacts: Use cases, sequence diagrams, component updates
-- Existing artifacts: feature_002_rag_evaluation.md (evaluation only)
-- Missing artifacts: Analysis docs, Design docs for fixes
-- Action: Creating analysis/design documents first
-
-[Creates documents in .meta/software_development_process/2-7/]
-
-✅ PROCESS COMPLIANCE: 
-- Phase: Design complete
-- Artifacts: complete
-- Ready to code: YES
-
-Now implementing the fix...
-```
-
-**NOT:** Jumping straight to code ❌
-
----
-
-
-
+**When in doubt: read `omt_agent_guide.md` §2 "Phase Model" and §12 "Essential vs. Optional".**
