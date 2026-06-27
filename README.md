@@ -188,6 +188,72 @@ Sessions are isolated and command history is persisted per session.
 If no name is provided, a default session name will be used.
 
 
+---
+
+## opencode Process Enforcement
+
+agentx development is driven by **opencode only** with a mechanically enforced OMT++ (Object Modeling Technique++) process harness. This ensures every code change follows a structured Analysis → Design → Programming → Testing workflow with visible artifacts.
+
+### How Enforcement Works
+
+The enforcement lives in two layers:
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| **Coarse permissions** | `opencode.jsonc` | Declarative deny/allow rules (git commit, bare python, .env edits, etc.) |
+| **Fine process gate** | `.opencode/plugin/omt_enforcer.ts` | Programmatic phase checking, MVC++ linting, artifact scaffolding |
+
+#### The OMT++ Gate
+
+Before editing any file under `src/`, you **must** declare your OMT++ phase using the `omt_phase` tool:
+
+```
+omt_phase{ task_type: "bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs", 
+           phase: "Analysis|Design|Programming|Testing",
+           scope: "one sentence: what 'done' looks like" }
+```
+
+This creates a ledger entry in `.meta/.omt/ledger.jsonl` and unlocks `src/` edits for the session.
+
+#### Rigor Scales to Task Size
+
+| task_type | Required Artifacts |
+|-----------|-------------------|
+| `bug_fix` / `minor_feature` / `refactor` | Phase declaration only |
+| `major_feature` / `new_screen` | Phase declaration **+** design doc on disk (scaffold with `uv run scripts/omt/new_feature.py "<name>" --type major_feature`) |
+
+#### Automatic Architecture Checks
+
+After every `src/` edit and on session idle, the gate runs the MVC++ linter (`uv run scripts/omt/mvc_check.py`) which checks for:
+- View ↔ Model layer leaks
+- Non-ABC Abstract Partners
+- SQL outside Data Provider classes
+- God controllers (>300 lines)
+- Controllers in `model/` directory
+
+Violations surface as non-blocking toasts (guiding, not punishing).
+
+#### Escape Hatch (Logged)
+
+For genuine emergencies: `omt_skip{ reason: "...", scope: "src|tests|all" }`. Every skip is recorded in the ledger for audit.
+
+#### Tooling
+
+| Tool | Purpose |
+|------|---------|
+| `omt_phase` | Declare OMT++ phase; unlocks `src/` edits |
+| `omt_skip` | Logged process-override escape hatch |
+| `uv run scripts/omt/mvc_check.py` | MVC++ architecture linter (guide §16) |
+| `uv run scripts/omt/new_feature.py "<name>"` | Scaffold feature artifacts from `.meta/templates/` |
+
+#### References
+
+- **OMT++ methodology**: `.meta/software_development_process/omt_agent_guide.md` (source of truth)
+- **Process enforcement plan**: `.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/plan/PLAN.md`
+- **AGENTS.md**: Complete enforcement rules for opencode agents
+
+---
+
 ## Troubleshooting
 
 ### "Unknown command" error
