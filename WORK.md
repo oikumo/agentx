@@ -43,6 +43,13 @@
         - [x] Solution: Option 2 – MainTUIScreen pushes screens directly for navigation while also calling controller.show_chat()/show_rag() for side effects (recording, logging)
         - [x] All navigation tests pass: `test_key_c_opens_chat`, `test_key_r_opens_rag`, `test_escape_returns_from_chat`, `test_chat_button_opens_chat`
     - [x] Verify end-to-end TUI navigation (Main → Chat → RAG)
+    - [x] **TUI Chat Conversation Fix (2026-06-27)**
+        - [x] Root cause: MainController.show_chat() created console ChatView blocking TUI event loop
+        - [x] Fix: MainController now uses provider to create TUIChatAdapter; ChatTUIScreen implements IChatView
+        - [x] ChatTUIScreen now has show_partial_message(), show_message(), show_stream_message() for streaming
+        - [x] TUIChatAdapter delegates to ChatTUIScreen via set_screen() connection
+        - [x] All navigation + chat conversation e2e tests pass
+    - [ ] Verify User acceptance test
     - [ ] Write `FEATURE.md` summary in `.meta/.../feature_004.modern_ui/`
 - [x] Update README.md with feature_006 and agentic workflow description <!-- id:T-006-readme prio:med agent:true -->
 - [x] Update application design overview in `.meta/software_development_process/4.design/` <!-- id:T-006-design prio:med agent:true -->
@@ -62,6 +69,15 @@
     - [x] Harden: auto‑detect feature design artifact from slug
     - [x] Dogfood one bug_fix + one feature through the gate
     - [x] Fix 2 legacy MVC++ errors so the gate guards a clean baseline
+    - [x] Phase exit validation (P0) — enforce artifacts on phase transition <!-- id:T-006-phase-exit prio:high agent:true -->
+        - [x] PHASE_EXIT_REQUIREMENTS mapping per guide §12
+        - [x] checkPhaseExitArtifacts() function with feature-scoped paths
+        - [x] Integration in omt_phase.execute() — blocks invalid transitions
+        - [x] Fixed: Unit tests scoped to tests/features/<feature>/
+        - [x] Fixed: Operation specs detection (operation_spec_*.md pattern)
+        - [x] Added: omt_complete tool for phase completion verification
+        - [x] Added: WORK.md auto-sync hook on phase completion
+      - [ ] Verify User acceptance test
 - [ ] Implement feature_002.rag_retrieval_augmented_generation <!-- id:T-002-prio-med agent:false -->
     - [ ] Scaffold design doc
 

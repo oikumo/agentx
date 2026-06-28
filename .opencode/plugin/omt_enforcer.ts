@@ -28,6 +28,72 @@ const VALID_TASK_TYPES = new Set([
 ])
 // Task types that may not touch src/ until a design artifact exists on disk (guide §12).
 const ARTIFACT_REQUIRED = new Set(["major_feature", "new_screen"])
+
+// Phase exit requirements per guide §12 — only enforced for ARTIFACT_REQUIRED task types
+const PHASE_EXIT_REQUIREMENTS: Record<string, { phase: string; patterns: string[]; description: string }[]> = {
+  // Analysis → Design requires: Use case, Operation list, Analysis artifacts
+  Analysis: [
+    { phase: "Requirements", patterns: ["FEATURE.md"], description: "Use case / FEATURE.md" },
+    { phase: "Analysis", patterns: ["analysis_001_*.md"], description: "Analysis docs (analysis_001_*.md)" },
+  ],
+  // Design → Programming requires: Design class diagram, Operation specs
+  Design: [
+    { phase: "Design", patterns: ["design_001_*.md"], description: "Design doc (design_001_*.md)" },
+    { phase: "Operations", patterns: ["operation_spec_*.md", "operations.md"], description: "Operation specifications (operation_spec_*.md or operations.md)" },
+  ],
+  // Programming → Testing requires: Unit tests, Integration tests
+  Programming: [
+    { phase: "Implementation", patterns: ["*.md"], description: "Implementation notes (5.implementation/features/...)" },
+    { phase: "Unit tests", patterns: ["test_*.py", "*_test.py"], description: "Unit tests (tests/features/<feature>/...)" },
+  ],
+  // Testing → Done requires: System tests
+  Testing: [
+    { phase: "System tests", patterns: ["test_report.md"], description: "System test report (6.testing/features/...)" },
+  ],
+}
+
+// Check if required artifacts for a phase exist for a feature
+function checkPhaseExitArtifacts(feature: string, fromPhase: string): { ok: boolean; missing: string[] } {
+  if (!feature) return { ok: true, missing: [] }
+  const requirements = PHASE_EXIT_REQUIREMENTS[fromPhase]
+  if (!requirements) return { ok: true, missing: [] }
+
+  const featureNum = feature.match(/feature_(\d+)/)?.[0] || feature
+  const PROCESS_ROOT = ".meta/software_development_process"
+  const missing: string[] = []
+
+  for (const req of requirements) {
+    let exists = false
+    for (const pattern of req.patterns) {
+      let dir: string
+      if (req.phase === "Requirements") {
+        dir = join(REPO_ROOT, PROCESS_ROOT, "2.requirements", "features", feature)
+      } else if (req.phase.startsWith("Analysis")) {
+        dir = join(REPO_ROOT, PROCESS_ROOT, "3.analysis", "features", featureNum)
+      } else if (req.phase === "Design" || req.phase === "Operations") {
+        dir = join(REPO_ROOT, PROCESS_ROOT, "4.design", "features", featureNum)
+      } else if (req.phase === "Implementation") {
+        dir = join(REPO_ROOT, PROCESS_ROOT, "5.implementation", "features", featureNum)
+      } else if (req.phase.startsWith("Unit tests")) {
+        dir = join(REPO_ROOT, "tests", "features", featureNum)
+      } else if (req.phase.startsWith("System tests")) {
+        dir = join(REPO_ROOT, PROCESS_ROOT, "6.testing", "features", featureNum)
+      } else {
+        continue
+      }
+
+      try {
+        if (existsSync(dir)) {
+          const files = readdirSync(dir, { recursive: true })
+          exists = files.some(f => new RegExp(pattern.replace("*", ".*")).test(f))
+          if (exists) break
+        }
+      } catch { /* ignore */ }
+    }
+    if (!exists) missing.push(req.description)
+  }
+  return { ok: missing.length === 0, missing }
+}
 const UNLOCK_WINDOW_MS = 8 * 60 * 60 * 1000
 
 class OmtBlock extends Error {}
@@ -164,6 +230,9 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     `uv run scripts/omt/new_feature.py "<name>" --type ${tt}.`
 
   // --- custom tools --------------------------------------------------------
+  // Import omt_status from separate module
+  const { omt_status } = await import("./omt_status.ts")
+
   const omt_phase = tool({
     description:
       "Declare your OMT++ phase before editing src/. Records task_type/phase/scope to the " +
@@ -184,6 +253,21 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         return `❌ invalid task_type '${tt}'. Use one of: ${[...VALID_TASK_TYPES].join(", ")}.`
       }
       const session = context?.sessionID || undefined
+      const newPhase = args.phase || ""
+
+      // Phase exit validation: if transitioning FROM a phase, check artifacts exist
+      if (newPhase && ARTIFACT_REQUIRED.has(tt) && args.feature) {
+        const prevUnlock = getActiveUnlock(session)
+        if (prevUnlock && prevUnlock.phase && prevUnlock.phase !== newPhase) {
+          const { ok, missing } = checkPhaseExitArtifacts(args.feature, prevUnlock.phase)
+          if (!ok) {
+            return `⛔ OMT++ gate: cannot leave ${prevUnlock.phase} phase — missing required artifacts (guide §12):\n` +
+              missing.map(m => `  • ${m}`).join("\n") +
+              `\nComplete these before transitioning to ${newPhase}.`
+          }
+        }
+      }
+
       writeLedger({
         kind: "phase", session, task_type: tt, phase: args.phase || "",
         scope: args.scope || "", feature: args.feature || "", design_doc: args.design_doc || "",
@@ -228,9 +312,114 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     },
   })
 
+  // --- omt_complete: Verify phase completion and optionally advance ---
+  const omt_complete = tool({
+    description:
+      "Verify that all required artifacts for the current phase exist, then optionally advance to the next phase. " +
+      "Use this to formally complete a phase and unlock the next one with artifact validation.",
+    args: {
+      feature: tool.schema.string().describe("feature slug, e.g. feature_006.x"),
+      advance_to: tool.schema.string().optional().describe("optional: phase to advance to after verification (Design | Programming | Testing | Done)"),
+    },
+    async execute(args, context) {
+      const session = context?.sessionID || undefined
+      const feature = args.feature || ""
+      const advanceTo = args.advance_to || ""
+
+      if (!feature) {
+        return `❌ feature slug required (e.g., feature_006.x)`
+      }
+
+      const unlock = getActiveUnlock(session)
+      if (!unlock || !unlock.feature || unlock.feature !== feature) {
+        return `❌ no active phase for feature ${feature} in this session`
+      }
+
+      const currentPhase = unlock.phase
+      if (!currentPhase) {
+        return `❌ no current phase declared for this feature`
+      }
+
+      // Check exit artifacts for current phase
+      const { ok, missing } = checkPhaseExitArtifacts(feature, currentPhase)
+      if (!ok) {
+        return `⛔ Phase ${currentPhase} incomplete — missing required artifacts:\n` +
+          missing.map(m => `  • ${m}`).join("\n") +
+          `\nCreate these before completing ${currentPhase}.`
+      }
+
+      // All artifacts present - record completion
+      writeLedger({
+        kind: "complete",
+        session,
+        feature,
+        phase: currentPhase,
+        ts: new Date().toISOString(),
+      })
+
+      let result = `✅ Phase ${currentPhase} complete for ${feature} — all artifacts verified.`
+
+      // Advance to next phase if requested
+      if (advanceTo) {
+        const validNext = VALID_TRANSITIONS[currentPhase] || []
+        if (!validNext.includes(advanceTo)) {
+          return result + `\n⚠️ Invalid transition: ${currentPhase} → ${advanceTo}. Valid: ${validNext.join(", ")}`
+        }
+
+        // Declare new phase (will be validated on next omt_phase call, but we can pre-check)
+        writeLedger({
+          kind: "phase", session, task_type: unlock.task_type || "major_feature",
+          phase: advanceTo, scope: unlock.scope || "", feature, design_doc: "",
+        })
+        result += `\n➡️ Advanced to ${advanceTo} phase.`
+      }
+
+      // Auto-sync WORK.md
+      try { await syncWorkMdFromLedger() } catch { /* ignore */ }
+
+      return result
+    },
+  })
+
+  // --- WORK.md auto-sync from ledger ---
+  async function syncWorkMdFromLedger() {
+    const workMdPath = join(directory, "WORK.md")
+    if (!existsSync(workMdPath)) return
+
+    const ledger = readLedger()
+    const completedFeatures = new Set<string>()
+
+    // Find all completed phases from ledger
+    for (const rec of ledger) {
+      if (rec.kind === "complete" && rec.feature) {
+        completedFeatures.add(rec.feature)
+      }
+    }
+
+    let content = readFileSync(workMdPath, "utf8")
+    let modified = false
+
+    // Update checkboxes for completed features
+    for (const feature of completedFeatures) {
+      const featureSlug = feature.replace("feature_", "feature_")
+      const lines = content.split("\n")
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].includes(featureSlug) && lines[i].trim().startsWith("- [ ]")) {
+          lines[i] = lines[i].replace("- [ ]", "- [x]")
+          modified = true
+        }
+      }
+      content = lines.join("\n")
+    }
+
+    if (modified) {
+      writeFileSync(workMdPath, content, "utf8")
+    }
+  }
+
   // --- hooks ---------------------------------------------------------------
   return {
-    tool: { omt_phase, omt_skip },
+    tool: { omt_phase, omt_skip, omt_status, omt_complete },
 
     "tool.execute.before": async (input, output) => {
       try {
