@@ -22,6 +22,9 @@
 
 ## Tasks
 
+- [~] Implement feature_007.agentx_intelligent_agent_behaviour
+    - [ ] Complete the feature description with the User revision
+
 - [x] Implement feature_004.modern_ui <!-- id:T-004 prio:high agent:true -->
     - [x] Infrastructure complete (TUI module, providers, adapters)
     - [x] MainTUIScreen implemented with all widgets
@@ -95,4 +98,5 @@
 [2026-06-27T18:26] Agent: Completed feature_004 navigation fixes, all tests pass.
 [2026-06-27T18:30] Agent: Next action - write FEATURE.md for feature_004.
 [2026-06-27T19:15] Agent: Fixed TUI RAG screen freeze on Select button - replaced blocking console input with TUI screens.
+[2026-06-28] Agent: Moved feature_003 content to feature_007 (scaffolded via new_feature.py); Analysis phase started
 ```
