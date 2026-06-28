@@ -47,7 +47,7 @@ git clone <repository-url>
 cd agentx
 uv sync
 uv run main.py
-
+```
 
 You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 
