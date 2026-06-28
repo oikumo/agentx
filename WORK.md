@@ -27,6 +27,8 @@
     - [x] Create the feature implementation plan
     - [ ] Validate the feature technical feasibility, fix the feature and it is plan if needed
     - [ ] Validate the feature end User usability, fix the feature and it is plan if needed
+    - [ ] Develop the feature
+    - [ ] User validate the feature implementation
 
 - [x] Implement feature_004.modern_ui <!-- id:T-004 prio:high agent:true -->
     - [x] Infrastructure complete (TUI module, providers, adapters)
