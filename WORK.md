@@ -22,7 +22,7 @@
 
 ## Tasks
 
-- [~] Implement feature_004.modern_ui <!-- id:T-004 prio:high agent:true -->
+- [x] Implement feature_004.modern_ui <!-- id:T-004 prio:high agent:true -->
     - [x] Infrastructure complete (TUI module, providers, adapters)
     - [x] MainTUIScreen implemented with all widgets
     - [x] Integration with main.py complete
@@ -56,7 +56,7 @@
         - [x] Updated legacy unit tests in tests/tui/ to match new TUI screen delegation behavior
         - [x] All 23 automated TUI e2e tests pass including rag_screen_repository_selection_and_chat
     - [x] Verify User acceptance test
-    - [ ] Write `FEATURE.md` summary in `.meta/.../feature_004.modern_ui/`
+    - [x] Write `FEATURE.md` summary in `.meta/.../feature_004.modern_ui/`
 - [x] Update README.md with feature_006 and agentic workflow description <!-- id:T-006-readme prio:med agent:true -->
 - [x] Update application design overview in `.meta/software_development_process/4.design/` <!-- id:T-006-design prio:med agent:true -->
     - [x] Update application design structure documentation
