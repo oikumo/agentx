@@ -23,7 +23,7 @@
 └─────────────────────────────────────────────────────────────┘
 ```
 
-```
+
 **Key Features:**
 - 🎨 **Modern TUI** - Textual-based interface with keyboard navigation
 - 💬 **AI Chat** - Multi-provider LLM support (OpenRouter, OpenAI, Ollama, Google GenAI)
@@ -47,7 +47,7 @@ git clone <repository-url>
 cd agentx
 uv sync
 uv run main.py
-```
+
 
 You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 
@@ -77,6 +77,7 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 ```
 
 **Key Bindings:**
+
 | Key | Action |
 |-----|--------|
 | `c` | Open Chat screen |
