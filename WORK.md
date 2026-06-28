@@ -91,7 +91,22 @@
         - [x] Fixed: Operation specs detection (operation_spec_*.md pattern)
         - [x] Added: omt_complete tool for phase completion verification
         - [x] Added: WORK.md auto-sync hook on phase completion
-      - [ ] Verify User acceptance test
+      - [x] Verify User acceptance test
+        - [x] Source fix: make `omt_status.ts` a standalone plugin and remove dynamic status import from `omt_enforcer.ts`
+        - [x] Source fix: repair `omt_complete` feature-phase lookup and phase transition constants
+        - [x] Source fix: repair phase-exit artifact validation (`REPO_ROOT` → plugin `directory`)
+        - [x] Source fix: keep `omt_complete` artifact checks scoped to feature-sized work (`major_feature` / `new_screen`), not bug-fix dogfood phases
+        - [x] Source fix: align `omt_status` with strict `design_*.md` detection and no required artifacts for lightweight task types
+        - [x] Source verification: `uv run pytest tests/scripts/omt/test_mvc_check.py -q` → 25 passed
+        - [x] Source verification: `uv run scripts/omt/mvc_check.py --json` → 0 errors, 6 existing warnings
+        - [x] Restart opencode so plugin changes are reloaded
+        - [x] After restart, run `omt_status` and confirm it returns a status summary instead of `p.split` error
+        - [x] After restart, run `omt_phase` then `omt_complete` for `feature_006.opencode_process_enforcement` and confirm completion/advance works
+        - [x] If live tool smoke tests pass, mark this acceptance test complete
+    - [x] OMT harness comprehensive e2e guard (2026-06-28)
+        - [x] Added `tests/scripts/omt/test_omt_harness_e2e.py`
+        - [x] Added `.meta/.omt/omt_harness_e2e_last_run.json` runtime receipt on passing e2e run
+        - [x] Enforced fresh e2e receipt before repeated edits to OMT/META harness files
 - [ ] Implement feature_002.rag_retrieval_augmented_generation <!-- id:T-002-prio-med agent:false -->
     - [ ] Scaffold design doc
 

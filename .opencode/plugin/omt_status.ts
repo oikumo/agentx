@@ -74,7 +74,7 @@ function resolveDesignArtifact(feature: string, explicitDoc?: string): string | 
   for (const d of readdirSync(base)) {
     if (d === `feature_${num}` || d.startsWith(`feature_${num}.`) || d.startsWith(`feature_${num}_`)) {
       const files = readdirSync(join(base, d))
-      const hit = files.find(f => /design.*\.md$/i.test(f)) || files.find(f => f.toLowerCase().endsWith(".md"))
+      const hit = files.find(f => /^design_\d+_.+\.md$/i.test(f))
       if (hit) return join(".meta", "software_development_process", "4.design", "features", d, hit)
     }
   }
@@ -91,6 +91,7 @@ function getArtifactStatus(feature: string, taskType: string): {
   const present: string[] = []
 
   if (!feature) return { required, missing, present }
+  if (!ARTIFACT_REQUIRED.has(taskType)) return { required, missing, present }
 
   // Normalize feature slug: extract number part (feature_004.modern_ui -> feature_004)
   const featureNum = feature.match(/feature_(\d+)/)?.[0] || feature
@@ -99,7 +100,7 @@ function getArtifactStatus(feature: string, taskType: string): {
   const checks: [string, string, string][] = [
     ["Requirements", "FEATURE.md", `${PROCESS_ROOT}/2.requirements/features/${feature}/FEATURE.md`],
     ["Analysis", "analysis_001_*.md", `${PROCESS_ROOT}/3.analysis/features/${featureNum}/analysis_001_*.md`],
-    ["Design", "design_001_*.md", `${PROCESS_ROOT}/4.design/features/${featureNum}/design_001_*.md`],
+    ["Design", "design_*.md", `${PROCESS_ROOT}/4.design/features/${featureNum}/design_*.md`],
     ["Implementation", "*.md", `${PROCESS_ROOT}/5.implementation/features/${featureNum}/*.md`],
     ["Testing", "test_report.md", `${PROCESS_ROOT}/6.testing/features/${featureNum}/test_report.md`],
   ]
@@ -181,16 +182,21 @@ function formatDuration(ms: number): string {
   return `${Math.round(ms / 3600000)}h`
 }
 
-export const omt_status = tool({
+const omt_status = tool({
   description:
-    "Returns complete OMT++ process context: current phase, unlock state, artifact status, lint baseline, " +
-    "valid next phases, and WORK.md next task. Call at start of each turn to restore context.",
-  args: {},
-  async execute(_args, context) {
+    "Returns concise OMT++ process context: current phase, unlock state, artifact status, lint baseline, " +
+    "valid next phases, and WORK.md next task. Pass include_ledger=true only when audit detail is needed.",
+  args: {
+    include_ledger: tool.schema.boolean().optional().describe(
+      "Include the last five phase/skip ledger entries in the visible output and metadata. Default: false."),
+  },
+  async execute(args, context) {
     const sessionId = context?.sessionID
     const unlock = getActiveUnlock(sessionId)
     const ledger = readLedger()
-    const recent = ledger.filter(r => r.kind === "phase" || r.kind === "skip").slice(-5)
+    const statusRecords = ledger.filter(r => r.kind === "phase" || r.kind === "skip")
+    const recent = statusRecords.slice(-5)
+    const includeLedger = args.include_ledger === true
 
     let currentPhase = "None"
     let activeUnlock = null
@@ -232,7 +238,8 @@ export const omt_status = tool({
 
     const nextTask = getWorkMdNextTask()
 
-    const result = {
+    const lastLedger = recent.length ? recent[recent.length - 1] : null
+    const result: Record<string, any> = {
       current_phase: currentPhase,
       active_unlock: activeUnlock,
       artifacts_required: required,
@@ -242,14 +249,27 @@ export const omt_status = tool({
       next_valid_phases: nextPhases,
       work_md_next_task: nextTask,
       feature_health: featureHealth,
-      recent_ledger: recent
+      recent_ledger_summary: {
+        total_phase_or_skip_records: statusRecords.length,
+        last_entry: lastLedger
+          ? {
+              ts: lastLedger.ts,
+              kind: lastLedger.kind,
+              task_type: lastLedger.task_type || "",
+              phase: lastLedger.phase || "",
+              feature: lastLedger.feature || "",
+            }
+          : null,
+      },
     }
+    if (includeLedger) result.recent_ledger = recent
 
     const lines = [
       "📊 OMT++ STATUS",
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
       `Current Phase: ${currentPhase}`,
       activeUnlock ? `Active Unlock: ${activeUnlock.task_type} (${activeUnlock.phase}) — expires in ${activeUnlock.expires_in}` : "Active Unlock: None (src/ blocked)",
+      activeUnlock?.scope ? `Scope: ${activeUnlock.scope}` : "",
       "",
       `Artifacts Required: ${required.length || "none"}`,
       ...missing.map(m => `  ❌ ${m}`),
@@ -260,21 +280,41 @@ export const omt_status = tool({
       `Valid Next Phases: ${nextPhases.join(", ")}`,
       "",
       `WORK.md Next Task: ${nextTask || "none pending"}`,
-      "",
-      "Feature Health:",
-      ...Object.entries(featureHealth).map(([f, h]) =>
-        `  ${f}: overall ${Math.round(h.overall * 100)}% (R:${h.requirements} A:${h.analysis} D:${h.design} I:${h.implementation} T:${h.testing})`
-      ),
-      "",
-      "Recent Ledger:",
-      ...recent.map(r =>
-        `  [${r.ts?.slice(11, 19)}] ${r.kind} ${r.task_type || ""} ${r.phase || ""} ${r.feature || ""} ${r.reason ? `— ${r.reason}` : ""}`
+    ].filter(line => line !== "")
+
+    if (Object.keys(featureHealth).length) {
+      lines.push(
+        "",
+        "Feature Health:",
+        ...Object.entries(featureHealth).map(([f, h]) =>
+          `  ${f}: overall ${Math.round(h.overall * 100)}% (R:${h.requirements} A:${h.analysis} D:${h.design} I:${h.implementation} T:${h.testing})`
+        )
       )
-    ]
+    }
+
+    if (includeLedger) {
+      lines.push(
+        "",
+        "Recent Ledger:",
+        ...recent.map(r =>
+          `  [${r.ts?.slice(11, 19)}] ${r.kind} ${r.task_type || ""} ${r.phase || ""} ${r.feature || ""} ${r.reason ? `— ${r.reason}` : ""}`
+        )
+      )
+    } else if (statusRecords.length) {
+      lines.push("", `Recent Ledger: hidden (${statusRecords.length} records; call omt_status{include_ledger:true} if audit detail is needed)`)
+    }
 
     return {
-      structured: result,
-      summary: lines.join("\n")
+      title: "OMT++ Status",
+      output: lines.join("\n"),
+      metadata: result,
     }
   }
+})
+
+// Standalone opencode plugin. This file lives under .opencode/plugin/, so it
+// must export a plugin function, not only a helper tool object. The enforcer
+// plugin registers the gate tools; this plugin registers status independently.
+export default async () => ({
+  tool: { omt_status },
 })

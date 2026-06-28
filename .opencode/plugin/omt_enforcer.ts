@@ -19,8 +19,9 @@
 // gate falls back to an 8-hour time window so it still functions for a single user.
 
 import { tool } from "@opencode-ai/plugin"
-import { appendFileSync, mkdirSync, existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
+import { appendFileSync, mkdirSync, existsSync, readFileSync, readdirSync, writeFileSync, statSync } from "node:fs"
 import { join, relative, isAbsolute, dirname } from "node:path"
+import { execFileSync } from "node:child_process"
 
 const EDIT_TOOLS = new Set(["edit", "write", "patch", "multiedit"])
 const VALID_TASK_TYPES = new Set([
@@ -28,6 +29,17 @@ const VALID_TASK_TYPES = new Set([
 ])
 // Task types that may not touch src/ until a design artifact exists on disk (guide §12).
 const ARTIFACT_REQUIRED = new Set(["major_feature", "new_screen"])
+const OMT_HARNESS_E2E_COMMAND = "uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q"
+const OMT_HARNESS_E2E_RECEIPT = join(".meta", ".omt", "omt_harness_e2e_last_run.json")
+const OMT_HARNESS_E2E_TEST = "tests/scripts/omt/test_omt_harness_e2e.py"
+
+// Valid phase transitions per guide §12
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  Analysis: ["Design", "Testing"],
+  Design: ["Programming", "Analysis"],
+  Programming: ["Testing", "Design", "Analysis"],
+  Testing: ["Analysis", "Design", "Programming", "Done"],
+}
 
 // Phase exit requirements per guide §12 — only enforced for ARTIFACT_REQUIRED task types
 const PHASE_EXIT_REQUIREMENTS: Record<string, { phase: string; patterns: string[]; description: string }[]> = {
@@ -53,7 +65,7 @@ const PHASE_EXIT_REQUIREMENTS: Record<string, { phase: string; patterns: string[
 }
 
 // Check if required artifacts for a phase exist for a feature
-function checkPhaseExitArtifacts(feature: string, fromPhase: string): { ok: boolean; missing: string[] } {
+function checkPhaseExitArtifacts(repoRoot: string, feature: string, fromPhase: string): { ok: boolean; missing: string[] } {
   if (!feature) return { ok: true, missing: [] }
   const requirements = PHASE_EXIT_REQUIREMENTS[fromPhase]
   if (!requirements) return { ok: true, missing: [] }
@@ -67,17 +79,17 @@ function checkPhaseExitArtifacts(feature: string, fromPhase: string): { ok: bool
     for (const pattern of req.patterns) {
       let dir: string
       if (req.phase === "Requirements") {
-        dir = join(REPO_ROOT, PROCESS_ROOT, "2.requirements", "features", feature)
+        dir = join(repoRoot, PROCESS_ROOT, "2.requirements", "features", feature)
       } else if (req.phase.startsWith("Analysis")) {
-        dir = join(REPO_ROOT, PROCESS_ROOT, "3.analysis", "features", featureNum)
+        dir = join(repoRoot, PROCESS_ROOT, "3.analysis", "features", featureNum)
       } else if (req.phase === "Design" || req.phase === "Operations") {
-        dir = join(REPO_ROOT, PROCESS_ROOT, "4.design", "features", featureNum)
+        dir = join(repoRoot, PROCESS_ROOT, "4.design", "features", featureNum)
       } else if (req.phase === "Implementation") {
-        dir = join(REPO_ROOT, PROCESS_ROOT, "5.implementation", "features", featureNum)
+        dir = join(repoRoot, PROCESS_ROOT, "5.implementation", "features", featureNum)
       } else if (req.phase.startsWith("Unit tests")) {
-        dir = join(REPO_ROOT, "tests", "features", featureNum)
+        dir = join(repoRoot, "tests", "features", featureNum)
       } else if (req.phase.startsWith("System tests")) {
-        dir = join(REPO_ROOT, PROCESS_ROOT, "6.testing", "features", featureNum)
+        dir = join(repoRoot, PROCESS_ROOT, "6.testing", "features", featureNum)
       } else {
         continue
       }
@@ -137,6 +149,26 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
       chosen = recent.length ? recent[recent.length - 1] : null
     }
     return chosen ? { type: chosen.kind, record: chosen } : null
+  }
+
+  // Latest phase record for a specific feature. Exact session match is preferred,
+  // then we fall back to the recent single-user window. Unlike getActiveUnlock(),
+  // this ignores skip records and unrelated features so omt_complete cannot be
+  // shadowed by a later skip or another task's phase declaration.
+  const getActiveFeaturePhase = (feature, session) => {
+    const recs = readLedger().filter((r) => r.kind === "phase" && r.feature === feature)
+    if (!recs.length) return null
+    const mine = session ? recs.filter((r) => r.session === session) : []
+    let chosen = mine.length ? mine[mine.length - 1] : null
+    if (!chosen) {
+      const now = Date.now()
+      const recent = recs.filter((r) => {
+        const t = Date.parse(r.ts || "")
+        return !Number.isNaN(t) && now - t < UNLOCK_WINDOW_MS
+      })
+      chosen = recent.length ? recent[recent.length - 1] : null
+    }
+    return chosen
   }
 
   // Auto-detect a feature's design artifact from its slug (hardening — guide §12),
@@ -211,6 +243,63 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     rel === ".env" || rel.startsWith(".env.")
   const isTests = (rel) => rel === "tests" || rel.startsWith("tests/")
   const isSrc = (rel) => rel.startsWith("src/")
+  const isOmtHarness = (rel) =>
+    rel === "AGENTS.md" || rel === "opencode.jsonc" ||
+    rel === ".meta/software_development_process/omt_agent_guide.md" ||
+    rel.startsWith(".opencode/plugin/omt_") ||
+    rel.startsWith("scripts/omt/") ||
+    rel.startsWith(".meta/templates/") ||
+    rel.startsWith(".meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/") ||
+    rel.startsWith("tests/scripts/omt/")
+
+  const receiptTimestampMs = () => {
+    const receipt = join(directory, OMT_HARNESS_E2E_RECEIPT)
+    if (!existsSync(receipt)) return 0
+    let parsed = 0
+    try {
+      const data = JSON.parse(readFileSync(receipt, "utf8") || "{}")
+      const t = Date.parse(data.passed_at || data.timestamp || "")
+      parsed = Number.isNaN(t) ? 0 : t
+    } catch { /* ignore invalid receipt */ }
+    try { return Math.max(parsed, statSync(receipt).mtimeMs) } catch { return parsed }
+  }
+
+  const isGitDirty = (rel) => {
+    try {
+      const out = execFileSync("git", ["status", "--porcelain", "--", rel], {
+        cwd: directory,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      })
+      return out.trim().length > 0
+    } catch {
+      // If git is unavailable, fail open. The e2e test still verifies the source guard.
+      return false
+    }
+  }
+
+  const omtHarnessE2eStatus = (rel, abs) => {
+    if (!isOmtHarness(rel)) return { ok: true, message: "" }
+    if (rel === OMT_HARNESS_E2E_TEST || rel === OMT_HARNESS_E2E_RECEIPT) {
+      return { ok: true, message: "" }
+    }
+    if (!existsSync(abs)) return { ok: true, message: "" }
+    if (!isGitDirty(rel)) return { ok: true, message: "" }
+
+    const lastPassed = receiptTimestampMs()
+    let targetMtime = 0
+    try { targetMtime = statSync(abs).mtimeMs } catch { return { ok: true, message: "" } }
+    if (lastPassed >= targetMtime) return { ok: true, message: "" }
+
+    return {
+      ok: false,
+      message:
+        `⛔ OMT++ gate: '${rel}' is part of the META HARNESS / OMT enforcement surface ` +
+        `and already has unverified changes. Run the comprehensive harness e2e test before ` +
+        `editing it again:\n  ${OMT_HARNESS_E2E_COMMAND}\n` +
+        `This test refreshes ${OMT_HARNESS_E2E_RECEIPT}.`,
+    }
+  }
 
   // --- teaching messages ---------------------------------------------------
   const denyMsg = (rel) =>
@@ -234,8 +323,9 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     `uv run scripts/omt/new_feature.py "<name>" --type ${tt}.`
 
   // --- custom tools --------------------------------------------------------
-  // Import omt_status from separate module
-  const { omt_status } = await import("./omt_status.ts")
+  // omt_status is registered by .opencode/plugin/omt_status.ts as its own
+  // standalone plugin. Keeping it out of this enforcer avoids dynamic-import
+  // cache/loading failures and duplicate tool registration.
 
   const omt_phase = tool({
     description:
@@ -259,15 +349,20 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
       const session = context?.sessionID || undefined
       const newPhase = args.phase || ""
 
-      // Phase exit validation: if transitioning FROM a phase, check artifacts exist
-      if (newPhase && ARTIFACT_REQUIRED.has(tt) && args.feature) {
-        const prevUnlock = getActiveUnlock(session)
-        if (prevUnlock && prevUnlock.phase && prevUnlock.phase !== newPhase) {
-          const { ok, missing } = checkPhaseExitArtifacts(args.feature, prevUnlock.phase)
-          if (!ok) {
-            return `⛔ OMT++ gate: cannot leave ${prevUnlock.phase} phase — missing required artifacts (guide §12):\n` +
-              missing.map(m => `  • ${m}`).join("\n") +
-              `\nComplete these before transitioning to ${newPhase}.`
+      // Phase exit validation: if transitioning FROM a feature-sized phase,
+      // check artifacts exist. Bug fixes/refactors/tests intentionally keep the
+      // lightweight §12 path: a recorded phase is enough.
+      if (newPhase && args.feature) {
+        const prevPhaseRecord = getActiveFeaturePhase(args.feature, session)
+        if (prevPhaseRecord?.phase && prevPhaseRecord.phase !== newPhase) {
+          const exitTaskType = prevPhaseRecord.task_type || tt
+          if (ARTIFACT_REQUIRED.has(exitTaskType)) {
+            const { ok, missing } = checkPhaseExitArtifacts(directory, args.feature, prevPhaseRecord.phase)
+            if (!ok) {
+              return `⛔ OMT++ gate: cannot leave ${prevPhaseRecord.phase} phase — missing required artifacts (guide §12):\n` +
+                missing.map(m => `  • ${m}`).join("\n") +
+                `\nComplete these before transitioning to ${newPhase}.`
+            }
           }
         }
       }
@@ -334,22 +429,26 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         return `❌ feature slug required (e.g., feature_006.x)`
       }
 
-      const unlock = getActiveUnlock(session)
-      if (!unlock || !unlock.feature || unlock.feature !== feature) {
+      const phaseRecord = getActiveFeaturePhase(feature, session)
+      if (!phaseRecord) {
         return `❌ no active phase for feature ${feature} in this session`
       }
 
-      const currentPhase = unlock.phase
+      const currentPhase = phaseRecord.phase
       if (!currentPhase) {
         return `❌ no current phase declared for this feature`
       }
 
-      // Check exit artifacts for current phase
-      const { ok, missing } = checkPhaseExitArtifacts(feature, currentPhase)
-      if (!ok) {
-        return `⛔ Phase ${currentPhase} incomplete — missing required artifacts:\n` +
-          missing.map(m => `  • ${m}`).join("\n") +
-          `\nCreate these before completing ${currentPhase}.`
+      // Check exit artifacts for feature-sized work only. For bug fixes,
+      // refactors, tests, and docs, omt_complete should verify the declared
+      // process step without inventing major-feature artifact requirements.
+      if (ARTIFACT_REQUIRED.has(phaseRecord.task_type || "")) {
+        const { ok, missing } = checkPhaseExitArtifacts(directory, feature, currentPhase)
+        if (!ok) {
+          return `⛔ Phase ${currentPhase} incomplete — missing required artifacts:\n` +
+            missing.map(m => `  • ${m}`).join("\n") +
+            `\nCreate these before completing ${currentPhase}.`
+        }
       }
 
       // All artifacts present - record completion
@@ -372,8 +471,8 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
 
         // Declare new phase (will be validated on next omt_phase call, but we can pre-check)
         writeLedger({
-          kind: "phase", session, task_type: unlock.task_type || "major_feature",
-          phase: advanceTo, scope: unlock.scope || "", feature, design_doc: "",
+          kind: "phase", session, task_type: phaseRecord.task_type || "major_feature",
+          phase: advanceTo, scope: phaseRecord.scope || "", feature, design_doc: "",
         })
         result += `\n➡️ Advanced to ${advanceTo} phase.`
       }
@@ -437,7 +536,7 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
 
   // --- hooks ---------------------------------------------------------------
   return {
-    tool: { omt_phase, omt_skip, omt_status, omt_complete },
+    tool: { omt_phase, omt_skip, omt_complete },
 
     "tool.execute.before": async (input, output) => {
       try {
@@ -447,6 +546,9 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         const { abs, rel } = relOf(raw)
 
         if (isProtected(rel)) throw new OmtBlock(denyMsg(rel))
+
+        const e2e = omtHarnessE2eStatus(rel, abs)
+        if (!e2e.ok) throw new OmtBlock(e2e.message)
 
         const session = input?.sessionID || undefined
 
