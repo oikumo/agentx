@@ -19,7 +19,7 @@
 // gate falls back to an 8-hour time window so it still functions for a single user.
 
 import { tool } from "@opencode-ai/plugin"
-import { appendFileSync, mkdirSync, existsSync, readFileSync, readdirSync } from "node:fs"
+import { appendFileSync, mkdirSync, existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { join, relative, isAbsolute, dirname } from "node:path"
 
 const EDIT_TOOLS = new Set(["edit", "write", "patch", "multiedit"])
@@ -156,8 +156,12 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
       if (!match) continue
       let files
       try { files = readdirSync(join(base, d)) } catch { continue }
-      const hit = files.find((f) => /design.*\.md$/i.test(f)) ||
-                  files.find((f) => f.toLowerCase().endsWith(".md"))
+      // Strict matching: only design_NNN_*.md files count as design artifacts (guide §12)
+      const hit = files.find((f) => /^design_\d+_.+\.md$/i.test(f))
+      // Optional: warn if .md files exist but no design_*.md (logged, not blocking)
+      if (!hit && files.some(f => f.toLowerCase().endsWith(".md"))) {
+        safeLog("warn", `Feature ${feature} has .md files but no design_NNN_*.md artifact in ${d}/`)
+      }
       if (hit) return join(rel, d, hit)
     }
     return null
@@ -401,12 +405,26 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
 
     // Update checkboxes for completed features
     for (const feature of completedFeatures) {
-      const featureSlug = feature.replace("feature_", "feature_")
+      // Match both full slug (feature_006.opencode_process_enforcement) 
+      // and short form (feature_006) since WORK.md may use either
+      const shortFeature = feature.match(/feature_\d+/)?.[0]
+      const matchPatterns = [feature]
+      if (shortFeature && shortFeature !== feature) {
+        matchPatterns.push(shortFeature)
+      }
+
       const lines = content.split("\n")
       for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes(featureSlug) && lines[i].trim().startsWith("- [ ]")) {
-          lines[i] = lines[i].replace("- [ ]", "- [x]")
-          modified = true
+        const line = lines[i]
+        // Check if this line contains any of our match patterns and is an unchecked checkbox
+        if (line.trim().startsWith("- [ ]")) {
+          for (const pattern of matchPatterns) {
+            if (line.includes(pattern)) {
+              lines[i] = line.replace("- [ ]", "- [x]")
+              modified = true
+              break
+            }
+          }
         }
       }
       content = lines.join("\n")
