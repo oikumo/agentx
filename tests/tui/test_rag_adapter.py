@@ -3,18 +3,17 @@
 Covers:
   - Construction and initial state
   - ``show()`` — currently a placeholder (no-op)
-  - ``print_message``
-  - ``print_message_error``
-  - ``show_repository_state`` — prints state object
-  - ``show_menu``
+  - ``print_message`` — delegates to screen.notify()
+  - ``print_message_error`` — delegates to screen.notify()
+  - ``show_repository_state`` — delegates to screen._update_repository_ui()
+  - ``show_menu`` — delegates to screen._show_menu()
   - IRagView ABC compliance
-  - Edge cases: None state, non-string objects, empty messages
+  - Edge cases: None screen, None controller
 """
 
 from __future__ import annotations
 
-from io import StringIO
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -59,6 +58,13 @@ class TestTUIRagAdapterConstruction:
         assert adapter._controller is None
         assert adapter._screen is None
 
+    def test_set_screen_stores_screen(self, mock_rag_controller):
+        """set_screen should store the screen reference."""
+        adapter = TUIRagAdapter(mock_rag_controller)
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        assert adapter._screen is mock_screen
+
 
 # ---------------------------------------------------------------------------
 # show() — placeholder
@@ -79,152 +85,172 @@ class TestTUIRagAdapterShow:
 
 
 # ---------------------------------------------------------------------------
-# print_message
+# print_message — delegates to screen.notify()
 # ---------------------------------------------------------------------------
 
 class TestTUIRagAdapterPrintMessage:
-    """print_message prints with [RAG INFO] prefix."""
+    """print_message delegates to screen.notify() with info severity."""
 
-    def test_print_message_prints_prefix_and_message(self, mock_rag_controller):
+    def test_print_message_delegates_to_screen(self, mock_rag_controller):
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.print_message("info text")
-            output = mock_stdout.getvalue()
-            assert "[RAG INFO]" in output
-            assert "info text" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.print_message("info text")
+        
+        mock_screen.notify.assert_called_once_with("info text", severity="information", timeout=3)
 
-    def test_print_message_empty(self, mock_rag_controller):
+    def test_print_message_no_screen_does_not_raise(self, mock_rag_controller):
+        """Should not raise when no screen is set."""
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO):
-            adapter.print_message("")  # should not raise
+        # No screen set
+        adapter.print_message("info text")  # Should not raise
 
-    def test_print_message_unicode(self, mock_rag_controller):
-        adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.print_message("📚 RAG info")
-            assert "📚 RAG info" in mock_stdout.getvalue()
+    def test_print_message_with_none_controller(self):
+        adapter = TUIRagAdapter(None)  # type: ignore[arg-type]
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.print_message("test")
+        
+        mock_screen.notify.assert_called_once_with("test", severity="information", timeout=3)
 
     def test_print_message_multiple_calls(self, mock_rag_controller):
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.print_message("first")
-            adapter.print_message("second")
-            output = mock_stdout.getvalue()
-            assert output.count("[RAG INFO]") == 2
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.print_message("first")
+        adapter.print_message("second")
+        
+        assert mock_screen.notify.call_count == 2
 
 
 # ---------------------------------------------------------------------------
-# print_message_error
+# print_message_error — delegates to screen.notify() with error severity
 # ---------------------------------------------------------------------------
 
 class TestTUIRagAdapterPrintError:
-    """print_message_error prints with [RAG ERROR] prefix."""
+    """print_message_error delegates to screen.notify() with error severity."""
 
-    def test_print_error_prints_prefix_and_message(self, mock_rag_controller):
+    def test_print_error_delegates_to_screen(self, mock_rag_controller):
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.print_message_error("error text")
-            output = mock_stdout.getvalue()
-            assert "[RAG ERROR]" in output
-            assert "error text" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.print_message_error("error text")
+        
+        mock_screen.notify.assert_called_once_with("error text", severity="error", timeout=None)
 
-    def test_print_error_empty(self, mock_rag_controller):
+    def test_print_error_no_screen_does_not_raise(self, mock_rag_controller):
+        """Should not raise when no screen is set."""
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO):
-            adapter.print_message_error("")
+        adapter.print_message_error("error text")  # Should not raise
 
-    def test_print_error_vs_print_message_prefix_difference(self, mock_rag_controller):
-        """Info and error use different prefixes."""
+    def test_print_error_vs_print_message_different_severity(self, mock_rag_controller):
+        """Info and error use different severities."""
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.print_message("info")
-            adapter.print_message_error("error")
-            output = mock_stdout.getvalue()
-            assert "[RAG INFO]" in output
-            assert "[RAG ERROR]" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.print_message("info")
+        adapter.print_message_error("error")
+        
+        calls = mock_screen.notify.call_args_list
+        assert calls[0][1]["severity"] == "information"
+        assert calls[1][1]["severity"] == "error"
 
 
 # ---------------------------------------------------------------------------
-# show_repository_state
+# show_repository_state — delegates to screen._update_repository_ui()
 # ---------------------------------------------------------------------------
 
 class TestTUIRagAdapterShowRepositoryState:
-    """show_repository_state prints the state object."""
+    """show_repository_state delegates to screen._update_repository_ui()."""
 
-    def test_show_repository_state_prints_state(self, mock_rag_controller):
+    def test_show_repository_state_delegates_to_screen(self, mock_rag_controller):
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_repository_state("current_state")
-            output = mock_stdout.getvalue()
-            assert "[RAG STATE]" in output
-            assert "current_state" in output
-
-    def test_show_repository_state_with_dict(self, mock_rag_controller):
-        adapter = TUIRagAdapter(mock_rag_controller)
-        state_data = {"repo": "agentx", "branch": "main", "files": 42}
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_repository_state(state_data)
-            output = mock_stdout.getvalue()
-            assert "[RAG STATE]" in output
-            assert "repo" in output
-            assert "agentx" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_repository_state({"repo": "test", "status": "ready"})
+        
+        mock_screen._update_repository_ui.assert_called_once_with({"repo": "test", "status": "ready"})
 
     def test_show_repository_state_with_none(self, mock_rag_controller):
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_repository_state(None)  # should not raise
-            output = mock_stdout.getvalue()
-            assert "[RAG STATE]" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_repository_state(None)  # should not raise
+        
+        mock_screen._update_repository_ui.assert_called_once_with(None)
 
-    def test_show_repository_state_with_integer(self, mock_rag_controller):
+    def test_show_repository_state_no_screen_does_not_raise(self, mock_rag_controller):
+        """Should not raise when no screen is set."""
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_repository_state(42)
-            output = mock_stdout.getvalue()
-            assert "42" in output
+        adapter.show_repository_state("test")  # Should not raise
 
-    def test_show_repository_state_with_object(self, mock_rag_controller):
+    def test_show_repository_state_with_various_types(self, mock_rag_controller):
+        """Should handle various state types."""
         adapter = TUIRagAdapter(mock_rag_controller)
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        # Test with dict
+        adapter.show_repository_state({"key": "value"})
+        mock_screen._update_repository_ui.assert_called_with({"key": "value"})
+        
+        # Test with string
+        adapter.show_repository_state("state_string")
+        mock_screen._update_repository_ui.assert_called_with("state_string")
+        
+        # Test with integer
+        adapter.show_repository_state(42)
+        mock_screen._update_repository_ui.assert_called_with(42)
+        
+        # Test with custom object
         class CustomState:
             def __str__(self) -> str:
                 return "CustomState[sync=True]"
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_repository_state(CustomState())
-            output = mock_stdout.getvalue()
-            assert "CustomState" in output
-
-    def test_show_repository_state_casts_to_string(self, mock_rag_controller):
-        """The state parameter is typed as `object`, so str() conversion is used."""
-        adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_repository_state(True)
-            output = mock_stdout.getvalue()
-            assert "True" in output
+        adapter.show_repository_state(CustomState())
+        args = mock_screen._update_repository_ui.call_args[0][0]
+        assert isinstance(args, CustomState)
 
 
 # ---------------------------------------------------------------------------
-# show_menu
+# show_menu — delegates to screen._show_menu()
 # ---------------------------------------------------------------------------
 
 class TestTUIRagAdapterShowMenu:
-    """show_menu prints a fixed [RAG MENU] marker."""
+    """show_menu delegates to screen._show_menu()."""
 
-    def test_show_menu_prints_menu_marker(self, mock_rag_controller):
+    def test_show_menu_delegates_to_screen(self, mock_rag_controller):
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_menu()
-            output = mock_stdout.getvalue()
-            assert "[RAG MENU]" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_menu()
+        
+        mock_screen._show_menu.assert_called_once()
+
+    def test_show_menu_no_screen_does_not_raise(self, mock_rag_controller):
+        """Should not raise when no screen is set."""
+        adapter = TUIRagAdapter(mock_rag_controller)
+        adapter.show_menu()  # Should not raise
 
     def test_show_menu_takes_no_args(self, mock_rag_controller):
         """show_menu() takes no arguments beyond self."""
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO):
-            adapter.show_menu()  # should not raise TypeError
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_menu()  # should not raise TypeError
+        mock_screen._show_menu.assert_called_once_with()
 
 
 # ---------------------------------------------------------------------------
-# Edge cases — combined
+# Edge cases
 # ---------------------------------------------------------------------------
 
 class TestTUIRagAdapterEdgeCases:
@@ -233,22 +259,26 @@ class TestTUIRagAdapterEdgeCases:
     def test_full_workflow(self, mock_rag_controller):
         """Simulate a typical RAG session: info, menu, state updates, error."""
         adapter = TUIRagAdapter(mock_rag_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show()
-            adapter.print_message("Repository loaded")
-            adapter.show_menu()
-            adapter.show_repository_state({"status": "ready", "files": 3})
-            adapter.print_message_error("No results found")
-            output = mock_stdout.getvalue()
-            assert "[RAG INFO]" in output
-            assert "[RAG MENU]" in output
-            assert "[RAG STATE]" in output
-            assert "[RAG ERROR]" in output
-            assert "ready" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show()
+        adapter.print_message("Repository loaded")
+        adapter.show_menu()
+        adapter.show_repository_state({"status": "ready", "files": 3})
+        adapter.print_message_error("No results found")
+        
+        # Verify all delegations happened
+        assert mock_screen.notify.call_count == 2  # info + error
+        mock_screen._show_menu.assert_called_once()
+        mock_screen._update_repository_ui.assert_called_once_with({"status": "ready", "files": 3})
 
     def test_very_long_state_message(self, mock_rag_controller):
         adapter = TUIRagAdapter(mock_rag_controller)
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
         long_state = "x" * 10000
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_repository_state(long_state)
-            assert len(mock_stdout.getvalue()) > 10000
+        adapter.show_repository_state(long_state)
+        
+        mock_screen._update_repository_ui.assert_called_once_with(long_state)

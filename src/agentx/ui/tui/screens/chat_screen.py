@@ -113,6 +113,9 @@ class ChatTUIScreen(Screen):
         super().__init__()
         self._controller = controller
         self.history: list = []
+        self._streaming_message: str = ""
+        self._is_streaming: bool = False
+        self._streaming_widget: ChatMessage | None = None
 
     def compose(self) -> ComposeResult:
         """Compose chat screen layout."""
@@ -193,6 +196,52 @@ class ChatTUIScreen(Screen):
             self.call_later(messages_container.scroll_end, animate=False)
         except Exception:
             pass
+
+    # View methods for IChatView interface (used by controller)
+    def show_initial_message(self) -> None:
+        """Show welcome message."""
+        self._add_message("Welcome to AgentX Chat! Ask me anything.", "assistant")
+
+    def show_message(self, message: str) -> None:
+        """Show a complete message."""
+        self._add_message(message, "assistant")
+
+    def show_partial_message(self, message: str) -> None:
+        """Show partial (streaming) message."""
+        try:
+            messages_container = self.query_one("#messages", ScrollableContainer)
+            
+            if not self._is_streaming:
+                # Start new streaming message
+                self._is_streaming = True
+                self._streaming_message = message
+                chat_message = ChatMessage(message, "assistant")
+                messages_container.mount(chat_message)
+                self._streaming_widget = chat_message
+            else:
+                # Append to existing streaming message
+                self._streaming_message += message
+                if self._streaming_widget:
+                    self._streaming_widget.update(self._streaming_message)
+            
+            # Scroll to bottom
+            self.call_later(messages_container.scroll_end, animate=False)
+        except Exception:
+            pass
+
+    def show_stream_message(self, message: str) -> None:
+        """Stream message with typing effect (alias for show_partial_message)."""
+        self.show_partial_message(message)
+
+    def show_message_chat_error(self) -> None:
+        """Show chat error."""
+        self._add_message("Error: Failed to get response from assistant.", "assistant")
+
+    def _on_streaming_complete(self) -> None:
+        """Called when streaming is complete."""
+        self._is_streaming = False
+        self._streaming_message = ""
+        self._streaming_widget = None
 
     def action_quit(self) -> None:
         """Quit the application."""

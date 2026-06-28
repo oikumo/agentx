@@ -22,7 +22,7 @@
 
 ## Tasks
 
-- [x] Implement feature_004.modern_ui <!-- id:T-004 prio:high agent:true -->
+- [~] Implement feature_004.modern_ui <!-- id:T-004 prio:high agent:true -->
     - [x] Infrastructure complete (TUI module, providers, adapters)
     - [x] MainTUIScreen implemented with all widgets
     - [x] Integration with main.py complete
@@ -49,7 +49,13 @@
         - [x] ChatTUIScreen now has show_partial_message(), show_message(), show_stream_message() for streaming
         - [x] TUIChatAdapter delegates to ChatTUIScreen via set_screen() connection
         - [x] All navigation + chat conversation e2e tests pass
-    - [ ] Verify User acceptance test
+    - [x] **TUI RAG Screen Freeze Fix (2026-06-27)**
+        - [x] Root cause: RagController.select_repository() used blocking console input loop (RagRepositorySelectionView.show())
+        - [x] Fix: RagTUIScreen._select_repository() now always uses TUI RepositorySelectionScreen (non-blocking)
+        - [x] Also fixed _create_repository() and _ingest_documents() to use TUI screens
+        - [x] Updated legacy unit tests in tests/tui/ to match new TUI screen delegation behavior
+        - [x] All 23 automated TUI e2e tests pass including rag_screen_repository_selection_and_chat
+    - [x] Verify User acceptance test
     - [ ] Write `FEATURE.md` summary in `.meta/.../feature_004.modern_ui/`
 - [x] Update README.md with feature_006 and agentic workflow description <!-- id:T-006-readme prio:med agent:true -->
 - [x] Update application design overview in `.meta/software_development_process/4.design/` <!-- id:T-006-design prio:med agent:true -->
@@ -88,4 +94,5 @@
 ```
 [2026-06-27T18:26] Agent: Completed feature_004 navigation fixes, all tests pass.
 [2026-06-27T18:30] Agent: Next action - write FEATURE.md for feature_004.
+[2026-06-27T19:15] Agent: Fixed TUI RAG screen freeze on Select button - replaced blocking console input with TUI screens.
 ```

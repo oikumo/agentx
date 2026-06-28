@@ -1,8 +1,8 @@
 from agentx.ui.common.ui_console import UIConsole
-from agentx.ui.interfaces import IMainViewPartner
+from agentx.ui.interfaces import IMainViewPartner, IMainView
 
 
-class MainView:
+class MainView(IMainView):
     def __init__(self, controller: IMainViewPartner):
         self.controller = controller
         self.console = UIConsole("(agentx)")
@@ -28,8 +28,8 @@ class MainView:
     def print_error_message(self, message: str):
         self.console.error(message)
 
-    def print_response(self, response: str):
-        self.console.info(response)
+    def print_response(self, message: str):
+        self.console.info(message)
 
-    def print_response_error(self, response: str):
-        self.console.error(response)
+    def print_response_error(self, message: str):
+        self.console.error(message)

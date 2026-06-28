@@ -1,18 +1,19 @@
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, BaseMessage
 from agentx.model.ai.service import AIService
-from agentx.ui.screens.chat.chat_view import ChatView, ChatViewPartner
+from agentx.ui.interfaces import IChatView, IChatViewPartner
 
 
-class ChatController(ChatViewPartner):
-    def __init__(self, view: ChatView | None = None) -> None:
-        self.view = view if view else ChatView(self)
+class ChatController(IChatViewPartner):
+    def __init__(self, view: IChatView | None = None) -> None:
+        self.view = view if view else None  # Will be set by provider if None
         self.history: list[BaseMessage] = []
         self.llm = AIService().openrouter_llm_provider().create_llm()
 
     def show(self):
         self.start_interactive_streaming(system_prompt="You are a helpful assistant.")
-        self.view.show()
+        if self.view:
+            self.view.show()
 
     def close(self) -> None:
         pass
@@ -35,10 +36,12 @@ class ChatController(ChatViewPartner):
             full_response: list[str] = []
 
             for chunk_content in self.get_streaming_response(self.llm, self.history):
-                self.view.show_partial_message(chunk_content)
+                if self.view:
+                    self.view.show_partial_message(chunk_content)
                 full_response.append(chunk_content)
 
-            self.view.show_partial_message("\n")
+            if self.view:
+                self.view.show_partial_message("\n")
             self.history.append(AIMessage(content="".join(full_response)))
 
             return True

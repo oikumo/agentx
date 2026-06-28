@@ -49,8 +49,8 @@ def main():
     # Initialize UI
     ui_provider.initialize()
     
-    # Create controller first (with console view as fallback)
-    main_controller = MainController()
+    # Create controller with provider for sub-view creation
+    main_controller = MainController(provider=ui_provider)
     
     # Create view via provider
     main_view = ui_provider.create_main_view(main_controller)

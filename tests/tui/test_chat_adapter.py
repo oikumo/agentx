@@ -3,18 +3,17 @@
 Covers:
   - Construction and initial state
   - ``show()`` — currently a placeholder (no-op)
-  - ``show_initial_message``
-  - ``show_message``
-  - ``show_partial_message`` (streaming, no newline, flush)
-  - ``show_stream_message`` (streaming, no newline, flush)
-  - ``show_message_chat_error``
+  - ``show_initial_message`` — delegates to screen.show_initial_message()
+  - ``show_message`` — delegates to screen.show_message()
+  - ``show_partial_message`` — delegates to screen.show_partial_message()
+  - ``show_stream_message`` — delegates to screen.show_stream_message()
+  - ``show_message_chat_error`` — delegates to screen.show_message_chat_error()
   - IChatView ABC compliance
-  - Edge cases: empty messages, unicode, multi-line
+  - Edge cases: None screen, None controller
 """
 
 from __future__ import annotations
 
-from io import StringIO
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -63,164 +62,190 @@ class TestTUIChatAdapterConstruction:
         assert adapter._controller is None
         assert adapter._screen is None
 
+    def test_set_screen_stores_screen(self, mock_chat_controller):
+        """set_screen should store the screen reference."""
+        adapter = TUIChatAdapter(mock_chat_controller)
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        assert adapter._screen is mock_screen
+
 
 # ---------------------------------------------------------------------------
-# show() — runs Textual app
+# show() — placeholder
 # ---------------------------------------------------------------------------
 
 class TestTUIChatAdapterShow:
-    """show() runs the Textual chat application."""
+    """show() is currently a no-op placeholder."""
 
-    def test_show_completes_without_error(self, mock_chat_controller):
-        """Test that show() runs without throwing exceptions."""
+    def test_show_is_noop(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        
-        # Just verify show() completes without error
-        # The actual app.run() is blocking and hard to test in isolation
-        # This test just ensures the method is callable
         result = adapter.show()
-        assert result is None  # show() returns None
+        assert result is None
+
+    def test_show_with_none_controller(self):
+        adapter = TUIChatAdapter(None)  # type: ignore[arg-type]
+        result = adapter.show()
+        assert result is None
 
 
 # ---------------------------------------------------------------------------
-# show_initial_message
+# show_initial_message — delegates to screen.show_initial_message()
 # ---------------------------------------------------------------------------
 
 class TestTUIChatAdapterInitialMessage:
-    """show_initial_message prints a fixed welcome string."""
+    """show_initial_message delegates to screen.show_initial_message()."""
 
-    def test_show_initial_message_prints(self, mock_chat_controller):
+    def test_show_initial_message_delegates_to_screen(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_initial_message()
-            output = mock_stdout.getvalue()
-            assert "[CHAT]" in output
-            assert "Starting interactive chat session" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_initial_message()
+        
+        mock_screen.show_initial_message.assert_called_once()
+
+    def test_show_initial_message_no_screen_does_not_raise(self, mock_chat_controller):
+        """Should not raise when no screen is set."""
+        adapter = TUIChatAdapter(mock_chat_controller)
+        adapter.show_initial_message()  # Should not raise
 
 
 # ---------------------------------------------------------------------------
-# show_message
+# show_message — delegates to screen.show_message()
 # ---------------------------------------------------------------------------
 
 class TestTUIChatAdapterMessage:
-    """show_message prints the message with [CHAT] prefix."""
+    """show_message delegates to screen.show_message()."""
 
-    def test_show_message_prints_prefix_and_message(self, mock_chat_controller):
+    def test_show_message_delegates_to_screen(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_message("Hello world")
-            output = mock_stdout.getvalue()
-            assert "[CHAT]" in output
-            assert "Hello world" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_message("Hello world")
+        
+        mock_screen.show_message.assert_called_once_with("Hello world")
 
     def test_show_message_empty_string(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO):
-            adapter.show_message("")  # should not raise
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_message("")  # should not raise
+        mock_screen.show_message.assert_called_once_with("")
 
     def test_show_message_unicode(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_message("🎉 Unicode ✓")
-            assert "🎉 Unicode ✓" in mock_stdout.getvalue()
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_message("🎉 Unicode ✓")
+        mock_screen.show_message.assert_called_once_with("🎉 Unicode ✓")
 
     def test_show_message_multiple_calls(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_message("first")
-            adapter.show_message("second")
-            output = mock_stdout.getvalue()
-            assert "first" in output
-            assert "second" in output
-            assert output.count("second") == 1
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_message("first")
+        adapter.show_message("second")
+        
+        assert mock_screen.show_message.call_count == 2
+        mock_screen.show_message.assert_any_call("first")
+        mock_screen.show_message.assert_any_call("second")
 
 
 # ---------------------------------------------------------------------------
-# show_partial_message  (streaming — no newline, flush=True)
+# show_partial_message — delegates to screen.show_partial_message()
 # ---------------------------------------------------------------------------
 
 class TestTUIChatAdapterPartialMessage:
-    """``show_partial_message`` streams output without a trailing newline."""
+    """show_partial_message delegates to screen.show_partial_message()."""
 
-    def test_partial_message_prints_without_newline(self, mock_chat_controller):
+    def test_partial_message_delegates_to_screen(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_partial_message("streaming")
-            output = mock_stdout.getvalue()
-            assert "[CHAT STREAM]" in output
-            assert "streaming" in output
-            # Should NOT end with a newline
-            assert not output.endswith("\n"), \
-                "partial message should not include trailing newline"
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_partial_message("streaming")
+        
+        mock_screen.show_partial_message.assert_called_once_with("streaming")
 
-    def test_partial_message_calls_flush(self, mock_chat_controller):
-        """Verify flush=True is used for streaming output."""
+    def test_partial_message_no_screen_does_not_raise(self, mock_chat_controller):
+        """Should not raise when no screen is set."""
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout") as mock_stdout:
-            mock_stdout.write = MagicMock()
-            adapter.show_partial_message("partial")
-
-            mock_stdout.flush.assert_called_once()
+        adapter.show_partial_message("streaming")  # Should not raise
 
     def test_partial_message_multiple_calls(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_partial_message("first")
-            adapter.show_partial_message("second")
-            output = mock_stdout.getvalue()
-            assert "first" in output
-            assert "second" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_partial_message("first")
+        adapter.show_partial_message("second")
+        
+        assert mock_screen.show_partial_message.call_count == 2
 
     def test_partial_message_unicode(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_partial_message("流")
-            assert "流" in mock_stdout.getvalue()
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_partial_message("流")
+        mock_screen.show_partial_message.assert_called_once_with("流")
 
 
 # ---------------------------------------------------------------------------
-# show_stream_message  (same contract as partial message)
+# show_stream_message — delegates to screen.show_stream_message()
 # ---------------------------------------------------------------------------
 
 class TestTUIChatAdapterStreamMessage:
-    """``show_stream_message`` behaves identically to partial message."""
+    """show_stream_message delegates to screen.show_stream_message()."""
 
-    def test_stream_message_prints_without_newline(self, mock_chat_controller):
+    def test_stream_message_delegates_to_screen(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_stream_message("stream")
-            output = mock_stdout.getvalue()
-            assert "[CHAT STREAM]" in output
-            assert not output.endswith("\n")
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_stream_message("stream")
+        
+        mock_screen.show_stream_message.assert_called_once_with("stream")
 
-    def test_stream_message_calls_flush(self, mock_chat_controller):
+    def test_stream_message_no_screen_does_not_raise(self, mock_chat_controller):
+        """Should not raise when no screen is set."""
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout") as mock_stdout:
-            mock_stdout.write = MagicMock()
-            adapter.show_stream_message("data")
-            mock_stdout.flush.assert_called_once()
+        adapter.show_stream_message("data")  # Should not raise
 
 
 # ---------------------------------------------------------------------------
-# show_message_chat_error
+# show_message_chat_error — delegates to screen.show_message_chat_error()
 # ---------------------------------------------------------------------------
 
 class TestTUIChatAdapterError:
-    """show_message_chat_error prints a fixed error string."""
+    """show_message_chat_error delegates to screen.show_message_chat_error()."""
 
-    def test_show_message_chat_error_prints(self, mock_chat_controller):
+    def test_show_message_chat_error_delegates_to_screen(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_message_chat_error()
-            output = mock_stdout.getvalue()
-            assert "[CHAT ERROR]" in output
-            assert "error occurred" in output.lower()
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_message_chat_error()
+        
+        mock_screen.show_message_chat_error.assert_called_once()
+
+    def test_show_message_chat_error_no_screen_does_not_raise(self, mock_chat_controller):
+        """Should not raise when no screen is set."""
+        adapter = TUIChatAdapter(mock_chat_controller)
+        adapter.show_message_chat_error()  # Should not raise
 
     def test_show_message_chat_error_ignores_args(self, mock_chat_controller):
         """The method takes no arguments (only self)."""
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO):
-            adapter.show_message_chat_error()  # should not raise TypeError
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_message_chat_error()  # should not raise TypeError
+        mock_screen.show_message_chat_error.assert_called_once_with()
 
 
 # ---------------------------------------------------------------------------
@@ -233,26 +258,36 @@ class TestTUIChatAdapterEdgeCases:
     def test_mixed_message_types(self, mock_chat_controller):
         """All message types can be called in sequence without errors."""
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO):
-            adapter.show_initial_message()
-            adapter.show_message("msg")
-            adapter.show_partial_message("partial")
-            adapter.show_stream_message("stream")
-            adapter.show_message_chat_error()
-        # All should complete without error
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_initial_message()
+        adapter.show_message("msg")
+        adapter.show_partial_message("partial")
+        adapter.show_stream_message("stream")
+        adapter.show_message_chat_error()
+        
+        mock_screen.show_initial_message.assert_called_once()
+        mock_screen.show_message.assert_called_once_with("msg")
+        mock_screen.show_partial_message.assert_called_once_with("partial")
+        mock_screen.show_stream_message.assert_called_once_with("stream")
+        mock_screen.show_message_chat_error.assert_called_once()
 
     def test_very_long_message(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
         long_msg = "x" * 10000
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_message(long_msg)
-            assert len(mock_stdout.getvalue()) > 10000
+        adapter.show_message(long_msg)
+        
+        mock_screen.show_message.assert_called_once_with(long_msg)
 
     def test_message_with_newlines(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            adapter.show_message("line1\nline2\nline3")
-            output = mock_stdout.getvalue()
-            assert "line1" in output
-            assert "line2" in output
-            assert "line3" in output
+        mock_screen = MagicMock()
+        adapter.set_screen(mock_screen)
+        
+        adapter.show_message("line1\nline2\nline3")
+        
+        mock_screen.show_message.assert_called_once_with("line1\nline2\nline3")

@@ -289,10 +289,10 @@ class MainTUIScreen(Screen):
     def action_open_chat(self) -> None:
         """Open chat screen via controller and direct navigation.
         
-        Calls controller.show_chat() for side effects (recording, logging),
-        then pushes the TUI screen directly for proper navigation.
+        Calls controller.show_chat() to set up controller/view,
+        then pushes the TUI screen with the controller for proper navigation.
         """
-        # Call controller for side effects (recording in tests, logging, etc.)
+        # Call controller to set up chat controller and view
         if self._controller:
             try:
                 self._controller.show_chat()
@@ -302,11 +302,22 @@ class MainTUIScreen(Screen):
                 except Exception:
                     pass
         
-        # Always push the TUI screen directly for proper navigation
+        # Get the chat controller and view from main controller
+        chat_controller = None
+        chat_view = None
+        if self._controller and hasattr(self._controller, 'get_chat_controller'):
+            chat_controller, chat_view = self._controller.get_chat_controller()
+        
+        # Push the TUI screen with controller for proper navigation
         try:
             from agentx.ui.tui.screens.chat_screen import ChatTUIScreen
+            from agentx.ui.tui.adapters.chat_adapter import TUIChatAdapter
             if hasattr(self, 'app') and self.app is not None:
-                self.app.push_screen(ChatTUIScreen())
+                chat_screen = ChatTUIScreen(chat_controller)
+                # Connect the adapter to the screen if we have a view
+                if chat_view and isinstance(chat_view, TUIChatAdapter):
+                    chat_view.set_screen(chat_screen)
+                self.app.push_screen(chat_screen)
         except Exception as e:
             try:
                 self.notify(f"Error opening Chat: {str(e)}", severity="error", timeout=None)
@@ -316,10 +327,10 @@ class MainTUIScreen(Screen):
     def action_open_rag(self) -> None:
         """Open RAG screen via controller and direct navigation.
         
-        Calls controller.show_rag() for side effects (recording, logging),
-        then pushes the TUI screen directly for proper navigation.
+        Calls controller.show_rag() to set up controller/view,
+        then pushes the TUI screen with the controller for proper navigation.
         """
-        # Call controller for side effects (recording in tests, logging, etc.)
+        # Call controller to set up RAG controller and view
         if self._controller:
             try:
                 self._controller.show_rag()
@@ -329,11 +340,22 @@ class MainTUIScreen(Screen):
                 except Exception:
                     pass
         
-        # Always push the TUI screen directly for proper navigation
+        # Get the RAG controller and view from main controller
+        rag_controller = None
+        rag_view = None
+        if self._controller and hasattr(self._controller, 'get_rag_controller'):
+            rag_controller, rag_view = self._controller.get_rag_controller()
+        
+        # Push the TUI screen with controller for proper navigation
         try:
             from agentx.ui.tui.screens.rag_screen import RagTUIScreen
+            from agentx.ui.tui.adapters.rag_adapter import TUIRagAdapter
             if hasattr(self, 'app') and self.app is not None:
-                self.app.push_screen(RagTUIScreen())
+                rag_screen = RagTUIScreen(rag_controller)
+                # Connect the adapter to the screen if we have a view
+                if rag_view and isinstance(rag_view, TUIRagAdapter):
+                    rag_view.set_screen(rag_screen)
+                self.app.push_screen(rag_screen)
         except Exception as e:
             try:
                 self.notify(f"Error opening RAG: {str(e)}", severity="error", timeout=None)

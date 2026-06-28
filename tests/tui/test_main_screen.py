@@ -797,6 +797,8 @@ class TestMainTUIScreenLifecycle:
         screen = MainTUIScreen.__new__(MainTUIScreen)
         screen.notify = MagicMock()
         screen._controller = MagicMock()
+        # Mock get_chat_controller to return None (no provider in test)
+        screen._controller.get_chat_controller.return_value = (None, None)
         screen.query_one = MagicMock()
         mock_input = MagicMock()
         screen.query_one.return_value = mock_input
@@ -811,7 +813,7 @@ class TestMainTUIScreenLifecycle:
     
         # 3. Press 'c' - should call controller.show_chat()
         screen.action_open_chat()
-        # Verify controller.show_chat was called (not push_screen)
+        # Verify controller.show_chat was called
         screen._controller.show_chat.assert_called_once()
     
         # 4. Type command

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from typing import TYPE_CHECKING
 
 from agentx.ui.screens.chat.chat_controller import ChatController
 from agentx.ui.screens.main.commands.commands import SumCommand, QuitCommand, ClearCommand, HelpCommand, \
@@ -9,16 +10,26 @@ from agentx.ui.screens.main.commands.commands_base import Command
 from agentx.ui.screens.main.commands.commands_parser import CommandParser
 from agentx.model.session.session_manager import SessionManager
 from agentx.ui.screens.main.main_view import MainView
-from agentx.ui.interfaces import IMainViewPartner
+from agentx.ui.interfaces import IMainViewPartner, IChatView, IRagView, IMainView
 from agentx.ui.screens.rag.rag_controller import RagController
+
+if TYPE_CHECKING:
+    from agentx.ui.interfaces import IUIProvider
 
 
 class MainController(IMainViewPartner):
-    def __init__(self, view: MainView | None = None):
+    def __init__(self, view: IMainView | None = None, provider: "IUIProvider | None" = None):
         self.commands: dict[str, Command] = {}
         self.parser = CommandParser()
-        self.view = view if view else MainView(self)
+        self.view: IMainView = view if view else MainView(self)
+        self._provider = provider
         self.session_controller = SessionManager()
+        # Store sub-controllers and views for screen connection
+        self._chat_controller: ChatController | None = None
+        self._chat_controller: ChatController | None = None
+        self._chat_view: IChatView | None = None
+        self._rag_controller: RagController | None = None
+        self._rag_view: IRagView | None = None
         self.load_commands()
 
     def load_commands(self):
@@ -37,12 +48,42 @@ class MainController(IMainViewPartner):
         return self.session_controller
 
     def show_chat(self):
-        chat_controller = ChatController()
-        chat_controller.show()
+        # Use provider to create appropriate chat view if available
+        if self._provider:
+            chat_controller = ChatController()
+            chat_view = self._provider.create_chat_view(chat_controller)
+            chat_controller.view = chat_view
+            # Store for screen connection
+            self._chat_controller = chat_controller
+            self._chat_view = chat_view
+            # Don't call show() - screen will be pushed by MainTUIScreen
+        else:
+            # Fallback: create controller without view (will use console default)
+            chat_controller = ChatController()
+            chat_controller.show()
 
     def show_rag(self):
-        rag_controller = RagController()
-        rag_controller.show()
+        # Use provider to create appropriate RAG view if available
+        if self._provider:
+            rag_controller = RagController()
+            rag_view = self._provider.create_rag_view(rag_controller)
+            rag_controller.view = rag_view
+            # Store for screen connection
+            self._rag_controller = rag_controller
+            self._rag_view = rag_view
+            # Don't call show() - screen will be pushed by MainTUIScreen
+        else:
+            # Fallback: create controller without view (will use console default)
+            rag_controller = RagController()
+            rag_controller.show()
+
+    def get_chat_controller(self) -> tuple[ChatController | None, IChatView | None]:
+        """Get the chat controller and view for screen connection."""
+        return self._chat_controller, self._chat_view
+
+    def get_rag_controller(self) -> tuple[RagController | None, IRagView | None]:
+        """Get the RAG controller and view for screen connection."""
+        return self._rag_controller, self._rag_view
 
     def show_react(self):
         from agentx.ui.screens.react.react_controller import ReActController

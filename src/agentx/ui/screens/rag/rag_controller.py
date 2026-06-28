@@ -8,7 +8,7 @@ from agentx.ui.screens.rag.rag_web_ingestion_controller import RagWebIngestionCo
 from agentx.model.session.session_manager import SessionManager
 from agentx.model.rag.rag_repository import RagRepository
 from agentx.ui.screens.rag.rag_view import RagView
-from agentx.ui.interfaces import IRagView
+from agentx.ui.interfaces import IRagView, IRagViewPartner
 
 @dataclass
 class RagState:
@@ -16,7 +16,7 @@ class RagState:
     data_base_location: str | None
     documents_location: str | None
 
-class RagController:
+class RagController(IRagViewPartner):
     view: IRagView
     current_rag_repository: RagRepository | None
 

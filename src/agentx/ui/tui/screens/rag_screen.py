@@ -204,16 +204,12 @@ class RagTUIScreen(Screen):
         self._ask_question(question)
 
     def _select_repository(self) -> None:
-        """Open repository selection screen."""
-        if self._controller:
-            # Use controller for selection
-            self._controller.select_repository()
-        else:
-            # Fallback to internal logic
-            from agentx.ui.tui.screens.rag_screens import RepositorySelectionScreen
-            
-            # Push the selection screen
-            self.app.push_screen(RepositorySelectionScreen(self.rag_working_directory))
+        """Open repository selection screen using TUI (non-blocking)."""
+        # Always use TUI screen to avoid blocking console input loop
+        from agentx.ui.tui.screens.rag_screens import RepositorySelectionScreen
+        
+        # Push the selection screen
+        self.app.push_screen(RepositorySelectionScreen(self.rag_working_directory))
     
     def on_mount(self) -> None:
         """Called when screen is mounted."""
@@ -228,10 +224,13 @@ class RagTUIScreen(Screen):
     
     def _check_selection_result(self) -> None:
         """Poll for repository selection result."""
-        if hasattr(self.app, 'repository_selected') and self.app.repository_selected:
-            repository = self.app.repository_selected
+        # Access dynamic attribute safely
+        app = self.app
+        repo_selected = getattr(app, 'repository_selected', None)
+        if repo_selected:
+            repository = repo_selected
             # Clear the attribute
-            delattr(self.app, 'repository_selected')
+            delattr(app, 'repository_selected')
             # Debug notification
             self.notify(f"DEBUG: Repository received: {repository.id}", severity="information", timeout=2)
             # Handle the selection
@@ -268,51 +267,43 @@ class RagTUIScreen(Screen):
             self.notify(traceback.format_exc()[:200], severity="error", timeout=5)
     
     def _create_repository(self) -> None:
-        """Open repository creation screen."""
-        if self._controller:
-            # Use controller for creation
-            self._controller.create_repository()
-        else:
-            # Fallback to internal logic
-            from agentx.ui.tui.screens.rag_screens import RepositoryCreateScreen
-            
-            def on_created(repository):
-                """Handle repository creation."""
-                if repository:
-                    self.notify(f"Created repository: {repository.id}", severity="information", timeout=2)
-                    # Auto-select the created repository
-                    self.current_repository = repository
-                    self._update_repository_ui()
-            
-            self.app.push_screen(
-                RepositoryCreateScreen(self.rag_working_directory),
-                callback=on_created
-            )
+        """Open repository creation screen using TUI (non-blocking)."""
+        # Always use TUI screen to avoid blocking console input loop
+        from agentx.ui.tui.screens.rag_screens import RepositoryCreateScreen
+        
+        def on_created(repository):
+            """Handle repository creation."""
+            if repository:
+                self.notify(f"Created repository: {repository.id}", severity="information", timeout=2)
+                # Auto-select the created repository
+                self.current_repository = repository
+                self._update_repository_ui()
+        
+        self.app.push_screen(
+            RepositoryCreateScreen(self.rag_working_directory),
+            callback=on_created
+        )
 
     def _ingest_documents(self) -> None:
-        """Open web ingestion screen."""
+        """Open web ingestion screen using TUI (non-blocking)."""
         if not self.current_repository:
             self.notify("Please select a repository first", severity="warning", timeout=2)
             return
         
-        if self._controller:
-            # Use controller for ingestion
-            self._controller.show_web_ingestion()
-        else:
-            # Fallback to internal logic
-            from agentx.ui.tui.screens.rag_screens import WebIngestionScreen
-            
-            def on_ingested(success):
-                """Handle ingestion completion."""
-                if success:
-                    self.notify("Documents ingested successfully!", severity="information", timeout=2)
-                else:
-                    self.notify("Ingestion cancelled", severity="information", timeout=2)
-            
-            self.app.push_screen(
-                WebIngestionScreen(self.current_repository),
-                callback=on_ingested
-            )
+        # Always use TUI screen to avoid blocking console input loop
+        from agentx.ui.tui.screens.rag_screens import WebIngestionScreen
+        
+        def on_ingested(success):
+            """Handle ingestion completion."""
+            if success:
+                self.notify("Documents ingested successfully!", severity="information", timeout=2)
+            else:
+                self.notify("Ingestion cancelled", severity="information", timeout=2)
+        
+        self.app.push_screen(
+            WebIngestionScreen(self.current_repository),
+            callback=on_ingested
+        )
 
     def _update_repository_ui(self) -> None:
         """Update UI to reflect selected repository."""
@@ -341,12 +332,17 @@ class RagTUIScreen(Screen):
         try:
             # Query RAG
             from agentx.model.rag.rag import Rag
+            from agentx.model.rag.query.rag_query import RagChatHistory
             
             rag = Rag(self.current_repository.path)
             
             # Get answer (simple query for now)
             # TODO: Implement proper RAG retrieval with context
-            answer = rag.query(question)
+            history = RagChatHistory()
+            answer_history = rag.query(question, history)
+            
+            # Get the latest answer
+            answer = answer_history.chat_answers_history[-1] if answer_history.chat_answers_history else "No answer"
             
             # Display answer
             status_widget = self.query_one("#chat-status", Static)
