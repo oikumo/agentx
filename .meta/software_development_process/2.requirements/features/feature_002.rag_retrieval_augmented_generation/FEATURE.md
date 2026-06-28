@@ -1,4 +1,4 @@
-# FEATURE: RAG (Retrieval Augmented Generation)
+# FEATURE SUMMARY: feature_002.rag_retrieval_augmented_generation
 
 ## Overview
 AgentX RAG feature provides a comprehensive Retrieval Augmented Generation system that allows users to create, manage, and query multiple RAG repositories within a session. The system supports web content ingestion, vector storage, and context-aware chat interactions.
