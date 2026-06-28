@@ -23,8 +23,8 @@
 ## Tasks
 
 - [~] Implement feature_007.agentx_intelligent_agent_behaviour
-    - [~] Complete the feature description with the User revision
-    - [ ] Create the feature implementation plan
+    - [x] Complete the feature description with the User revision
+    - [x] Create the feature implementation plan
     - [ ] Validate the feature technical feasibility, fix the feature and it is plan if needed
     - [ ] Validate the feature end User usability, fix the feature and it is plan if needed
 
