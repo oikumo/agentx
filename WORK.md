@@ -68,21 +68,21 @@
 - [x] D10: Design summary document
 - [x] Declare omt_phase Design with design doc path
 - [x] Declare omt_phase Design with design doc path
-    - [ ] Implementation phase
-        - [ ] I1: Scaffold feature_007 implementation directory
-        - [ ] I2: Model layer (src/agentx/agent/model/) — Agent, MemoryManager, PolicyEngine, GoalManager, ReflectionEngine
-        - [ ] I3: Abstract Partners (src/agentx/agent/partners/) — IEnvironment, IToolRegistry, IPersistence, etc.
-        - [ ] I4: Controller layer (src/agentx/agent/controller/) — AgentController, SessionController, ToolController
-        - [ ] I5: View layer (src/agentx/agent/view/) — AgentTUIScreen, AgentView, MemoryView, PolicyView, ReflectionView (Textual)
-        - [ ] I6: Tool Registry (src/agentx/agent/tools/) — ToolRegistry, BaseTool, SensorMixin, ActuatorMixin, built-in tools (FS, RAG, Session)
-        - [ ] I7: Persistence (src/agentx/agent/persistence/) — stdlib sqlite3 backend (schema.py DDL + database.py + repositories), SessionRepository, MemoryRepository, PolicyRepository — no ORM, no Alembic
-        - [ ] I8: Policy Engine implementation — rule DSL parser, evaluation loop, adaptation hooks
-        - [ ] I9: Reflection Engine implementation — reasoning trace capture, self-critique prompts, proposal generation
-        - [ ] I10: Integrate with feature_004 (Modern UI) — AgentAdapter, AgentTUIScreen, TUIProvider registration
-        - [ ] I11: Integrate with feature_001 (Session Objectives) — IGoalManager stub, swap when 001 ready
-        - [ ] I12: Integrate with feature_002 (RAG) — RagSensorTool wrapping Rag.query()
-        - [ ] I13: Implementation notes
-        - [ ] Run mvc_check.py after each component
+    - [~] Implementation phase
+        - [x] I1: Scaffold feature_007 implementation directory
+        - [x] I2: Model layer (src/agentx/agent/model/) — Agent, MemoryManager, PolicyEngine, GoalManager, ReflectionEngine
+        - [x] I3: Abstract Partners (src/agentx/agent/interfaces.py) — IAgentViewPartner, IMemoryStorePartner, IPolicyStorePartner, IToolRegistryPartner, IGoalManager, ISafetyEvaluator, IAIServicePartner, IPersistencePartner
+        - [x] I4: Controller layer (src/agentx/agent/controller/) — AgentController, SessionController, ToolController
+        - [x] I5: View layer (src/agentx/agent/view/) — AgentView (console), AgentTUIScreen (Textual), AgentAdapter
+        - [x] I6: Tool Registry (src/agentx/agent/model/tools/) — ToolRegistry, ISensor/IActuator, ToolSpec, discovery, built-in tools (FileSystemTool, RagSensorTool, SessionTool)
+        - [x] I7: Persistence (src/agentx/agent/persistence/) — stdlib sqlite3 backend (schema_db.py DDL + agent_db.py + repositories_db.py), MemoryRepository, PolicyRepository, GoalRepository, ReflectionRepository — no ORM, no Alembic
+        - [x] I8: Policy Engine implementation — condition DSL parser (tokenizer+AST+visitor), evaluation loop, priority resolution, conflict detection, adaptation hooks
+        - [x] I9: Reflection Engine implementation — critique parser, safety evaluator, proposal router, reflection engine
+        - [x] I10: Integrate with feature_004 (Modern UI) — AgentAdapter, AgentTUIScreen
+        - [x] I11: Integrate with feature_001 (Session Objectives) — IGoalManager stub, swap when 001 ready
+        - [x] I12: Integrate with feature_002 (RAG) — RagSensorTool wrapping Rag.query()
+        - [x] I13: Implementation notes (impl_notes.md)
+        - [x] Run mvc_check.py after each component — 0 errors, 0 warnings on src/agentx/agent/
     - [ ] Testing phase
         - [ ] T1: Unit tests (Model, PolicyEngine, GoalManager, ReflectionEngine, MemoryStore, ToolRegistry)
         - [ ] T2: Integration tests (Perception→Decision→Action cycle, Session persistence, Tool registration)
@@ -90,7 +90,6 @@
         - [ ] T4: E2E tests (Textual pilot) — Agent session lifecycle, goal pursuit, reflection, session resume
         - [ ] T5: Performance tests (Policy eval latency, memory growth, persistence latency)
         - [ ] T6: Test report
-    - [ ] Develop the feature
     - [ ] User validate the feature implementation
 
 - [x] Implement feature_004.modern_ui <!-- id:T-004 prio:high agent:true -->
@@ -187,4 +186,5 @@
 [2026-06-29] Agent: Architecture decision — persistence uses stdlib sqlite3 only (no SQLAlchemy, no Alembic); updated PLAN.md, design_001 (§5.1/5.2/5.3/9/10/11.2/13/15), analysis_001, analysis_007, and WORK.md to match existing SessionDatabase/RagDatabase convention.
 [2026-06-29] Agent: Completed Design D6/D7/D8 — expanded design_001 §6 (ToolSpec, ToolRegistry, discovery, built-in tools), §7 (priority resolution, conflict detection, adaptation hooks), §8 (critique parser, safety evaluator, proposal routing); aligned interfaces with class diagram & data dictionary; corrected TOOL_CONFIG→TOOL_CONFIGURATION.
 [2026-06-29] Agent: Fixed META HARNESS bug — omt_enforcer.ts checkPhaseExitArtifacts + omt_status.ts getArtifactStatus resolved feature dirs as short "feature_NNN" but new_feature.py scaffolds full-slug dirs (feature_007.agentx_intelligent_agent_behaviour), causing false-negative artifact detection. Added resolveFeatureDir() (exact + prefix match) to both. Harness e2e test passes (receipt refreshed); both plugins load OK via node --experimental-strip-types. Also created operation_spec_001_agent_operations.md (Design deliverable, guide §10). NOTE: advancing Design→Programming via omt_complete is blocked until opencode restarts so the plugin fix reloads.
+[2026-06-29] Agent: Verified OMT harness after restart — omt_status works (no p.split error), plugin fix loaded. Advanced feature_007 Design→Programming via omt_complete. Implemented full agent framework (I1-I13): types.py (38 enums+dataclasses), interfaces.py (8 Abstract Partners), persistence (schema_db/agent_db/repositories_db — stdlib sqlite3), tool registry (ToolRegistry + ISensor/IActuator + 3 built-in tools), policy engine (condition DSL parser+AST+evaluator+conflict resolver), reflection engine (critique parser+safety evaluator+proposal router), Agent facade (perceive/decide/act/reflect/persist), 3 controllers, console+TUI views, AgentAdapter (feature_004 integration). MVC check: 0 errors, 0 warnings on src/agentx/agent/. Full cycle test passed (goal+policy→decide→act→reflect→persist). impl_notes.md written. Ready for Testing phase.
 ```
