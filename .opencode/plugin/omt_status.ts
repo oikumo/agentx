@@ -81,6 +81,27 @@ function resolveDesignArtifact(feature: string, explicitDoc?: string): string | 
   return null
 }
 
+// Resolve the actual feature subdirectory under a `features/` parent.
+// Handles BOTH naming conventions: short "feature_004" and full
+// "feature_007.agentx_intelligent_agent_behaviour" (new_feature.py scaffolder default).
+function resolveFeatureDir(featuresParent: string, feature: string, featureNum: string): string | null {
+  try {
+    if (!existsSync(featuresParent)) return null
+    const entries = readdirSync(featuresParent, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+    for (const c of [feature, featureNum]) {
+      if (c && entries.includes(c)) return join(featuresParent, c)
+    }
+    for (const p of [featureNum + ".", featureNum + "_"]) {
+      if (!featureNum || p === "." || p === "_") continue
+      const m = entries.find(e => e.startsWith(p))
+      if (m) return join(featuresParent, m)
+    }
+    return null
+  } catch { return null }
+}
+
 function getArtifactStatus(feature: string, taskType: string): {
   required: string[]
   missing: string[]
@@ -97,22 +118,22 @@ function getArtifactStatus(feature: string, taskType: string): {
   const featureNum = feature.match(/feature_(\d+)/)?.[0] || feature
   const PROCESS_ROOT = ".meta/software_development_process"
 
+  // [phase, pattern, features-parent-dir] — the parent is resolved to the actual
+  // feature subdir via resolveFeatureDir so full-slug features are found.
   const checks: [string, string, string][] = [
-    ["Requirements", "FEATURE.md", `${PROCESS_ROOT}/2.requirements/features/${feature}/FEATURE.md`],
-    ["Analysis", "analysis_001_*.md", `${PROCESS_ROOT}/3.analysis/features/${featureNum}/analysis_001_*.md`],
-    ["Design", "design_*.md", `${PROCESS_ROOT}/4.design/features/${featureNum}/design_*.md`],
-    ["Implementation", "*.md", `${PROCESS_ROOT}/5.implementation/features/${featureNum}/*.md`],
-    ["Testing", "test_report.md", `${PROCESS_ROOT}/6.testing/features/${featureNum}/test_report.md`],
+    ["Requirements", "FEATURE.md", join(REPO_ROOT, PROCESS_ROOT, "2.requirements", "features")],
+    ["Analysis", "analysis_001_*.md", join(REPO_ROOT, PROCESS_ROOT, "3.analysis", "features")],
+    ["Design", "design_*.md", join(REPO_ROOT, PROCESS_ROOT, "4.design", "features")],
+    ["Implementation", "*.md", join(REPO_ROOT, PROCESS_ROOT, "5.implementation", "features")],
+    ["Testing", "test_report.md", join(REPO_ROOT, PROCESS_ROOT, "6.testing", "features")],
   ]
 
-  for (const [phase, pattern, relPath] of checks) {
+  for (const [phase, pattern, featuresParent] of checks) {
     let exists = false
     try {
-      // Get directory: everything before the last "/"
-      const lastSlash = relPath.lastIndexOf("/")
-      const dir = lastSlash >= 0 ? join(REPO_ROOT, relPath.substring(0, lastSlash)) : REPO_ROOT
-      if (existsSync(dir)) {
-        const files = readdirSync(dir)
+      const dir = resolveFeatureDir(featuresParent, feature, featureNum)
+      if (dir) {
+        const files = readdirSync(dir, { recursive: true })
         exists = files.some(f => new RegExp(pattern.replace("*", ".*")).test(f))
       }
     } catch { /* ignore */ }

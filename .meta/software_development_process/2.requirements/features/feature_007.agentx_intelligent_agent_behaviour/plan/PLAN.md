@@ -23,7 +23,7 @@ Implement an intelligent agent framework where agents have persistent session st
 - [ ] **D2** Define MVC++ architecture: Model (Agent, Session, Memory, Policy, Goal), View (AgentView, MemoryView, PolicyView), Controller (AgentController, SessionController, ToolController), Abstract Partners (IEnvironment, IToolRegistry, IPersistence)
 - [ ] **D3** Define interfaces: ISensor, IActuator, ITool, IMemoryStore, IPolicyEngine, IGoalManager, IReflectionEngine
 - [ ] **D4** Define data models: SessionConfig (JSON/YAML), MemoryEntry (volatile/persistent), PolicyRule (condition→action), GoalTree, ReflectionLog
-- [ ] **D5** Define persistence schema: SQLite/JSON schema for Session, Memory, Policy, Goals, Reflections
+- [ ] **D5** Define persistence schema: stdlib `sqlite3` DDL (`Table*` descriptor classes with idempotent `CREATE TABLE IF NOT EXISTS`) for Session, Memory, Policy, Goals, Reflections — **no ORM, no Alembic** (matches existing `SessionDatabase`/`RagDatabase` convention)
 - [ ] **D6** Define tool registry protocol: ToolSpec (name, description, schema, side_effects), registration, discovery, composition
 - [ ] **D7** Define policy engine: rule evaluation, priority, conflict resolution, learning/adaptation hooks
 - [ ] **D8** Define reflection engine: reasoning trace, decision log, self-critique, improvement proposals
@@ -37,7 +37,7 @@ Implement an intelligent agent framework where agents have persistent session st
 - [ ] **I4** Implement Controller layer: `src/agentx/agent/controller/` — AgentController, SessionController, ToolController
 - [ ] **I5** Implement View layer: `src/agentx/agent/view/` — AgentView, MemoryView, PolicyView, ReflectionView (Textual widgets)
 - [ ] **I6** Implement Tool Registry: `src/agentx/agent/tools/` — ToolRegistry, BaseTool, SensorMixin, ActuatorMixin, built-in tools (FS, Session, RAG, UI)
-- [ ] **I7** Implement Persistence: `src/agentx/agent/persistence/` — SQLite/JSON backend, SessionRepository, MemoryRepository, PolicyRepository
+- [ ] **I7** Implement Persistence: `src/agentx/agent/persistence/` — stdlib `sqlite3` backend (`schema.py` DDL + `database.py` connection/CRUD + repositories), SessionRepository, MemoryRepository, PolicyRepository — **no ORM, no Alembic**
 - [ ] **I8** Implement Policy Engine: rule DSL, evaluation loop, priority resolution, adaptation hooks
 - [ ] **I9** Implement Reflection Engine: reasoning trace capture, self-critique prompts, improvement proposal generation
 - [ ] **I10** Integrate with feature_004 (Modern UI): AgentView widget, session dashboard, reflection log viewer

@@ -23,10 +23,73 @@
 ## Tasks
 
 - [~] Implement feature_007.agentx_intelligent_agent_behaviour
-    - [x] Complete the feature description with the User revision
-    - [x] Create the feature implementation plan
-    - [x] Validate the feature technical feasibility, fix the feature and it is plan if needed
-    - [ ] Validate the feature end User usability, fix the feature and it is plan if needed
+- [x] Complete the feature description with the User revision
+- [x] Create the feature implementation plan
+- [x] Validate the feature technical feasibility, fix the feature and it is plan if needed
+- [x] Validate the feature end User usability, fix the feature and it is plan if needed
+- [x] Analysis phase complete (8 artifacts)
+- [x] A1: Use case diagram + specifications (analysis_002_use_cases.md)
+- [x] A2: Class diagram (analysis_003_class_diagram.md)
+- [x] A3: Sequence diagrams (analysis_004_sequence_diagrams.md)
+- [x] A4: State diagrams (analysis_005_state_diagram.md)
+- [x] A5: Data dictionary (analysis_006_data_dictionary.md)
+- [x] A6: Non-functional requirements (analysis_007_nfrs.md)
+- [x] A7: Traceability matrix (analysis_008_traceability.md)
+- [x] A8: Analysis summary (analysis_001_agent_architecture.md)
+- [x] Design phase (major_feature requires design doc)
+- [x] D1: Scaffold design_001_agent_framework.md via new_feature.py
+- [x] D2: MVC++ component diagram for agent subsystem
+- [x] D3: Abstract Partner interfaces (IAgentViewPartner, IAgentModelPartner, IToolRegistryPartner, IMemoryStorePartner, IPolicyStorePartner, IGoalManager)
+- [x] D4: Data models (Pydantic/dataclasses) from Data Dictionary
+- [x] D5: Persistence schema
+  - [x] In-memory data models defined (Pydantic/dataclasses)
+  - [x] sqlite3 DDL schema defined (Table* classes, idempotent CREATE TABLE IF NOT EXISTS)
+  - [x] SessionDatabase design (stdlib sqlite3, no ORM/migrations) — code in I7
+  - [x] Schema validation approach defined — tests in T-phase
+- [x] D6: Tool registry protocol
+  - [x] ISensor/IActuator interfaces defined
+  - [x] ToolSpec schema formalized
+  - [x] Registry implementation
+  - [x] Discovery mechanism
+  - [x] Built-in tool implementations
+- [x] D7: Policy engine DSL
+  - [x] Rule syntax specification
+  - [x] Condition DSL design
+  - [x] Evaluator implementation
+  - [x] Priority resolution
+  - [x] Conflict detection
+- [x] D8: Reflection engine
+  - [x] Prompt templates designed
+  - [x] Proposal types defined
+  - [x] Critique parser implementation
+  - [x] Safety evaluation hook
+  - [x] Proposal routing
+- [x] D9: MVC++ compliance checklist for agent module
+- [x] D10: Design summary document
+- [x] Declare omt_phase Design with design doc path
+- [x] Declare omt_phase Design with design doc path
+    - [ ] Implementation phase
+        - [ ] I1: Scaffold feature_007 implementation directory
+        - [ ] I2: Model layer (src/agentx/agent/model/) — Agent, MemoryManager, PolicyEngine, GoalManager, ReflectionEngine
+        - [ ] I3: Abstract Partners (src/agentx/agent/partners/) — IEnvironment, IToolRegistry, IPersistence, etc.
+        - [ ] I4: Controller layer (src/agentx/agent/controller/) — AgentController, SessionController, ToolController
+        - [ ] I5: View layer (src/agentx/agent/view/) — AgentTUIScreen, AgentView, MemoryView, PolicyView, ReflectionView (Textual)
+        - [ ] I6: Tool Registry (src/agentx/agent/tools/) — ToolRegistry, BaseTool, SensorMixin, ActuatorMixin, built-in tools (FS, RAG, Session)
+        - [ ] I7: Persistence (src/agentx/agent/persistence/) — stdlib sqlite3 backend (schema.py DDL + database.py + repositories), SessionRepository, MemoryRepository, PolicyRepository — no ORM, no Alembic
+        - [ ] I8: Policy Engine implementation — rule DSL parser, evaluation loop, adaptation hooks
+        - [ ] I9: Reflection Engine implementation — reasoning trace capture, self-critique prompts, proposal generation
+        - [ ] I10: Integrate with feature_004 (Modern UI) — AgentAdapter, AgentTUIScreen, TUIProvider registration
+        - [ ] I11: Integrate with feature_001 (Session Objectives) — IGoalManager stub, swap when 001 ready
+        - [ ] I12: Integrate with feature_002 (RAG) — RagSensorTool wrapping Rag.query()
+        - [ ] I13: Implementation notes
+        - [ ] Run mvc_check.py after each component
+    - [ ] Testing phase
+        - [ ] T1: Unit tests (Model, PolicyEngine, GoalManager, ReflectionEngine, MemoryStore, ToolRegistry)
+        - [ ] T2: Integration tests (Perception→Decision→Action cycle, Session persistence, Tool registration)
+        - [ ] T3: MVC++ compliance tests (uv run scripts/omt/mvc_check.py src/agentx/agent/)
+        - [ ] T4: E2E tests (Textual pilot) — Agent session lifecycle, goal pursuit, reflection, session resume
+        - [ ] T5: Performance tests (Policy eval latency, memory growth, persistence latency)
+        - [ ] T6: Test report
     - [ ] Develop the feature
     - [ ] User validate the feature implementation
 
@@ -119,4 +182,9 @@
 [2026-06-27T18:30] Agent: Next action - write FEATURE.md for feature_004.
 [2026-06-27T19:15] Agent: Fixed TUI RAG screen freeze on Select button - replaced blocking console input with TUI screens.
 [2026-06-28] Agent: Moved feature_003 content to feature_007 (scaffolded via new_feature.py); Analysis phase started
+[2026-06-29] Agent: Completed all 8 Analysis artifacts for feature_007 (use cases, class diagrams, sequence diagrams, state diagrams, data dictionary, NFRs, traceability, architecture summary); Usability validated with User; Ready for Design phase
+[2026-06-29] Agent: Updated WORK.md with detailed sub-tasks per PLAN.md; Creating Design phase scaffold and design_001_agent_framework.md
+[2026-06-29] Agent: Architecture decision — persistence uses stdlib sqlite3 only (no SQLAlchemy, no Alembic); updated PLAN.md, design_001 (§5.1/5.2/5.3/9/10/11.2/13/15), analysis_001, analysis_007, and WORK.md to match existing SessionDatabase/RagDatabase convention.
+[2026-06-29] Agent: Completed Design D6/D7/D8 — expanded design_001 §6 (ToolSpec, ToolRegistry, discovery, built-in tools), §7 (priority resolution, conflict detection, adaptation hooks), §8 (critique parser, safety evaluator, proposal routing); aligned interfaces with class diagram & data dictionary; corrected TOOL_CONFIG→TOOL_CONFIGURATION.
+[2026-06-29] Agent: Fixed META HARNESS bug — omt_enforcer.ts checkPhaseExitArtifacts + omt_status.ts getArtifactStatus resolved feature dirs as short "feature_NNN" but new_feature.py scaffolds full-slug dirs (feature_007.agentx_intelligent_agent_behaviour), causing false-negative artifact detection. Added resolveFeatureDir() (exact + prefix match) to both. Harness e2e test passes (receipt refreshed); both plugins load OK via node --experimental-strip-types. Also created operation_spec_001_agent_operations.md (Design deliverable, guide §10). NOTE: advancing Design→Programming via omt_complete is blocked until opencode restarts so the plugin fix reloads.
 ```

@@ -64,6 +64,33 @@ const PHASE_EXIT_REQUIREMENTS: Record<string, { phase: string; patterns: string[
   ],
 }
 
+// Resolve the actual feature subdirectory under a `features/` parent.
+// The repo uses TWO naming conventions for non-requirements phase dirs:
+//   - short: "feature_004"                 (older features: analysis/design/impl/testing)
+//   - full:  "feature_007.agentx_intelligent_agent_behaviour"  (new_feature.py scaffolder)
+// `feature` is the full slug; `featureNum` is the short "feature_NNN" prefix.
+// Without this, full-slug features (the scaffolder default) are never found and
+// phase-exit artifact checks report false negatives.
+function resolveFeatureDir(featuresParent: string, feature: string, featureNum: string): string | null {
+  try {
+    if (!existsSync(featuresParent)) return null
+    const entries = readdirSync(featuresParent, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+    // 1. exact matches (full slug first, then short)
+    for (const c of [feature, featureNum]) {
+      if (c && entries.includes(c)) return join(featuresParent, c)
+    }
+    // 2. prefix match: a full-slug dir that starts with "feature_NNN." or "feature_NNN_"
+    for (const p of [featureNum + ".", featureNum + "_"]) {
+      if (!featureNum || p === "." || p === "_") continue
+      const m = entries.find(e => e.startsWith(p))
+      if (m) return join(featuresParent, m)
+    }
+    return null
+  } catch { return null }
+}
+
 // Check if required artifacts for a phase exist for a feature
 function checkPhaseExitArtifacts(repoRoot: string, feature: string, fromPhase: string): { ok: boolean; missing: string[] } {
   if (!feature) return { ok: true, missing: [] }
@@ -77,25 +104,25 @@ function checkPhaseExitArtifacts(repoRoot: string, feature: string, fromPhase: s
   for (const req of requirements) {
     let exists = false
     for (const pattern of req.patterns) {
-      let dir: string
+      let dir: string | null = null
       if (req.phase === "Requirements") {
-        dir = join(repoRoot, PROCESS_ROOT, "2.requirements", "features", feature)
+        dir = resolveFeatureDir(join(repoRoot, PROCESS_ROOT, "2.requirements", "features"), feature, featureNum)
       } else if (req.phase.startsWith("Analysis")) {
-        dir = join(repoRoot, PROCESS_ROOT, "3.analysis", "features", featureNum)
+        dir = resolveFeatureDir(join(repoRoot, PROCESS_ROOT, "3.analysis", "features"), feature, featureNum)
       } else if (req.phase === "Design" || req.phase === "Operations") {
-        dir = join(repoRoot, PROCESS_ROOT, "4.design", "features", featureNum)
+        dir = resolveFeatureDir(join(repoRoot, PROCESS_ROOT, "4.design", "features"), feature, featureNum)
       } else if (req.phase === "Implementation") {
-        dir = join(repoRoot, PROCESS_ROOT, "5.implementation", "features", featureNum)
+        dir = resolveFeatureDir(join(repoRoot, PROCESS_ROOT, "5.implementation", "features"), feature, featureNum)
       } else if (req.phase.startsWith("Unit tests")) {
-        dir = join(repoRoot, "tests", "features", featureNum)
+        dir = resolveFeatureDir(join(repoRoot, "tests", "features"), feature, featureNum)
       } else if (req.phase.startsWith("System tests")) {
-        dir = join(repoRoot, PROCESS_ROOT, "6.testing", "features", featureNum)
+        dir = resolveFeatureDir(join(repoRoot, PROCESS_ROOT, "6.testing", "features"), feature, featureNum)
       } else {
         continue
       }
 
       try {
-        if (existsSync(dir)) {
+        if (dir) {
           const files = readdirSync(dir, { recursive: true })
           exists = files.some(f => new RegExp(pattern.replace("*", ".*")).test(f))
           if (exists) break
