@@ -15,6 +15,7 @@ from agentx.ui.screens.rag.rag_controller import RagController
 
 if TYPE_CHECKING:
     from agentx.ui.interfaces import IUIProvider
+    from agentx.agent.controller.agent_controller import AgentController
 
 
 class MainController(IMainViewPartner):
@@ -30,6 +31,7 @@ class MainController(IMainViewPartner):
         self._chat_view: IChatView | None = None
         self._rag_controller: RagController | None = None
         self._rag_view: IRagView | None = None
+        self._agent_controller: AgentController | None = None
         self.load_commands()
 
     def load_commands(self):
@@ -84,6 +86,42 @@ class MainController(IMainViewPartner):
     def get_rag_controller(self) -> tuple[RagController | None, IRagView | None]:
         """Get the RAG controller and view for screen connection."""
         return self._rag_controller, self._rag_view
+
+    def show_agent(self) -> None:
+        """Create and wire an Agent + AgentController for the TUI agent screen."""
+        from agentx.agent.model.agent import Agent
+        from agentx.agent.model.ai_adapter import AIServiceAdapter
+        from agentx.agent.controller.agent_controller import AgentController
+        from agentx.agent.types import AgentConfig, AutonomyLevel, MemoryConfig
+
+        # Use the session working directory for persistence + sandbox
+        session_dir = "."
+        try:
+            session = self.session_controller.get_current_session()
+            if session and session.directory:
+                session_dir = session.directory
+        except Exception:
+            pass
+
+        import os
+        agent_id = f"agent_{os.getpid()}"
+        config = AgentConfig(
+            id=agent_id,
+            name="AgentX Agent",
+            autonomy_level=AutonomyLevel.SUPERVISED,
+            memory_config=MemoryConfig(persistent_path=session_dir),
+            sandbox_root=session_dir,
+        )
+        agent = Agent(config)
+        # Wire the AI service so reflection works (degrades gracefully if
+        # no API keys are configured)
+        agent.set_ai_service(AIServiceAdapter())
+        controller = AgentController(agent)
+        self._agent_controller = controller
+
+    def get_agent_controller(self) -> AgentController | None:
+        """Get the agent controller for screen connection."""
+        return self._agent_controller
 
     def show_react(self):
         from agentx.ui.screens.react.react_controller import ReActController

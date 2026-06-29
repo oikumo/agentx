@@ -118,7 +118,7 @@ class MenuGrid(Grid):
 
     DEFAULT_CSS = """
     MenuGrid {
-        grid-size: 3 1;
+        grid-size: 4 1;
         grid-gutter: 1 1;
         margin: 1 0;
         height: auto;
@@ -138,6 +138,7 @@ class MenuGrid(Grid):
         """Compose menu buttons."""
         yield Button("💬 Chat", id="btn-chat", variant="primary")
         yield Button("📚 RAG", id="btn-rag", variant="primary")
+        yield Button("🤖 Agent", id="btn-agent", variant="success")
         yield Button("⚙️ Help", id="btn-help", variant="default")
 
 
@@ -188,6 +189,7 @@ class MainTUIScreen(Screen):
         Binding("q", "quit", "Quit", show=True, priority=True),
         Binding("c", "open_chat", "Chat", show=True),
         Binding("r", "open_rag", "RAG", show=True),
+        Binding("a", "open_agent", "Agent", show=True),
         Binding("h", "show_help", "Help", show=True),
         Binding("ctrl+l", "focus_input", "Focus Input", show=False),
     ]
@@ -247,6 +249,8 @@ class MainTUIScreen(Screen):
             self.action_open_chat()
         elif button_id == "btn-rag":
             self.action_open_rag()
+        elif button_id == "btn-agent":
+            self.action_open_agent()
         elif button_id == "btn-help":
             self.action_show_help()
 
@@ -362,6 +366,39 @@ class MainTUIScreen(Screen):
             except Exception:
                 pass
 
+    def action_open_agent(self) -> None:
+        """Open the Agent screen via controller and direct navigation.
+
+        Calls controller.show_agent() to create and wire the Agent + AgentController,
+        then pushes the AgentTUIScreen with the controller for proper navigation.
+        """
+        # Call controller to create agent + controller
+        if self._controller and hasattr(self._controller, 'show_agent'):
+            try:
+                self._controller.show_agent()
+            except Exception as e:
+                try:
+                    self.notify(f"Controller error: {str(e)}", severity="error", timeout=None)
+                except Exception:
+                    pass
+
+        # Get the agent controller from main controller
+        agent_controller = None
+        if self._controller and hasattr(self._controller, 'get_agent_controller'):
+            agent_controller = self._controller.get_agent_controller()
+
+        # Push the Agent TUI screen with controller
+        try:
+            from agentx.agent.view.tui.agent_screen import AgentTUIScreen
+            if hasattr(self, 'app') and self.app is not None:
+                agent_screen = AgentTUIScreen(agent_controller)
+                self.app.push_screen(agent_screen)
+        except Exception as e:
+            try:
+                self.notify(f"Error opening Agent: {str(e)}", severity="error", timeout=None)
+            except Exception:
+                pass
+
     def action_show_help(self) -> None:
         """Show help information."""
         help_text = """
@@ -371,6 +408,7 @@ class MainTUIScreen(Screen):
 - `q` - Quit application
 - `c` - Open Chat
 - `r` - Open RAG
+- `a` - Open Agent
 - `h` - Show this help
 - `Ctrl+L` - Focus command input
 

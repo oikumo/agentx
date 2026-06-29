@@ -101,7 +101,18 @@ class ReflectionEngine:
             raw = self._ai.complete(prompt)
         except Exception as exc:  # noqa: BLE001 — reflection is non-fatal
             _log.warning("AI reflection failed: %s", exc)
-            raw = ""
+            entry = ReflectionEntry(
+                id=str(uuid.uuid4()),
+                trace=trace,
+                critique=Critique(
+                    summary=f"(AI service unavailable: {exc})",
+                    weaknesses=["AI service not configured or unreachable"],
+                    confidence=0.0,
+                ),
+                proposals=[],
+            )
+            self._entries.append(entry)
+            return entry
 
         entry = self._parser.parse(raw, trace)
         self._route_proposals(entry, ctx)
