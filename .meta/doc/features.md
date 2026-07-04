@@ -13,6 +13,7 @@
 | 006 | opencode_process_enforcement | ✅ | OMT++ process gate: `mvc_check.py`, `new_feature.py`, `omt_enforcer.ts` |
 | 007 | agentx_intelligent_agent_behaviour | ✅ | The intelligent agent: goals, policy DSL, memory, reflection, tools |
 | 010 | agent_demo_screen | ✅ | One-trigger demo screen showcasing the agent cycle (scenarios A/B) |
+| 011 | fast_agent | ✅ | Modal-dialog-driven agent UX (Goal → Running → Reflection → Result) |
 
 > `feature_008.agent_framework` and `feature_009.feature_007_agentx_intelligent_agent_behaviour`
 > are empty placeholder dirs (only `FEATURE.md` + `plan/`) — not implemented.
@@ -106,6 +107,34 @@ buttons.
   `command.parameters` instead of `command.action`) that broke runtime
   `EXECUTE_TOOL` create/query/update actions.
 - **Artifacts:** `.meta/.../features/feature_010.agent_demo_screen/`.
+
+## feature_011 — Fast Agent ✅
+
+**Goal:** a streamlined, modal-dialog-driven agent UX that reuses the existing
+feature_007 `Agent` engine through a stack of Textual `ModalScreen` dialogs.
+The existing `🤖 Agent` button was relabeled `⚙️ Advanced Agent`; the new
+`⚡ Fast Agent` (`f` key) offers a much simpler UX.
+
+- **Flow:** Goal → Running (auto-runs cycles) → Reflection (on proposal) → Result
+- **Simplicity:** one goal at a time, natural-language input, no raw policy
+  authoring, auto-runs cycles pausing only on reflection proposals, auto-resumes
+  latest snapshot
+- **First `ModalScreen` use** in the codebase; Textual `ModalScreen` stack with
+  `dismiss(value)` + callbacks
+- **Key code:** `src/agentx/agent/view/tui/fast_agent_screen.py`,
+  `src/agentx/agent/view/tui/fast_agent_modals.py`,
+  `src/agentx/agent/view/tui/fast_agent_view.py`,
+  `src/agentx/agent/controller/agent_controller.py` (+ `get_cycle_summary()`),
+  `src/agentx/agent/adapter.py` (+ `create_fast()`),
+  `src/agentx/ui/screens/main/main_controller.py` (+ `show_fast_agent()`),
+  `src/agentx/ui/tui/screens/main_screen.py` (+ `f` binding, `⚡ Fast Agent`
+  button, grid `3 2`, relabel "Advanced Agent")
+- **MVC++ clean:** View-only addition; no Model-layer changes; `FastAgentTUIView`
+  is a no-op `IAgentViewPartner` virtual subclass; `get_cycle_summary()`
+  returns plain dicts for display
+- **Tests:** 44 new tests (unit + integration + MVC), 0 regressions
+- **Artifacts:** `.meta/.../features/feature_011.fast_agent/` (design, impl notes,
+  test report)
 
 ---
 

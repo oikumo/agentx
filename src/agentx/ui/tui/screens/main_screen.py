@@ -118,7 +118,7 @@ class MenuGrid(Grid):
 
     DEFAULT_CSS = """
     MenuGrid {
-        grid-size: 4 1;
+        grid-size: 3 2;
         grid-gutter: 1 1;
         margin: 1 0;
         height: auto;
@@ -138,8 +138,9 @@ class MenuGrid(Grid):
         """Compose menu buttons."""
         yield Button("💬 Chat", id="btn-chat", variant="primary")
         yield Button("📚 RAG", id="btn-rag", variant="primary")
-        yield Button("🤖 Agent", id="btn-agent", variant="success")
-        yield Button("⚙️ Help", id="btn-help", variant="default")
+        yield Button("⚡ Fast Agent", id="btn-fast-agent", variant="warning")
+        yield Button("⚙️ Advanced Agent", id="btn-agent", variant="success")
+        yield Button("❓ Help", id="btn-help", variant="default")
 
 
 class CommandInput(Vertical):
@@ -189,7 +190,8 @@ class MainTUIScreen(Screen):
         Binding("q", "quit", "Quit", show=True, priority=True),
         Binding("c", "open_chat", "Chat", show=True),
         Binding("r", "open_rag", "RAG", show=True),
-        Binding("a", "open_agent", "Agent", show=True),
+        Binding("f", "open_fast_agent", "Fast Agent", show=True),
+        Binding("a", "open_agent", "Advanced Agent", show=True),
         Binding("h", "show_help", "Help", show=True),
         Binding("ctrl+l", "focus_input", "Focus Input", show=False),
     ]
@@ -249,6 +251,8 @@ class MainTUIScreen(Screen):
             self.action_open_chat()
         elif button_id == "btn-rag":
             self.action_open_rag()
+        elif button_id == "btn-fast-agent":
+            self.action_open_fast_agent()
         elif button_id == "btn-agent":
             self.action_open_agent()
         elif button_id == "btn-help":
@@ -399,6 +403,41 @@ class MainTUIScreen(Screen):
             except Exception:
                 pass
 
+    def action_open_fast_agent(self) -> None:
+        """Open the Fast Agent screen via controller and direct navigation.
+
+        Calls controller.show_fast_agent() to create and wire the Agent +
+        AgentController (with a no-op FastAgentTUIView partner), then pushes
+        the FastAgentTUIScreen which hosts the modal-dialog flow
+        (Goal → Running → Reflection → Result).
+        """
+        # Call controller to create fast agent + controller
+        if self._controller and hasattr(self._controller, 'show_fast_agent'):
+            try:
+                self._controller.show_fast_agent()
+            except Exception as e:
+                try:
+                    self.notify(f"Controller error: {str(e)}", severity="error", timeout=None)
+                except Exception:
+                    pass
+
+        # Get the fast agent controller from main controller
+        fast_agent_controller = None
+        if self._controller and hasattr(self._controller, 'get_fast_agent_controller'):
+            fast_agent_controller = self._controller.get_fast_agent_controller()
+
+        # Push the Fast Agent TUI screen with controller
+        try:
+            from agentx.agent.view.tui.fast_agent_screen import FastAgentTUIScreen
+            if hasattr(self, 'app') and self.app is not None:
+                fast_screen = FastAgentTUIScreen(fast_agent_controller)
+                self.app.push_screen(fast_screen)
+        except Exception as e:
+            try:
+                self.notify(f"Error opening Fast Agent: {str(e)}", severity="error", timeout=None)
+            except Exception:
+                pass
+
     def action_show_help(self) -> None:
         """Show help information."""
         help_text = """
@@ -408,7 +447,8 @@ class MainTUIScreen(Screen):
 - `q` - Quit application
 - `c` - Open Chat
 - `r` - Open RAG
-- `a` - Open Agent
+- `f` - Open Fast Agent (simple modal UX)
+- `a` - Open Advanced Agent (full workspace)
 - `h` - Show this help
 - `Ctrl+L` - Focus command input
 

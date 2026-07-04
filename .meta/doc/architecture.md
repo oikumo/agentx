@@ -80,10 +80,32 @@ Controller ──calls──▶ I*View (ABC) ◀──implements── View
 `IMemoryStorePartner`, `IPolicyStorePartner`, `IToolRegistryPartner`,
 `IGoalManager`, `IPersistencePartner`, `ISafetyEvaluator`.
 
-> The agent's Textual screens (`AgentTUIScreen`, `AgentDemoScreen`) are
-> registered as **virtual subclasses** of `IAgentViewPartner` (avoids the
-> Textual/abc metaclass conflict) — see `agent_screen.py` / `demo_screen.py`
-> footers.
+> The agent's Textual screens (`AgentTUIScreen`, `AgentDemoScreen`) and the
+> Fast Agent's no-op partner (`FastAgentTUIView`) are registered as
+> **virtual subclasses** of `IAgentViewPartner` (avoids the Textual/abc
+> metaclass conflict) — see `agent_screen.py` / `demo_screen.py` /
+> `fast_agent_view.py` footers.
+
+---
+
+## 2.5. Fast Agent — modal dialog UX (feature_011)
+
+The **Fast Agent** (`feature_011.fast_agent`) is a new, streamlined entry point
+to the existing feature_007 `Agent` facade. It is the **first use of
+`textual.screen.ModalScreen`** in the codebase.
+
+| Aspect | Detail |
+|--------|--------|
+| Entry point | Main menu `f` key / `⚡ Fast Agent` button |
+| UX model | Stack of `ModalScreen`s: `GoalModal` → `RunningModal` → `ReflectionModal` → `ResultModal` |
+| Engine | Reuses feature_007 `Agent` + `AgentController` (zero Model changes) |
+| Auto-run | `call_after_refresh` chain — cycles run back-to-back; pauses only on reflection proposals |
+| Goal completion | Manual (`SuccessCriteria(kind="manual")`); user presses Stop when "done enough" |
+| No-op partner | `FastAgentTUIView` swallows controller UI callbacks during `run_cycle()`; modal flow queries `get_cycle_summary()` instead |
+| Existing Agent button | Relabeled `⚙️ Advanced Agent`; unchanged behaviour |
+
+The Fast Agent is a **View-only addition** (3 new View files, 4 edited files,
+44 tests). It demonstrates the extensibility of the MVC++ agent subsystem.
 
 ---
 

@@ -33,6 +33,11 @@ class AgentController:
     def __init__(self, agent: Agent) -> None:
         self._agent = agent
         self._view: IAgentViewPartner | None = None
+        # feature_011: display counter for Fast Agent's RunningModal. Not
+        # persisted — resets when the controller is reconstructed. Acceptable
+        # for "current run" display only.
+        self._cycle_count: int = 0
+        self._last_result: CycleResult | None = None
 
     def set_view(self, view: IAgentViewPartner) -> None:
         self._view = view
@@ -84,6 +89,9 @@ class AgentController:
     def run_cycle(self) -> CycleResult:
         """Execute one perceive → decide → act → reflect cycle (operation spec §1.4)."""
         result = self._agent.run_cycle()
+        # feature_011: track for get_cycle_summary() (Fast Agent display).
+        self._cycle_count += 1
+        self._last_result = result
         if self._view:
             self._view.show_status(self._agent.get_status())
             if result.reflection:
@@ -113,6 +121,53 @@ class AgentController:
         if self._view:
             self._view.show_status(status)
         return status
+
+    # ----------------------------------------------------------- fast agent (feature_011)
+
+    def get_cycle_summary(self) -> dict[str, Any]:
+        """Return a read-only dict bundling display data for Fast Agent's RunningModal.
+
+        Keeps the View free of Model-type imports (``CycleResult``,
+        ``PolicyDecision``, ``ActuatorResult``, ``Proposal``).  See
+        ``operation_spec_001_fast_agent.md``.
+
+        Keys: ``cycle`` (int), ``phase`` (str), ``last_tool`` (str|None),
+        ``last_action`` (str), ``goal_status`` (str), ``pending_proposals`` (int).
+        """
+        status = self._agent.get_status()
+        phase = status.get("state", "IDLE")
+
+        last_tool: str | None = None
+        last_action = "(none)"
+        result = self._last_result
+        if result is not None and result.decision is not None:
+            action = result.decision.selected_action
+            params = dict(action.parameters)
+            # EXECUTE_TOOL actions carry a tool_id in their parameters.
+            if action.type == ActionType.EXECUTE_TOOL:
+                last_tool = params.get("tool_id")
+            # Human-readable, truncated to 80 chars for the status line.
+            param_str = ", ".join(f"{k}={v!r}" for k, v in params.items())
+            last_action = f"{action.type.value}({param_str})"[:80]
+
+        # Root goal status — the Fast Agent runs a single root goal.
+        goal_status = "NONE"
+        tree = self._agent.list_goals()
+        if tree is not None and tree.root is not None:
+            root_goal = tree.nodes.get(tree.root)
+            if root_goal is not None:
+                goal_status = root_goal.status.value
+
+        pending = self._agent.list_pending_proposals()
+
+        return {
+            "cycle": self._cycle_count,
+            "phase": phase,
+            "last_tool": last_tool,
+            "last_action": last_action,
+            "goal_status": goal_status,
+            "pending_proposals": len(pending),
+        }
 
     # ----------------------------------------------------------- query ops (N6)
     #  The view calls these instead of reaching into the Agent's model

@@ -8,13 +8,16 @@ code is not modified.
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from agentx.agent.controller.agent_controller import AgentController
 from agentx.agent.interfaces import IAIServicePartner, IAgentViewPartner
 from agentx.agent.model.agent import Agent
 from agentx.agent.types import AgentConfig
 from agentx.agent.view.tui.agent_screen import AgentTUIScreen
+
+if TYPE_CHECKING:
+    from agentx.agent.view.tui.fast_agent_screen import FastAgentTUIScreen
 
 _log = logging.getLogger(__name__)
 
@@ -84,6 +87,34 @@ class AgentAdapter:
         screen = AgentTUIScreen(controller)
         _wire_view(controller, screen)
         return screen
+
+    @staticmethod
+    def create_fast(
+        config: AgentConfig,
+        ai_service: IAIServicePartner | None = None,
+        resume: bool = True,
+    ) -> tuple[Agent, AgentController, "FastAgentTUIScreen"]:
+        """Build a wired Fast Agent triad (feature_011).
+
+        Mirrors :meth:`create` but uses :class:`FastAgentTUIScreen` (modal-flow
+        host) + :class:`FastAgentTUIView` (no-op partner) instead of
+        :class:`AgentTUIScreen`.  The no-op view swallows the controller's
+        push-style UI callbacks during ``run_cycle()`` — the modal flow queries
+        the controller explicitly via ``get_cycle_summary()``.
+        """
+        # Lazy imports to avoid top-level circular dependency and keep the
+        # Fast Agent UI optional (only loaded when the user opens it).
+        from agentx.agent.view.tui.fast_agent_screen import FastAgentTUIScreen
+        from agentx.agent.view.tui.fast_agent_view import FastAgentTUIView
+
+        agent, controller = AgentAdapter.create_agent(config, ai_service, resume)
+        # The no-op FastAgentTUIView is the controller's partner (NOT the screen).
+        view = FastAgentTUIView()
+        if not isinstance(view, IAgentViewPartner):  # m9-style runtime check
+            raise TypeError("FastAgentTUIView does not implement IAgentViewPartner")
+        controller.set_view(view)
+        screen = FastAgentTUIScreen(controller)
+        return agent, controller, screen
 
 
 def _wire_view(controller: AgentController, screen: AgentTUIScreen) -> None:

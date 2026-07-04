@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from agentx.ui.screens.chat.chat_controller import ChatController
 from agentx.ui.screens.main.commands.commands import SumCommand, QuitCommand, ClearCommand, HelpCommand, \
@@ -16,6 +16,7 @@ from agentx.ui.screens.rag.rag_controller import RagController
 if TYPE_CHECKING:
     from agentx.ui.interfaces import IUIProvider
     from agentx.agent.controller.agent_controller import AgentController
+    from agentx.agent.interfaces import IAgentViewPartner
 
 
 class MainController(IMainViewPartner):
@@ -32,6 +33,7 @@ class MainController(IMainViewPartner):
         self._rag_controller: RagController | None = None
         self._rag_view: IRagView | None = None
         self._agent_controller: AgentController | None = None
+        self._fast_agent_controller: AgentController | None = None
         self.load_commands()
 
     def load_commands(self):
@@ -126,6 +128,57 @@ class MainController(IMainViewPartner):
     def get_agent_controller(self) -> AgentController | None:
         """Get the agent controller for screen connection."""
         return self._agent_controller
+
+    def show_fast_agent(self) -> None:
+        """Create and wire a Fast Agent (feature_011) — modal-dialog UX.
+
+        Builds an :class:`Agent` + :class:`AgentController` (reusing the same
+        engine as the Advanced Agent) and wires a no-op
+        :class:`FastAgentTUIView` as the controller's partner.  The Fast Agent
+        screen is pushed by :meth:`MainTUIScreen.action_open_fast_agent`.
+
+        C5: reuses an already-wired controller (no fresh agent on every open).
+        """
+        if self._fast_agent_controller is not None:
+            return
+
+        from agentx.agent.adapter import AgentAdapter
+        from agentx.agent.types import AgentConfig, AutonomyLevel, MemoryConfig
+
+        session_dir = "."
+        try:
+            session = self.session_controller.get_current_session()
+            if session and session.directory:
+                session_dir = session.directory
+        except Exception:
+            pass
+
+        import os
+        agent_id = f"fast_agent_{os.getpid()}"
+        config = AgentConfig(
+            id=agent_id,
+            name="AgentX Fast Agent",
+            autonomy_level=AutonomyLevel.SUPERVISED,
+            memory_config=MemoryConfig(persistent_path=session_dir),
+            sandbox_root=session_dir,
+        )
+        _agent, controller = AgentAdapter.create_agent(config, resume=True)
+
+        # Wire the no-op FastAgentTUIView as the controller's partner so
+        # run_cycle() callbacks don't crash (the modal flow queries the
+        # controller explicitly via get_cycle_summary()).
+        from agentx.agent.view.tui.fast_agent_view import FastAgentTUIView
+
+        view = FastAgentTUIView()
+        # FastAgentTUIView is registered as a virtual subclass of
+        # IAgentViewPartner (avoids the Textual/abc metaclass conflict) — the
+        # cast satisfies the static type checker (m9-style pattern).
+        controller.set_view(cast("IAgentViewPartner", view))
+        self._fast_agent_controller = controller
+
+    def get_fast_agent_controller(self) -> AgentController | None:
+        """Get the Fast Agent controller for screen connection."""
+        return self._fast_agent_controller
 
     def show_react(self):
         from agentx.ui.screens.react.react_controller import ReActController

@@ -17,7 +17,7 @@ with a perceive → decide → act → reflect cycle. The largest subsystem.
 |-------|-------|----------------|
 | Model | `model/agent.py` (`Agent` facade), `model/goal/`, `model/policy/`, `model/memory/`, `model/reflection/`, `model/tools/`, `persistence/`, `types.py` | Domain logic + persistence |
 | Controller | `controller/agent_controller.py`, `session_controller.py`, `tool_controller.py` | Mediate View ↔ Agent |
-| View | `view/agent_view.py` (console), `view/tui/agent_screen.py`, `view/tui/demo_screen.py` | UI |
+| View | `view/agent_view.py` (console), `view/tui/agent_screen.py`, `view/tui/demo_screen.py`, `view/tui/fast_agent_screen.py`, `view/tui/fast_agent_modals.py`, `view/tui/fast_agent_view.py` | UI |
 | Wiring | `adapter.py` (`AgentAdapter`) | Factory: builds Agent + Controller (+ screen) |
 | Contracts | `interfaces.py` | 8 Abstract Partners |
 
@@ -123,16 +123,21 @@ root, reflection-log position. See [persistence.md](persistence.md) §3.
 
 - `AgentController` (`controller/agent_controller.py`) — small (<200 loc),
   mediates View ↔ Agent. Methods map to operations (submit_goal, run_cycle,
-  update_policy, save_snapshot, list_*, approve_proposal, reset_state,
-  load_demo_scenario_by_name, get_demo_scenario_info).
+  update_policy, update_policy, save_snapshot, list_*, approve_proposal, reset_state,
+  load_demo_scenario_by_name, get_demo_scenario_info, **get_cycle_summary**).
 - `SessionController`, `ToolController` — thin specialists.
 - `AgentView` (console) — `IAgentViewPartner`.
 - `AgentTUIScreen` (Textual) — own command dispatch (`goal`, `rule`, `run`,
   `status`, `goals`, `rules`, `memory`, `save`, `demo`, `proposals`,
   `approve`); bindings `q`/`r`/`s`/`d`/`escape`.
 - `AgentDemoScreen` (feature_010) — demo with Run/Reset/Back buttons.
+- `FastAgentTUIScreen` (feature_011) — modal-stack host (Goal → Running →
+  Reflection → Result); pushes `ModalScreen` dialogs; `escape` pops host.
+- `FastAgentTUIView` (feature_011) — no-op `IAgentViewPartner` virtual subclass
+  (swallows controller UI callbacks during `run_cycle()`).
 - `AgentAdapter` (`adapter.py`) — factory owning AI-service wiring (I4) +
-  snapshot resume (C5/I1); the only entry point the main app calls.
+  snapshot resume (C5/I1); **create_fast()** builds Fast Agent triad with
+  `FastAgentTUIView`.
 
 ### 1.10 Types (`types.py`)
 

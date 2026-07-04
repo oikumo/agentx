@@ -1,6 +1,6 @@
 # agentx
 
-> **Version**: 0.1.1  
+> **Version**: 0.1.2  
 > **Python**: 3.14+  
 > **Package Manager**: uv  
 > **License**: Apache 2.0 (Educational & Enterprise Use)
@@ -14,11 +14,12 @@
 ```text
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
 │  Welcome to AgentX TUI                                      │
-│  Press 'c' Chat, 'r' RAG, 'a' Agent, 'q' to quit            │
+│  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent │
 │                                                             │
 │  [c] Chat  ──→ LLM conversations with streaming responses   │
 │  [r] RAG   ──→ PDF Q&A, document ingestion, vector search   │
-│  [a] Agent ──→ Autonomous agent: tools, policy, reflection  │
+│  [f] Fast Agent ──→ Modal-dialog-driven agent (simplified)  │
+│  [a] Advanced Agent ──→ Full agent workspace (tools, policy) │
 │  [h] Help  ──→ Command reference                            │
 │  [q] Quit  ──→ Exit application                             │
 └─────────────────────────────────────────────────────────────┘
@@ -32,7 +33,7 @@
 - 🤖 **Intelligent Agent** - Autonomous perceive→decide→act→reflect cycle with tool registry, policy DSL engine, and self-improvement loop
 - 🧠 **Petri Net Sessions** - Graph-based session/user objective management
 - 🔌 **LangChain/LangGraph** - Full integration for agentic workflows
-- 🧪 **469 Tests** - Comprehensive unit + integration + automated TUI tests
+- 🧪 **512+ Tests** - Comprehensive unit + integration + automated TUI tests
 
 Developed with **opencode** using **OMT++ methodology** (Analysis → Design → Programming → Testing with visible artifacts).
 
@@ -63,7 +64,7 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 
 ```text
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
-│  agentx 0.1.1                                               │
+│  agentx 0.1.2                                               │
 │  Session: session_2026-06-27_18-30-00                       │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
@@ -72,7 +73,8 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 │  Press:                                                     │
 │    [c] Chat  ──→ Start AI conversation                      │
 │    [r] RAG   ──→ Document Q&A and ingestion                 │
-│    [a] Agent ──→ Autonomous agent (tools, policy, reflect)  │
+│    [f] Fast Agent ──→ Simple modal agent                    │
+│    [a] Advanced Agent ──→ Full agent workspace              │
 │    [h] Help  ──→ View all commands                          │
 │    [q] Quit  ──→ Exit application                           │
 │                                                             │
@@ -85,7 +87,8 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 |-----|--------|
 | `c` | Open Chat screen |
 | `r` | Open RAG screen |
-| `a` | Open Agent screen |
+| `f` | Open Fast Agent (modal-dialog-driven) |
+| `a` | Open Advanced Agent screen |
 | `h` | Show help |
 | `q` | Quit application |
 | `Esc` | Go back / Close screen |
@@ -227,9 +230,9 @@ An autonomous agent subsystem that runs a **perceive → decide → act → refl
 | **Memory Manager** | Volatile + persistent memory with metadata and source tracking |
 | **Persistence** | stdlib `sqlite3` (no ORM, no Alembic) — schema, agent DB, and repositories |
 
-**Agent Screen (TUI):**
+**Advanced Agent Screen (TUI):**
 
-Press `a` from the main screen, then:
+Press `a` from the main screen to open the full-featured agent workspace:
 
 | Key / Command | Action |
 |---------------|--------|
@@ -244,6 +247,49 @@ Press `a` from the main screen, then:
 **Self-Improvement Loop:**
 
 The reflection engine critiques each cycle's trace and may propose changes (new policy rules, goal adjustments, tool enablement). Proposals are safety-evaluated and held as **pending** until approved via the `approve` command — closing the self-improvement loop without uncontrolled autonomy.
+
+---
+
+### ⚡ Fast Agent (feature_011)
+
+A streamlined, modal-dialog-driven agent UX for quick tasks. Press `f` from the main screen:
+
+```text
+┌─ Fast Agent ────────────────────────────────────────────────┐
+│  ⚡ Goal: What do you want the agent to do?                │
+│  [Advanced ▸] (optional constraints)                        │
+│  [ Start ]  [ Cancel ]                                      │
+└─────────────────────────────────────────────────────────────┘
+      ↓
+┌─ Running ───────────────────────────────────────────────────┐
+│  Cycle 3 · DECIDING · tool: filesystem · read file.py       │
+│  [⏸ Pause]  [⏹ Stop]                                        │
+└─────────────────────────────────────────────────────────────┘
+      ↓ (on self-improvement proposal)
+┌─ Reflection ────────────────────────────────────────────────┐
+│  ▸ Proposal: Add rule "skip /tmp"                            │
+│     because: caught noisy readings                            │
+│  [✓ Approve] [✕ Dismiss] [⏹ Stop]                            │
+└─────────────────────────────────────────────────────────────┘
+      ↓
+┌─ Result ────────────────────────────────────────────────────┐
+│  ✓ Goal achieved in 4 cycles                                 │
+│  [💾 Save session]  [⚡ New goal]  [← Back to menu]          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key Differences from Advanced Agent:**
+
+| Aspect | Fast Agent (`f`) | Advanced Agent (`a`) |
+|--------|------------------|---------------------|
+| Goal input | Single natural-language prompt | Hierarchical goal tree editor |
+| Policy rules | Hidden (auto/off) | Full DSL editor |
+| Cycle execution | Auto-run (call_after_refresh) | Manual `r` key / `run` command |
+| Proposals | Modal interrupt (Approve/Dismiss/Stop) | `proposals` / `approve` commands |
+| Goal completion | Manual (Stop when done) | Auto via SuccessCriteria |
+| Best for | Quick one-shot tasks | Complex multi-goal workflows |
+
+The Fast Agent reuses the same `Agent` facade + `AgentController` under the hood — zero Model-layer changes. It's the first use of `textual.screen.ModalScreen` in the codebase.
 
 ---
 
@@ -431,11 +477,12 @@ uv run main.py
 ```text
 🎨 Starting modern TUI... (press 'q' to quit, 'h' for help)
 
-agentx 0.1.1
+agentx 0.1.2
 
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
 │  Welcome to AgentX TUI                                      │
-│  Press 'c' Chat, 'r' RAG, 'a' Agent, 'q' to quit            │
+│  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent│
+│  Press 'h' for help, 'q' to quit                            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -457,7 +504,8 @@ agentx 0.1.1
 |-----|--------|
 | `c` | Open Chat screen |
 | `r` | Open RAG screen |
-| `a` | Open Agent screen |
+| `f` | Open Fast Agent (modal-dialog-driven) |
+| `a` | Open Advanced Agent screen |
 | `h` | Show help/commands |
 | `q` | Quit application |
 | `Esc` | Go back to previous screen |
@@ -750,6 +798,7 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_006**: opencode process enforcement (OMT++ gate, MVC++ linter)
 - ✅ **feature_007**: Intelligent agent behaviour (tools, policy DSL, reflection, self-improvement)
 - ✅ **feature_010**: Agent demo screen (seeded scenarios A & B)
+- ✅ **feature_011**: Fast Agent modal UX (Goal → Running → Reflection → Result)
 
 ### Pending
 - 🔲 **feature_001**: Session/user objectives driven by Petri Nets

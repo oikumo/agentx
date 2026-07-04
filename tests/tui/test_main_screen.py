@@ -161,12 +161,12 @@ class TestWelcomePanel:
 # ===================================================================
 
 class TestMenuGrid:
-    """Menu grid contains 4 action buttons (Chat, RAG, Agent, Help)."""
+    """Menu grid contains 5 action buttons (Chat, RAG, Fast Agent, Advanced Agent, Help)."""
 
     def test_compose_yields_four_buttons(self):
         grid = MenuGrid()
         composed = list(grid.compose())
-        assert len(composed) == 4
+        assert len(composed) == 5
 
         from textual.widgets import Button
         assert all(isinstance(w, Button) for w in composed)
@@ -175,20 +175,21 @@ class TestMenuGrid:
         grid = MenuGrid()
         composed = list(grid.compose())
         ids = [b.id for b in composed]
-        assert ids == ["btn-chat", "btn-rag", "btn-agent", "btn-help"]
+        assert ids == ["btn-chat", "btn-rag", "btn-fast-agent", "btn-agent", "btn-help"]
 
     def test_button_variants(self):
         grid = MenuGrid()
         composed = list(grid.compose())
 
-        assert composed[0].variant == "primary"  # Chat
-        assert composed[1].variant == "primary"  # RAG
-        assert composed[2].variant == "success"  # Agent
-        assert composed[3].variant == "default"  # Help
+        assert composed[0].variant == "primary"    # Chat
+        assert composed[1].variant == "primary"    # RAG
+        assert composed[2].variant == "warning"    # Fast Agent
+        assert composed[3].variant == "success"    # Advanced Agent
+        assert composed[4].variant == "default"    # Help
 
     def test_css_grid_size(self):
         css = MenuGrid.DEFAULT_CSS
-        assert "grid-size: 4 1" in css, "MenuGrid should have 4 columns"
+        assert "grid-size: 3 2" in css, "MenuGrid should have 3 columns 2 rows"
 
     def test_css_button_hover(self):
         css = MenuGrid.DEFAULT_CSS
@@ -239,10 +240,10 @@ class TestCommandInput:
 # ===================================================================
 
 class TestMainTUIScreenBindings:
-    """All 6 keyboard bindings are correctly defined."""
+    """All 7 keyboard bindings are correctly defined."""
 
     def test_bindings_count(self):
-        assert len(MainTUIScreen.BINDINGS) == 6
+        assert len(MainTUIScreen.BINDINGS) == 7
 
     def test_binding_q_quit(self):
         binding = self._find_binding("q")
