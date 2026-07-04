@@ -49,6 +49,22 @@
 - [x] Implement feature_011.fast_agent <!-- id:T-011-prio-high agent:true -->
   - [x] Design (design_001 + operation_spec_001), Implementation (3 new View files + 4 edited files), Testing (44 tests, 0 regressions); MVC++ 0/6; full suite 512/513 (1 pre-existing)
 
+- [ ] Fix feature_011.fast_agent UI freeze <!-- id:T-011-freeze prio:high agent:true -->
+  - [ ] **Bug**: Fast Agent freezes on first screen after pressing "Start" — the RunningModal auto-run loop calls `run_cycle()` synchronously on the Textual UI thread, which blocks on `reflect()` → `AIServiceAdapter.complete()` → `llm.invoke()` (synchronous LLM HTTP call). The entire event loop freezes; Stop/Pause buttons don't work.
+  - [ ] **Root cause**: `RunningModal._tick()` runs `self._controller.run_cycle()` directly on the UI thread. `run_cycle()` calls `reflect()` which makes a blocking `llm.invoke()` call.
+  - [ ] **Hints**:
+    1. The fix must run `run_cycle()` OFF the UI thread. Options:
+       a) Use `asyncio.to_thread()` inside a `@work` coroutine (current attempt — but `@work` + `to_thread` conflicts with `pilot.pause()`)
+       b) Disable reflection for Fast Agent (simplest — `ReflectionConfig(enabled=False)` in `AgentAdapter.create_fast()`)
+       c) Use a simple sync loop with a `threading.Thread` + queue (no Textual worker complexity)
+    2. If using `@work` + `to_thread`, `pilot.pause()` won't work with active workers — tests need raw `asyncio.sleep()` + manual `action_stop()`.
+    3. The worker must NOT call `query_one()` / widget updates from the thread — only from the event loop (after `await to_thread()` returns).
+    4. Use `_dismissed` flag + `_dismiss()` guard to prevent double-dismiss when Stop is clicked during a blocking cycle.
+    5. Add initial `await asyncio.sleep(0.01)` in the worker to let the screen finish mounting/painting before the first cycle.
+    6. Yield `await asyncio.sleep(0.1)` between cycles so the UI can paint + process Stop/Pause.
+  - [ ] **Files to modify**: `src/agentx/agent/adapter.py` (disable reflection), `src/agentx/agent/view/tui/fast_agent_modals.py` (simplify loop or use worker correctly)
+  - [ ] **Regression test**: `test_stop_works_while_cycle_blocks` in `test_fast_agent_modals.py` must verify: (1) run_cycle runs off UI thread, (2) event loop responsive during block, (3) action_stop dismisses during block.
+
 ---
 
 ## Agent Scratchpad (auto‑managed, do not edit manually)
