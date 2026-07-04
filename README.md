@@ -12,17 +12,17 @@
 **agentx** is a Python-based LLM agent framework with a modern **Textual TUI** and **console REPL** interface, created strictly for educational purposes. It lets you interact with language models through chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows.
 
 ```text
-┌─ AgentX TUI ────────────────────────────────────────────────┐
-│  Welcome to AgentX TUI                                      │
+┌─ AgentX TUI ─────────────────────────────────────────────────┐
+│  Welcome to AgentX TUI                                       │
 │  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent │
-│                                                             │
-│  [c] Chat  ──→ LLM conversations with streaming responses   │
-│  [r] RAG   ──→ PDF Q&A, document ingestion, vector search   │
-│  [f] Fast Agent ──→ Modal-dialog-driven agent (simplified)  │
+│                                                              │
+│  [c] Chat  ──→ LLM conversations with streaming responses    │
+│  [r] RAG   ──→ PDF Q&A, document ingestion, vector search    │
+│  [f] Fast Agent ──→ Modal-dialog-driven agent (simplified)   │
 │  [a] Advanced Agent ──→ Full agent workspace (tools, policy) │
-│  [h] Help  ──→ Command reference                            │
-│  [q] Quit  ──→ Exit application                             │
-└─────────────────────────────────────────────────────────────┘
+│  [h] Help  ──→ Command reference                             │
+│  [q] Quit  ──→ Exit application                              │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 
@@ -256,24 +256,24 @@ A streamlined, modal-dialog-driven agent UX for quick tasks. Press `f` from the 
 
 ```text
 ┌─ Fast Agent ────────────────────────────────────────────────┐
-│  ⚡ Goal: What do you want the agent to do?                │
+│  ⚡ Goal: What do you want the agent to do?                  │
 │  [Advanced ▸] (optional constraints)                        │
 │  [ Start ]  [ Cancel ]                                      │
 └─────────────────────────────────────────────────────────────┘
       ↓
 ┌─ Running ───────────────────────────────────────────────────┐
 │  Cycle 3 · DECIDING · tool: filesystem · read file.py       │
-│  [⏸ Pause]  [⏹ Stop]                                        │
+│  [ Pause] [ Stop]                                           │
 └─────────────────────────────────────────────────────────────┘
       ↓ (on self-improvement proposal)
 ┌─ Reflection ────────────────────────────────────────────────┐
-│  ▸ Proposal: Add rule "skip /tmp"                            │
-│     because: caught noisy readings                            │
-│  [✓ Approve] [✕ Dismiss] [⏹ Stop]                            │
+│  ▸ Proposal: Add rule "skip /tmp"                           │
+│     because: caught noisy readings                          │
+│  [✓ Approve] [✕ Dismiss] [⏹ Stop]                           │
 └─────────────────────────────────────────────────────────────┘
       ↓
 ┌─ Result ────────────────────────────────────────────────────┐
-│  ✓ Goal achieved in 4 cycles                                 │
+│  ✓ Goal achieved in 4 cycles                                │
 │  [💾 Save session]  [⚡ New goal]  [← Back to menu]          │
 └─────────────────────────────────────────────────────────────┘
 ```
