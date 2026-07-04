@@ -142,6 +142,13 @@ class MemoryManager(IMemoryStorePartner):
         """Public accessor for the volatile entry count (replaces private reach-through)."""
         return len(self._volatile)
 
+    def clear_volatile(self) -> None:
+        """Empty the volatile memory cache (feature_010: demo re-seed support).
+
+        Only volatile memory is cleared; persisted memory rows are unaffected.
+        """
+        self._volatile = OrderedDict()
+
     def create_entry(
         self,
         content: dict[str, Any],

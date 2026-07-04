@@ -188,6 +188,13 @@
         - [x] Enforced fresh e2e receipt before repeated edits to OMT/META harness files
 - [ ] Implement feature_002.rag_retrieval_augmented_generation <!-- id:T-002-prio-med agent:false -->
     - [ ] Scaffold design doc
+- [x] Implement feature_010.agent_demo_screen <!-- id:T-010-prio-med agent:true -->
+    - [x] Design phase (new_screen): design_001_agent_demo_screen.md + operation_spec_001_agent_demo.md
+    - [x] Model: demo/scenarios.py (DemoScenario A+B + seed_sandbox_files); GoalManager.clear(), MemoryManager.clear_volatile(), Agent.clear_state()
+    - [x] Controller: AgentController.reset_state(), load_demo_scenario_by_name(), get_demo_scenario_info()
+    - [x] View: AgentDemoScreen (Run/Reset/Back buttons + live cycle log); AgentTUIScreen 'd' key + 'demo [a|b]' command
+    - [x] Bug fix (feature_007): tools read command.action (was command.parameters) — unblocked EXECUTE_TOOL create/query/update at runtime
+    - [x] Testing: 34 tests (scenarios, clear ops, controller, Textual pilot) — all pass; 169/169 feature_007 pass; full suite 468/469 (1 pre-existing); MVC++ 0/6
 
 ---
 

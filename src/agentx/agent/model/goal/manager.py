@@ -57,6 +57,14 @@ class GoalManager(IGoalManager):
     def get_tree(self) -> GoalTree:
         return self._tree
 
+    def clear(self) -> None:
+        """Reset the goal tree to empty (feature_010: demo re-seed support).
+
+        Only in-memory state is cleared; persisted goal rows in the repository
+        are not deleted, so a saved snapshot is unaffected.
+        """
+        self._tree = GoalTree()
+
     def update_status(self, goal_id: str, status: Any) -> None:
         goal = self._tree.get(goal_id)
         if goal is None:

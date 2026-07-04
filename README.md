@@ -14,10 +14,11 @@
 ```text
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
 │  Welcome to AgentX TUI                                      │
-│  Press 'c' for Chat, 'r' for RAG, 'q' to quit               │
+│  Press 'c' Chat, 'r' RAG, 'a' Agent, 'q' to quit            │
 │                                                             │
 │  [c] Chat  ──→ LLM conversations with streaming responses   │
 │  [r] RAG   ──→ PDF Q&A, document ingestion, vector search   │
+│  [a] Agent ──→ Autonomous agent: tools, policy, reflection  │
 │  [h] Help  ──→ Command reference                            │
 │  [q] Quit  ──→ Exit application                             │
 └─────────────────────────────────────────────────────────────┘
@@ -28,9 +29,10 @@
 - 🎨 **Modern TUI** - Textual-based interface with keyboard navigation
 - 💬 **AI Chat** - Multi-provider LLM support (OpenRouter, OpenAI, Ollama, Google GenAI)
 - 📚 **RAG** - PDF Q&A, web ingestion, Chroma/FAISS/Pinecone vector stores
+- 🤖 **Intelligent Agent** - Autonomous perceive→decide→act→reflect cycle with tool registry, policy DSL engine, and self-improvement loop
 - 🧠 **Petri Net Sessions** - Graph-based session/user objective management
 - 🔌 **LangChain/LangGraph** - Full integration for agentic workflows
-- 🧪 **205+ Tests** - Comprehensive unit + automated TUI tests
+- 🧪 **469 Tests** - Comprehensive unit + integration + automated TUI tests
 
 Developed with **opencode** using **OMT++ methodology** (Analysis → Design → Programming → Testing with visible artifacts).
 
@@ -70,6 +72,7 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 │  Press:                                                     │
 │    [c] Chat  ──→ Start AI conversation                      │
 │    [r] RAG   ──→ Document Q&A and ingestion                 │
+│    [a] Agent ──→ Autonomous agent (tools, policy, reflect)  │
 │    [h] Help  ──→ View all commands                          │
 │    [q] Quit  ──→ Exit application                           │
 │                                                             │
@@ -82,6 +85,7 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 |-----|--------|
 | `c` | Open Chat screen |
 | `r` | Open RAG screen |
+| `a` | Open Agent screen |
 | `h` | Show help |
 | `q` | Quit application |
 | `Esc` | Go back / Close screen |
@@ -182,6 +186,80 @@ Ask questions about your documents, PDFs, and web pages using vector search.
 - PDF files (PyPDF)
 - Web URLs (Tavily search)
 - Local documents
+
+---
+
+### 🤖 Intelligent Agent (feature_007)
+
+An autonomous agent subsystem that runs a **perceive → decide → act → reflect → persist** cycle, with a tool registry, a policy DSL engine, and a reflection/self-improvement loop.
+
+**Agent Cycle:**
+```text
+         ┌──────────┐
+         │ perceive │ ← sensors read environment + tool readings
+         └────┬─────┘
+              ▼
+         ┌──────────┐
+         │ decide   │ ← policy engine evaluates rules → action
+         └────┬─────┘
+              ▼
+         ┌──────────┐
+         │ act      │ ← actuator executes tool command
+         └────┬─────┘
+              ▼
+         ┌──────────┐
+         │ reflect  │ ← AI critiques trace → proposals (safety-checked)
+         └────┬─────┘
+              ▼
+         ┌──────────┐
+         │ persist  │ ← snapshot to SQLite (memory, goals, policies, reflection log)
+         └──────────┘
+```
+
+**Core Subsystems:**
+
+| Subsystem | Purpose |
+|-----------|---------|
+| **Tool Registry** | `ISensor`/`IActuator` interfaces, `ToolSpec` schema, discovery, and built-in tools (FileSystem, RAG query, Session) |
+| **Policy Engine** | Condition DSL (tokenizer → AST → visitor), priority resolution, conflict detection, adaptation hooks |
+| **Reflection Engine** | Critique parser, safety evaluator (deny-list), proposal router, approval flow |
+| **Goal Manager** | Hierarchical goal trees with success criteria and status tracking |
+| **Memory Manager** | Volatile + persistent memory with metadata and source tracking |
+| **Persistence** | stdlib `sqlite3` (no ORM, no Alembic) — schema, agent DB, and repositories |
+
+**Agent Screen (TUI):**
+
+Press `a` from the main screen, then:
+
+| Key / Command | Action |
+|---------------|--------|
+| `r` / `run` | Run one agent cycle |
+| `s` / `save` | Save session snapshot |
+| `d` / `demo [a\|b]` | Open the demo screen |
+| `goal <desc>` | Submit a new goal |
+| `rule <cond> \| <action> <json>` | Add a policy rule |
+| `status` / `goals` / `rules` / `memory` | Inspect agent state |
+| `proposals` / `approve <id> <idx>` | View and approve reflection proposals |
+
+**Self-Improvement Loop:**
+
+The reflection engine critiques each cycle's trace and may propose changes (new policy rules, goal adjustments, tool enablement). Proposals are safety-evaluated and held as **pending** until approved via the `approve` command — closing the self-improvement loop without uncontrolled autonomy.
+
+---
+
+### 🎬 Agent Demo (feature_010)
+
+Built-in demo scenarios that seed the agent sandbox with files, goals, and policies — perfect for exploring the agent cycle without configuration.
+
+```text
+┌─ Agent Demo ────────────────────────────────────────────────┐
+│  [Run]    Run the seeded scenario cycle                     │
+│  [Reset]  Clear state and re-seed                           │
+│  [Back]   Return to agent screen                            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+Two scenarios are available (`demo a` / `demo b`), each with pre-configured goals, policy rules, and sandbox files.
 
 ---
 
@@ -351,13 +429,13 @@ uv run main.py
 
 **TUI Mode (default):**
 ```text
-🎨 Starting modern TUI... (press \'q\' to quit, \'h\' for help)
+🎨 Starting modern TUI... (press 'q' to quit, 'h' for help)
 
 agentx 0.1.1
 
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
 │  Welcome to AgentX TUI                                      │
-│  Press 'c' for Chat, 'r' for RAG, 'q' to quit               │
+│  Press 'c' Chat, 'r' RAG, 'a' Agent, 'q' to quit            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -379,6 +457,7 @@ agentx 0.1.1
 |-----|--------|
 | `c` | Open Chat screen |
 | `r` | Open RAG screen |
+| `a` | Open Agent screen |
 | `h` | Show help/commands |
 | `q` | Quit application |
 | `Esc` | Go back to previous screen |
@@ -471,31 +550,46 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 ┌─────────────────────────────────────────────────────────────┐
 │                   CONTROLLER LAYER                          │
 │  MainController, RagController, ChatController              │
-│  Implements: IMainViewPartner, IRagViewPartner, ...         │
+│  AgentController, SessionController, ToolController         │
+│  Implements: IMainViewPartner, IRagViewPartner,             │
+│              IAgentViewPartner, IAgentModelPartner, ...     │
 └─────────────────────────────────────────────────────────────┘
                             │
                             │ Uses (ABC interfaces)
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    INTERFACE LAYER                          │
-│  IMainView, IRagView, IChatView, IUIProvider (ABCs)         │
+│  IMainView, IRagView, IChatView, IAgentViewPartner          │
+│  IUIProvider, IAgentModelPartner, IToolRegistryPartner      │
+│  IMemoryStorePartner, IPolicyStorePartner, IGoalManager     │
+│  ISafetyEvaluator, IAIServicePartner (ABCs)                 │
 └─────────────────────────────────────────────────────────────┘
                             │
                             │ Implemented By
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                     VIEW LAYER                              │
-│  Console: MainView, RagView, ChatView                       │
+│  Console: MainView, RagView, ChatView, AgentView            │
 │  TUI:     TUIAdapter, TUIRagAdapter, TUIChatAdapter         │
+│           AgentTUIScreen, AgentDemoScreen                   │
 └─────────────────────────────────────────────────────────────┘
                             │
                             │ Depends On
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    MODEL LAYER                              │
-│  model/ai/     — LLM providers (OpenAI, Ollama, etc.)       │
-│  model/rag/    — RAG orchestration, vector stores           │
-│  model/session/ — Session management, SQLite persistence    │
+│  model/ai/       — LLM providers (OpenAI, Ollama, etc.)     │
+│  model/rag/      — RAG orchestration, vector stores         │
+│  model/session/  — Session management, SQLite persistence   │
+│  agent/          — Intelligent agent subsystem              │
+│    ├─ model/agent.py     — Agent facade (cycle orchestrator)│
+│    ├─ model/tools/       — Tool registry + built-in tools   │
+│    ├─ model/policy/      — Policy DSL engine + conflict     │
+│    ├─ model/reflection/  — Critique, safety, proposal router│
+│    ├─ model/goal/        — Goal tree manager                │
+│    ├─ model/memory/      — Volatile + persistent memory     │
+│    ├─ persistence/       — stdlib sqlite3 (no ORM)          │
+│    └─ demo/              — Seeded demo scenarios            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -503,49 +597,59 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 - **Abstract Partner**: View↔Controller communication via ABCs
 - **Command Pattern**: Main screen input dispatch
 - **Provider Pattern**: Runtime UI selection (TUI vs Console)
+- **Facade Pattern**: `Agent` class orchestrates all agent subsystems
 - **Data Provider (DP)**: SQL encapsulation in `*_db.py` classes
 
 **Layer Rules:**
 - ✅ Model has NO imports from `ui`
 - ✅ View has NO business logic
 - ✅ Controller has NO rendering code
-- ✅ SQL only in `DP_*` classes
+- ✅ SQL only in `DP_*` / `*_db.py` classes
 
 ---
 
 ## 🧪 Testing
 
-agentx includes **205+ comprehensive unit tests** covering all core modules:
+agentx includes **469 comprehensive tests** covering all core modules:
 
 ```bash
-# Run all unit tests
-uv run pytest tests/unit/ -v
+# Run all tests
+uv run pytest tests/ -v
 
-# Run specific module
-uv run pytest tests/unit/model/session/ -v
+# Run model tests
+uv run pytest tests/model/ -v
+
+# Run agent subsystem tests
+uv run pytest tests/features/feature_007.agentx_intelligent_agent_behaviour/ -v
 
 # Run TUI automated tests
-uv run pytest tests_automated/tui/ -v
+uv run pytest tests/tui/ -v
+
+# Run MVC++ architecture check
+uv run scripts/omt/mvc_check.py
 
 # Run with coverage (if pytest-cov installed)
 uv run pytest tests/ --cov=agentx --cov-report=html
 ```
 
 **Test Coverage:**
-- ✅ Petri nets
-- ✅ Session management
+- ✅ Petri nets & session management
 - ✅ Commands & controllers
-- ✅ Views & adapters
-- ✅ AI services
-- ✅ RAG orchestration
-- ✅ Utilities
+- ✅ Views & adapters (console + TUI)
+- ✅ AI services & RAG orchestration
+- ✅ Agent tool registry (sensors, actuators, discovery)
+- ✅ Policy DSL engine (parsing, evaluation, conflict detection)
+- ✅ Reflection engine (critique, safety, proposal routing)
+- ✅ Goal manager & memory manager
+- ✅ Agent persistence (stdlib sqlite3 repositories)
+- ✅ Agent facade cycle (perceive→decide→act→reflect→persist)
+- ✅ Demo scenarios & Textual pilot e2e tests
 
 **Characteristics:**
 - **Isolation**: All tests are isolated with mocking (no external dependencies)
 - **TUI Tests**: Automated end-to-end tests using Textual Pilot
+- **MVC++ Compliant**: 0 errors, 0 warnings on agent module
 - **Fast**: Full suite runs in seconds
-
-**Documentation:** See `tests/unit/README.md` and `tests_automated/tui/README.md` for complete test documentation.
 
 ---
 
@@ -641,14 +745,15 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 ## 🗺️ Roadmap
 
 ### Completed Features
-- ✅ **feature_003**: agentx process (OMT++ methodology)
 - ✅ **feature_004**: Modern TUI with Textual
 - ✅ **feature_005**: File system agentic tools
-- ✅ **feature_006**: opencode process enforcement
+- ✅ **feature_006**: opencode process enforcement (OMT++ gate, MVC++ linter)
+- ✅ **feature_007**: Intelligent agent behaviour (tools, policy DSL, reflection, self-improvement)
+- ✅ **feature_010**: Agent demo screen (seeded scenarios A & B)
 
-### In Progress
-- 🔄 **feature_001**: Session/user objectives driven by Petri Nets
-- 🔄 **feature_002**: RAG retrieval augmented generation
+### Pending
+- 🔲 **feature_001**: Session/user objectives driven by Petri Nets
+- 🔲 **feature_002**: RAG retrieval augmented generation
 
 ### Future Features
 - 🔮 Custom agent graphs with LangGraph
@@ -669,8 +774,8 @@ For deep dives into architecture, design decisions, and development methodology:
 | `.meta/software_development_process/omt_agent_guide.md` | Complete OMT++ methodology guide |
 | `.meta/software_development_process/4.design/structure/STRUCTURE.md` | Architecture deep dive |
 | `.meta/software_development_process/4.design/behavior/BEHAVIOR.md` | Runtime behavior specifications |
-| `tests/unit/README.md` | Unit testing documentation |
-| `tests_automated/tui/README.md` | TUI automated testing guide |
+| `.meta/software_development_process/2.requirements/features/feature_007.agentx_intelligent_agent_behaviour/` | Agent feature analysis, design & test artifacts |
+| `AGENTS.md` | Enforcement rules for opencode agents |
 
 ---
 

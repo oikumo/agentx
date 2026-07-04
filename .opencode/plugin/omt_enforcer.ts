@@ -434,7 +434,10 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         tests_approved: scope === "tests" || scope === "all",
       })
       return `⚠️ OMT++ skip recorded (scope=${scope}): "${args.reason}". Edits unlocked; ` +
-        "this override is logged in .meta/.omt/ledger.jsonl."
+        "this override is logged in .meta/.omt/ledger.jsonl. " +
+        (scope === "all"
+          ? "scope=all also permits README.md/uv.lock/LICENSE edits (AGENTS.md #5 'unless explicitly asked'); .env stays denied."
+          : "")
     },
   })
 
@@ -571,13 +574,26 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         const raw = output?.args?.filePath ?? output?.args?.path ?? output?.args?.file
         if (!raw) return
         const { abs, rel } = relOf(raw)
+        const session = input?.sessionID || undefined
 
-        if (isProtected(rel)) throw new OmtBlock(denyMsg(rel))
+        if (isProtected(rel)) {
+          // .env / secrets are never editable (AGENTS.md #2 — no override).
+          const isEnv = rel === ".env" || rel.startsWith(".env.")
+          if (isEnv) throw new OmtBlock(denyMsg(rel))
+          // README.md / uv.lock / LICENSE: AGENTS.md #5 allows edits "unless
+          // explicitly asked". Honour an explicit omt_skip{scope:"all"} as that
+          // explicit, ledger-audited unlock (aligns the gate with AGENTS.md so
+          // a direct user request isn't mechanically blocked).
+          const unlock = getActiveUnlock(session)
+          const approved = unlock && unlock.type === "skip" && unlock.record.scope === "all"
+          if (!approved) throw new OmtBlock(denyMsg(rel))
+          safeLog("warn", `protected '${rel}' edit permitted under omt_skip(scope=all): ${unlock.record.reason || "(no reason)"}`)
+          return
+        }
 
         const e2e = omtHarnessE2eStatus(rel, abs)
         if (!e2e.ok) throw new OmtBlock(e2e.message)
 
-        const session = input?.sessionID || undefined
 
         if (isTests(rel)) {
           const unlock = getActiveUnlock(session)

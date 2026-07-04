@@ -57,6 +57,7 @@ class AgentTUIScreen(Screen):
         Binding("q", "quit", "Quit"),
         Binding("r", "run_cycle", "Run Cycle"),
         Binding("s", "save", "Save"),
+        Binding("d", "open_demo", "Demo"),
         Binding("escape", "app.pop_screen", "Back"),
     ]
 
@@ -119,7 +120,7 @@ class AgentTUIScreen(Screen):
         with Vertical(id="agent-input-panel"):
             yield Label("Command (type 'help' for commands):")
             yield Input(
-                placeholder="goal <desc> | rule <cond> | <action> <params> | run | status | goals | rules | memory | save | proposals | approve <n> | help",
+                placeholder="goal <desc> | rule <cond> | <action> <params> | run | status | goals | rules | memory | save | demo [a|b] | proposals | approve <n> | help",
                 id="agent-input",
             )
         yield Footer()
@@ -167,6 +168,8 @@ class AgentTUIScreen(Screen):
             self._cmd_memory()
         elif cmd == "save":
             self.action_save()
+        elif cmd == "demo":  # feature_010: open the demo screen (scenario a|b)
+            self._cmd_demo(args)
         elif cmd == "proposals":  # N4: list pending reflection proposals
             self._cmd_proposals()
         elif cmd == "approve":  # N4: approve a pending proposal
@@ -186,10 +189,11 @@ class AgentTUIScreen(Screen):
         self._log("  [cyan]rules[/cyan]                  — List all policy rules")
         self._log("  [cyan]memory[/cyan]                 — Show recent memory entries")
         self._log("  [cyan]save[/cyan]                   — Save session snapshot (also: 's' key)")
+        self._log("  [cyan]demo [a|b][/cyan]             — Open the demo screen (scenario a or b, also: 'd' key)")
         self._log("  [cyan]proposals[/cyan]             — List reflection proposals awaiting approval (N4)")
         self._log("  [cyan]approve <n>[/cyan]           — Approve and apply proposal #<n>")
         self._log("  [cyan]help[/cyan]                   — Show this help")
-        self._log("[dim]Key bindings: r=run, s=save, q=quit, Esc=back[/dim]")
+        self._log("[dim]Key bindings: r=run, s=save, d=demo, q=quit, Esc=back[/dim]")
 
     def _cmd_goal(self, description: str) -> None:
         if not description:
@@ -271,6 +275,29 @@ class AgentTUIScreen(Screen):
         self._log(f"  rules:    {status.get('rules', 0)}")
         self._log(f"  tools:    {status.get('tools', 0)}")
         self._log(f"  memory:   {status.get('memory_entries', 0)} entries")
+
+    # ----------------------------------------------------------- demo (feature_010)
+
+    def _cmd_demo(self, args: str) -> None:
+        """Open the demo screen with an optional scenario key (``demo [a|b]``)."""
+        scenario = args.strip().lower() or "a"
+        self._log(f"[bold cyan]Launching demo (scenario {scenario})…[/bold cyan]")
+        self.action_open_demo(scenario)
+
+    def action_open_demo(self, scenario_name: str = "a") -> None:
+        """Push the :class:`AgentDemoScreen` seeded with *scenario_name*."""
+        try:
+            from agentx.agent.view.tui.demo_screen import AgentDemoScreen
+
+            if hasattr(self, "app") and self.app is not None:
+                self.app.push_screen(
+                    AgentDemoScreen(self._controller, scenario_name=scenario_name)
+                )
+        except Exception as exc:  # noqa: BLE001 — never crash the TUI
+            try:
+                self.notify(f"Error opening demo: {exc}", severity="error", timeout=None)
+            except Exception:
+                pass
 
     # ----------------------------------------------------------- reflection (N4)
 

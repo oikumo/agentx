@@ -253,6 +253,19 @@ class Agent(IAgentModelPartner):
         """Add or replace a policy rule via the safe path (operation spec §1.5)."""
         return self.policy_engine.add_rule_safely(rule)
 
+    def clear_state(self) -> None:
+        """Clear all volatile agent state (feature_010: demo re-seed support).
+
+        Clears the goal tree, policy rules, and volatile memory, then returns
+        the agent to the ``PERCEIVING`` state so a demo scenario can be loaded
+        cleanly.  Only in-memory state is cleared; persisted snapshots and
+        repository rows are not modified (operation_spec_001_agent_demo.md).
+        """
+        self.goal_manager.clear()
+        self.policy_engine.clear()
+        self.memory.clear_volatile()
+        self.state = AgentState.PERCEIVING
+
     def get_status(self) -> dict[str, Any]:
         """Return a serializable status snapshot."""
         return {

@@ -9,6 +9,14 @@
 ```
 .meta/
 ├── META.md                              # This file - overview of .meta directory
+├── doc/                                 # Maintainable technical documentation
+│   ├── README.md                        #   Index + maintenance guide
+│   ├── architecture.md                  #   MVC++, layers, provider pattern, tech stack
+│   ├── features.md                      #   Feature catalog (all features + status)
+│   ├── subsystems.md                    #   Deep dives: Agent, RAG, Session, AI, UI
+│   ├── data_flow.md                     #   Boot, navigation, agent cycle, RAG flow
+│   ├── persistence.md                   #   DBs, schemas, no-ORM convention
+│   └── extending.md                     #   How-to: add command/screen/tool/feature
 ├── software_development_process/        # OMT++ SDLC artifacts organized by phase
 │   ├── META.md                          # Process overview
 │   ├── omt_agent_guide.md               # Complete OMT++ methodology guide for agents
@@ -38,6 +46,16 @@
 ---
 
 ## Directory Descriptions
+
+### doc/
+**Maintainable technical documentation** of agentx features and characteristics —
+the current-state reference for developers and AI coding agents. Start at
+`doc/README.md` for an index and the maintenance guide. Unlike the phase
+artifacts under `software_development_process/` (which are historical records of
+individual features), `doc/` summarises the system as it exists today and is
+kept up to date as the code changes. Covers: architecture (MVC++), feature
+catalog, subsystem deep dives, runtime data flows, persistence, and extension
+how-to guides.
 
 ### software_development_process/
 The complete OMT++ methodology implementation for agentx. Every feature, bug fix, and enhancement moves through these phases with visible artifacts:
@@ -82,9 +100,11 @@ Rapid UI mockups and interaction flows to validate use cases and dialog designs.
 3. Follow OMT++ process: Analysis (root cause) → Design (fix approach) → Implementation → Testing
 
 ### For Learning the Codebase
-1. Read `software_development_process/omt_agent_guide.md` first
-2. Review `1.project/PROJECT_SUMMARY.md` for high-level overview
-3. Explore phase directories to understand the development workflow
+1. Start at `.meta/doc/README.md` — the current-state technical documentation
+   (architecture, features, subsystems, data flows)
+2. Read `software_development_process/omt_agent_guide.md` for the methodology
+3. Review `1.project/PROJECT_SUMMARY.md` for high-level overview
+4. Explore phase directories to understand the development workflow
 
 ---
 

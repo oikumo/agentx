@@ -86,7 +86,7 @@ class RagSensorTool(ISensor, IActuator):
         )
 
     def validate(self, command: ActuatorCommand) -> ValidationResult:
-        action = command.parameters.get("action")
+        action = command.action or command.parameters.get("action")
         if action != "query":
             return ValidationResult(valid=False, errors=[f"unknown action: {action}"])
         if not command.parameters.get("prompt"):

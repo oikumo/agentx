@@ -85,7 +85,11 @@ class FileSystemTool(ISensor, IActuator):
         target = (self._root / path).resolve()
         if not str(target).startswith(str(self._root)):
             return ValidationResult(valid=False, errors=["path escapes sandbox"])
-        action = command.parameters.get("action", "read")
+        # Read the canonical command.action (set by _decision_to_command); fall
+        # back to parameters for backward compat with direct callers (feature_010
+        # bug fix: previously only read parameters, so EXECUTE_TOOL create/update
+        # silently defaulted to "read" at runtime).
+        action = command.action or command.parameters.get("action", "read")
         if action not in {"create", "read", "update", "delete"}:
             return ValidationResult(
                 valid=False, errors=[f"unknown action: {action}"]
@@ -98,7 +102,7 @@ class FileSystemTool(ISensor, IActuator):
             return ActuatorResult(success=False, error="; ".join(vr.errors))
         path = command.parameters["path"]
         target = (self._root / path).resolve()
-        action = command.parameters.get("action", "read")
+        action = command.action or command.parameters.get("action", "read")
         content = command.parameters.get("content", "")
         side_effects: list[EnvironmentChange] = []
         try:

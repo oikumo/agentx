@@ -72,7 +72,7 @@ class SessionTool(ISensor, IActuator):
         )
 
     def validate(self, command: ActuatorCommand) -> ValidationResult:
-        action = command.parameters.get("action")
+        action = command.action or command.parameters.get("action")
         if action not in {"persist", "restore"}:
             return ValidationResult(valid=False, errors=[f"unknown action: {action}"])
         return ValidationResult(valid=True)
@@ -81,7 +81,7 @@ class SessionTool(ISensor, IActuator):
         vr = self.validate(command)
         if not vr.valid:
             return ActuatorResult(success=False, error="; ".join(vr.errors))
-        action = command.parameters["action"]
+        action = command.action or command.parameters.get("action")
         try:
             if action == "persist":
                 if self._agent and hasattr(self._agent, "persist"):
