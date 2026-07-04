@@ -19,12 +19,26 @@ from agentx.agent.types import (
 
 
 class DefaultSafetyEvaluator(ISafetyEvaluator):
-    """SUPERVISED autonomy → most proposals need confirmation; AUTONOMOUS → auto-apply safe ones."""
+    """SUPERVISED autonomy → most proposals need confirmation; AUTONOMOUS → auto-apply safe ones.
 
-    #: (proposal_type, op) pairs that are always rejected.
+    Standard ``op`` values per ProposalType (M7):
+
+    * ``POLICY_CHANGE``      — ``add`` | ``update`` | ``delete`` | ``disable``
+    * ``MEMORY_UPDATE``      — ``add`` | ``update`` | ``delete`` | ``delete_all``
+    * ``GOAL_ADJUSTMENT``    — ``add`` | ``update`` | ``delete`` | ``demote`` | ``abandon_root``
+    * ``TOOL_CONFIGURATION`` — ``enable`` | ``disable`` | ``delete`` | ``uninstall``
+    """
+
+    #: (proposal_type, op) pairs that are always rejected regardless of autonomy.
     DANGEROUS = {
-        "TOOL_CONFIGURATION:delete",
+        "POLICY_CHANGE:delete",
+        "POLICY_CHANGE:disable",
+        "MEMORY_UPDATE:delete_all",
         "GOAL_ADJUSTMENT:abandon_root",
+        "GOAL_ADJUSTMENT:delete",
+        "GOAL_ADJUSTMENT:demote",
+        "TOOL_CONFIGURATION:delete",
+        "TOOL_CONFIGURATION:uninstall",
     }
 
     def evaluate(self, proposal: Proposal, ctx: PolicyContext) -> ProposalVerdict:

@@ -68,6 +68,54 @@ class IAgentModelPartner(ABC):
     def persist(self) -> str:
         """Persist the current state and return the snapshot id."""
 
+    @abstractmethod
+    def load_snapshot(self, snapshot_id: str) -> Any:
+        """Read a persisted SessionSnapshot by id (C4: controller→facade, not _db)."""
+
+    @abstractmethod
+    def load_latest_snapshot(self) -> Any:
+        """Read the most recent persisted snapshot for this agent (C5/I1)."""
+
+    @abstractmethod
+    def list_rules(self) -> Any:
+        """Return the current policy rules (N6: view via controller, not model)."""
+
+    @abstractmethod
+    def list_goals(self) -> Any:
+        """Return the current goal tree (N6)."""
+
+    @abstractmethod
+    def query_memory(self, query: Any) -> Any:
+        """Retrieve memory entries matching *query* (N6)."""
+
+    @abstractmethod
+    def list_tools(self) -> Any:
+        """Return the registered tool specs (N14: controller via facade)."""
+
+    @abstractmethod
+    def register_tool(self, tool: Any) -> Any:
+        """Register a sensor/actuator (N14)."""
+
+    @abstractmethod
+    def unregister_tool(self, tool_id: str) -> bool:
+        """Unregister a tool by id (N14)."""
+
+    @abstractmethod
+    def execute_tool_action(self, command: Any) -> Any:
+        """Validate and run an actuator command (N14)."""
+
+    @abstractmethod
+    def tool_health_check(self) -> Any:
+        """Return {tool_id: alive} for all tools (N14)."""
+
+    @abstractmethod
+    def list_pending_proposals(self) -> Any:
+        """Return proposals awaiting confirmation (N4: approval flow)."""
+
+    @abstractmethod
+    def approve_proposal(self, entry_id: str, proposal_idx: int) -> Any:
+        """Apply a pending reflection proposal (N4: closes the loop)."""
+
 
 # ---------------------------------------------------------------------------
 # View Partner — Controller → View contract
@@ -187,10 +235,14 @@ class IAIServicePartner(ABC):
 
 
 class IPersistencePartner(ABC):
-    """Abstract Partner for session persistence."""
+    """Abstract Partner for session persistence.
+
+    ``load_snapshot`` returns ``None`` when the snapshot is absent (m7: the
+    return type now reflects the implementation contract).
+    """
 
     @abstractmethod
     def save_snapshot(self, snapshot: SessionSnapshot) -> bool: ...
 
     @abstractmethod
-    def load_snapshot(self, snapshot_id: str) -> SessionSnapshot: ...
+    def load_snapshot(self, snapshot_id: str) -> "SessionSnapshot | None": ...

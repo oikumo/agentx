@@ -114,20 +114,20 @@ class ProposalRouter:
 
     def _apply_tool_config(self, content: dict[str, Any]) -> str:
         tool_id = content.get("tool_id", "")
-        spec = self._tools._specs.get(tool_id)  # noqa: SLF001
-        if spec is None:
-            raise ValueError(f"unknown tool: {tool_id}")
-        if content.get("op") == "enable":
-            spec.enabled = True
-        elif content.get("op") == "disable":
-            spec.enabled = False
-        return f"{tool_id}:{content.get('op', 'noop')}"
+        op = content.get("op", "noop")
+        # M6: use the public registry API instead of reaching into _specs.
+        if op == "enable":
+            if not self._tools.set_tool_enabled(tool_id, True):
+                raise ValueError(f"unknown tool: {tool_id}")
+        elif op == "disable":
+            if not self._tools.set_tool_enabled(tool_id, False):
+                raise ValueError(f"unknown tool: {tool_id}")
+        return f"{tool_id}:{op}"
 
     def _revert_tool_config(self, token: str) -> None:
         try:
             tool_id, op = token.split(":", 1)
-            spec = self._tools._specs.get(tool_id)  # noqa: SLF001
-            if spec is not None:
-                spec.enabled = op != "disable"
+            # revert: undo the applied enable/disable
+            self._tools.set_tool_enabled(tool_id, op == "disable")
         except (ValueError, KeyError):
             pass

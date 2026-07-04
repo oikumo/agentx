@@ -50,11 +50,15 @@ class CritiqueParser:
 
     @staticmethod
     def _extract_json(raw: str) -> dict[str, Any] | None:
-        """Strip ```json fences and parse; return None on failure."""
+        """Strip ```json fences and parse; return None on failure.
+
+        m5: the fenced regex uses a *greedy* capture so nested objects
+        (``{"a": {"b": 1}}``) are not truncated at the first ``}``.
+        """
         if not raw or not raw.strip():
             return None
         # strip markdown code fences
-        fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
+        fenced = re.search(r"```(?:json)?\s*(\{.*\})\s*```", raw, re.DOTALL)
         if fenced:
             raw = fenced.group(1)
         # try direct parse first
@@ -62,7 +66,7 @@ class CritiqueParser:
             return json.loads(raw)
         except json.JSONDecodeError:
             pass
-        # fall back to first {...} block
+        # fall back to the outermost {...} block (greedy)
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if match:
             try:

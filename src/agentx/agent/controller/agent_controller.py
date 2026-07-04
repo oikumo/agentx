@@ -17,6 +17,7 @@ from agentx.agent.types import (
     CycleResult,
     Goal,
     GoalType,
+    MemoryQuery,
     PolicyRule,
     SuccessCriteria,
 )
@@ -95,7 +96,7 @@ class AgentController:
         """Add or replace a policy rule via the safe path (operation spec §1.5)."""
         ok = self._agent.update_policy(rule)
         if self._view:
-            self._view.show_policy_editor(list(self._agent.policy_engine.rules.values()))
+            self._view.show_policy_editor(self._agent.list_rules())  # N14: via facade
             self._view.show_message(
                 f"Policy rule {'added' if ok else 'rejected'}: {rule.id}"
             )
@@ -109,5 +110,31 @@ class AgentController:
             self._view.show_status(status)
         return status
 
-    def get_agent(self) -> Agent:
-        return self._agent
+    # ----------------------------------------------------------- query ops (N6)
+    #  The view calls these instead of reaching into the Agent's model
+    #  internals (goal_manager, policy_engine, memory) directly.
+
+    def list_rules(self) -> list[PolicyRule]:
+        return self._agent.list_rules()
+
+    def list_goals(self):
+        return self._agent.list_goals()
+
+    def query_memory(self, limit: int = 10):
+        return self._agent.query_memory(MemoryQuery(limit=limit))
+
+    def save_snapshot(self) -> str:
+        return self._agent.persist()
+
+    # ----------------------------------------------------------- reflection (N4)
+
+    def list_pending_proposals(self):
+        return self._agent.list_pending_proposals()
+
+    def approve_proposal(self, entry_id: str, proposal_idx: int) -> bool:
+        outcome = self._agent.approve_proposal(entry_id, proposal_idx)
+        if self._view:
+            self._view.show_message(
+                f"Proposal {'applied' if outcome.status.value == 'APPLIED' else outcome.status.value}"
+            )
+        return outcome.status.value == "APPLIED"

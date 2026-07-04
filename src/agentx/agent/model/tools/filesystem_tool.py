@@ -26,6 +26,9 @@ from agentx.agent.types import (
 class FileSystemTool(ISensor, IActuator):
     """Filesystem sensor/actuator. Sandboxed to ``sandbox_root``."""
 
+    #: m10: cap on files returned per sense() to avoid unbounded scans on huge trees.
+    MAX_FILES = 2000
+
     def __init__(self, sandbox_root: str | Path) -> None:
         self.id = "filesystem"
         self._root = Path(sandbox_root).resolve()
@@ -36,12 +39,16 @@ class FileSystemTool(ISensor, IActuator):
     def sense(self) -> SensorReading:
         files: dict[str, Any] = {}
         if self._root.exists():
+            count = 0
             for p in self._root.rglob("*"):
                 if p.is_file():
                     try:
                         files[str(p.relative_to(self._root))] = p.stat().st_size
                     except (OSError, ValueError):
                         continue
+                    count += 1
+                    if count >= self.MAX_FILES:  # m10: stop pathological scans
+                        break
         return SensorReading(
             sensor_id=self.id,
             data=files,

@@ -21,7 +21,7 @@ class SessionController:
 
     def load_snapshot(self, snapshot_id: str) -> SessionSnapshot | None:
         """Read a SessionSnapshot by id (operation spec §2.2)."""
-        return self._agent._db.load_snapshot(snapshot_id)  # noqa: SLF001
+        return self._agent.load_snapshot(snapshot_id)  # C4: via facade, not _db
 
     def resume_snapshot(self, snapshot_id: str) -> None:
         """Restore agent state from a snapshot."""

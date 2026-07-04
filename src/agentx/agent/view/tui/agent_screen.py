@@ -119,7 +119,7 @@ class AgentTUIScreen(Screen):
         with Vertical(id="agent-input-panel"):
             yield Label("Command (type 'help' for commands):")
             yield Input(
-                placeholder="goal <desc> | rule <cond> | <action> <params> | run | status | goals | rules | memory | save | help",
+                placeholder="goal <desc> | rule <cond> | <action> <params> | run | status | goals | rules | memory | save | proposals | approve <n> | help",
                 id="agent-input",
             )
         yield Footer()
@@ -167,6 +167,10 @@ class AgentTUIScreen(Screen):
             self._cmd_memory()
         elif cmd == "save":
             self.action_save()
+        elif cmd == "proposals":  # N4: list pending reflection proposals
+            self._cmd_proposals()
+        elif cmd == "approve":  # N4: approve a pending proposal
+            self._cmd_approve(args)
         else:
             self._log(f"[red]Unknown command: {cmd}[/red]. Type 'help' for available commands.")
 
@@ -182,6 +186,8 @@ class AgentTUIScreen(Screen):
         self._log("  [cyan]rules[/cyan]                  — List all policy rules")
         self._log("  [cyan]memory[/cyan]                 — Show recent memory entries")
         self._log("  [cyan]save[/cyan]                   — Save session snapshot (also: 's' key)")
+        self._log("  [cyan]proposals[/cyan]             — List reflection proposals awaiting approval (N4)")
+        self._log("  [cyan]approve <n>[/cyan]           — Approve and apply proposal #<n>")
         self._log("  [cyan]help[/cyan]                   — Show this help")
         self._log("[dim]Key bindings: r=run, s=save, q=quit, Esc=back[/dim]")
 
@@ -255,7 +261,7 @@ class AgentTUIScreen(Screen):
         if not self._controller:
             self._log("[red]No controller connected.[/red]")
             return
-        status = self._controller.get_agent().get_status()
+        status = self._controller.get_status()  # N6: via controller
         self._log(f"[bold]Agent Status[/bold]")
         self._log(f"  id:       {status.get('id', '?')}")
         self._log(f"  name:     {status.get('name', '?')}")
@@ -266,12 +272,52 @@ class AgentTUIScreen(Screen):
         self._log(f"  tools:    {status.get('tools', 0)}")
         self._log(f"  memory:   {status.get('memory_entries', 0)} entries")
 
+    # ----------------------------------------------------------- reflection (N4)
+
+    def _cmd_proposals(self) -> None:
+        """List reflection proposals awaiting user confirmation."""
+        if not self._controller:
+            self._log("[red]No controller connected.[/red]")
+            return
+        pending = self._controller.list_pending_proposals()
+        if not pending:
+            self._log("[dim]No proposals awaiting approval.[/dim]")
+            self._log("[dim]Run cycles (with an AI service wired) to generate proposals.[/dim]")
+            return
+        self._log(f"[bold]Pending Proposals ({len(pending)}):[/bold]")
+        for n, (entry_id, idx, proposal) in enumerate(pending, 1):
+            self._log(
+                f"  [yellow]#{n}[/yellow] {proposal.type.value} — {proposal.rationale or '(no rationale)'}"
+            )
+            self._log(f"      [dim]content: {proposal.content}[/dim]")
+            self._log(f"      [dim]approve with: approve {n}[/dim]")
+
+    def _cmd_approve(self, args: str) -> None:
+        """Approve and apply a pending proposal by its 1-based number."""
+        if not self._controller:
+            self._log("[red]No controller connected.[/red]")
+            return
+        if not args.strip().isdigit():
+            self._log("[red]Usage: approve <n>  (use 'proposals' to list)[/red]")
+            return
+        n = int(args.strip())
+        pending = self._controller.list_pending_proposals()
+        if n < 1 or n > len(pending):
+            self._log(f"[red]Invalid number {n}. There are {len(pending)} pending proposal(s).[/red]")
+            return
+        entry_id, idx, proposal = pending[n - 1]
+        ok = self._controller.approve_proposal(entry_id, idx)
+        if ok:
+            self._log(f"[green]Proposal #{n} ({proposal.type.value}) applied.[/green]")
+        else:
+            self._log(f"[red]Proposal #{n} could not be applied (check status).[/red]")
+        self._refresh_status()
+
     def _cmd_goals(self) -> None:
         if not self._controller:
             self._log("[red]No controller connected.[/red]")
             return
-        agent = self._controller.get_agent()
-        tree = agent.goal_manager.get_tree()
+        tree = self._controller.list_goals()  # N6: via controller, not get_agent()
         if not tree.nodes:
             self._log("[dim]No goals yet. Use 'goal <description>' to add one.[/dim]")
             return
@@ -294,8 +340,7 @@ class AgentTUIScreen(Screen):
         if not self._controller:
             self._log("[red]No controller connected.[/red]")
             return
-        agent = self._controller.get_agent()
-        rules = list(agent.policy_engine.rules.values())
+        rules = self._controller.list_rules()  # N6
         if not rules:
             self._log("[dim]No policy rules yet. Use 'rule <condition> | <action> <params>' to add one.[/dim]")
             return
@@ -311,8 +356,7 @@ class AgentTUIScreen(Screen):
         if not self._controller:
             self._log("[red]No controller connected.[/red]")
             return
-        agent = self._controller.get_agent()
-        entries = agent.memory.retrieve(MemoryQuery(limit=10))
+        entries = self._controller.query_memory(limit=10)  # N6
         if not entries:
             self._log("[dim]No memory entries yet.[/dim]")
             return
@@ -368,8 +412,7 @@ class AgentTUIScreen(Screen):
             tree = self.query_one("#agent-tree", Tree)
             tree.clear()
             tree.root.expand()
-            agent = self._controller.get_agent()
-            goal_tree = agent.goal_manager.get_tree()
+            goal_tree = self._controller.list_goals()  # N6
             if not goal_tree.nodes:
                 tree.root.add_leaf("[dim]No goals yet[/dim]")
                 return
@@ -448,7 +491,7 @@ class AgentTUIScreen(Screen):
         if not self._controller:
             return
         try:
-            snapshot_id = self._controller.get_agent().persist()
+            snapshot_id = self._controller.save_snapshot()  # N6
             self._log(f"[green]Snapshot saved: {snapshot_id[:8]}…[/green]")
         except Exception as exc:
             self._log(f"[red]Save error: {exc}[/red]")
@@ -465,7 +508,7 @@ class AgentTUIScreen(Screen):
 
     def _refresh_status(self) -> None:
         if self._controller:
-            self.show_status(self._controller.get_agent().get_status())
+            self.show_status(self._controller.get_status())  # N6: via controller
             self.refresh_goal_tree()
 
 

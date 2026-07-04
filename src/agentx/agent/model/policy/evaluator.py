@@ -13,6 +13,7 @@ from typing import Any
 from agentx.agent.interfaces import IPolicyStorePartner
 from agentx.agent.model.policy.conflict_resolver import ConflictResolver
 from agentx.agent.model.policy.rule import CompiledCondition, ConditionCompileError
+from agentx.agent.persistence.repositories_db import PolicyRepository
 from agentx.agent.types import (
     ActionType,
     PolicyAction,
@@ -36,12 +37,23 @@ _NOOP = PolicyAction(type=ActionType.PAUSE)
 
 
 class PolicyEngine(IPolicyStorePartner):
-    """Evaluates policy rules against a context and selects the winning action."""
+    """Evaluates policy rules against a context and selects the winning action.
 
-    def __init__(self) -> None:
+    When a :class:`PolicyRepository` is supplied, rules are persisted on add and
+    removed on delete (N3 — consistent with :class:`GoalManager`), so policy
+    survives a process restart even without an explicit snapshot.
+    """
+
+    def __init__(
+        self,
+        repository: PolicyRepository | None = None,
+        agent_id: str = "",
+    ) -> None:
         self.rules: dict[str, PolicyRule] = {}
         self._compiled: dict[str, CompiledCondition] = {}
         self._resolver = ConflictResolver()
+        self._repository = repository
+        self._agent_id = agent_id
 
     # ----------------------------------------------------------- IPolicyStorePartner
 
@@ -49,10 +61,32 @@ class PolicyEngine(IPolicyStorePartner):
         # fail-fast: compile at load time
         self._compile(rule)
         self.rules[rule.id] = rule
+        if self._repository is not None:
+            self._repository.save(self._agent_id, rule)
 
     def remove_rule(self, rule_id: str) -> None:
         self.rules.pop(rule_id, None)
         self._compiled.pop(rule_id, None)
+        if self._repository is not None:
+            self._repository.delete(rule_id)
+
+    def clear(self) -> None:
+        """Drop all rules and compiled conditions (used on session resume, N9)."""
+        self.rules.clear()
+        self._compiled.clear()
+
+    def load_from_repository(self) -> list[PolicyRule]:
+        """Load rules from the repository (N3). Returns the loaded rules.
+
+        Does not re-save (mirrors ``GoalManager.load_from_repository``).
+        """
+        if self._repository is None:
+            return []
+        loaded = self._repository.load_by_agent(self._agent_id)
+        for rule in loaded:
+            self._compile(rule)
+            self.rules[rule.id] = rule
+        return loaded
 
     def resolve_conflicts(self) -> dict[str, Any]:
         return self._resolver.detect(list(self.rules.values()))

@@ -9,10 +9,12 @@ Controllers depend on :class:`IAgentModelPartner`, not this concrete class.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import logging
 import uuid
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Any
 
 from agentx.agent.interfaces import (
@@ -40,6 +42,7 @@ from agentx.agent.persistence.repositories_db import (
 )
 from agentx.agent.types import (
     ActuatorCommand,
+    ActuatorConfig,
     ActuatorResult,
     AgentConfig,
     AgentState,
@@ -48,17 +51,30 @@ from agentx.agent.types import (
     DecisionTrace,
     EnvironmentModel,
     Goal,
+    GoalConfig,
     GoalStatus,
+    GoalTree,
+    MemoryEntry,
+    MemoryMetadata,
+    MemoryQuery,
     MemorySource,
     MemoryTier,
+    MemoryConfig,
     PolicyAction,
+    PolicyConfig,
     PolicyContext,
     PolicyDecision,
     PolicyRule,
+    Proposal,
+    ProposalOutcome,
+    ReflectionConfig,
+    ReflectionEntry,
     RuleMetadata,
     RuleSource,
+    SensorConfig,
     SensorReading,
     SessionSnapshot,
+    ToolConfig,
 )
 
 _log = logging.getLogger(__name__)
@@ -73,7 +89,11 @@ class Agent(IAgentModelPartner):
         self.state = AgentState.INITIALIZING
 
         # --- persistence (stdlib sqlite3) ---
-        db_path = f"{config.memory_config.persistent_path}/agent_session.db"
+        # C7*: canonicalise the persistent path (expand ~, resolve relative).
+        from pathlib import Path as _Path
+
+        persistent_path = str(_Path(config.memory_config.persistent_path).expanduser())
+        db_path = f"{persistent_path}/agent_session.db"
         self._db = SessionDatabase(db_path)
         self._mem_repo = MemoryRepository(db_path)
         self._pol_repo = PolicyRepository(db_path)
@@ -87,7 +107,7 @@ class Agent(IAgentModelPartner):
             repository=self._mem_repo,
             agent_id=self.id,
         )
-        self.policy_engine = PolicyEngine()
+        self.policy_engine = PolicyEngine(repository=self._pol_repo, agent_id=self.id)
         self.goal_manager = GoalManager(
             config=config.goal_config,
             repository=self._goal_repo,
@@ -129,19 +149,62 @@ class Agent(IAgentModelPartner):
         return self.id
 
     def resume_session(self, snapshot_id: str) -> None:
-        """Rebuild the Agent from a persisted snapshot (operation spec §1.2)."""
+        """Rebuild the Agent from a persisted snapshot (operation spec §1.2).
+
+        Restores: config (N7), policy rules, goal tree with persisted root
+        (N8), volatile memory (N1), reflection log (M2), and built-in tools
+        (C1). Pre-existing in-memory state is cleared first (N9).
+
+        The AI service is a non-serialisable runtime object: it is preserved
+        on this instance if already set, but callers resuming a *fresh* Agent
+        must re-inject it via :meth:`set_ai_service` (C3).
+        """
         snapshot = self._db.load_snapshot(snapshot_id)
         if snapshot is None:
             raise FileNotFoundError(f"snapshot not found: {snapshot_id}")
-        # restore policy store
-        for rule_data in snapshot.policy_store:
-            rule = _dict_to_rule(rule_data)
-            self.policy_engine.add_rule(rule)
-        # restore goal tree
-        self.goal_manager.load_from_repository()
-        # restore volatile memory
-        for entry in self._mem_repo.load_by_agent(self.id, MemoryTier.VOLATILE):
-            self.memory.store(entry, MemoryTier.VOLATILE)
+
+        # --- N9: clear pre-existing in-memory state before restoring ---
+        self.policy_engine.clear()
+        self.memory.import_volatile([])
+        self.reflection_engine.restore_log([])
+
+        # --- N7: restore config from the snapshot ---
+        vol = snapshot.volatility_data or {}
+        config_data = vol.get("config")
+        if config_data:
+            restored = _dict_to_config(config_data)
+            if restored is not None:
+                restored.id = self.id  # keep the live agent id
+                self.config = restored
+
+        # --- restore policy store (N3: repo is source of truth; snapshot is
+        # a fallback for data created before the repo-based fix) ---
+        loaded_rules = self.policy_engine.load_from_repository()
+        if not loaded_rules:
+            for rule_data in snapshot.policy_store:
+                rule = _dict_to_rule(rule_data)
+                self.policy_engine.add_rule(rule)
+
+        # --- restore goal tree (N8: honour the persisted root) ---
+        root_id = snapshot.goal_tree.get("root") if snapshot.goal_tree else None
+        self.goal_manager.load_from_repository(root_id)
+
+        # --- N1: restore volatile memory from the snapshot ---
+        volatile_data = vol.get("volatile_memory")
+        if volatile_data:
+            entries = [_dict_to_memory_entry(d) for d in volatile_data]
+            self.memory.import_volatile(entries)
+
+        # --- M2: restore reflection log ---
+        if snapshot.reflection_log_position:
+            entries = self._refl_repo.load_recent_entries(
+                self.id, limit=snapshot.reflection_log_position
+            )
+            self.reflection_engine.restore_log(entries)
+
+        # --- C1: re-register built-in tools ---
+        self._register_builtin_tools(self.config)
+
         self.state = AgentState.PERCEIVING
 
     def submit_goal(self, goal: Goal) -> str:
@@ -154,16 +217,23 @@ class Agent(IAgentModelPartner):
         """Execute one perceive → decide → act → reflect cycle (operation spec §1.4)."""
         perception = self.perceive()
         decision = self.decide()
-        action_result = self.act(_decision_to_command(decision)) if decision.selected_action else None
+        # N2: build the command ONCE so the executed action and the traced
+        # action share the same correlation_id.
+        command = _decision_to_command(decision)
+        action_result = self.act(command) if command is not None else None
         reflection = None
-        if self.config.reflection_config.enabled:
+        # N11: skip reflection entirely when no AI service is wired, so the
+        # reflection log is not polluted with "(reflection disabled)" entries
+        # every cycle. The engine still degrades gracefully if the AI call
+        # itself fails at runtime.
+        if self.config.reflection_config.enabled and self.reflection_engine.has_ai_service():
             self.state = AgentState.REFLECTING
             ctx = self._build_context()
             trace = DecisionTrace(
                 agent_id=self.id,
                 perception=perception,
                 decision=decision,
-                action=_decision_to_command(decision) if decision.selected_action else None,
+                action=command,
                 result=action_result,
                 goal_context=self.goal_manager.active_goal(),
             )
@@ -193,7 +263,7 @@ class Agent(IAgentModelPartner):
             "goals": len(self.goal_manager.get_tree().nodes),
             "rules": len(self.policy_engine.rules),
             "tools": len(self.tool_registry.list_specs()),
-            "memory_entries": len(self.memory._volatile),  # noqa: SLF001
+            "memory_entries": self.memory.count_volatile(),
         }
 
     def persist(self) -> str:
@@ -203,7 +273,13 @@ class Agent(IAgentModelPartner):
             snapshot_id=str(uuid.uuid4()),
             agent_id=self.id,
             config_version=self.config.version,
-            volatility_data={"state": self.state.value},
+            volatility_data={
+                "state": self.state.value,
+                "config": _config_to_dict(self.config),  # N7
+                "volatile_memory": [  # N1
+                    _memory_entry_to_dict(e) for e in self.memory.export_volatile()
+                ],
+            },
             policy_store=[_rule_to_dict(r) for r in self.policy_engine.rules.values()],
             goal_tree={"root": self.goal_manager.get_tree().root},
             reflection_log_position=len(self.reflection_engine.get_log()),
@@ -214,6 +290,63 @@ class Agent(IAgentModelPartner):
             _log.error("persistence failed for agent %s", self.id)
         return snapshot.snapshot_id
 
+    def load_snapshot(self, snapshot_id: str) -> SessionSnapshot | None:
+        """Read a persisted SessionSnapshot by id (C4: facade owns persistence)."""
+        return self._db.load_snapshot(snapshot_id)
+
+    def load_latest_snapshot(self) -> SessionSnapshot | None:
+        """Read the most recent snapshot for this agent (C5/I1: resume on open)."""
+        return self._db.load_latest_snapshot(self.id)
+
+    # ----------------------------------------------------------- query helpers (N6)
+
+    def list_rules(self) -> list[PolicyRule]:
+        """Return the current policy rules."""
+        return list(self.policy_engine.rules.values())
+
+    def list_goals(self) -> GoalTree:
+        """Return the current goal tree."""
+        return self.goal_manager.get_tree()
+
+    def query_memory(self, query: "MemoryQuery") -> list[MemoryEntry]:
+        """Retrieve memory entries matching *query*."""
+        return self.memory.retrieve(query)
+
+    # ----------------------------------------------------------- tool ops (N14)
+
+    def list_tools(self) -> list[Any]:
+        """Return the registered tool specs (N14: via facade, not tool_registry)."""
+        return self.tool_registry.list_specs()
+
+    def register_tool(self, tool: Any) -> Any:
+        """Register a sensor/actuator with the tool registry (N14)."""
+        if hasattr(tool, "sense"):
+            return self.tool_registry.register_sensor(tool)
+        return self.tool_registry.register_actuator(tool)
+
+    def unregister_tool(self, tool_id: str) -> bool:
+        """Unregister a tool by id (N14)."""
+        return self.tool_registry.unregister(tool_id)
+
+    def execute_tool_action(self, command: ActuatorCommand) -> ActuatorResult:
+        """Validate and run an actuator command (N14)."""
+        return self.tool_registry.execute_safely(command)
+
+    def tool_health_check(self) -> dict[str, bool]:
+        """Return {tool_id: alive} for all tools (N14)."""
+        return self.tool_registry.health_check()
+
+    # ----------------------------------------------------------- reflection (N4)
+
+    def list_pending_proposals(self) -> list[tuple[str, int, "Proposal"]]:
+        """Return ``(entry_id, proposal_index, proposal)`` for proposals
+        awaiting user confirmation (N4: closes the self-improvement loop)."""
+        return self.reflection_engine.pending_proposals()
+
+    def approve_proposal(self, entry_id: str, proposal_idx: int) -> "ProposalOutcome":
+        """Apply a pending reflection proposal via its router (N4)."""
+        return self.reflection_engine.approve_proposal(entry_id, proposal_idx)
+
     # ============================================================ cycle steps
 
     def perceive(self) -> EnvironmentModel:
@@ -221,19 +354,29 @@ class Agent(IAgentModelPartner):
         self.state = AgentState.PERCEIVING
         readings: dict[str, SensorReading] = {}
         for sid in self.tool_registry.list_sensors():
+            # N5: skip disabled sensors (set via reflection/TOOL_CONFIGURATION).
+            if not self.tool_registry.is_enabled(sid):
+                continue
             sensor = self.tool_registry.get_sensor(sid)
             try:
                 reading = sensor.sense()
-                readings[sid] = reading
-                # store perception in volatile memory
-                entry = self.memory.create_entry(
-                    content={"sensor": sid, "data": reading.data},
-                    source=MemorySource.PERCEPTION,
-                    importance=0.4,
-                )
-                self.memory.store(entry, MemoryTier.VOLATILE)
             except Exception as exc:  # noqa: BLE001 — sensors must not crash the cycle
+                # M1: surface the failure as a zero-confidence reading so the
+                # policy layer can react (e.g. `environment.confidence < 0.5`).
                 _log.warning("sensor %s failed: %s", sid, exc)
+                reading = SensorReading(
+                    sensor_id=sid,
+                    data={"error": str(exc)},
+                    confidence=0.0,
+                )
+            readings[sid] = reading
+            # store perception in volatile memory
+            entry = self.memory.create_entry(
+                content={"sensor": sid, "data": reading.data},
+                source=MemorySource.PERCEPTION,
+                importance=0.4,
+            )
+            self.memory.store(entry, MemoryTier.VOLATILE)
         self.environment_model = EnvironmentModel(
             sensor_readings=readings,
             confidence=sum(r.confidence for r in readings.values()) / max(len(readings), 1),
@@ -264,23 +407,30 @@ class Agent(IAgentModelPartner):
             importance=0.6 if result.success else 0.8,
         )
         self.memory.store(entry, MemoryTier.VOLATILE)
-        # update goals based on success
-        if result.success:
+        # C6: only complete the active goal when the acting tool matches the
+        # goal's expected tool (or the goal accepts any successful tool).
+        if result.success and command is not None:
             active = self.goal_manager.active_goal()
             if active and active.success_criteria.kind == "tool_success":
-                self.goal_manager.update_status(active.id, GoalStatus.COMPLETED)
+                expected_tool = active.success_criteria.tool_id
+                if expected_tool is None or expected_tool == command.actuator_id:
+                    self.goal_manager.update_status(active.id, GoalStatus.COMPLETED)
         return result
 
-    def reflect(self) -> Any:
-        """ReflectionEngine.reflect() → actionable proposals."""
-        return self.reflection_engine
+    def reflect(self, trace: DecisionTrace, ctx: PolicyContext) -> ReflectionEntry:
+        """ReflectionEngine.reflect() → actionable proposals (operation spec §1.6).
+
+        C2: previously returned the engine itself. ``run_cycle`` calls the
+        engine directly; this method exposes reflection for external callers.
+        """
+        return self.reflection_engine.reflect(trace, ctx)
 
     # ============================================================ wiring
 
     def set_ai_service(self, ai: IAIServicePartner) -> None:
         """Inject the AI service for reflection (deferred wiring)."""
         self._ai_service = ai
-        self.reflection_engine._ai = ai  # noqa: SLF001
+        self.reflection_engine.set_ai_service(ai)  # N13: public API, not _ai reach
 
     def set_rag(self, rag: Any) -> None:
         """Inject a RAG instance into the RagSensorTool (feature_002 integration)."""
@@ -300,6 +450,7 @@ class Agent(IAgentModelPartner):
 
         rag_tool = RagSensorTool()
         self._safe_register_sensor(rag_tool)
+        self._safe_register_actuator(rag_tool)  # N12: query action for EXECUTE_TOOL
 
         session_tool = SessionTool(self)
         self._safe_register_sensor(session_tool)
@@ -330,7 +481,7 @@ class Agent(IAgentModelPartner):
 
         return PolicyContext(
             environment=self.environment_model,
-            memory=self.memory.retrieve(MemoryQuery(limit=5)),
+            memory=self.memory.retrieve(MemoryQuery(limit=self.config.context_memory_limit)),  # m2
             current_goal=self.goal_manager.active_goal(),
             agent_state=self.state,
             autonomy_level=self.config.autonomy_level,
@@ -362,6 +513,10 @@ def _decision_to_command(decision: PolicyDecision) -> ActuatorCommand | None:
         return None
     params = decision.selected_action.parameters
     tool_id = params.get("tool_id", "")
+    # m1: an EXECUTE_TOOL action without a valid tool_id cannot be dispatched.
+    if not tool_id:
+        _log.warning("EXECUTE_TOOL action has no tool_id — dropping command")
+        return None
     return ActuatorCommand(
         actuator_id=tool_id,
         action=params.get("action", "default"),
@@ -410,3 +565,176 @@ def _dict_to_rule(data: dict[str, Any]) -> PolicyRule:
             version=int(meta_data.get("version", 1)),
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# config serialisation (N7)
+# ---------------------------------------------------------------------------
+
+
+def _config_to_dict(config: AgentConfig) -> dict[str, Any]:
+    """Recursively serialise an :class:`AgentConfig` (enums→value, datetimes→iso)."""
+
+    def _normalize(obj: Any) -> Any:
+        if isinstance(obj, Enum):
+            return obj.value
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
+            return {f.name: _normalize(getattr(obj, f.name)) for f in dataclasses.fields(obj)}
+        if isinstance(obj, list):
+            return [_normalize(x) for x in obj]
+        if isinstance(obj, dict):
+            return {k: _normalize(v) for k, v in obj.items()}
+        return obj
+
+    return _normalize(config)
+
+
+def _dict_to_config(data: dict[str, Any]) -> AgentConfig | None:
+    """Reconstruct an :class:`AgentConfig` from a serialised dict (N7).
+
+    Returns ``None`` on malformed input so resume degrades gracefully rather
+    than crashing.
+    """
+    if not data:
+        return None
+    try:
+        return AgentConfig(
+            id=data.get("id", ""),
+            name=data.get("name", "agentx-agent"),
+            version=int(data.get("version", 1)),
+            sensors=[_dict_to_sensor_config(s) for s in data.get("sensors", [])],
+            actuators=[_dict_to_actuator_config(a) for a in data.get("actuators", [])],
+            policy_config=_dict_to_policy_config(data.get("policy_config", {})),
+            memory_config=_dict_to_memory_config(data.get("memory_config", {})),
+            goal_config=_dict_to_goal_config(data.get("goal_config", {})),
+            reflection_config=_dict_to_reflection_config(data.get("reflection_config", {})),
+            tool_config=_dict_to_tool_config(data.get("tool_config", {})),
+            autonomy_level=AutonomyLevel(
+                data.get("autonomy_level", AutonomyLevel.SUPERVISED.value)
+            ),
+            sandbox_root=data.get("sandbox_root", "."),
+            context_memory_limit=int(data.get("context_memory_limit", 5)),  # m2
+            created_at=_from_iso_str(data.get("created_at")),
+            updated_at=_from_iso_str(data.get("updated_at")),
+        )
+    except (KeyError, ValueError, TypeError):
+        return None
+
+
+def _dict_to_sensor_config(data: dict[str, Any]) -> SensorConfig:
+    return SensorConfig(
+        id=data.get("id", ""),
+        type=data.get("type", ""),
+        enabled=bool(data.get("enabled", True)),
+        parameters=data.get("parameters", {}),
+        sampling_rate=data.get("sampling_rate"),
+    )
+
+
+def _dict_to_actuator_config(data: dict[str, Any]) -> ActuatorConfig:
+    return ActuatorConfig(
+        id=data.get("id", ""),
+        type=data.get("type", ""),
+        enabled=bool(data.get("enabled", True)),
+        parameters=data.get("parameters", {}),
+        requires_confirmation=bool(data.get("requires_confirmation", False)),
+    )
+
+
+def _dict_to_policy_config(data: dict[str, Any]) -> PolicyConfig:
+    from agentx.agent.types import ConflictResolutionStrategy
+
+    return PolicyConfig(
+        rules_file=data.get("rules_file", "policies/rules.json"),
+        conflict_resolution=ConflictResolutionStrategy(
+            data.get("conflict_resolution", ConflictResolutionStrategy.PRIORITY_WINS.value)
+        ),
+        default_autonomy=AutonomyLevel(
+            data.get("default_autonomy", AutonomyLevel.SUPERVISED.value)
+        ),
+        max_rules=int(data.get("max_rules", 1000)),
+    )
+
+
+def _dict_to_memory_config(data: dict[str, Any]) -> MemoryConfig:
+    return MemoryConfig(
+        volatile_capacity=int(data.get("volatile_capacity", 10_000)),
+        persistent_path=data.get("persistent_path", ".agentx/memory"),
+        consolidation_interval=float(data.get("consolidation_interval", 300.0)),
+        embedding_model=data.get("embedding_model", "nomic-embed-text"),
+        max_persistent_entries=int(data.get("max_persistent_entries", 100_000)),
+    )
+
+
+def _dict_to_goal_config(data: dict[str, Any]) -> GoalConfig:
+    return GoalConfig(
+        max_active_goals=int(data.get("max_active_goals", 10)),
+        default_priority=int(data.get("default_priority", 50)),
+        auto_decompose=bool(data.get("auto_decompose", True)),
+        max_depth=int(data.get("max_depth", 5)),
+    )
+
+
+def _dict_to_reflection_config(data: dict[str, Any]) -> ReflectionConfig:
+    return ReflectionConfig(
+        enabled=bool(data.get("enabled", True)),
+        interval=float(data.get("interval", 600.0)),
+        prompt_template=data.get("prompt_template", "built-in"),
+        ai_service_id=data.get("ai_service_id", "default"),
+        min_confidence=float(data.get("min_confidence", 0.7)),
+    )
+
+
+def _dict_to_tool_config(data: dict[str, Any]) -> ToolConfig:
+    return ToolConfig(auto_discover=bool(data.get("auto_discover", False)))
+
+
+# ---------------------------------------------------------------------------
+# memory-entry serialisation (N1)
+# ---------------------------------------------------------------------------
+
+
+def _memory_entry_to_dict(entry: MemoryEntry) -> dict[str, Any]:
+    return {
+        "id": entry.id,
+        "content": entry.content,
+        "metadata": {
+            "created_at": entry.metadata.created_at.isoformat(),
+            "access_count": entry.metadata.access_count,
+            "last_accessed": entry.metadata.last_accessed.isoformat(),
+            "importance": entry.metadata.importance,
+            "tags": entry.metadata.tags,
+            "source": entry.metadata.source.value,
+        },
+        "embedding": entry.embedding,
+        "tier": entry.tier.value,
+    }
+
+
+def _dict_to_memory_entry(data: dict[str, Any]) -> MemoryEntry:
+    meta = data.get("metadata", {})
+    return MemoryEntry(
+        id=data.get("id", str(uuid.uuid4())),
+        content=data.get("content", {}),
+        metadata=MemoryMetadata(
+            created_at=_from_iso_str(meta.get("created_at")),
+            access_count=int(meta.get("access_count", 0)),
+            last_accessed=_from_iso_str(meta.get("last_accessed")),
+            importance=float(meta.get("importance", 0.5)),
+            tags=meta.get("tags", []),
+            source=MemorySource(meta.get("source", MemorySource.PERCEPTION.value)),
+        ),
+        embedding=data.get("embedding"),
+        tier=MemoryTier(data.get("tier", MemoryTier.VOLATILE.value)),
+    )
+
+
+def _from_iso_str(value: Any) -> datetime:
+    if not value:
+        return datetime.now(timezone.utc)
+    try:
+        return datetime.fromisoformat(str(value))
+    except (ValueError, TypeError):
+        return datetime.now(timezone.utc)

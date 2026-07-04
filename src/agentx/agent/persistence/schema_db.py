@@ -152,7 +152,7 @@ class TableGoals:
         f"priority, success_criteria, created_at, updated_at) "
         f"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
-    SELECT_BY_AGENT = f"SELECT * FROM {TABLE_NAME} WHERE agent_id = ?"
+    SELECT_BY_AGENT = f"SELECT * FROM {TABLE_NAME} WHERE agent_id = ? ORDER BY created_at ASC"
     DELETE_BY_ID = f"DELETE FROM {TABLE_NAME} WHERE id = ?"
 
 

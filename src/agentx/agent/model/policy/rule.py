@@ -9,11 +9,14 @@ at ``decide()`` time.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from typing import Any
 
 from agentx.agent.types import PolicyContext
+
+_log = logging.getLogger(__name__)
 
 
 class ConditionCompileError(Exception):
@@ -350,7 +353,10 @@ class ConditionEvaluator:
                 return left > right
             if op == ">=":
                 return left >= right
-        except TypeError:
+        except TypeError as exc:
+            # M5: surface type mismatches instead of silently returning False
+            # so misconfigured conditions are diagnosable.
+            _log.warning("condition compare %r failed: %r %s %r — %s", op, left, op, right, exc)
             return False
         return False
 

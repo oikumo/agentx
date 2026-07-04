@@ -41,9 +41,11 @@ class GoalManager(IGoalManager):
 
     def add_goal(self, goal: Goal) -> str:
         self._tree.add(goal)
-        # activate if no active goal and under the limit
+        # Single-active model: activate only when no goal is currently active.
+        # (m4: the previous ``len(active) < max_active_goals`` clause was dead
+        # — ``active`` is empty here, so the bound was always satisfied.)
         active = [g for g in self._tree.nodes.values() if g.status == GoalStatus.ACTIVE]
-        if not active and len(active) < self._config.max_active_goals:
+        if not active:
             goal.status = GoalStatus.ACTIVE
         if self._repository is not None:
             self._repository.save(self._agent_id, goal)
@@ -130,7 +132,12 @@ class GoalManager(IGoalManager):
         except (ValueError, KeyError):
             pass
 
-    def load_from_repository(self) -> None:
+    def load_from_repository(self, root_id: str | None = None) -> None:
         if self._repository is None:
             return
         self._tree = self._repository.load_tree(self._agent_id)
+        # honour the persisted root if provided and valid (N8: otherwise the
+        # root drifts to whichever row SQLite returns first, since load_tree
+        # sets root to the first-inserted goal).
+        if root_id and root_id in self._tree.nodes:
+            self._tree.root = root_id

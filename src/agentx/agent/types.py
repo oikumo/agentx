@@ -214,6 +214,7 @@ class AgentConfig:
     tool_config: ToolConfig = field(default_factory=ToolConfig)
     autonomy_level: AutonomyLevel = AutonomyLevel.SUPERVISED
     sandbox_root: str = "."
+    context_memory_limit: int = 5  # m2: entries pulled into PolicyContext per cycle
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -392,12 +393,16 @@ class SuccessCriteria:
     ``kind`` selects the evaluation strategy:
 
     * ``"always"``  — always satisfied (used for maintenance goals)
-    * ``"tool_success"`` — satisfied when the acting tool returns success
+    * ``"tool_success"`` — satisfied when the acting tool returns success.
+      When ``tool_id`` is set, only a successful action by *that* tool
+      satisfies the criteria (C6); when ``None`` any successful tool action
+      satisfies it.
     * ``"expression"`` — a policy-DSL expression evaluated against the context
     """
 
     kind: str = "always"
     expression: str | None = None
+    tool_id: str | None = None
 
 
 @dataclass

@@ -19,6 +19,8 @@ from agentx.agent.persistence.schema_db import (
 )
 from agentx.agent.types import (
     ActionType,
+    Critique,
+    DecisionTrace,
     Goal,
     GoalStatus,
     GoalTree,
@@ -32,6 +34,7 @@ from agentx.agent.types import (
     Proposal,
     ProposalStatus,
     ProposalType,
+    ReflectionEntry,
     RuleMetadata,
     RuleSource,
     SuccessCriteria,
@@ -199,6 +202,20 @@ class ReflectionRepository:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def load_recent_entries(self, agent_id: str, limit: int = 20) -> list[ReflectionEntry]:
+        """Load recent reflection entries as reconstructed :class:`ReflectionEntry`.
+
+        Used on session resume (M2) to repopulate the in-memory reflection log.
+        The ``DecisionTrace`` is reconstructed minimally (agent_id + timestamp)
+        since the full nested trace is not needed for log display.
+        """
+        with sqlite3.connect(self._db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                TableReflectionEntries.SELECT_BY_AGENT, (agent_id, limit)
+            ).fetchall()
+        return [_row_to_reflection_entry(r) for r in rows]
+
 
 # ---------------------------------------------------------------------------
 # Row → dataclass helpers
@@ -255,6 +272,44 @@ def _row_to_goal(row: sqlite3.Row) -> Goal:
     )
 
 
+def _row_to_reflection_entry(row: sqlite3.Row) -> ReflectionEntry:
+    """Reconstruct a :class:`ReflectionEntry` from a persisted row (M2).
+
+    The ``DecisionTrace`` is rebuilt minimally (agent_id + timestamp); the
+    critique and proposals are fully restored since those drive log display.
+    """
+    critique_data = json.loads(row["critique_json"] or "{}")
+    proposals_data = json.loads(row["proposals_json"] or "[]")
+    proposals: list[Proposal] = []
+    for item in proposals_data:
+        if not isinstance(item, dict):
+            continue
+        try:
+            ptype = ProposalType(item.get("type", ""))
+        except ValueError:
+            continue
+        proposals.append(
+            Proposal(
+                type=ptype,
+                content=item.get("content", {}),
+                rationale=item.get("rationale", ""),
+                status=ProposalStatus(item.get("status", ProposalStatus.PROPOSED.value)),
+            )
+        )
+    return ReflectionEntry(
+        id=row["id"],
+        trace=DecisionTrace(agent_id=row["agent_id"], timestamp=_from_iso(row["created_at"])),
+        critique=Critique(
+            summary=critique_data.get("summary", ""),
+            strengths=critique_data.get("strengths", []),
+            weaknesses=critique_data.get("weaknesses", []),
+            confidence=float(critique_data.get("confidence", 0.0)),
+        ),
+        proposals=proposals,
+        created_at=_from_iso(row["created_at"]),
+    )
+
+
 # ---------------------------------------------------------------------------
 # dataclass ↔ dict serializers
 # ---------------------------------------------------------------------------
@@ -277,11 +332,15 @@ def _dict_to_action(data: dict[str, Any]) -> PolicyAction:
 
 
 def _success_criteria_to_dict(sc: SuccessCriteria) -> dict[str, Any]:
-    return {"kind": sc.kind, "expression": sc.expression}
+    return {"kind": sc.kind, "expression": sc.expression, "tool_id": sc.tool_id}
 
 
 def _dict_to_success_criteria(data: dict[str, Any]) -> SuccessCriteria:
-    return SuccessCriteria(kind=data.get("kind", "always"), expression=data.get("expression"))
+    return SuccessCriteria(
+        kind=data.get("kind", "always"),
+        expression=data.get("expression"),
+        tool_id=data.get("tool_id"),
+    )
 
 
 def _critique_to_dict(critique: Any) -> dict[str, Any]:

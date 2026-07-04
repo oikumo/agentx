@@ -54,11 +54,19 @@ class ConflictResolver:
 
     @staticmethod
     def _condition_overlap(expr_a: str, expr_b: str) -> float:
-        """Estimate condition overlap from shared tokens (heuristic)."""
+        """Estimate condition overlap from shared *identifier* tokens (N15).
+
+        Structural tokens (operators, parentheses, keywords) are excluded so
+        the Jaccard score reflects semantic overlap rather than syntax.
+        """
         if expr_a == expr_b:
             return 1.0
-        tokens_a = set(expr_a.replace("(", " ( ").replace(")", " ) ").split())
-        tokens_b = set(expr_b.replace("(", " ( ").replace(")", " ) ").split())
+        # N15: keep only identifier-like tokens (drop operators/parens/keywords).
+        import re
+
+        ident_re = re.compile(r"[A-Za-z_][A-Za-z0-9_.]*")
+        tokens_a = set(ident_re.findall(expr_a)) - {"AND", "OR", "NOT", "true", "false"}
+        tokens_b = set(ident_re.findall(expr_b)) - {"AND", "OR", "NOT", "true", "false"}
         if not tokens_a or not tokens_b:
             return 0.0
         intersection = tokens_a & tokens_b

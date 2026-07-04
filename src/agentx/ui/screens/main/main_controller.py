@@ -88,13 +88,20 @@ class MainController(IMainViewPartner):
         return self._rag_controller, self._rag_view
 
     def show_agent(self) -> None:
-        """Create and wire an Agent + AgentController for the TUI agent screen."""
-        from agentx.agent.model.agent import Agent
-        from agentx.agent.model.ai_adapter import AIServiceAdapter
-        from agentx.agent.controller.agent_controller import AgentController
+        """Create and wire an Agent + AgentController for the TUI agent screen.
+
+        C5: reuses an already-wired controller (no fresh agent on every open).
+        I1/I4: the :class:`AgentAdapter` owns AI-service wiring and resumes the
+        latest persisted snapshot so state survives a close/reopen.
+        """
+        # C5: reuse the existing agent controller if already wired this session.
+        if self._agent_controller is not None:
+            return
+
+        from agentx.agent.adapter import AgentAdapter
         from agentx.agent.types import AgentConfig, AutonomyLevel, MemoryConfig
 
-        # Use the session working directory for persistence + sandbox
+        # Use the session working directory for persistence + sandbox.
         session_dir = "."
         try:
             session = self.session_controller.get_current_session()
@@ -112,11 +119,8 @@ class MainController(IMainViewPartner):
             memory_config=MemoryConfig(persistent_path=session_dir),
             sandbox_root=session_dir,
         )
-        agent = Agent(config)
-        # Wire the AI service so reflection works (degrades gracefully if
-        # no API keys are configured)
-        agent.set_ai_service(AIServiceAdapter())
-        controller = AgentController(agent)
+        # I4: AI service wiring + C5/I1 snapshot resume happen inside the adapter.
+        _agent, controller = AgentAdapter.create_agent(config, resume=True)
         self._agent_controller = controller
 
     def get_agent_controller(self) -> AgentController | None:

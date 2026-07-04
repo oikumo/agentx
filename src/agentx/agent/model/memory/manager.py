@@ -124,6 +124,24 @@ class MemoryManager(IMemoryStorePartner):
             k, self._volatile.values(), key=lambda e: e.metadata.importance
         )
 
+    # ----------------------------------------------------------- snapshot helpers
+
+    def export_volatile(self) -> list[MemoryEntry]:
+        """Return a shallow copy of the volatile cache (for snapshot serialisation)."""
+        return list(self._volatile.values())
+
+    def import_volatile(self, entries: list[MemoryEntry]) -> None:
+        """Replace the volatile cache with *entries* (used on session resume)."""
+        self._volatile = OrderedDict()
+        for entry in entries:
+            entry.tier = MemoryTier.VOLATILE
+            self._volatile[entry.id] = entry
+        self._enforce_capacity()
+
+    def count_volatile(self) -> int:
+        """Public accessor for the volatile entry count (replaces private reach-through)."""
+        return len(self._volatile)
+
     def create_entry(
         self,
         content: dict[str, Any],

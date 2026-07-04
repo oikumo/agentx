@@ -96,8 +96,9 @@ class SessionTool(ISensor, IActuator):
                 return ActuatorResult(success=False, error="agent cannot persist")
             if action == "restore":
                 snapshot_id = command.parameters.get("snapshot_id", "")
-                if self._agent and hasattr(self._agent, "resume"):
-                    self._agent.resume(snapshot_id)
+                # M8: Agent exposes resume_session (not resume).
+                if self._agent and hasattr(self._agent, "resume_session"):
+                    self._agent.resume_session(snapshot_id)
                     return ActuatorResult(success=True, output={"restored": snapshot_id})
                 return ActuatorResult(success=False, error="agent cannot restore")
             return ActuatorResult(success=False, error=f"unhandled action: {action}")

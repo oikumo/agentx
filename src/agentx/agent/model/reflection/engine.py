@@ -21,6 +21,7 @@ from agentx.agent.types import (
     DecisionTrace,
     PolicyContext,
     Proposal,
+    ProposalOutcome,
     ProposalStatus,
     ProposalVerdict,
     ReflectionEntry,
@@ -122,11 +123,57 @@ class ReflectionEngine:
     def get_log(self) -> list[ReflectionEntry]:
         return list(self._entries)
 
+    def restore_log(self, entries: list[ReflectionEntry]) -> None:
+        """Replace the in-memory reflection log (used on session resume, M2)."""
+        self._entries = list(entries)
+
+    def has_ai_service(self) -> bool:
+        """True if an AI service is wired (used to skip no-op reflection, N11)."""
+        return self._ai is not None
+
+    def set_ai_service(self, ai: IAIServicePartner) -> None:
+        """Wire (or re-wire) the AI service (N13: public API, not _ai reach)."""
+        self._ai = ai
+
+    # ----------------------------------------------------------- approval flow (N4)
+
+    def pending_proposals(self) -> list[tuple[str, int, Proposal]]:
+        """Return ``(entry_id, proposal_index, proposal)`` for every proposal
+        currently awaiting user confirmation."""
+        result: list[tuple[str, int, Proposal]] = []
+        for entry in self._entries:
+            for idx, proposal in enumerate(entry.proposals):
+                if proposal.status == ProposalStatus.NEEDS_CONFIRMATION:
+                    result.append((entry.id, idx, proposal))
+        return result
+
+    def approve_proposal(self, entry_id: str, proposal_idx: int) -> ProposalOutcome:
+        """Apply a pending proposal via the router (N4: closes the loop).
+
+        In SUPERVISED mode the safety gate marks proposals
+        ``NEEDS_CONFIRMATION``; this method is the user-approved path that
+        routes them for real.
+        """
+        for entry in self._entries:
+            if entry.id != entry_id:
+                continue
+            if not (0 <= proposal_idx < len(entry.proposals)):
+                return ProposalOutcome(status=ProposalStatus.REJECTED, reason="bad index")
+            proposal = entry.proposals[proposal_idx]
+            if proposal.status != ProposalStatus.NEEDS_CONFIRMATION:
+                return ProposalOutcome(
+                    status=ProposalStatus.REJECTED, reason=f"not pending ({proposal.status.value})"
+                )
+            if self._router is None:
+                return ProposalOutcome(status=ProposalStatus.REJECTED, reason="no router")
+            return self._router.route(proposal)
+        return ProposalOutcome(status=ProposalStatus.REJECTED, reason="entry not found")
+
     # ----------------------------------------------------------- internals
 
     @staticmethod
     def _render_prompt(trace: DecisionTrace) -> str:
-        perception = str(trace.perception.sensor_readings.keys()) if trace.perception else "{}"
+        perception = ", ".join(trace.perception.sensor_readings.keys()) if trace.perception else "(none)"
         decision = trace.decision.reasoning if trace.decision else "none"
         action = str(trace.action.action) if trace.action else "none"
         outcome = "success" if (trace.result and trace.result.success) else "unknown"
@@ -141,6 +188,14 @@ class ReflectionEngine:
 
     def _route_proposals(self, entry: ReflectionEntry, ctx: PolicyContext) -> None:
         if self._safety is None or self._router is None:
+            # M3: surface un-routed proposals instead of silently dropping them.
+            _log.warning(
+                "reflection safety/router missing — %d proposal(s) left for manual review",
+                len(entry.proposals),
+            )
+            for proposal in entry.proposals:
+                if proposal.status == ProposalStatus.PROPOSED:
+                    proposal.status = ProposalStatus.NEEDS_CONFIRMATION
             return
         for proposal in entry.proposals:
             verdict: ProposalVerdict = self._safety.evaluate(proposal, ctx)

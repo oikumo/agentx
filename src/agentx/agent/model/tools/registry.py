@@ -96,6 +96,21 @@ class ToolRegistry(IToolRegistryPartner):
     def list_specs(self) -> list[ToolSpec]:
         return list(self._specs.values())
 
+    # ----------------------------------------------------------- enablement (M6/N5)
+
+    def is_enabled(self, tool_id: str) -> bool:
+        """True if *tool_id* is registered and enabled."""
+        spec = self._specs.get(tool_id)
+        return spec.enabled if spec is not None else False
+
+    def set_tool_enabled(self, tool_id: str, enabled: bool) -> bool:
+        """Enable/disable a tool by id. Returns False if the tool is unknown."""
+        spec = self._specs.get(tool_id)
+        if spec is None:
+            return False
+        spec.enabled = enabled
+        return True
+
     # --------------------------------------------------------------- health
 
     def health_check(self) -> dict[str, bool]:
@@ -123,6 +138,11 @@ class ToolRegistry(IToolRegistryPartner):
         if actuator is None:
             return ActuatorResult(
                 success=False, error=f"unknown actuator: {command.actuator_id}"
+            )
+        # N5: honour the tool's enabled flag (set via reflection/TOOL_CONFIGURATION).
+        if not self.is_enabled(command.actuator_id):
+            return ActuatorResult(
+                success=False, error=f"tool disabled: {command.actuator_id}"
             )
         vr = actuator.validate(command)
         if not vr.valid:
