@@ -478,11 +478,25 @@ class AgentTUIScreen(BaseAgentXScreen):
     # ----------------------------------------------------------- actions
 
     def action_run_cycle(self) -> None:
+        """Run one agent cycle on a worker thread (feature_014 freeze fix).
+
+        ``run_cycle()`` makes a blocking ``llm.invoke()`` HTTP call.  Running
+        it on the UI thread froze the entire TUI (Escape/Back unresponsive).
+        Now it runs via :meth:`run_blocking` on a daemon worker thread; the
+        result is rendered in :meth:`_on_cycle_result` on the UI thread.
+        """
         if not self._controller:
             return
         self._log("[bold blue]═══ Running cycle ═══[/bold blue]")
+        self.run_blocking(
+            self._controller.run_cycle,
+            on_result=self._on_cycle_result,
+            on_error=self._on_cycle_error,
+        )
+
+    def _on_cycle_result(self, result: Any) -> None:
+        """Render the cycle result on the UI thread (called by run_blocking)."""
         try:
-            result = self._controller.run_cycle()
             # Show decision
             self._log(f"  [bold]Decision:[/bold] {result.decision.reasoning} "
                       f"(confidence: {result.decision.confidence:.2f})")
@@ -506,17 +520,39 @@ class AgentTUIScreen(BaseAgentXScreen):
             if result.reflection:
                 self._log(f"  [magenta]Reflection:[/magenta] {result.reflection.critique.summary}")
         except Exception as exc:
-            self._log(f"[red]Cycle error: {exc}[/red]")
+            self._log(f"[red]Render error: {exc}[/red]")
+        self._refresh_status()
+
+    def _on_cycle_error(self, exc: Exception) -> None:
+        """Handle a cycle error on the UI thread (called by run_blocking)."""
+        self._log(f"[red]Cycle error: {exc}[/red]")
         self._refresh_status()
 
     def action_save(self) -> None:
+        """Save a session snapshot on a worker thread (feature_014 freeze fix).
+
+        ``save_snapshot()`` does sqlite I/O.  Running it on the UI thread could
+        stall the TUI on large databases.  Now it runs via :meth:`run_blocking`.
+        """
         if not self._controller:
             return
+        self._log("[dim]Saving snapshot…[/dim]")
+        self.run_blocking(
+            self._controller.save_snapshot,
+            on_result=self._on_save_result,
+            on_error=self._on_save_error,
+        )
+
+    def _on_save_result(self, snapshot_id: Any) -> None:
+        """Handle a successful save on the UI thread (called by run_blocking)."""
         try:
-            snapshot_id = self._controller.save_snapshot()  # N6
             self._log(f"[green]Snapshot saved: {snapshot_id[:8]}…[/green]")
-        except Exception as exc:
-            self._log(f"[red]Save error: {exc}[/red]")
+        except Exception:
+            self._log(f"[green]Snapshot saved: {snapshot_id}[/green]")
+
+    def _on_save_error(self, exc: Exception) -> None:
+        """Handle a save error on the UI thread (called by run_blocking)."""
+        self._log(f"[red]Save error: {exc}[/red]")
 
     # ----------------------------------------------------------- helpers
 

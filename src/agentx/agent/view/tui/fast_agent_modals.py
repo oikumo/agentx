@@ -275,6 +275,9 @@ class RunningModal(BaseAgentXModalScreen[dict]):
 
     def on_unmount(self) -> None:
         """Signal the worker to stop so it does not outlive the modal."""
+        # feature_014: call super() so BaseAgentXScreen cancels any
+        # run_blocking handles (none today, but future-proofs the modal).
+        super().on_unmount()
         self._auto_running = False
         self._stop_evt.set()
         self._pause_evt.set()  # release the worker if parked on pause

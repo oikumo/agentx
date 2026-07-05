@@ -13,14 +13,17 @@ Public API:
     - :class:`BaseScreenAdapter`       — base for view adapters that delegate to a Screen.
     - :class:`NavigationMixin`         — ``navigate_to_child`` for host screens.
     - :func:`register_partner`         — metaclass-safe ABC partner registration.
+    - :class:`BlockingTaskRunner`      — runs blocking callables off the UI thread.
+    - :class:`TaskHandle`              — handle for cancelling a blocking task.
     - :class:`SessionStatusBar`, :class:`WelcomePanel`, :class:`MenuGrid`,
       :class:`CommandInput`, :class:`ChatMessage` — reusable widgets.
 
-Design: ``design_001_tui_framework.md``.
+Design: ``design_001_tui_framework.md``, ``design_001_nonblocking_runner.md``.
 """
 
 from __future__ import annotations
 
+from agentx.ui.tui.framework.async_runner import BlockingTaskRunner, TaskHandle
 from agentx.ui.tui.framework.base_adapter import BaseScreenAdapter
 from agentx.ui.tui.framework.base_app import BaseAgentXApp
 from agentx.ui.tui.framework.base_modal import BaseAgentXModalScreen
@@ -41,6 +44,8 @@ __all__ = [
     "BaseScreenAdapter",
     "NavigationMixin",
     "register_partner",
+    "BlockingTaskRunner",
+    "TaskHandle",
     "SessionStatusBar",
     "WelcomePanel",
     "MenuGrid",

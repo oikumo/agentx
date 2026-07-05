@@ -14,14 +14,11 @@ MVC++: pure View — no ``agentx.model.*`` import, controllers duck-typed ``Any`
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import Any, Callable, Literal
 
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Input, RichLog, Static
-
-if TYPE_CHECKING:
-    pass
 
 # Textual's notify() accepts a literal severity.  We type the parameter as a
 # Literal so the call site type-checks, while still accepting plain strings at
@@ -143,6 +140,11 @@ class BaseAgentXScreen(Screen, NavigationMixin):
         # Duck-typed ``Any`` (mirrors the codebase convention) so subclasses can
         # call controller methods without per-access None-narrowing.
         self._controller: Any = controller
+        # Active blocking-task handles (feature_014).  Each entry is a
+        # :class:`~agentx.ui.tui.framework.async_runner.TaskHandle` returned by
+        # :meth:`run_blocking`.  All are cancelled on unmount so no callback
+        # fires on a gone screen and no zombie thread lingers.
+        self._task_handles: list[Any] = []
 
     # ----------------------------------------------------------- controller wiring
 
@@ -243,6 +245,72 @@ class BaseAgentXScreen(Screen, NavigationMixin):
             return False
         input_widget.value = ""
         return True
+
+    # ----------------------------------------------------------- non-blocking work
+
+    def run_blocking(
+        self,
+        func: Callable[[], Any],
+        *,
+        on_result: Callable[[Any], None] | None = None,
+        on_error: Callable[[Exception], None] | None = None,
+    ) -> Any:
+        """Run a blocking callable on a daemon worker thread (feature_014).
+
+        The UI thread stays free — timers fire, keys are accepted, Stop/Escape
+        work mid-call.  When ``func`` returns (or raises), ``on_result`` (or
+        ``on_error``) is invoked **on the UI thread** (safe to touch widgets).
+
+        This is the framework-level fix for the agent-screen freeze: calling
+        ``controller.run_cycle()`` synchronously on the UI thread blocks on
+        ``llm.invoke()`` (a 1–30s HTTP call), freezing the entire TUI.  Routing
+        it through ``run_blocking`` moves the blocking call to a worker thread.
+
+        Args:
+            func:       The blocking callable (takes no args, returns ``Any``).
+            on_result:  Callback invoked on the UI thread with the return value.
+                        May be ``None`` (result silently discarded).
+            on_error:   Callback invoked on the UI thread with the exception.
+                        May be ``None`` (error silently discarded).
+
+        Returns:
+            A :class:`~agentx.ui.tui.framework.async_runner.TaskHandle` with
+            ``cancel()`` and ``is_done``.  The handle is tracked internally and
+            cancelled automatically on unmount.
+
+        Operation spec: ``operation_spec_001_nonblocking_runner.md`` O1.
+        """
+        from agentx.ui.tui.framework.async_runner import (
+            BlockingTaskRunner,
+            TaskHandle,
+        )
+
+        runner = BlockingTaskRunner(func, on_result, on_error, screen=self)
+        handle = TaskHandle(runner)
+        self._task_handles.append(handle)
+        runner.start()
+        return handle
+
+    def on_unmount(self) -> None:
+        """Cancel all active blocking tasks when the screen is popped.
+
+        Ensures no callback fires on the now-unmounted screen (which would
+        crash — no widget context) and no zombie worker thread lingers.  Each
+        handle's stop event is set and its runner is marked unmounted so the
+        poller exits without invoking callbacks.
+
+        Subclasses that override ``on_unmount`` MUST call ``super().on_unmount()``
+        first (or cancel their own handles manually).
+
+        Operation spec: ``operation_spec_001_nonblocking_runner.md`` O4.
+        """
+        for handle in self._task_handles:
+            try:
+                handle._runner._unmounted = True  # type: ignore[attr-defined]
+                handle.cancel()
+            except Exception:  # noqa: BLE001 — never crash on cleanup
+                pass
+        self._task_handles.clear()
 
 
 # ---------------------------------------------------------------------------

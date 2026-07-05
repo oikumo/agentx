@@ -116,15 +116,34 @@ class AgentDemoScreen(BaseAgentXScreen):
     # ----------------------------------------------------------- actions
 
     def action_run_cycle(self) -> None:
+        """Run one demo cycle on a worker thread (feature_014 freeze fix).
+
+        ``run_cycle()`` makes a blocking ``llm.invoke()`` HTTP call.  Running
+        it on the UI thread froze the entire TUI.  Now it runs via
+        :meth:`run_blocking` on a daemon worker thread; the result is rendered
+        in :meth:`_on_cycle_result` on the UI thread.
+        """
         if not self._controller:
             self._log("[red]No controller connected.[/red]")
             return
         self._log("[bold blue]─── Running cycle ───[/bold blue]")
+        self.run_blocking(
+            self._controller.run_cycle,
+            on_result=self._on_cycle_result,
+            on_error=self._on_cycle_error,
+        )
+
+    def _on_cycle_result(self, result: Any) -> None:
+        """Render the cycle result on the UI thread (called by run_blocking)."""
         try:
-            result = self._controller.run_cycle()
             self._render_cycle_result(result)
         except Exception as exc:  # noqa: BLE001 — never crash the TUI
-            self._log(f"[red]Cycle error: {exc}[/red]")
+            self._log(f"[red]Render error: {exc}[/red]")
+        self._refresh_status()
+
+    def _on_cycle_error(self, exc: Exception) -> None:
+        """Handle a cycle error on the UI thread (called by run_blocking)."""
+        self._log(f"[red]Cycle error: {exc}[/red]")
         self._refresh_status()
 
     def action_reset(self) -> None:
