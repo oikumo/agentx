@@ -11,10 +11,21 @@ receives an :class:`AgentController` (duck-typed as ``Any``) and queries it via
 
 Design: ``design_001_fast_agent.md`` §5–§6.
 Operation spec: ``operation_spec_001_fast_agent.md``.
+
+Threading note (feature_011 freeze fix): ``run_cycle()`` makes a synchronous
+LLM HTTP call inside ``reflection_engine.reflect()`` →
+``AIServiceAdapter.complete()`` → ``llm.invoke()``.  Running it on the Textual
+UI thread freezes the entire event loop (Stop/Pause become unresponsive).
+``RunningModal`` therefore runs the cycle loop on a **worker thread** and
+communicates with the UI thread via a :class:`queue.Queue`; the UI thread polls
+that queue with :meth:`set_timer` and refreshes widgets.  The worker never
+touches Textual widgets directly (that would race the event loop).
 """
 
 from __future__ import annotations
 
+import queue
+import threading
 from typing import Any
 
 from textual.app import ComposeResult
@@ -29,6 +40,47 @@ MAX_CYCLES = 50
 
 # Goal statuses that terminate the auto-run (design §5).
 _TERMINAL_STATUSES = frozenset({"COMPLETED", "FAILED", "ABANDONED"})
+
+
+# Worker → UI thread messages.  The worker thread pushes these onto a
+# ``queue.Queue``; the UI thread drains the queue inside its ``_poll`` callback
+# (scheduled via ``set_timer``).  Keeping them as tiny plain objects means the
+# worker never touches a Textual widget and never crosses the GIL with anything
+# the event loop also mutates.
+class _MsgCycle:
+    """One cycle finished.  Carries the summary dict for the status line."""
+
+    __slots__ = ("summary",)
+
+    def __init__(self, summary: dict[str, Any]) -> None:
+        self.summary = summary
+
+
+class _MsgPending:
+    """Reflection produced pending proposals — UI should show ReflectionModal."""
+
+    __slots__ = ("proposals",)
+
+    def __init__(self, proposals: list[Any]) -> None:
+        # Raw ``Proposal`` objects — converted to dicts on the UI thread so the
+        # worker does not need to know about the display schema.
+        self.proposals = proposals
+
+
+class _MsgDone:
+    """The worker has exited.  ``outcome`` mirrors the dismiss schema."""
+
+    __slots__ = ("outcome", "summary", "error")
+
+    def __init__(
+        self,
+        outcome: str,
+        summary: dict[str, Any],
+        error: str | None = None,
+    ) -> None:
+        self.outcome = outcome
+        self.summary = summary
+        self.error = error
 
 
 # ============================================================================
@@ -180,12 +232,25 @@ class RunningModal(ModalScreen[dict]):
         super().__init__()
         self._controller = controller
         self._goal_description = goal_description
+        # UI-side state — mutated only on the UI thread.
         self._paused: bool = False
-        self._running: bool = True
+        self._auto_running: bool = True
         self._cycle_count: int = 0
         self._last_summary: dict[str, Any] = {}
-        # Pending proposals captured during _tick for _on_reflection to use.
+        # Pending proposals captured from the worker for _on_reflection to use.
         self._pending: list[Any] = []
+        # True once dismiss() has been called — guards against the worker
+        # queueing a _MsgDone after Stop has already dismissed the modal.
+        self._dismissed: bool = False
+        # Worker communication: a thread-safe queue + two events.
+        self._queue: "queue.Queue[Any]" = queue.Queue()
+        self._stop_evt = threading.Event()       # set by Stop / unmount
+        self._pause_evt = threading.Event()      # set when NOT paused (worker waits)
+        self._pause_evt.set()                    # start un-paused
+        self._worker: threading.Thread | None = None
+        # True while a ReflectionModal is up; the poller is paused so it does not
+        # drain the queue concurrently with the reflection callback.
+        self._awaiting_reflection: bool = False
 
     def compose(self) -> ComposeResult:
         with Vertical():
@@ -196,12 +261,22 @@ class RunningModal(ModalScreen[dict]):
                 yield Button("⏹ Stop", id="btn-stop", variant="error")
 
     def on_mount(self) -> None:
-        """Start the auto-run loop."""
-        self._tick()
+        """Start the worker thread + schedule the first poll."""
+        self._worker = threading.Thread(
+            target=self._worker_loop,
+            name="FastAgent run_cycle",
+            daemon=True,
+        )
+        self._worker.start()
+        # Schedule the poller on the UI thread — fires even while the worker
+        # is blocked inside llm.invoke().
+        self.set_timer(0.05, self._poll)
 
     def on_unmount(self) -> None:
-        """Stop scheduled ticks when the modal is popped."""
-        self._running = False
+        """Signal the worker to stop so it does not outlive the modal."""
+        self._auto_running = False
+        self._stop_evt.set()
+        self._pause_evt.set()  # release the worker if parked on pause
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-pause":
@@ -209,58 +284,128 @@ class RunningModal(ModalScreen[dict]):
         elif event.button.id == "btn-stop":
             self.action_stop()
 
-    # ----------------------------------------------------------- auto-run loop
+    # ----------------------------------------------------------- worker (off UI thread)
 
-    def _tick(self) -> None:
-        """Run one cycle, refresh display, check termination, schedule next."""
-        if not self._running or self._paused:
-            return
+    def _worker_loop(self) -> None:
+        """Run cycles until told to stop, the goal terminates, or the cap hits.
 
+        Runs on a background thread — MUST NOT touch Textual widgets or call
+        ``query_one`` / ``dismiss``; it only posts path messages onto the queue.
+        """
+        cycle_count = 0
+        last_summary: dict[str, Any] = {}
         try:
-            self._controller.run_cycle()
-        except Exception as exc:  # noqa: BLE001 — surface to user, don't crash
-            self._last_summary = self._controller.get_cycle_summary()
-            self.dismiss({"outcome": "error", "summary": self._last_summary,
-                          "error": str(exc)})
+            while not self._stop_evt.is_set():
+                # 0. Pause gate — block here while paused, but yield to Stop.
+                if not self._pause_evt.is_set():
+                    while not self._pause_evt.is_set():
+                        if self._stop_evt.is_set():
+                            return
+                        # Light sleep so Stop is observed within ~50ms.
+                        self._stop_evt.wait(0.05)
+                    if self._stop_evt.is_set():
+                        return
+                # 1. Run one cycle.  This is the blocking call (llm.invoke).
+                try:
+                    self._controller.run_cycle()
+                except Exception as exc:  # noqa: BLE001 — surface, don't crash
+                    try:
+                        last_summary = self._controller.get_cycle_summary()
+                    except Exception:  # noqa: BLE001
+                        last_summary = {}
+                    self._queue.put(_MsgDone("error", last_summary, str(exc)))
+                    return
+                cycle_count += 1
+                last_summary = self._controller.get_cycle_summary()
+
+                # 2. Pending reflection proposals → pause + tell the UI.
+                pending = self._controller.list_pending_proposals()
+                if pending:
+                    # Hand the raw tuples to the UI thread for display.  We do
+                    # NOT dismiss here; the UI takes over and the worker parks
+                    # until _on_reflection clears the pause (or Stop fires).
+                    self._queue.put(_MsgPending(pending))
+                    self._pause_evt.clear()
+                    while not self._pause_evt.is_set():
+                        if self._stop_evt.is_set():
+                            return
+                        self._stop_evt.wait(0.05)
+                    continue  # re-check stop, then run the next cycle
+
+                # 3. Tell the UI about the cycle (status-line update).
+                self._queue.put(_MsgCycle(last_summary))
+
+                # 4. Goal terminal status?
+                goal_status = last_summary.get("goal_status", "NONE")
+                if goal_status in _TERMINAL_STATUSES:
+                    self._queue.put(_MsgDone(goal_status.lower(), last_summary))
+                    return
+
+                # 5. Cycle cap.
+                if cycle_count >= MAX_CYCLES:
+                    self._queue.put(_MsgDone("capped", last_summary))
+                    return
+
+                # 6. Small breath so the UI can paint + process Stop/Pause
+                # between cycles (also observable on the worker side).
+                self._stop_evt.wait(0.1)
+        finally:
+            # Defensive: make sure unmount/unpause never deadlocks on us.
+            self._pause_evt.set()
+
+    # ----------------------------------------------------------- poller (UI thread)
+
+    def _poll(self) -> None:
+        """Drain the worker queue and update widgets / dismiss as needed.
+
+        Scheduled by :meth:`on_mount` and re-scheduled by itself.  Runs on the
+        UI thread, so it is the only place that calls ``query_one`` / ``dismiss``.
+        """
+        if self._dismissed:
+            return  # already dismissing — stop polling
+        # While a ReflectionModal is up, the user drives the next step — do not
+        # drain the queue until _on_reflection resumes polling.
+        if self._awaiting_reflection:
+            self.set_timer(0.05, self._poll)
             return
 
-        self._cycle_count += 1
-        self._last_summary = self._controller.get_cycle_summary()
-        self._refresh_status()
+        while True:
+            try:
+                msg = self._queue.get_nowait()
+            except queue.Empty:
+                break
+            if isinstance(msg, _MsgCycle):
+                self._last_summary = msg.summary
+                self._cycle_count = msg.summary.get("cycle", self._cycle_count)
+                self._refresh_status()
+            elif isinstance(msg, _MsgPending):
+                self._pending = msg.proposals
+                self._awaiting_reflection = True
+                proposals_as_dicts = [
+                    {
+                        "entry_id": entry_id,
+                        "idx": idx,
+                        "type": (
+                            proposal.type.value
+                            if hasattr(proposal.type, "value")
+                            else str(proposal.type)
+                        ),
+                        "rationale": proposal.rationale or "(no rationale)",
+                        "content": proposal.content,
+                    }
+                    for entry_id, idx, proposal in msg.proposals[:3]
+                ]
+                self.app.push_screen(
+                    ReflectionModal(proposals_as_dicts),
+                    callback=self._on_reflection,
+                )
+            elif isinstance(msg, _MsgDone):
+                self._last_summary = msg.summary
+                self._do_dismiss(msg.outcome, msg.summary, error=msg.error)
+                return  # modal is dismissing — stop polling
 
-        # 1. Check for pending reflection proposals → pause + show ReflectionModal.
-        pending = self._controller.list_pending_proposals()
-        if pending:
-            self._pending = pending
-            proposals_as_dicts = [
-                {
-                    "entry_id": entry_id,
-                    "idx": idx,
-                    "type": proposal.type.value,
-                    "rationale": proposal.rationale or "(no rationale)",
-                    "content": proposal.content,
-                }
-                for entry_id, idx, proposal in pending[:3]  # show first 3
-            ]
-            self.app.push_screen(
-                ReflectionModal(proposals_as_dicts),
-                callback=self._on_reflection,
-            )
-            return  # pause — _on_reflection will resume or dismiss
-
-        # 2. Check goal terminal status.
-        goal_status = self._last_summary.get("goal_status", "NONE")
-        if goal_status in _TERMINAL_STATUSES:
-            self.dismiss({"outcome": goal_status.lower(), "summary": self._last_summary})
-            return
-
-        # 3. Safety cap.
-        if self._cycle_count >= MAX_CYCLES:
-            self.dismiss({"outcome": "capped", "summary": self._last_summary})
-            return
-
-        # 4. Schedule next cycle (cooperative — yields to the event loop).
-        self.call_after_refresh(self._tick)
+        if not self._dismissed:
+            self.set_timer(0.05, self._poll)
 
     def _refresh_status(self) -> None:
         """Update the status line widget from the last summary."""
@@ -278,8 +423,12 @@ class RunningModal(ModalScreen[dict]):
     # ----------------------------------------------------------- reflection callback
 
     def _on_reflection(self, choice: str | None) -> None:
-        """Called when ReflectionModal dismisses with 'approve'/'dismiss'/'stop'."""
-        if not self._running:
+        """Called when ReflectionModal dismisses with 'approve'/'dismiss'/'stop'.
+
+        Runs on the UI thread — safe to drive the controller and resume polling.
+        """
+        self._awaiting_reflection = False
+        if not self._auto_running:
             return
         if choice is None:
             choice = "dismiss"  # treat None as dismiss (shouldn't happen)
@@ -290,17 +439,24 @@ class RunningModal(ModalScreen[dict]):
             except Exception as exc:  # noqa: BLE001
                 self.notify(f"Approval failed: {exc}", severity="warning")
         elif choice == "stop":
-            self.dismiss({"outcome": "stopped", "summary": self._last_summary})
+            self._stop_evt.set()
+            self._do_dismiss("stopped", self._last_summary)
             return
-        # "approve" or "dismiss" → resume the loop.
+        # "approve" or "dismiss" → release the worker from the proposal pause
+        # and resume polling on the UI thread.
         self._pending = []
-        self.call_after_refresh(self._tick)
+        self._pause_evt.set()
+        self.set_timer(0.05, self._poll)
 
     # ----------------------------------------------------------- actions
 
     def action_pause_resume(self) -> None:
-        """Toggle pause/resume."""
+        """Toggle pause/resume — flips the pause event the worker waits on."""
         self._paused = not self._paused
+        if self._paused:
+            self._pause_evt.clear()  # worker gates on this being clear
+        else:
+            self._pause_evt.set()
         btn = self.query_one("#btn-pause", Button)
         if self._paused:
             btn.label = "▶ Resume"
@@ -308,12 +464,24 @@ class RunningModal(ModalScreen[dict]):
         else:
             btn.label = "⏸ Pause"
             self.notify("Resumed", timeout=1)
-            self.call_after_refresh(self._tick)
 
     def action_stop(self) -> None:
-        """Stop the run and dismiss with outcome 'stopped'."""
-        self._running = False
-        self.dismiss({"outcome": "stopped", "summary": self._last_summary})
+        """Stop the run: signal the worker, dismiss with outcome 'stopped'."""
+        self._auto_running = False
+        self._stop_evt.set()
+        self._pause_evt.set()  # unstick the worker if parked on pause
+        self._do_dismiss("stopped", self._last_summary)
+
+    def _do_dismiss(self, outcome: str, summary: dict[str, Any],
+                    error: str | None = None) -> None:
+        """Single dismissal path — guarded against double-dismiss."""
+        if self._dismissed:
+            return
+        self._dismissed = True
+        payload: dict[str, Any] = {"outcome": outcome, "summary": summary}
+        if error is not None:
+            payload["error"] = error
+        self.dismiss(payload)
 
 
 # ============================================================================
