@@ -54,8 +54,9 @@ class TestModelsController:
 
     def test_list_providers(self, controller: ModelsController) -> None:
         providers = controller.list_providers()
-        assert len(providers) == 5
+        assert len(providers) == 6
         assert providers[0].id == "openrouter"
+        assert providers[3].id == "nvidia"
 
     def test_get_current_id_default(self, controller: ModelsController) -> None:
         assert controller.get_current_id() == "openrouter"
@@ -67,6 +68,11 @@ class TestModelsController:
     def test_select_provider_unknown(self, controller: ModelsController) -> None:
         assert controller.select_provider("zzz") is False
         assert controller.get_current_id() == "openrouter"
+
+    def test_select_nvidia_provider(self, controller: ModelsController) -> None:
+        assert controller.select_provider("nvidia") is True
+        assert controller.get_current_id() == "nvidia"
+        assert controller.get_status_text() == "Current: NVIDIA NIM (cloud)"
 
     def test_get_status_text(self, controller: ModelsController) -> None:
         assert controller.get_status_text() == "Current: OpenRouter (cloud)"
@@ -197,7 +203,7 @@ def _make_app(controller: ModelsController) -> App:
 
 
 class TestModelsTUIScreen:
-    def test_renders_five_options_and_marks_current(
+    def test_renders_six_options_and_marks_current(
         self, controller: ModelsController
     ) -> None:
         async def run() -> None:
@@ -209,10 +215,12 @@ class TestModelsTUIScreen:
 
                 assert isinstance(screen, ModelsTUIScreen)
                 ol = screen.query_one("#models-list", OptionList)
-                assert ol.option_count == 5
+                assert ol.option_count == 6
                 # default openrouter highlighted
                 assert ol.highlighted == 0
                 assert ol.get_option_at_index(0).id == "openrouter"
+                # nvidia sits at index 3 (cloud-first ordering, after gemini)
+                assert ol.get_option_at_index(3).id == "nvidia"
 
         asyncio.run(run())
 

@@ -22,6 +22,7 @@ from agentx.model.ai.providers import (
     GeminiProvider,
     LlamaCppProvider,
     LLMProvider,
+    NvidiaProvider,
     OpenAIProvider,
     OpenRouterProvider,
     OllamaProvider,
@@ -46,9 +47,9 @@ def registry(tmp_path: Path) -> ModelRegistry:
 
 
 class TestProviderCatalog:
-    def test_catalog_has_five_providers(self, registry: ModelRegistry) -> None:
+    def test_catalog_has_six_providers(self, registry: ModelRegistry) -> None:
         ids = [p.id for p in registry.list_providers()]
-        assert ids == ["openrouter", "openai", "gemini", "ollama", "llamacpp"]
+        assert ids == ["openrouter", "openai", "gemini", "nvidia", "ollama", "llamacpp"]
 
     def test_catalog_entries_are_provider_info(self, registry: ModelRegistry) -> None:
         for p in registry.list_providers():
@@ -62,6 +63,7 @@ class TestProviderCatalog:
         assert kinds["openrouter"] == "cloud"
         assert kinds["openai"] == "cloud"
         assert kinds["gemini"] == "cloud"
+        assert kinds["nvidia"] == "cloud"
         assert kinds["ollama"] == "local"
         assert kinds["llamacpp"] == "local"
 
@@ -90,10 +92,55 @@ class TestUnifiedProviders:
     def test_gemini_provider_is_llm_provider(self) -> None:
         assert isinstance(GeminiProvider(), LLMProvider)
 
+    def test_nvidia_provider_is_llm_provider(self) -> None:
+        assert isinstance(NvidiaProvider(), LLMProvider)
+
     def test_all_existing_providers_still_llm_providers(self) -> None:
         assert isinstance(OpenRouterProvider(), LLMProvider)
         assert isinstance(OpenAIProvider(), LLMProvider)
         assert isinstance(LlamaCppProvider("m.gguf", 2048), LLMProvider)
+
+
+# ===========================================================================
+# NVIDIA provider (ChatNVIDIA wiring)
+# ===========================================================================
+
+
+class TestNvidiaProvider:
+    def test_default_model_is_nemotron(self) -> None:
+        from agentx.model.ai.model_registry import DEFAULT_NVIDIA_MODEL
+
+        provider = NvidiaProvider()
+        assert provider._model_name == DEFAULT_NVIDIA_MODEL
+        assert provider._model_name == "nvidia/nemotron-3-ultra-550b-a55b"
+
+    def test_custom_model_passthrough(self) -> None:
+        provider = NvidiaProvider(model_name="meta/llama-3.3-70b-instruct")
+        assert provider._model_name == "meta/llama-3.3-70b-instruct"
+
+    def test_create_llm_calls_chatnvidia_with_model(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """create_llm constructs a ChatNVIDIA with the configured model.
+
+        Patches the (installed) ``langchain_nvidia_ai_endpoints.ChatNVIDIA``
+        attribute so the lazy ``from … import ChatNVIDIA`` inside ``create_llm``
+        resolves to the stub — no ``NVIDIA_API_KEY`` needed.
+        """
+        import langchain_nvidia_ai_endpoints as nv
+
+        calls: dict[str, object] = {}
+
+        class _FakeChatNVIDIA:
+            def __init__(self, **kwargs: object) -> None:
+                calls.update(kwargs)
+
+        monkeypatch.setattr(nv, "ChatNVIDIA", _FakeChatNVIDIA)
+
+        provider = NvidiaProvider(model_name="nvidia/nemotron-3-ultra-550b-a55b")
+        llm = provider.create_llm()
+        assert isinstance(llm, _FakeChatNVIDIA)
+        assert calls["model"] == "nvidia/nemotron-3-ultra-550b-a55b"
 
 
 # ===========================================================================
@@ -112,7 +159,7 @@ class TestSelection:
         assert registry.get_current_id() == "openrouter"
 
     def test_select_each_provider(self, registry: ModelRegistry) -> None:
-        for pid in ("openrouter", "openai", "gemini", "ollama", "llamacpp"):
+        for pid in ("openrouter", "openai", "gemini", "nvidia", "ollama", "llamacpp"):
             assert registry.select(pid) is True
             assert registry.get_current_id() == pid
 

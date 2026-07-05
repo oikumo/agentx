@@ -23,6 +23,7 @@ dependencies = [
     "langchain-google-genai==4.2.5",
     "langchain-core==1.4.8",
     "langchain-openrouter==0.2.3",
+    "langchain-nvidia-ai-endpoints==1.4.3",
     "openai==2.43.0",
     "aiohttp==3.14.1",
     "numpy>=2.4.6",

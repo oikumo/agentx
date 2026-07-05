@@ -96,3 +96,24 @@ class GeminiProvider(LLMProvider):
         return get_remote_llm_google_gemini()
 
 
+class NvidiaProvider(LLMProvider):
+    """Cloud LLM provider using NVIDIA NIM (NVIDIA API Catalog).
+
+    Wraps ``langchain_nvidia_ai_endpoints.ChatNVIDIA`` so NVIDIA-hosted models
+    (Nemotron, Llama, …) are reachable through the unified :class:`LLMProvider`
+    strategy interface (feature_013).  Authentication is via the
+    ``NVIDIA_API_KEY`` environment variable.
+    """
+
+    def __init__(self, model_name: str = "nvidia/nemotron-3-ultra-550b-a55b") -> None:
+        self._model_name = model_name
+
+    def create_llm(self) -> BaseChatModel:
+        # Lazy import keeps provider-module load light and surfaces a missing
+        # package / NVIDIA_API_KEY only on use (matches the Gemini/Ollama
+        # pattern; lets the ai_adapter fallback chain degrade gracefully).
+        from langchain_nvidia_ai_endpoints import ChatNVIDIA
+
+        return ChatNVIDIA(model=self._model_name)
+
+

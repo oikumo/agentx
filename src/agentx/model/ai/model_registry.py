@@ -31,6 +31,7 @@ from agentx.model.ai.providers import (
     GeminiProvider,
     LlamaCppProvider,
     LLMProvider,
+    NvidiaProvider,
     OpenAIProvider,
     OpenRouterProvider,
     OllamaProvider,
@@ -48,6 +49,7 @@ DEFAULT_LLAMACPP_MODEL = "qwen2.5-3b-instruct-q4_k_m.gguf"
 DEFAULT_LLAMACPP_CONTEXT = 4096
 DEFAULT_OLLAMA_MODEL = "qwen3.5:0.8b"
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-lite"
+DEFAULT_NVIDIA_MODEL = "nvidia/nemotron-3-ultra-550b-a55b"
 
 
 @dataclass(frozen=True)
@@ -89,6 +91,13 @@ def _build_catalog() -> dict[str, ProviderInfo]:
             kind="cloud",
             description=f"{DEFAULT_GEMINI_MODEL} (cloud)",
             factory=lambda: GeminiProvider(),
+        ),
+        "nvidia": ProviderInfo(
+            id="nvidia",
+            name="NVIDIA NIM",
+            kind="cloud",
+            description=f"{DEFAULT_NVIDIA_MODEL} via NVIDIA API Catalog (cloud)",
+            factory=lambda: NvidiaProvider(),
         ),
         "ollama": ProviderInfo(
             id="ollama",
