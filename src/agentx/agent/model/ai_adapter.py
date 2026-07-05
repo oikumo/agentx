@@ -33,7 +33,13 @@ class AIServiceAdapter(IAIServicePartner):
         self._init_attempted = False
 
     def _ensure_llm(self) -> Any:
-        """Lazily create the LLM, trying providers in order."""
+        """Lazily create the LLM, trying providers in order.
+
+        feature_013: the user-selected provider (via the :class:`ModelRegistry`)
+        is tried first.  If it fails (missing key / model not found), the legacy
+        fallback chain (OpenRouter → OpenAI) is attempted so the agent degrades
+        gracefully — the same behaviour the reflection engine relied on before.
+        """
         if self._llm is not None:
             return self._llm
         if self._init_attempted:
@@ -47,7 +53,18 @@ class AIServiceAdapter(IAIServicePartner):
             ai = AIService()
             self._ai_service = ai
 
-        # Try OpenRouter first (most likely to work with env config)
+        # 1. Try the user-selected provider first (feature_013).
+        try:
+            self._llm = ai.get_current_llm()
+            _log.info(
+                "AI service initialized from selection: %s",
+                ai.get_current_provider_info().name,
+            )
+            return self._llm
+        except Exception as exc:
+            _log.warning("selected AI provider failed to initialize: %s", exc)
+
+        # 2. Legacy fallback chain (preserves pre-feature_013 robustness).
         for provider_factory in (
             lambda: ai.openrouter_llm_provider(),
             lambda: ai.cloud_llm_provider(),
@@ -55,7 +72,7 @@ class AIServiceAdapter(IAIServicePartner):
             try:
                 provider = provider_factory()
                 self._llm = provider.create_llm()
-                _log.info("AI service initialized: %s", type(provider).__name__)
+                _log.info("AI service initialized (fallback): %s", type(provider).__name__)
                 return self._llm
             except Exception as exc:
                 _log.warning("AI provider failed to initialize: %s", exc)

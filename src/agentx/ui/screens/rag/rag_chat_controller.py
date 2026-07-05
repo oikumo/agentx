@@ -10,7 +10,7 @@ class RagChatController:
     def __init__(self, rag_repository: RagRepository) -> None:
         self.view = RagChatView(self)
         self.history: list[BaseMessage] = []
-        self.llm = AIService().openrouter_llm_provider().create_llm()
+        self.llm = AIService().get_current_llm()
         self.rag = Rag(rag_repository.path)
         self.rag_chat_history = RagChatHistory()
 

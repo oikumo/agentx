@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from agentx.ui.interfaces import IUIProvider
     from agentx.agent.controller.agent_controller import AgentController
     from agentx.agent.interfaces import IAgentViewPartner
+    from agentx.ui.screens.models.models_controller import ModelsController
 
 
 class MainController(IMainViewPartner):
@@ -34,6 +35,7 @@ class MainController(IMainViewPartner):
         self._rag_view: IRagView | None = None
         self._agent_controller: AgentController | None = None
         self._fast_agent_controller: AgentController | None = None
+        self._models_controller: "ModelsController | None" = None
         self.load_commands()
 
     def load_commands(self):
@@ -179,6 +181,22 @@ class MainController(IMainViewPartner):
     def get_fast_agent_controller(self) -> AgentController | None:
         """Get the Fast Agent controller for screen connection."""
         return self._fast_agent_controller
+
+    def show_models(self) -> None:
+        """Create and wire a ModelsController for the Models screen.
+
+        Reuses an already-wired controller (C5 pattern) so the selection
+        survives a close/reopen.
+        """
+        if self._models_controller is not None:
+            return
+        from agentx.ui.screens.models.models_controller import ModelsController
+
+        self._models_controller = ModelsController()
+
+    def get_models_controller(self) -> "ModelsController | None":
+        """Get the Models controller for screen connection."""
+        return self._models_controller
 
     def show_react(self):
         from agentx.ui.screens.react.react_controller import ReActController

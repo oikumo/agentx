@@ -30,7 +30,7 @@ class Rag:
         self.rag_db_path = f"{self.working_directory}/rag.db"
         self.rag_db = RagDatabase(self.rag_db_path)
         self.rag_query = RagQuery(
-            llm=AIService().openrouter_llm_provider().create_llm(),
+            llm=AIService().get_current_llm(),
             vector_store=AIService().rag_chromadb(self.vector_db_path)
         )
 

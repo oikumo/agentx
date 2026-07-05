@@ -8,7 +8,7 @@ class ChatController(IChatViewPartner):
     def __init__(self, view: IChatView | None = None) -> None:
         self.view = view if view else None  # Will be set by provider if None
         self.history: list[BaseMessage] = []
-        self.llm = AIService().openrouter_llm_provider().create_llm()
+        self.llm = AIService().get_current_llm()
 
     def show(self):
         self.start_interactive_streaming(system_prompt="You are a helpful assistant.")

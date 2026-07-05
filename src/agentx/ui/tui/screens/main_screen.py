@@ -50,6 +50,7 @@ class MainTUIScreen(BaseAgentXScreen):
         Binding("r", "open_rag", "RAG", show=True),
         Binding("f", "open_fast_agent", "Fast Agent", show=True),
         Binding("a", "open_agent", "Advanced Agent", show=True),
+        Binding("m", "open_models", "Models", show=True),
         Binding("h", "show_help", "Help", show=True),
         Binding("ctrl+l", "focus_input", "Focus Input", show=False),
     ]
@@ -106,6 +107,8 @@ class MainTUIScreen(BaseAgentXScreen):
             self.action_open_fast_agent()
         elif button_id == "btn-agent":
             self.action_open_agent()
+        elif button_id == "btn-models":
+            self.action_open_models()
         elif button_id == "btn-help":
             self.action_show_help()
 
@@ -193,6 +196,21 @@ class MainTUIScreen(BaseAgentXScreen):
             ),
         )
 
+    def action_open_models(self) -> None:
+        """Open the Models screen (select the current AI model provider)."""
+        from agentx.ui.tui.screens.models_screen import ModelsTUIScreen
+
+        self.navigate_to_child(
+            ModelsTUIScreen,
+            controller=self._controller,
+            setup=lambda c: c.show_models() if hasattr(c, "show_models") else None,
+            getter=lambda c: (
+                c.get_models_controller()
+                if hasattr(c, "get_models_controller")
+                else None
+            ),
+        )
+
     # ----------------------------------------------------------- other actions
 
     def action_show_help(self) -> None:
@@ -206,6 +224,7 @@ class MainTUIScreen(BaseAgentXScreen):
 - `r` - Open RAG
 - `f` - Open Fast Agent (simple modal UX)
 - `a` - Open Advanced Agent (full workspace)
+- `m` - Open Models (select AI model provider)
 - `h` - Show this help
 - `Ctrl+L` - Focus command input
 

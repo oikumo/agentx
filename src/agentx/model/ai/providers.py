@@ -58,3 +58,41 @@ class OpenRouterProvider(LLMProvider):
         )
 
 
+class OllamaProvider(LLMProvider):
+    """Local LLM provider using a local Ollama server.
+
+    Wraps the existing :class:`agentx.model.ai.local.ollama.ollama.Ollama`
+    adapter so Ollama is reachable through the unified :class:`LLMProvider`
+    strategy interface (feature_013).
+    """
+
+    def __init__(self, model_name: str = "qwen3.5:0.8b") -> None:
+        self._model_name = model_name
+
+    def create_llm(self) -> BaseChatModel:
+        # Lazy import keeps provider module load light and survives a missing
+        # Ollama server at import time (the error surfaces only on use).
+        from agentx.model.ai.local.ollama.ollama import Ollama
+
+        return Ollama(self._model_name).get_model()
+
+
+class GeminiProvider(LLMProvider):
+    """Cloud LLM provider using Google Gemini.
+
+    Wraps the existing ``get_remote_llm_google_gemini`` factory so Gemini is
+    reachable through the unified :class:`LLMProvider` strategy interface
+    (feature_013).
+    """
+
+    def __init__(self, model_name: str = "gemini-2.5-flash-lite") -> None:
+        self._model_name = model_name
+
+    def create_llm(self) -> BaseChatModel:
+        from agentx.model.ai.cloud.google.google_gemini import (
+            get_remote_llm_google_gemini,
+        )
+
+        return get_remote_llm_google_gemini()
+
+

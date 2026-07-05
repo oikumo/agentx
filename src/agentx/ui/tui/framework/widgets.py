@@ -138,6 +138,7 @@ class MenuGrid(Grid):
         yield Button("📚 RAG", id="btn-rag", variant="primary")
         yield Button("⚡ Fast Agent", id="btn-fast-agent", variant="warning")
         yield Button("⚙️ Advanced Agent", id="btn-agent", variant="success")
+        yield Button("🎛️ Models", id="btn-models", variant="primary")
         yield Button("❓ Help", id="btn-help", variant="default")
 
 
