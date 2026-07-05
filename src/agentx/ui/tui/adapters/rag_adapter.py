@@ -1,7 +1,10 @@
-"""TUI Adapter for RAG Screen.
+"""TUI Adapter for the RAG Screen.
 
-Implements IRagView by delegating to an existing RagTUIScreen.
-This adapter connects the RagController to the already-running TUI screen.
+Implements :class:`IRagView` by delegating to an existing :class:`RagTUIScreen`.
+
+Refactored (feature_012.tui_framework): inherits :class:`BaseScreenAdapter`, so
+the controller storage, ``set_screen``, and the no-op ``show`` come from the
+base.  Only the ``IRagView`` delegation methods remain here.
 """
 
 from __future__ import annotations
@@ -9,44 +12,25 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from agentx.ui.interfaces import IRagView
+from agentx.ui.tui.framework import BaseScreenAdapter
 
 if TYPE_CHECKING:
     from agentx.ui.interfaces import IRagViewPartner
     from agentx.ui.tui.screens.rag_screen import RagTUIScreen
 
 
-class TUIRagAdapter(IRagView):
-    """Adapter that implements IRagView by delegating to RagTUIScreen.
-    
-    This adapter allows the existing RagController to work with the Textual TUI
-    by connecting to an already-mounted RagTUIScreen instance.
+class TUIRagAdapter(BaseScreenAdapter, IRagView):
+    """Adapter that implements :class:`IRagView` by delegating to :class:`RagTUIScreen`.
+
+    This adapter allows the existing :class:`RagController` to work with the
+    Textual TUI by connecting to an already-mounted :class:`RagTUIScreen`.
     """
 
-    def __init__(self, controller: IRagViewPartner) -> None:
-        """Initialize TUI adapter for RAG.
-        
-        Args:
-            controller: RagController instance implementing IRagViewPartner
-        """
-        self._controller = controller
-        self._screen: RagTUIScreen | None = None
-
-    def set_screen(self, screen: RagTUIScreen) -> None:
-        """Set the RagTUIScreen instance to delegate to.
-        
-        Args:
-            screen: The mounted RagTUIScreen instance
-        """
-        self._screen = screen
-
-    def show(self) -> None:
-        """Display RAG screen - no-op since screen is already pushed by MainTUIScreen."""
-        # The screen is already displayed via app.push_screen() in MainTUIScreen
-        pass
+    # __init__, set_screen, and show() are inherited from BaseScreenAdapter.
 
     def print_message(self, message: str) -> None:
         """Show info message.
-        
+
         Args:
             message: Message to display
         """
@@ -55,7 +39,7 @@ class TUIRagAdapter(IRagView):
 
     def print_message_error(self, message: str) -> None:
         """Show error message.
-        
+
         Args:
             message: Error message to display
         """
@@ -64,7 +48,7 @@ class TUIRagAdapter(IRagView):
 
     def show_repository_state(self, state: object) -> None:
         """Display repository information.
-        
+
         Args:
             state: Repository state object
         """

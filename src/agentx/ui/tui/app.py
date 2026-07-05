@@ -1,74 +1,53 @@
-"""TUI Application - Base Textual app for AgentX.
+"""TUI Application — Base Textual app for AgentX.
 
-This is the main Textual application that hosts all screens.
-It is completely isolated from the existing UI module.
+Refactored (feature_012.tui_framework):
+  - :class:`TUIApplication` now inherits :class:`BaseAgentXApp`, which absorbs
+    the TTY check, the default CSS, and the on-mount screen push.  The app only
+    overrides :meth:`make_initial_screen` to supply the full
+    :class:`~agentx.ui.tui.screens.main_screen.MainTUIScreen`.
+  - The minimal fallback :class:`MainTUIScreen` (kept here for app-infrastructure
+    tests) now inherits :class:`BaseAgentXScreen`, dropping its duplicated
+    ``__init__``/``action_quit`` boilerplate.
+
+``sys`` is imported (and kept) so the test-suite can patch
+``agentx.ui.tui.app.sys.stdin.isatty``; the inherited ``on_mount`` lives in
+``base_app`` but reads the same shared ``sys.stdin``.
 """
 
 from __future__ import annotations
 
-import sys
+import sys  # noqa: F401  — kept for test patching of sys.stdin.isatty
 from typing import TYPE_CHECKING
 
-from textual.app import App, ComposeResult
-from textual.screen import Screen
-from textual.widgets import Header, Footer, Label
+from textual.app import ComposeResult
+from textual.widgets import Footer, Header, Label
+
+from agentx.ui.tui.framework import BaseAgentXApp, BaseAgentXScreen
 
 if TYPE_CHECKING:
     from agentx.ui.interfaces import IMainViewPartner
 
 
-class TUIApplication(App):
+class TUIApplication(BaseAgentXApp):
     """Main Textual application for AgentX.
-    
-    This application hosts all TUI screens and manages navigation.
-    It is completely isolated from the existing console-based UI.
+
+    Inherits TTY detection, default CSS, and the on-mount initial-screen push
+    from :class:`BaseAgentXApp`.  Only :meth:`make_initial_screen` is overridden
+    to supply the full main screen.
     """
 
-    CSS = """
-    Screen {
-        background: $surface;
-    }
-    
-    Header {
-        background: $primary;
-        color: white;
-    }
-    
-    Footer {
-        dock: bottom;
-    }
-    """
-
-    def __init__(self, controller: IMainViewPartner | None = None) -> None:
-        """Initialize TUI application.
-        
-        Args:
-            controller: Optional main controller for command handling
-        """
-        super().__init__()
-        self._controller = controller
-
-    def on_mount(self) -> None:
-        """Called when app is mounted."""
-        # Check if running in a proper terminal
-        if not sys.stdin.isatty():
-            self.notify(
-                "⚠️  Non-TTY environment detected. Keyboard input may not work.\n"
-                "Run in a proper terminal for full interactivity.",
-                severity="warning",
-                timeout=10
-            )
-        
-        # Push the main screen
+    def make_initial_screen(self):  # type: ignore[override]
+        """Return the full MainTUIScreen (from ``screens.main_screen``)."""
         from agentx.ui.tui.screens.main_screen import MainTUIScreen
-        self.push_screen(MainTUIScreen(self._controller))
+        return MainTUIScreen(self._controller)
 
 
-class MainTUIScreen(Screen):
-    """Main screen with welcome message and navigation.
-    
-    This is a minimal implementation to test the TUI infrastructure.
-    Full implementation will include menu buttons and command input.
+class MainTUIScreen(BaseAgentXScreen):
+    """Minimal main screen — a lightweight fallback used by app-infrastructure tests.
+
+    The full main screen lives in ``agentx.ui.tui.screens.main_screen``; this
+    minimal version is retained here so the app can be exercised without the
+    full menu/command-input layout.
     """
 
     BINDINGS = [
@@ -77,14 +56,7 @@ class MainTUIScreen(Screen):
         ("r", "open_rag", "RAG"),
     ]
 
-    def __init__(self, controller: IMainViewPartner | None = None) -> None:
-        """Initialize main screen.
-        
-        Args:
-            controller: Optional main controller
-        """
-        super().__init__()
-        self._controller = controller
+    # __init__ and action_quit are inherited from BaseAgentXScreen.
 
     def compose(self) -> ComposeResult:
         """Compose the screen layout."""
@@ -93,16 +65,10 @@ class MainTUIScreen(Screen):
         yield Label("Press 'c' for Chat, 'r' for RAG, 'q' to quit", id="instructions")
         yield Footer()
 
-    def action_quit(self) -> None:
-        """Quit the application."""
-        self.app.exit()
-
     def action_open_chat(self) -> None:
-        """Open chat screen."""
-        # Placeholder - will navigate to chat screen
-        self.notify("Chat screen - coming soon!", severity="information")
+        """Open chat screen (placeholder)."""
+        self.safe_notify("Chat screen - coming soon!")
 
     def action_open_rag(self) -> None:
-        """Open RAG screen."""
-        # Placeholder - will navigate to RAG screen
-        self.notify("RAG screen - coming soon!", severity="information")
+        """Open RAG screen (placeholder)."""
+        self.safe_notify("RAG screen - coming soon!")

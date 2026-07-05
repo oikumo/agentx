@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.screen import Screen
+from textual.screen import Screen  # noqa: F401  (kept for type compatibility)
 from textual.widgets import (
     Header,
     Footer,
@@ -25,12 +25,14 @@ from textual.widgets import (
 from textual.containers import Container, Vertical, Horizontal, ScrollableContainer
 from textual.binding import Binding
 
+from agentx.ui.tui.framework import BaseAgentXScreen
+
 if TYPE_CHECKING:
     from agentx.model.rag.rag_repository import RagRepository
     from agentx.ui.interfaces import IRagViewPartner
 
 
-class RagTUIScreen(Screen):
+class RagTUIScreen(BaseAgentXScreen):
     """RAG screen with full workflow: select/create repo → ingest → chat.
     
     Features:
@@ -110,8 +112,7 @@ class RagTUIScreen(Screen):
         Args:
             controller: Optional IRagViewPartner for repository operations
         """
-        super().__init__()
-        self._controller = controller
+        super().__init__(controller)
         self.current_repository = None
         self.chat_history = []
         self.rag_working_directory = self._get_rag_directory()
@@ -356,13 +357,7 @@ class RagTUIScreen(Screen):
             except Exception:
                 pass
 
-    def action_quit(self) -> None:
-        """Quit the application."""
-        self.app.exit()
-
-    def action_back(self) -> None:
-        """Go back to main screen."""
-        self.app.pop_screen()
+    # action_quit / action_back are inherited from BaseAgentXScreen.
 
     def action_refresh(self) -> None:
         """Refresh repository list."""

@@ -23,13 +23,13 @@ from typing import Any
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Label, RichLog, Static
 
 from agentx.agent.interfaces import IAgentViewPartner
+from agentx.ui.tui.framework import BaseAgentXScreen, register_partner
 
 
-class AgentDemoScreen(Screen):
+class AgentDemoScreen(BaseAgentXScreen):
     """Demonstrates the intelligent-agent cycle with a seeded scenario."""
 
     BINDINGS = [
@@ -75,8 +75,7 @@ class AgentDemoScreen(Screen):
     """
 
     def __init__(self, controller: Any | None = None, scenario_name: str = "a") -> None:
-        super().__init__()
-        self._controller = controller
+        super().__init__(controller)
         self._scenario_name = scenario_name.strip().lower() or "a"
 
     # ----------------------------------------------------------- compose
@@ -133,12 +132,7 @@ class AgentDemoScreen(Screen):
         self._load_scenario()
         self._refresh_status()
 
-    def action_back(self) -> None:
-        """Pop back to the AgentTUIScreen (the agent main screen)."""
-        try:
-            self.app.pop_screen()
-        except Exception:
-            pass
+    # action_back is inherited from BaseAgentXScreen (try app.pop_screen()).
 
     # ----------------------------------------------------------- scenario loading
 
@@ -235,12 +229,10 @@ class AgentDemoScreen(Screen):
     # ----------------------------------------------------------- helpers
 
     def _log(self, message: str) -> None:
-        try:
-            self.query_one("#demo-log", RichLog).write(message)
-        except Exception:
-            pass
+        """Append a line to the demo log (delegates to BaseAgentXScreen.safe_log)."""
+        self.safe_log("demo-log", message)
 
 
-# Register as a virtual subclass of IAgentViewPartner (matches AgentTUIScreen's
-# pattern; avoids the Textual/abc metaclass conflict).
-IAgentViewPartner.register(AgentDemoScreen)
+# Register as a virtual subclass of IAgentViewPartner via the framework helper
+# (matches AgentTUIScreen's pattern; avoids the Textual/abc metaclass conflict).
+register_partner(IAgentViewPartner, AgentDemoScreen)

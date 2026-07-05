@@ -1,42 +1,48 @@
-"""TUI Adapter for Main Screen.
+"""TUI Adapter for the Main Screen.
 
-Implements IMainView using Textual widgets.
-This adapter bridges the existing MainController with the new Textual TUI.
+Implements :class:`IMainView` using Textual.
+
+Refactored (feature_012.tui_framework): inherits :class:`BaseScreenAdapter` for
+the shared controller storage.  Unlike the chat/RAG adapters (which delegate to
+a pushed *screen*), the main adapter delegates to the running *app* — its
+``show()`` creates and runs the :class:`TUIApplication`, and its ``print_*``
+methods call ``app.notify``.  It therefore overrides ``__init__`` (to add the
+``_app`` reference) and ``show()``.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from textual.app import App
+from typing import TYPE_CHECKING, Any
 
 from agentx.ui.interfaces import IMainView
+from agentx.ui.tui.framework import BaseScreenAdapter
 
 if TYPE_CHECKING:
     from agentx.ui.interfaces import IMainViewPartner
 
 
-class TUIAdapter(IMainView):
-    """Adapter that implements IMainView using Textual.
-    
-    This adapter allows the existing MainController to work with the new Textual TUI
-    without any modifications to the controller code.
+class TUIAdapter(BaseScreenAdapter, IMainView):
+    """Adapter that implements :class:`IMainView` using Textual.
+
+    This adapter allows the existing :class:`MainController` to work with the
+    Textual TUI without any modifications to the controller code.
     """
 
-    def __init__(self, controller: IMainViewPartner) -> None:
+    def __init__(self, controller: "IMainViewPartner") -> None:
         """Initialize TUI adapter.
-        
+
         Args:
             controller: MainController instance implementing IMainViewPartner
         """
-        self._controller = controller
-        self._app: "App[object] | None" = None
+        super().__init__(controller)
+        # The main adapter delegates to the running *app* (not a pushed screen),
+        # so it keeps an `_app` reference rather than using the inherited `_screen`.
+        self._app: Any = None
 
     def show(self) -> None:
-        """Display main screen using Textual."""
-        from textual.app import App
+        """Display main screen by creating and running the TUIApplication."""
         from agentx.ui.tui.app import TUIApplication
-        
+
         # Create and run the Textual application
         app = TUIApplication(self._controller)
         self._app = app
@@ -44,7 +50,7 @@ class TUIAdapter(IMainView):
 
     def print_message(self, message: str) -> None:
         """Show info message via notification.
-        
+
         Args:
             message: Message to display
         """
@@ -53,7 +59,7 @@ class TUIAdapter(IMainView):
 
     def print_error_message(self, message: str) -> None:
         """Show error message via notification.
-        
+
         Args:
             message: Error message to display
         """
@@ -62,7 +68,7 @@ class TUIAdapter(IMainView):
 
     def print_warring_message(self, message: str) -> None:
         """Show warning message via notification.
-        
+
         Args:
             message: Warning message to display
         """
@@ -71,7 +77,7 @@ class TUIAdapter(IMainView):
 
     def print_response(self, message: str) -> None:
         """Show response via notification.
-        
+
         Args:
             message: Response message to display
         """
@@ -79,7 +85,7 @@ class TUIAdapter(IMainView):
 
     def print_response_error(self, message: str) -> None:
         """Show error response via notification.
-        
+
         Args:
             message: Error response to display
         """

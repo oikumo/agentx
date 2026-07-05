@@ -33,10 +33,10 @@ from typing import Any
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Header, Input, Label, RichLog, Static, Tree
 
 from agentx.agent.interfaces import IAgentViewPartner
+from agentx.ui.tui.framework import BaseAgentXScreen, register_partner
 from agentx.agent.types import (
     ActionType,
     AutonomyLevel,
@@ -50,7 +50,7 @@ from agentx.agent.types import (
 )
 
 
-class AgentTUIScreen(Screen):
+class AgentTUIScreen(BaseAgentXScreen):
     """Interactive Textual screen for the agent subsystem."""
 
     BINDINGS = [
@@ -100,12 +100,7 @@ class AgentTUIScreen(Screen):
     }
     """
 
-    def __init__(self, controller: Any | None = None) -> None:
-        super().__init__()
-        self._controller = controller
-
-    def set_controller(self, controller: Any) -> None:
-        self._controller = controller
+    # __init__ and set_controller are inherited from BaseAgentXScreen.
 
     # ----------------------------------------------------------- compose
 
@@ -526,12 +521,8 @@ class AgentTUIScreen(Screen):
     # ----------------------------------------------------------- helpers
 
     def _log(self, message: str) -> None:
-        """Write a line to the activity log."""
-        try:
-            log = self.query_one("#agent-log", RichLog)
-            log.write(message)
-        except Exception:
-            pass
+        """Write a line to the activity log (delegates to BaseAgentXScreen.safe_log)."""
+        self.safe_log("agent-log", message)
 
     def _refresh_status(self) -> None:
         if self._controller:
@@ -540,5 +531,5 @@ class AgentTUIScreen(Screen):
 
 
 # Register as a virtual subclass of IAgentViewPartner (avoids metaclass conflict
-# between Textual's _MessagePumpMeta and abc.ABCMeta).
-IAgentViewPartner.register(AgentTUIScreen)
+# between Textual's _MessagePumpMeta and abc.ABCMeta) via the framework helper.
+register_partner(IAgentViewPartner, AgentTUIScreen)

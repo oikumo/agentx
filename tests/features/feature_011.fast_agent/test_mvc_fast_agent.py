@@ -86,18 +86,26 @@ class TestMvcFastAgent:
         raise AssertionError("open_agent binding not found")
 
     def test_main_screen_has_fast_agent_button(self):
-        """MenuGrid must contain a btn-fast-agent button."""
+        """MenuGrid must contain a btn-fast-agent button.
+
+        Note (feature_012): MenuGrid was extracted to
+        ``ui/tui/framework/widgets.py``; the source is read from there.
+        """
         from agentx.ui.tui.screens.main_screen import MenuGrid
 
         source = Path(
-            _SRC / "ui" / "tui" / "screens" / "main_screen.py"
+            _SRC / "ui" / "tui" / "framework" / "widgets.py"
         ).read_text()
         assert 'id="btn-fast-agent"' in source, "Missing btn-fast-agent button"
 
     def test_grid_is_3x2(self):
-        """MenuGrid CSS must use grid-size: 3 2 (to fit 5 buttons)."""
+        """MenuGrid CSS must use grid-size: 3 2 (to fit 5 buttons).
+
+        Note (feature_012): MenuGrid CSS now lives in
+        ``ui/tui/framework/widgets.py``.
+        """
         source = Path(
-            _SRC / "ui" / "tui" / "screens" / "main_screen.py"
+            _SRC / "ui" / "tui" / "framework" / "widgets.py"
         ).read_text()
         assert "grid-size: 3 2" in source, "MenuGrid should use grid-size: 3 2"
 

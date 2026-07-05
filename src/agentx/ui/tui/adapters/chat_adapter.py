@@ -1,7 +1,10 @@
-"""TUI Adapter for Chat Screen.
+"""TUI Adapter for the Chat Screen.
 
-Implements IChatView by delegating to an existing ChatTUIScreen.
-This adapter connects the ChatController to the already-running TUI screen.
+Implements :class:`IChatView` by delegating to an existing :class:`ChatTUIScreen`.
+
+Refactored (feature_012.tui_framework): inherits :class:`BaseScreenAdapter`, so
+the controller storage, ``set_screen``, and the no-op ``show`` come from the
+base.  Only the ``IChatView`` delegation methods remain here.
 """
 
 from __future__ import annotations
@@ -9,40 +12,21 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from agentx.ui.interfaces import IChatView
+from agentx.ui.tui.framework import BaseScreenAdapter
 
 if TYPE_CHECKING:
     from agentx.ui.interfaces import IChatViewPartner
     from agentx.ui.tui.screens.chat_screen import ChatTUIScreen
 
 
-class TUIChatAdapter(IChatView):
-    """Adapter that implements IChatView by delegating to ChatTUIScreen.
-    
-    This adapter allows the existing ChatController to work with the Textual TUI
-    by connecting to an already-mounted ChatTUIScreen instance.
+class TUIChatAdapter(BaseScreenAdapter, IChatView):
+    """Adapter that implements :class:`IChatView` by delegating to :class:`ChatTUIScreen`.
+
+    This adapter allows the existing :class:`ChatController` to work with the
+    Textual TUI by connecting to an already-mounted :class:`ChatTUIScreen`.
     """
 
-    def __init__(self, controller: IChatViewPartner) -> None:
-        """Initialize TUI adapter for Chat.
-        
-        Args:
-            controller: ChatController instance implementing IChatViewPartner
-        """
-        self._controller = controller
-        self._screen: ChatTUIScreen | None = None
-
-    def set_screen(self, screen: ChatTUIScreen) -> None:
-        """Set the ChatTUIScreen instance to delegate to.
-        
-        Args:
-            screen: The mounted ChatTUIScreen instance
-        """
-        self._screen = screen
-
-    def show(self) -> None:
-        """Display chat screen - no-op since screen is already pushed by MainTUIScreen."""
-        # The screen is already displayed via app.push_screen() in MainTUIScreen
-        pass
+    # __init__, set_screen, and show() are inherited from BaseScreenAdapter.
 
     def show_initial_message(self) -> None:
         """Show welcome message."""
@@ -51,7 +35,7 @@ class TUIChatAdapter(IChatView):
 
     def show_message(self, message: str) -> None:
         """Show message.
-        
+
         Args:
             message: Message to display
         """
@@ -60,7 +44,7 @@ class TUIChatAdapter(IChatView):
 
     def show_partial_message(self, message: str) -> None:
         """Show partial (streaming) message.
-        
+
         Args:
             message: Partial message to display
         """
@@ -69,7 +53,7 @@ class TUIChatAdapter(IChatView):
 
     def show_stream_message(self, message: str) -> None:
         """Stream message with typing effect.
-        
+
         Args:
             message: Message chunk to stream
         """

@@ -22,7 +22,6 @@ from typing import Any
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
 from agentx.agent.view.tui.fast_agent_modals import (
@@ -30,9 +29,10 @@ from agentx.agent.view.tui.fast_agent_modals import (
     ResultModal,
     RunningModal,
 )
+from agentx.ui.tui.framework import BaseAgentXScreen
 
 
-class FastAgentTUIScreen(Screen):
+class FastAgentTUIScreen(BaseAgentXScreen):
     """Host screen for the Fast Agent modal-dialog flow.
 
     Owns the controller and drives the modal stack via push-screen callbacks.
@@ -57,8 +57,7 @@ class FastAgentTUIScreen(Screen):
     """
 
     def __init__(self, controller: Any | None = None) -> None:
-        super().__init__()
-        self._controller = controller
+        super().__init__(controller)
         # Stash the last outcome/summary so "Save" can re-push ResultModal.
         self._last_outcome: str = ""
         self._last_summary: dict[str, Any] = {}

@@ -183,8 +183,8 @@ class TestTUIActionMethods:
         screen.action_open_chat()
         
         screen.notify.assert_called_once()
-        call_args = str(screen.notify.call_args)
-        assert "Chat" in call_args
+        call_args = str(screen.notify.call_args).lower()
+        assert "chat" in call_args
 
     def test_action_open_rag_notifies(self):
         """action_open_rag should show notification."""
@@ -194,7 +194,7 @@ class TestTUIActionMethods:
         screen.action_open_rag()
         
         screen.notify.assert_called_once()
-        assert "RAG" in str(screen.notify.call_args)
+        assert "rag" in str(screen.notify.call_args).lower()
 
     def test_action_show_help_notifies(self):
         """action_show_help should show help text."""

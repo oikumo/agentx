@@ -31,8 +31,9 @@ from typing import Any
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Static
+
+from agentx.ui.tui.framework import BaseAgentXModalScreen
 
 # Safety cap: prevents an infinite auto-run if the goal never terminates and
 # the user walks away (design §9).
@@ -88,7 +89,7 @@ class _MsgDone:
 # ============================================================================
 
 
-class GoalModal(ModalScreen[dict | None]):
+class GoalModal(BaseAgentXModalScreen[dict | None]):
     """Capture the user's natural-language goal (+ optional constraints).
 
     Dismisses with ``{"description": str, "constraints": str}`` on Start, or
@@ -185,7 +186,7 @@ class GoalModal(ModalScreen[dict | None]):
 # ============================================================================
 
 
-class RunningModal(ModalScreen[dict]):
+class RunningModal(BaseAgentXModalScreen[dict]):
     """Auto-run agent cycles and show live status.
 
     Dismisses with ``{"outcome": str, "summary": dict}`` when the goal reaches a
@@ -489,7 +490,7 @@ class RunningModal(ModalScreen[dict]):
 # ============================================================================
 
 
-class ReflectionModal(ModalScreen[str]):
+class ReflectionModal(BaseAgentXModalScreen[str]):
     """Show a pending self-improvement proposal and ask the user what to do.
 
     Constructor receives proposals as ``list[dict]`` (already converted by
@@ -589,7 +590,7 @@ class ReflectionModal(ModalScreen[str]):
 # ============================================================================
 
 
-class ResultModal(ModalScreen[str]):
+class ResultModal(BaseAgentXModalScreen[str]):
     """Show the run outcome and offer next actions.
 
     Dismisses with ``"save"``, ``"new"``, or ``"back"``.
