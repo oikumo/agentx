@@ -34,6 +34,14 @@ class AIService:
         """Expose the backing registry (used by the Models screen/controller)."""
         return self._registry
 
+    def get_current_provider_name(self) -> str:
+        """Return the name of the currently selected provider."""
+        return self._registry.get_current().name
+
+    def get_current_provider_id(self) -> str:
+        """Return the id of the currently selected provider."""
+        return self._registry.get_current_id()
+
     # ----------------------------------------------------------- legacy factories
 
     def openrouter_llm_provider(self) -> OpenRouterProvider:

@@ -1,4 +1,5 @@
 import pprint
+from dataclasses import dataclass, field
 from typing import List, Dict, Any, Set
 
 from langchain_chroma import Chroma
@@ -9,10 +10,16 @@ from langchain_core.language_models import BaseChatModel
 from agentx.model.rag.query.rag_prompts import RagChatPrompts
 
 
+@dataclass
 class RagChatHistory:
-    chat_answers_history = []
-    user_prompt_history = []
-    chat_history = []
+    """Conversation history for RAG chat sessions.
+    
+    Each instance maintains independent history lists to prevent
+    cross-session contamination (bug fix for class attributes).
+    """
+    chat_answers_history: list[str] = field(default_factory=list)
+    user_prompt_history: list[str] = field(default_factory=list)
+    chat_history: list[tuple[str, str]] = field(default_factory=list)
 
 class RagQuery:
     def __init__(self, llm: BaseChatModel, vector_store: Chroma):
@@ -43,7 +50,7 @@ class RagQuery:
 
         return history
 
-    def _run_llm(self, query: str, chat_history: List[Dict[str, Any]] = []):
+    def _run_llm(self, query: str, chat_history: list[tuple[str, str]] = []):
         rag_prompt = RagChatPrompts.create_rag_template()
         rephrase_prompt = RagChatPrompts.create_rephase_template()
 

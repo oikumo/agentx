@@ -17,6 +17,7 @@ MVC++: pure View — no Model import.
 
 from __future__ import annotations
 
+from datetime import datetime
 from textual.app import ComposeResult
 from textual.containers import Grid, Vertical
 from textual.widgets import Button, Input, Label, Static
@@ -203,7 +204,7 @@ class ChatMessage(Static):
 
         Args:
             message: Message content.
-            role:    ``'user'`` or ``'assistant'``.
+            role:    'user' or 'assistant'.
         """
         super().__init__(message)
         self.role = role
