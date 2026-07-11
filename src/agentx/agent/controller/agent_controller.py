@@ -67,16 +67,24 @@ class AgentController:
         goal_type: GoalType = GoalType.USER_OBJECTIVE,
         priority: int = 50,
         success_criteria: SuccessCriteria | None = None,
+        constraints: str = "",
+        manual: bool = False,
     ) -> str:
-        """Add a user objective to the GoalTree (operation spec §1.3)."""
+        """Add a user objective to the GoalTree (operation spec §1.3).
+
+        S3: *constraints* are appended to the description.
+        S8: *manual*=True creates a kind="manual" goal (never auto-completes).
+        """
         import uuid
 
+        full_desc = f"{description}\n\nConstraints: {constraints}" if constraints else description
+        sc = success_criteria or (SuccessCriteria(kind="manual") if manual else SuccessCriteria())
         goal = Goal(
             id=str(uuid.uuid4()),
-            description=description,
+            description=full_desc,
             type=goal_type,
             priority=priority,
-            success_criteria=success_criteria or SuccessCriteria(),
+            success_criteria=sc,
         )
         goal_id = self._agent.submit_goal(goal)
         if self._view:
@@ -194,7 +202,8 @@ class AgentController:
         outcome = self._agent.approve_proposal(entry_id, proposal_idx)
         if self._view:
             self._view.show_message(
-                f"Proposal {'applied' if outcome.status.value == 'APPLIED' else outcome.status.value}"
+                # L17 (feature_015): consistent lowercase status.
+                f"Proposal {outcome.status.value.lower()}"
             )
         return outcome.status.value == "APPLIED"
 
@@ -226,7 +235,7 @@ class AgentController:
             return False
         try:
             self._agent.clear_state()
-            seed_sandbox_files(scenario, self._agent.config.sandbox_root)
+            seed_sandbox_files(scenario, self._agent.sandbox_root)  # L16 (feature_015)
         except Exception as exc:  # noqa: BLE001 — surface to the view, do not crash
             if self._view:
                 self._view.show_message(f"Demo seed failed: {exc}")

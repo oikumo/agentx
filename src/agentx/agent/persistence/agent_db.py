@@ -14,11 +14,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from agentx.agent.persistence.schema_db import ALL_TABLES, TableAgents, TableSessionSnapshots
+from agentx.agent.persistence.schema_db import ALL_TABLES, INDEXES, TableAgents, TableSessionSnapshots
 from agentx.agent.types import SessionSnapshot
 
 
 AGENT_DATABASE_FILENAME = "agent_session.db"
+
+#: M14 (feature_015): maximum snapshots retained per agent.
+_MAX_SNAPSHOTS_PER_AGENT: int = 50
 
 
 class SessionDatabase:
@@ -38,8 +41,17 @@ class SessionDatabase:
     def _ensure_schema(self) -> None:
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         with sqlite3.connect(self.path) as conn:
+            # L14 (feature_015): enable FK enforcement.  Existing databases
+            # created before this change won't have FK constraints in their
+            # table definitions (CREATE TABLE IF NOT EXISTS is a no-op), but
+            # new databases will if the schema is updated.  Enabling the PRAGMA
+            # is safe — it's a no-op on tables without FK declarations.
+            conn.execute("PRAGMA foreign_keys = ON")
             for table in ALL_TABLES:
                 conn.execute(table.TABLE_QUERY)
+            # L13 (feature_015): create indexes for agent_id lookups.
+            for index_sql in INDEXES:
+                conn.execute(index_sql)
             conn.commit()
 
     # ------------------------------------------------------------------ agents
@@ -53,9 +65,15 @@ class SessionDatabase:
         config_json: str,
     ) -> bool:
         with sqlite3.connect(self.path) as conn:
+            # L11 (feature_015): use INSERT OR IGNORE + UPDATE so created_at
+            # is preserved on re-save (previously INSERT OR REPLACE overwrote it).
             conn.execute(
-                TableAgents.INSERT,
+                TableAgents.INSERT_OR_IGNORE,
                 (agent_id, name, version, autonomy_level, config_json, _now_iso()),
+            )
+            conn.execute(
+                TableAgents.UPDATE,
+                (name, version, autonomy_level, config_json, agent_id),
             )
             conn.commit()
         return True
@@ -77,6 +95,11 @@ class SessionDatabase:
                     snapshot.reflection_log_position,
                 ),
             )
+            # M14 (feature_015): retain only the last N snapshots per agent.
+            conn.execute(
+                TableSessionSnapshots.DELETE_OLD_BY_AGENT,
+                (snapshot.agent_id, snapshot.agent_id, _MAX_SNAPSHOTS_PER_AGENT),
+            )
             conn.commit()
         return True
 
@@ -87,10 +110,15 @@ class SessionDatabase:
         for attempt in range(max_retries):
             try:
                 return self.save_snapshot(snapshot)
-            except sqlite3.Error:
+            except sqlite3.OperationalError:
+                # L12 (feature_015): only retry on OperationalError ("database
+                # is locked"); other sqlite3.Errors (IntegrityError, etc.) are
+                # not transient and should not be retried.
                 if attempt == max_retries - 1:
                     return False
                 time.sleep(1)
+            except sqlite3.Error:
+                return False
         return False
 
     def load_snapshot(self, snapshot_id: str) -> SessionSnapshot | None:

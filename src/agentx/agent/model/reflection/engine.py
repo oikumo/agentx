@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from agentx.agent.interfaces import IAIServicePartner, ISafetyEvaluator
@@ -28,6 +29,9 @@ from agentx.agent.types import (
 )
 
 _log = logging.getLogger(__name__)
+
+#: M13 (feature_015): maximum in-memory reflection log entries.
+_MAX_LOG_ENTRIES: int = 1000
 
 _CRITIQUE_PROMPT = """\
 You are an AI critic reviewing an agent's decision trace.
@@ -77,6 +81,19 @@ class ReflectionEngine:
         self._parser = CritiqueParser()
         self._entries: list[ReflectionEntry] = []
 
+    def _append_entry(self, entry: ReflectionEntry) -> None:
+        """Append + prune (M13: bounded log growth)."""
+        self._entries.append(entry)
+        if len(self._entries) > _MAX_LOG_ENTRIES:
+            excess = len(self._entries) - _MAX_LOG_ENTRIES
+            # Prune oldest entries that have no pending proposals.
+            prunable = [
+                i for i, e in enumerate(self._entries)
+                if not any(p.status == ProposalStatus.NEEDS_CONFIRMATION for p in e.proposals)
+            ]
+            for i in reversed(prunable[:excess]):
+                del self._entries[i]
+
     def set_router(self, router: ProposalRouter) -> None:
         self._router = router
 
@@ -84,6 +101,9 @@ class ReflectionEngine:
         self, trace: DecisionTrace, ctx: PolicyContext
     ) -> ReflectionEntry:
         """Run a full reflection cycle on *trace*."""
+        # S7 (feature_015): expire stale proposals before processing new ones.
+        self.expire_old_proposals()
+
         if self._ai is None:
             entry = ReflectionEntry(
                 id=str(uuid.uuid4()),
@@ -94,7 +114,7 @@ class ReflectionEngine:
                 ),
                 proposals=[],
             )
-            self._entries.append(entry)
+            self._append_entry(entry)
             return entry
 
         prompt = self._render_prompt(trace)
@@ -112,12 +132,12 @@ class ReflectionEngine:
                 ),
                 proposals=[],
             )
-            self._entries.append(entry)
+            self._append_entry(entry)
             return entry
 
         entry = self._parser.parse(raw, trace)
         self._route_proposals(entry, ctx)
-        self._entries.append(entry)
+        self._append_entry(entry)
         return entry
 
     def get_log(self) -> list[ReflectionEntry]:
@@ -134,6 +154,23 @@ class ReflectionEngine:
     def set_ai_service(self, ai: IAIServicePartner) -> None:
         """Wire (or re-wire) the AI service (N13: public API, not _ai reach)."""
         self._ai = ai
+
+    def expire_old_proposals(self, max_age_seconds: float = 3600.0) -> int:
+        """S7 (feature_015): expire NEEDS_CONFIRMATION proposals older than *max_age_seconds*.
+
+        Returns the number of proposals expired.  Called before each reflect()
+        cycle so old proposals don't accumulate forever.
+        """
+        now = datetime.now(timezone.utc)
+        expired = 0
+        for entry in self._entries:
+            for proposal in entry.proposals:
+                if proposal.status == ProposalStatus.NEEDS_CONFIRMATION:
+                    age = (now - entry.created_at).total_seconds()
+                    if age > max_age_seconds:
+                        proposal.status = ProposalStatus.REJECTED
+                        expired += 1
+        return expired
 
     # ----------------------------------------------------------- approval flow (N4)
 

@@ -7,6 +7,7 @@ dicts to the Model layer.  No SQL leaks outside this package (MVC++).
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from datetime import datetime, timezone
 from typing import Any
@@ -39,6 +40,8 @@ from agentx.agent.types import (
     RuleSource,
     SuccessCriteria,
 )
+
+_log = logging.getLogger(__name__)
 
 
 class MemoryRepository:
@@ -79,7 +82,8 @@ class MemoryRepository:
                 rows = conn.execute(
                     TableMemoryEntries.SELECT_BY_AGENT, (agent_id,)
                 ).fetchall()
-        return [_row_to_memory_entry(r) for r in rows]
+        # M12 (feature_015): skip corrupt rows instead of crashing.
+        return [e for e in (_row_to_memory_entry(r) for r in rows) if e is not None]
 
     def delete(self, entry_id: str) -> bool:
         with sqlite3.connect(self._db_path) as conn:
@@ -120,7 +124,8 @@ class PolicyRepository:
             rows = conn.execute(
                 TablePolicyRules.SELECT_BY_AGENT, (agent_id,)
             ).fetchall()
-        return [_row_to_policy_rule(r) for r in rows]
+        # M12: skip corrupt rows.
+        return [r for r in (_row_to_policy_rule(row) for row in rows) if r is not None]
 
     def delete(self, rule_id: str) -> bool:
         with sqlite3.connect(self._db_path) as conn:
@@ -162,7 +167,10 @@ class GoalRepository:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(TableGoals.SELECT_BY_AGENT, (agent_id,)).fetchall()
         for row in rows:
-            tree.add(_row_to_goal(row))
+            # M12: skip corrupt rows instead of crashing load_tree.
+            goal = _row_to_goal(row)
+            if goal is not None:
+                tree.add(goal)
         return tree
 
     def delete(self, goal_id: str) -> bool:
@@ -214,7 +222,8 @@ class ReflectionRepository:
             rows = conn.execute(
                 TableReflectionEntries.SELECT_BY_AGENT, (agent_id, limit)
             ).fetchall()
-        return [_row_to_reflection_entry(r) for r in rows]
+        # M12: skip corrupt rows.
+        return [e for e in (_row_to_reflection_entry(r) for r in rows) if e is not None]
 
 
 # ---------------------------------------------------------------------------
@@ -222,92 +231,113 @@ class ReflectionRepository:
 # ---------------------------------------------------------------------------
 
 
-def _row_to_memory_entry(row: sqlite3.Row) -> MemoryEntry:
-    return MemoryEntry(
-        id=row["id"],
-        content=json.loads(row["content"] or "{}"),
-        metadata=MemoryMetadata(
+def _row_to_memory_entry(row: sqlite3.Row) -> MemoryEntry | None:
+    """M12 (feature_015): return None on corrupt rows instead of crashing."""
+    try:
+        return MemoryEntry(
+            id=row["id"],
+            content=json.loads(row["content"] or "{}"),
+            metadata=MemoryMetadata(
+                created_at=_from_iso(row["created_at"]),
+                last_accessed=_from_iso(row["last_accessed"]),
+                access_count=row["access_count"] or 0,
+                importance=row["importance"] or 0.5,
+                tags=json.loads(row["tags"] or "[]"),
+                source=MemorySource(row["source"]) if row["source"] else MemorySource.PERCEPTION,
+            ),
+            tier=MemoryTier(row["tier"]) if row["tier"] else MemoryTier.VOLATILE,
+        )
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        _log.warning("corrupt memory row: %s", exc)
+        return None
+
+
+def _row_to_policy_rule(row: sqlite3.Row) -> PolicyRule | None:
+    """M12 (feature_015): return None on corrupt rows."""
+    try:
+        action_dict = json.loads(row["action_json"] or "{}")
+        return PolicyRule(
+            id=row["id"],
+            condition_expr=row["condition_expr"] or "true",
+            action=_dict_to_action(action_dict),
+            priority=row["priority"] or 500,
+            enabled=bool(row["enabled"]),
+            metadata=RuleMetadata(
+                source=RuleSource(row["source"]) if row["source"] else RuleSource.DEFAULT,
+                created_by=row["created_by"] or "default",
+                version=row["version"] or 1,
+                created_at=_from_iso(row["created_at"]),
+            ),
+        )
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        _log.warning("corrupt policy row: %s", exc)
+        return None
+
+
+def _row_to_goal(row: sqlite3.Row) -> Goal | None:
+    """M12 (feature_015): return None on corrupt rows."""
+    try:
+        return Goal(
+            id=row["id"],
+            description=row["description"] or "",
+            type=GoalType(row["type"]) if row["type"] else GoalType.USER_OBJECTIVE,
+            parent=row["parent"],
+            children=json.loads(row["children"] or "[]"),
+            status=GoalStatus(row["status"]) if row["status"] else GoalStatus.PENDING,
+            priority=row["priority"] or 50,
+            success_criteria=_dict_to_success_criteria(
+                json.loads(row["success_criteria"] or "{}")
+            ),
             created_at=_from_iso(row["created_at"]),
-            last_accessed=_from_iso(row["last_accessed"]),
-            access_count=row["access_count"] or 0,
-            importance=row["importance"] or 0.5,
-            tags=json.loads(row["tags"] or "[]"),
-            source=MemorySource(row["source"]) if row["source"] else MemorySource.PERCEPTION,
-        ),
-        tier=MemoryTier(row["tier"]) if row["tier"] else MemoryTier.VOLATILE,
-    )
+            updated_at=_from_iso(row["updated_at"]),
+        )
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        _log.warning("corrupt goal row: %s", exc)
+        return None
 
 
-def _row_to_policy_rule(row: sqlite3.Row) -> PolicyRule:
-    action_dict = json.loads(row["action_json"] or "{}")
-    return PolicyRule(
-        id=row["id"],
-        condition_expr=row["condition_expr"] or "true",
-        action=_dict_to_action(action_dict),
-        priority=row["priority"] or 500,
-        enabled=bool(row["enabled"]),
-        metadata=RuleMetadata(
-            source=RuleSource(row["source"]) if row["source"] else RuleSource.DEFAULT,
-            created_by=row["created_by"] or "default",
-            version=row["version"] or 1,
-            created_at=_from_iso(row["created_at"]),
-        ),
-    )
-
-
-def _row_to_goal(row: sqlite3.Row) -> Goal:
-    return Goal(
-        id=row["id"],
-        description=row["description"] or "",
-        type=GoalType(row["type"]) if row["type"] else GoalType.USER_OBJECTIVE,
-        parent=row["parent"],
-        children=json.loads(row["children"] or "[]"),
-        status=GoalStatus(row["status"]) if row["status"] else GoalStatus.PENDING,
-        priority=row["priority"] or 50,
-        success_criteria=_dict_to_success_criteria(
-            json.loads(row["success_criteria"] or "{}")
-        ),
-        created_at=_from_iso(row["created_at"]),
-        updated_at=_from_iso(row["updated_at"]),
-    )
-
-
-def _row_to_reflection_entry(row: sqlite3.Row) -> ReflectionEntry:
+def _row_to_reflection_entry(row: sqlite3.Row) -> ReflectionEntry | None:
     """Reconstruct a :class:`ReflectionEntry` from a persisted row (M2).
 
     The ``DecisionTrace`` is rebuilt minimally (agent_id + timestamp); the
     critique and proposals are fully restored since those drive log display.
+
+    M12 (feature_015): return None on corrupt rows.
     """
-    critique_data = json.loads(row["critique_json"] or "{}")
-    proposals_data = json.loads(row["proposals_json"] or "[]")
-    proposals: list[Proposal] = []
-    for item in proposals_data:
-        if not isinstance(item, dict):
-            continue
-        try:
-            ptype = ProposalType(item.get("type", ""))
-        except ValueError:
-            continue
-        proposals.append(
-            Proposal(
-                type=ptype,
-                content=item.get("content", {}),
-                rationale=item.get("rationale", ""),
-                status=ProposalStatus(item.get("status", ProposalStatus.PROPOSED.value)),
+    try:
+        critique_data = json.loads(row["critique_json"] or "{}")
+        proposals_data = json.loads(row["proposals_json"] or "[]")
+        proposals: list[Proposal] = []
+        for item in proposals_data:
+            if not isinstance(item, dict):
+                continue
+            try:
+                ptype = ProposalType(item.get("type", ""))
+            except ValueError:
+                continue
+            proposals.append(
+                Proposal(
+                    type=ptype,
+                    content=item.get("content", {}),
+                    rationale=item.get("rationale", ""),
+                    status=ProposalStatus(item.get("status", ProposalStatus.PROPOSED.value)),
+                )
             )
+        return ReflectionEntry(
+            id=row["id"],
+            trace=DecisionTrace(agent_id=row["agent_id"], timestamp=_from_iso(row["created_at"])),
+            critique=Critique(
+                summary=critique_data.get("summary", ""),
+                strengths=critique_data.get("strengths", []),
+                weaknesses=critique_data.get("weaknesses", []),
+                confidence=float(critique_data.get("confidence", 0.0)),
+            ),
+            proposals=proposals,
+            created_at=_from_iso(row["created_at"]),
         )
-    return ReflectionEntry(
-        id=row["id"],
-        trace=DecisionTrace(agent_id=row["agent_id"], timestamp=_from_iso(row["created_at"])),
-        critique=Critique(
-            summary=critique_data.get("summary", ""),
-            strengths=critique_data.get("strengths", []),
-            weaknesses=critique_data.get("weaknesses", []),
-            confidence=float(critique_data.get("confidence", 0.0)),
-        ),
-        proposals=proposals,
-        created_at=_from_iso(row["created_at"]),
-    )
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        _log.warning("corrupt reflection row: %s", exc)
+        return None
 
 
 # ---------------------------------------------------------------------------

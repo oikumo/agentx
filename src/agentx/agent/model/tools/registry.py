@@ -79,10 +79,18 @@ class ToolRegistry(IToolRegistryPartner):
     # ------------------------------------------------------------- discovery
 
     def get_sensor(self, sid: str) -> ISensor:
-        return self._sensors[sid]
+        # L6 (feature_015): raise ToolSchemaError instead of raw KeyError.
+        sensor = self._sensors.get(sid)
+        if sensor is None:
+            raise ToolSchemaError(f"unknown sensor: {sid}")
+        return sensor
 
     def get_actuator(self, aid: str) -> IActuator:
-        return self._actuators[aid]
+        # L6 (feature_015): raise ToolSchemaError instead of raw KeyError.
+        actuator = self._actuators.get(aid)
+        if actuator is None:
+            raise ToolSchemaError(f"unknown actuator: {aid}")
+        return actuator
 
     def list_sensors(self) -> list[str]:
         return list(self._sensors)

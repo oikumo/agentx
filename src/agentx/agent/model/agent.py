@@ -139,11 +139,23 @@ class Agent(IAgentModelPartner):
 
     # ============================================================ IAgentModelPartner
 
+    @property
+    def sandbox_root(self) -> str:
+        """L16 (feature_015): expose sandbox_root via the interface."""
+        return self.config.sandbox_root
+
     def start_session(self, config: AgentConfig) -> str:
         """Initialize a new Agent from AgentConfig (operation spec §1.1)."""
         self.id = config.id
         self.config = config
         self.state = AgentState.PERCEIVING
+        # H2 (feature_015): propagate the new id to all subsystems so
+        # repository saves use the correct agent_id.  Previously the
+        # subsystems retained the original __init__ id, splitting data
+        # across two agent identities.
+        self.policy_engine._agent_id = config.id
+        self.memory._agent_id = config.id
+        self.goal_manager._agent_id = config.id
         self._register_builtin_tools(config)
         self._persist_agent_row()
         return self.id
@@ -158,11 +170,34 @@ class Agent(IAgentModelPartner):
         The AI service is a non-serialisable runtime object: it is preserved
         on this instance if already set, but callers resuming a *fresh* Agent
         must re-inject it via :meth:`set_ai_service` (C3).
+
+        H7 (feature_015): if the restore fails (corrupted snapshot,
+        deserialisation error), the pre-clear in-memory state is restored so
+        the agent is not left empty.
         """
         snapshot = self._db.load_snapshot(snapshot_id)
         if snapshot is None:
             raise FileNotFoundError(f"snapshot not found: {snapshot_id}")
 
+        # H7: snapshot pre-clear state so we can roll back on failure.
+        saved_rules = dict(self.policy_engine.rules)
+        saved_volatile = self.memory.export_volatile()
+        saved_reflection = self.reflection_engine.get_log()
+
+        try:
+            self._do_restore(snapshot)
+        except Exception:
+            # Restore the pre-clear state.
+            self.policy_engine.clear()
+            for rule in saved_rules.values():
+                self.policy_engine.add_rule(rule)
+            self.memory.import_volatile(saved_volatile)
+            self.reflection_engine.restore_log(saved_reflection)
+            self.state = AgentState.PERCEIVING
+            raise
+
+    def _do_restore(self, snapshot: SessionSnapshot) -> None:
+        """The actual restore logic (extracted from resume_session for H7)."""
         # --- N9: clear pre-existing in-memory state before restoring ---
         self.policy_engine.clear()
         self.memory.import_volatile([])
@@ -183,7 +218,10 @@ class Agent(IAgentModelPartner):
         if not loaded_rules:
             for rule_data in snapshot.policy_store:
                 rule = _dict_to_rule(rule_data)
-                self.policy_engine.add_rule(rule)
+                # H3 (feature_015): use add_rule_safely so legacy snapshot
+                # rules are conflict-checked (previously bypassed via add_rule).
+                if not self.policy_engine.add_rule_safely(rule):
+                    _log.warning("legacy snapshot rule %s skipped (conflict)", rule.id)
 
         # --- restore goal tree (N8: honour the persisted root) ---
         root_id = snapshot.goal_tree.get("root") if snapshot.goal_tree else None
@@ -301,6 +339,8 @@ class Agent(IAgentModelPartner):
         self.state = AgentState.PERCEIVING
         if not ok:
             _log.error("persistence failed for agent %s", self.id)
+            # H4 (feature_015): return "" so callers can detect failure.
+            return ""
         return snapshot.snapshot_id
 
     def load_snapshot(self, snapshot_id: str) -> SessionSnapshot | None:
@@ -422,7 +462,10 @@ class Agent(IAgentModelPartner):
         self.memory.store(entry, MemoryTier.VOLATILE)
         # C6: only complete the active goal when the acting tool matches the
         # goal's expected tool (or the goal accepts any successful tool).
-        if result.success and command is not None:
+        # L7 (feature_015): removed dead `and command is not None` check —
+        # command is always non-None here (None is returned at line 408).
+        # S8 (feature_015): "manual" kind never auto-completes.
+        if result.success:
             active = self.goal_manager.active_goal()
             if active and active.success_criteria.kind == "tool_success":
                 expected_tool = active.success_criteria.tool_id
@@ -457,6 +500,13 @@ class Agent(IAgentModelPartner):
 
     def _register_builtin_tools(self, config: AgentConfig) -> None:
         """Register built-in tools from config (design §6.6)."""
+        # L8 (feature_015): unregister stale tools first so config changes
+        # (e.g. sandbox_root) take effect.  Previously DuplicateToolError was
+        # silently swallowed, so the old tool with the old sandbox was kept.
+        self.tool_registry.unregister("filesystem")
+        self.tool_registry.unregister("rag_query")
+        self.tool_registry.unregister("session")
+
         fs = FileSystemTool(config.sandbox_root)
         self._safe_register_sensor(fs)
         self._safe_register_actuator(fs)

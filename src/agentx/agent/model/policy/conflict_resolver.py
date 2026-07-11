@@ -14,10 +14,16 @@ Conflicts are **reported, not silently auto-resolved**.
 
 from __future__ import annotations
 
+import re
 from itertools import combinations
 from typing import Any
 
 from agentx.agent.types import ActionType, PolicyRule
+
+#: L3 (feature_015): case-insensitive keyword exclusion set.
+_KEYWORD_EXCLUSIONS = frozenset(kw.upper() for kw in ("AND", "OR", "NOT", "TRUE", "FALSE"))
+
+_IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_.]*")
 
 
 class ConflictResolver:
@@ -61,12 +67,11 @@ class ConflictResolver:
         """
         if expr_a == expr_b:
             return 1.0
-        # N15: keep only identifier-like tokens (drop operators/parens/keywords).
-        import re
-
-        ident_re = re.compile(r"[A-Za-z_][A-Za-z0-9_.]*")
-        tokens_a = set(ident_re.findall(expr_a)) - {"AND", "OR", "NOT", "true", "false"}
-        tokens_b = set(ident_re.findall(expr_b)) - {"AND", "OR", "NOT", "true", "false"}
+        # L2 (feature_015): re is now a top-level import.
+        # L3: keywords are upper-cased before exclusion so "True"/"FALSE"
+        # etc. are caught regardless of case.
+        tokens_a = {t for t in _IDENT_RE.findall(expr_a) if t.upper() not in _KEYWORD_EXCLUSIONS}
+        tokens_b = {t for t in _IDENT_RE.findall(expr_b) if t.upper() not in _KEYWORD_EXCLUSIONS}
         if not tokens_a or not tokens_b:
             return 0.0
         intersection = tokens_a & tokens_b
@@ -79,6 +84,12 @@ class ConflictResolver:
         """True if two actions target the same resource with different intent."""
         # PAUSE vs EXECUTE_TOOL = direct contradiction
         if {action_a.type, action_b.type} == {ActionType.PAUSE, ActionType.EXECUTE_TOOL}:
+            return True
+        # L4 (feature_015): SET_GOAL vs PAUSE and other action-type mismatches
+        # that target the same resource are also contradictions.
+        if {action_a.type, action_b.type} == {ActionType.SET_GOAL, ActionType.PAUSE}:
+            return True
+        if {action_a.type, action_b.type} == {ActionType.MODIFY_MEMORY, ActionType.PAUSE}:
             return True
         # same tool, different parameters
         if action_a.type == ActionType.EXECUTE_TOOL and action_b.type == ActionType.EXECUTE_TOOL:

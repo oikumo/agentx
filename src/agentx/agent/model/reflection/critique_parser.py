@@ -83,7 +83,12 @@ class CritiqueParser:
             confidence_map = {"high": 0.9, "medium": 0.6, "low": 0.3}
             confidence = confidence_map.get(confidence_raw.lower(), 0.5)
         else:
-            confidence = float(confidence_raw)
+            # L10 (feature_015): catch TypeError/ValueError for non-numeric
+            # non-string values (e.g. list, dict, None) instead of crashing.
+            try:
+                confidence = float(confidence_raw)
+            except (TypeError, ValueError):
+                confidence = 0.5
         return Critique(
             summary=data.get("summary", ""),
             strengths=data.get("strengths", []),

@@ -33,7 +33,15 @@ _SOURCE_PRECEDENCE = {
     RuleSource.USER_DEFINED: 3,
 }
 
-_NOOP = PolicyAction(type=ActionType.PAUSE)
+def _noop_action() -> PolicyAction:
+    """M4 (feature_015): return a fresh PAUSE action each time.
+
+    Previously a module-level ``_NOOP`` singleton was shared across all
+    no-op decisions; since ``PolicyAction`` is mutable, any caller that
+    mutated ``decision.selected_action.parameters`` corrupted the global
+    default.
+    """
+    return PolicyAction(type=ActionType.PAUSE)
 
 
 class PolicyEngine(IPolicyStorePartner):
@@ -89,7 +97,10 @@ class PolicyEngine(IPolicyStorePartner):
         return loaded
 
     def resolve_conflicts(self) -> dict[str, Any]:
-        return self._resolver.detect(list(self.rules.values()))
+        # L1 (feature_015): previously a stub returning {}.  Now surfaces
+        # detected conflicts as {"ruleA:ruleB": score} for the interface.
+        conflicts = self._resolver.detect(list(self.rules.values()))
+        return {f"{a}:{b}": score for (a, b), score in conflicts.items()}
 
     # ----------------------------------------------------------- evaluation
 
@@ -101,7 +112,7 @@ class PolicyEngine(IPolicyStorePartner):
         ]
         if not candidates:
             return PolicyDecision(
-                selected_action=_NOOP,
+                selected_action=_noop_action(),
                 confidence=0.0,
                 reasoning="no matching rule",
             )
@@ -134,9 +145,17 @@ class PolicyEngine(IPolicyStorePartner):
         self.add_rule(rule)
         return True
 
-    def revert_rule(self, rule_id: str) -> None:
-        """Roll back a reflection-proposed rule (design §7.5)."""
-        self.remove_rule(rule_id)
+    def revert_rule(self, rule_id: str, previous: PolicyRule | None = None) -> None:
+        """Roll back a reflection-proposed rule (design §7.5).
+
+        M6 (feature_015): if *previous* is provided, restore it instead of
+        deleting the rule entirely.  Previously revert always deleted, so
+        an UPDATE to an existing rule was lost on revert.
+        """
+        if previous is not None:
+            self.add_rule(previous)
+        else:
+            self.remove_rule(rule_id)
 
     # ----------------------------------------------------------- priority resolution
 
@@ -161,7 +180,9 @@ class PolicyEngine(IPolicyStorePartner):
         base = winner.priority / 1000.0
         if len(candidates) == 1:
             return min(1.0, base + 0.2)
-        return base
+        # M3 (feature_015): cap contested confidence at 1.0 — a rule with
+        # priority > 1000 previously produced confidence > 1.0.
+        return min(1.0, base)
 
     # ----------------------------------------------------------- internals
 

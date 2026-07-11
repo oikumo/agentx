@@ -47,13 +47,25 @@ class MemoryManager(IMemoryStorePartner):
             self._volatile[entry.id] = entry
             self._volatile.move_to_end(entry.id)
             self._enforce_capacity()
-        elif tier == MemoryTier.PERSISTENT and self._repository is not None:
+        # M8 (feature_015): ARCHIVED tier was silently dropped — now treated
+        # like PERSISTENT (stored in the repository with tier=ARCHIVED).
+        elif tier in (MemoryTier.PERSISTENT, MemoryTier.ARCHIVED) and self._repository is not None:
             self._repository.save(self._agent_id, entry)
 
     def retrieve(self, query: MemoryQuery) -> list[MemoryEntry]:
-        results = list(self._volatile.values())
+        # M9 (feature_015): deduplicate by entry.id — an entry in both tiers
+        # previously appeared twice.
+        seen: set[str] = set()
+        results: list[MemoryEntry] = []
+        for entry in list(self._volatile.values()):
+            if entry.id not in seen:
+                results.append(entry)
+                seen.add(entry.id)
         if self._repository is not None:
-            results.extend(self._repository.load_by_agent(self._agent_id))
+            for entry in self._repository.load_by_agent(self._agent_id):
+                if entry.id not in seen:
+                    results.append(entry)
+                    seen.add(entry.id)
         # filter by source
         if query.source is not None:
             results = [e for e in results if e.metadata.source == query.source]
@@ -95,13 +107,16 @@ class MemoryManager(IMemoryStorePartner):
         to_evict: list[str] = []
         now = datetime.now(timezone.utc)
         for eid, entry in self._volatile.items():
+            # M1 (feature_015): use 'if' not 'elif' for OR semantics.
+            # Previously the criteria were mutually exclusive — if an entry
+            # was above min_importance, the tags criterion was never checked.
             if criteria.min_importance is not None and entry.metadata.importance < criteria.min_importance:
                 to_evict.append(eid)
-            elif criteria.max_age is not None:
+            if criteria.max_age is not None:
                 age = (now - entry.metadata.created_at).total_seconds()
                 if age > criteria.max_age:
                     to_evict.append(eid)
-            elif criteria.tags and any(t in entry.metadata.tags for t in criteria.tags):
+            if criteria.tags and any(t in entry.metadata.tags for t in criteria.tags):
                 to_evict.append(eid)
         # hard capacity limit
         if criteria.max_entries is not None and len(self._volatile) > criteria.max_entries:
@@ -179,6 +194,10 @@ class MemoryManager(IMemoryStorePartner):
     def revert_update(self, token: str) -> None:
         """Roll back a previously applied memory update."""
         self._volatile.pop(token, None)
+        # M7 (feature_015): also delete from the persistent tier in case
+        # consolidate() moved the entry before the revert.
+        if self._repository is not None:
+            self._repository.delete(token)
 
     def _enforce_capacity(self) -> None:
         while len(self._volatile) > self._volatile_capacity:

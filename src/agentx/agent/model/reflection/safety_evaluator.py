@@ -14,6 +14,7 @@ from agentx.agent.types import (
     PolicyContext,
     Proposal,
     ProposalStatus,
+    ProposalType,
     ProposalVerdict,
 )
 
@@ -42,7 +43,10 @@ class DefaultSafetyEvaluator(ISafetyEvaluator):
     }
 
     def evaluate(self, proposal: Proposal, ctx: PolicyContext) -> ProposalVerdict:
-        op = proposal.content.get("op", "")
+        # C2 (feature_015): derive op from the proposal's content shape, not
+        # the untrusted 'op' field.  Previously the deny-list was dead code
+        # because 'op' was never set by the proposal router for 3 of 4 types.
+        op = self._infer_op(proposal)
         key = f"{proposal.type.value}:{op}"
         if key in self.DANGEROUS:
             return ProposalVerdict(ProposalStatus.REJECTED, "deny-listed operation")
@@ -53,3 +57,43 @@ class DefaultSafetyEvaluator(ISafetyEvaluator):
             return ProposalVerdict(ProposalStatus.NEEDS_CONFIRMATION, "manual-only mode")
         # FULLY_AUTONOMOUS
         return ProposalVerdict(ProposalStatus.APPROVED, "autonomous mode, safe")
+
+    @staticmethod
+    def _infer_op(proposal: Proposal) -> str:
+        """Infer the operation from the proposal's content shape (C2).
+
+        Derives the op from the content keys (primary signal) so a malicious
+        or malformed proposal cannot bypass the deny-list by omitting or
+        mislabelling ``op``.  Falls back to the ``op`` field for backward
+        compatibility with callers that set it explicitly.
+        """
+        content = proposal.content
+        ptype = proposal.type
+        if ptype == ProposalType.POLICY_CHANGE:
+            if content.get("enabled") is False:
+                return "disable"
+            return content.get("op", "update")
+        if ptype == ProposalType.MEMORY_UPDATE:
+            if content.get("delete_all") or content.get("clear"):
+                return "delete_all"
+            return content.get("op", "add")
+        if ptype == ProposalType.GOAL_ADJUSTMENT:
+            status = str(content.get("status", "")).upper()
+            if status == "ABANDONED":
+                return "abandon_root"
+            if status == "DELETED":
+                return "delete"
+            if content.get("priority") is not None:
+                try:
+                    if int(content.get("priority", 0)) < 0:
+                        return "demote"
+                except (TypeError, ValueError):
+                    pass
+            # Fall back to op field for backward compat with explicit callers.
+            op = content.get("op", "")
+            if op in ("abandon_root", "delete", "demote"):
+                return op
+            return "update"
+        if ptype == ProposalType.TOOL_CONFIGURATION:
+            return content.get("op", "noop")
+        return content.get("op", "")

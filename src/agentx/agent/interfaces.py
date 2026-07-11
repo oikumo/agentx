@@ -15,6 +15,7 @@ if TYPE_CHECKING:
         ActuatorCommand,
         ActuatorResult,
         AgentConfig,
+        CycleResult,
         EnvironmentModel,
         EvictionCriteria,
         Goal,
@@ -40,6 +41,12 @@ if TYPE_CHECKING:
 class IAgentModelPartner(ABC):
     """Abstract Partner: Controller → Agent contract."""
 
+    # L16 (feature_015): property so the controller doesn't reach into config.
+    @property
+    @abstractmethod
+    def sandbox_root(self) -> str:
+        """Return the agent's sandbox root path."""
+
     @abstractmethod
     def start_session(self, config: AgentConfig) -> str:
         """Initialize a new Agent and return its id."""
@@ -53,7 +60,7 @@ class IAgentModelPartner(ABC):
         """Add a goal to the goal tree and return its id."""
 
     @abstractmethod
-    def run_cycle(self) -> Any:
+    def run_cycle(self) -> "CycleResult":
         """Execute one perceive → decide → act → reflect cycle."""
 
     @abstractmethod
@@ -61,27 +68,27 @@ class IAgentModelPartner(ABC):
         """Add or replace a policy rule via the safe path."""
 
     @abstractmethod
-    def get_status(self) -> Any:
+    def get_status(self) -> dict[str, Any]:
         """Return a serializable status snapshot."""
 
     @abstractmethod
     def persist(self) -> str:
-        """Persist the current state and return the snapshot id."""
+        """Persist the current state and return the snapshot id ("" on failure)."""
 
     @abstractmethod
-    def load_snapshot(self, snapshot_id: str) -> Any:
+    def load_snapshot(self, snapshot_id: str) -> "SessionSnapshot | None":
         """Read a persisted SessionSnapshot by id (C4: controller→facade, not _db)."""
 
     @abstractmethod
-    def load_latest_snapshot(self) -> Any:
+    def load_latest_snapshot(self) -> "SessionSnapshot | None":
         """Read the most recent persisted snapshot for this agent (C5/I1)."""
 
     @abstractmethod
-    def list_rules(self) -> Any:
+    def list_rules(self) -> list["PolicyRule"]:
         """Return the current policy rules (N6: view via controller, not model)."""
 
     @abstractmethod
-    def list_goals(self) -> Any:
+    def list_goals(self) -> "GoalTree":
         """Return the current goal tree (N6)."""
 
     @abstractmethod

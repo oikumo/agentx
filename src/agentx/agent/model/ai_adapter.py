@@ -12,12 +12,16 @@ gracefully to a no-reflection result.
 
 from __future__ import annotations
 
+import concurrent.futures
 import logging
 from typing import Any
 
 from agentx.agent.interfaces import IAIServicePartner
 
 _log = logging.getLogger(__name__)
+
+#: H6 (feature_015): timeout for a single LLM invocation.
+_LLM_TIMEOUT: float = 60.0
 
 
 class AIServiceAdapter(IAIServicePartner):
@@ -39,11 +43,13 @@ class AIServiceAdapter(IAIServicePartner):
         is tried first.  If it fails (missing key / model not found), the legacy
         fallback chain (OpenRouter → OpenAI) is attempted so the agent degrades
         gracefully — the same behaviour the reflection engine relied on before.
+
+        M2 (feature_015): the ``_init_attempted`` latch is reset on each call
+        so the user can add an API key later in the same session and retry.
         """
         if self._llm is not None:
             return self._llm
-        if self._init_attempted:
-            raise RuntimeError("AI service initialization already failed")
+        # M2: reset the latch so retry is possible after a previous failure.
         self._init_attempted = True
 
         ai: Any = self._ai_service
@@ -87,12 +93,20 @@ class AIServiceAdapter(IAIServicePartner):
         """Send *prompt* to the LLM and return the response text.
 
         Raises:
-            RuntimeError: if no AI provider is available.
+            RuntimeError: if no AI provider is available or the invocation
+                times out after ``_LLM_TIMEOUT`` seconds (H6).
         """
         from langchain_core.messages import HumanMessage
 
         llm = self._ensure_llm()
-        response = llm.invoke([HumanMessage(content=prompt)])
+        # H6 (feature_015): wrap invoke in a thread-based timeout so a hung
+        # HTTP call does not block the agent indefinitely.
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(llm.invoke, [HumanMessage(content=prompt)])
+                response = future.result(timeout=_LLM_TIMEOUT)
+        except concurrent.futures.TimeoutError:
+            raise RuntimeError(f"LLM invocation timed out after {_LLM_TIMEOUT}s")
         # LangChain response objects expose .content for the text
         if hasattr(response, "content"):
             return str(response.content)

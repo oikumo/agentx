@@ -7,10 +7,13 @@ without touching the agent core.
 
 from __future__ import annotations
 
+import logging
 from importlib.metadata import entry_points
 from typing import Any
 
 from agentx.agent.model.tools.spec import IActuator, ISensor
+
+_log = logging.getLogger(__name__)
 
 
 def discover_tools() -> list[ISensor | IActuator]:
@@ -32,6 +35,8 @@ def discover_tools() -> list[ISensor | IActuator]:
             instance = obj() if isinstance(obj, type) else obj
             if isinstance(instance, (ISensor, IActuator)):
                 tools.append(instance)
-        except Exception:  # noqa: BLE001 — one bad plugin must not break others
+        except Exception as exc:  # noqa: BLE001 — one bad plugin must not break others
+            # L5 (feature_015): log the error so plugin failures are diagnosable.
+            _log.warning("plugin %s failed to load: %s", ep.name, exc)
             continue
     return tools

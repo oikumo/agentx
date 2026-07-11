@@ -33,6 +33,18 @@ class TableAgents:
         f"(id, name, version, autonomy_level, config_json, created_at) "
         f"VALUES (?, ?, ?, ?, ?, ?)"
     )
+    # L11 (feature_015): separate INSERT (ignore if exists) + UPDATE so
+    # created_at is not overwritten on every upsert.
+    INSERT_OR_IGNORE = (
+        f"INSERT OR IGNORE INTO {TABLE_NAME} "
+        f"(id, name, version, autonomy_level, config_json, created_at) "
+        f"VALUES (?, ?, ?, ?, ?, ?)"
+    )
+    UPDATE = (
+        f"UPDATE {TABLE_NAME} "
+        f"SET name = ?, version = ?, autonomy_level = ?, config_json = ? "
+        f"WHERE id = ?"
+    )
     SELECT_BY_ID = f"SELECT * FROM {TABLE_NAME} WHERE id = ?"
 
 
@@ -63,6 +75,13 @@ class TableSessionSnapshots:
         f"ORDER BY timestamp DESC LIMIT 1"
     )
     SELECT_BY_ID = f"SELECT * FROM {TABLE_NAME} WHERE snapshot_id = ?"
+    # M14 (feature_015): delete old snapshots beyond the retention limit.
+    DELETE_OLD_BY_AGENT = (
+        f"DELETE FROM {TABLE_NAME} WHERE agent_id = ? AND snapshot_id NOT IN ("
+        f"  SELECT snapshot_id FROM {TABLE_NAME} "
+        f"  WHERE agent_id = ? ORDER BY timestamp DESC LIMIT ?"
+        f")"
+    )
 
 
 class TableMemoryEntries:
@@ -189,4 +208,13 @@ ALL_TABLES = (
     TablePolicyRules,
     TableGoals,
     TableReflectionEntries,
+)
+
+#: L13 (feature_015): indexes on agent_id columns to avoid full table scans.
+INDEXES = (
+    "CREATE INDEX IF NOT EXISTS idx_snapshots_agent ON session_snapshots(agent_id)",
+    "CREATE INDEX IF NOT EXISTS idx_memory_agent ON memory_entries(agent_id)",
+    "CREATE INDEX IF NOT EXISTS idx_policy_agent ON policy_rules(agent_id)",
+    "CREATE INDEX IF NOT EXISTS idx_goals_agent ON goals(agent_id)",
+    "CREATE INDEX IF NOT EXISTS idx_reflection_agent ON reflection_entries(agent_id)",
 )

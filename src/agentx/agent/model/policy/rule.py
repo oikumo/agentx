@@ -84,7 +84,7 @@ class Arithmetic(ASTNode):
 _TOKEN_RE = re.compile(
     r"""
       \s*(?:
-        (?P<NUMBER>-?\d+\.?\d*) |
+        (?P<NUMBER>\d+\.?\d*) |
         (?P<STRING>'[^']*'|"[^"]*") |
         (?P<OP><=|>=|==|!=|<|>|\+|-) |
         (?P<LP>\() |
@@ -197,6 +197,16 @@ class _Parser:
         tok = self._peek()
         if tok is None:
             raise ConditionCompileError("unexpected end of expression")
+        # C3 (feature_015): unary minus/plus support.
+        # Previously the tokenizer swallowed '-' into NUMBER tokens (-?\d+),
+        # making subtraction unreachable.  Now '-' is always an OP; unary
+        # minus is handled here as a prefix operator.
+        if tok[0] == "OP" and tok[1] == "-":
+            self._consume()
+            return UnaryOp("-", self._primary())
+        if tok[0] == "OP" and tok[1] == "+":
+            self._consume()
+            return self._primary()  # unary plus is a no-op
         if tok[0] == "LP":
             self._consume()
             node = self._or_expr()
@@ -234,7 +244,35 @@ def compile_condition(expr: str) -> ASTNode:
     tokens = tokenize(expr)
     if not tokens:
         return Literal(True)
-    return _Parser(tokens).parse()
+    ast = _Parser(tokens).parse()
+    # M11 (feature_015): validate identifiers at compile time so unknown
+    # roots/functions raise ConditionCompileError immediately, fulfilling
+    # the module docstring's "fail-fast, never at decide() time" promise.
+    _validate_identifiers(ast)
+    return ast
+
+
+#: M11: known root identifiers and function names for fail-fast validation.
+_KNOWN_ROOTS = {"true", "false", "agent", "environment", "goal", "memory"}
+_KNOWN_FUNCTIONS = {"has_observation", "goal_is_blocked", "memory_contains"}
+
+
+def _validate_identifiers(node: ASTNode) -> None:
+    """Recursively validate that all identifiers and functions are known."""
+    if isinstance(node, Identifier):
+        root = node.parts[0]
+        if root not in _KNOWN_ROOTS:
+            raise ConditionCompileError(f"unknown identifier: {root}")
+    elif isinstance(node, FunctionCall):
+        if node.name not in _KNOWN_FUNCTIONS:
+            raise ConditionCompileError(f"unknown function: {node.name}")
+        for arg in node.args:
+            _validate_identifiers(arg)
+    elif isinstance(node, UnaryOp):
+        _validate_identifiers(node.operand)
+    elif isinstance(node, (BinaryOp, Comparison, Arithmetic)):
+        _validate_identifiers(node.left)
+        _validate_identifiers(node.right)
 
 
 # ---------------------------------------------------------------------------
@@ -258,6 +296,9 @@ class ConditionEvaluator:
         if isinstance(node, UnaryOp):
             if node.op == "NOT":
                 return not self._visit(node.operand, ctx)
+            # C3 (feature_015): unary minus.
+            if node.op == "-":
+                return -self._visit(node.operand, ctx)
         if isinstance(node, BinaryOp):
             left = self._visit(node.left, ctx)
             right = self._visit(node.right, ctx)
@@ -374,13 +415,17 @@ class CompiledCondition:
     _ast: ASTNode | None = field(default=None, repr=False)
 
     def evaluate(self, ctx: PolicyContext) -> bool:
-        if self._ast is None:
-            self._ast = compile_condition(self.expression)
         try:
+            if self._ast is None:
+                self._ast = compile_condition(self.expression)
             return bool(ConditionEvaluator().evaluate(self._ast, ctx))
         except ConditionCompileError:
             return False
-        except Exception:  # noqa: BLE001 — conditions must not crash decide()
+        except (TypeError, ValueError, KeyError, AttributeError) as exc:
+            # M10 (feature_015): log diagnosable errors instead of silently
+            # returning False for ALL exceptions.  Programming errors in
+            # conditions are now visible in the log.
+            _log.warning("condition %r evaluation error: %s", self.expression, exc)
             return False
 
     def compile(self) -> None:

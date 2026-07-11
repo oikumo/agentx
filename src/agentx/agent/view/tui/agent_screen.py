@@ -27,6 +27,7 @@ Layout::
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from typing import Any
 
@@ -48,6 +49,8 @@ from agentx.agent.types import (
     RuleSource,
     SuccessCriteria,
 )
+
+_log = logging.getLogger(__name__)
 
 
 class AgentTUIScreen(BaseAgentXScreen):
@@ -404,8 +407,9 @@ class AgentTUIScreen(BaseAgentXScreen):
                     f"rules: {status.get('rules', 0)} | "
                     f"tools: {status.get('tools', 0)}"
                 )
-        except Exception:
-            pass
+        except Exception as exc:
+            # L15 (feature_015): log instead of silent pass.
+            _log.debug("show_status widget update failed: %s", exc)
 
     def show_reflection_log(self, entries: list[ReflectionEntry]) -> None:
         for entry in entries:
@@ -425,7 +429,13 @@ class AgentTUIScreen(BaseAgentXScreen):
     def show_policy_editor(self, rules: list[PolicyRule]) -> None:
         self._log(f"[Policy] {len(rules)} rule(s)")
         for rule in rules:
-            self._log(f"  {rule.id[:8]}…  pri={rule.priority}  enabled={rule.enabled}")
+            # S6 (feature_015): show condition + action (not just id/priority/enabled).
+            action = rule.action
+            self._log(
+                f"  {rule.id[:8]}…  pri={rule.priority}  enabled={rule.enabled}\n"
+                f"    condition: {rule.condition_expr}\n"
+                f"    action: {action.type.value}({action.parameters})"
+            )
 
     def refresh_goal_tree(self) -> None:
         if self._controller is None:
@@ -447,8 +457,9 @@ class AgentTUIScreen(BaseAgentXScreen):
                 # no root — list all goals flat
                 for goal in goal_tree.nodes.values():
                     tree.root.add_leaf(self._goal_label(goal))
-        except Exception:
-            pass
+        except Exception as exc:
+            # L15 (feature_015): log instead of silent pass.
+            _log.debug("refresh_goal_tree failed: %s", exc)
 
     def _goal_label(self, goal: Any) -> str:
         """Format a goal for display in the tree."""

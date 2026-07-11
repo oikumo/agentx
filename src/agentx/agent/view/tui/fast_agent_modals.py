@@ -24,6 +24,7 @@ touches Textual widgets directly (that would race the event loop).
 
 from __future__ import annotations
 
+import logging
 import queue
 import threading
 from typing import Any
@@ -34,6 +35,8 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Input, Label, Static
 
 from agentx.ui.tui.framework import BaseAgentXModalScreen
+
+_log = logging.getLogger(__name__)
 
 # Safety cap: prevents an infinite auto-run if the goal never terminates and
 # the user walks away (design §9).
@@ -281,6 +284,16 @@ class RunningModal(BaseAgentXModalScreen[dict]):
         self._auto_running = False
         self._stop_evt.set()
         self._pause_evt.set()  # release the worker if parked on pause
+        # H5 (feature_015): join the worker so it does not race a new modal's
+        # worker on the same controller state.  The worker is a daemon thread
+        # so it will not block process exit; the join just narrows the race
+        # window when the user re-opens Fast Agent quickly.  Short timeout
+        # (0.1s) so a cooperative worker exits but a stuck worker doesn't
+        # freeze the UI thread.
+        if self._worker is not None and self._worker.is_alive():
+            self._worker.join(timeout=0.1)
+            if self._worker.is_alive():
+                _log.warning("FastAgent worker did not exit within 0.1s")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-pause":
@@ -400,7 +413,9 @@ class RunningModal(BaseAgentXModalScreen[dict]):
                     for entry_id, idx, proposal in msg.proposals[:3]
                 ]
                 self.app.push_screen(
-                    ReflectionModal(proposals_as_dicts),
+                    # S2 (feature_015): pass the full count so the modal can
+                    # show "showing first 3 of N" when there are >3 proposals.
+                    ReflectionModal(proposals_as_dicts, full_count=len(msg.proposals)),
                     callback=self._on_reflection,
                 )
             elif isinstance(msg, _MsgDone):
@@ -429,6 +444,8 @@ class RunningModal(BaseAgentXModalScreen[dict]):
     def _on_reflection(self, choice: str | None) -> None:
         """Called when ReflectionModal dismisses with 'approve'/'dismiss'/'stop'.
 
+        S5 (feature_015): also handles 'approve_all' and 'dismiss_all'.
+
         Runs on the UI thread — safe to drive the controller and resume polling.
         """
         self._awaiting_reflection = False
@@ -436,18 +453,26 @@ class RunningModal(BaseAgentXModalScreen[dict]):
             return
         if choice is None:
             choice = "dismiss"  # treat None as dismiss (shouldn't happen)
-        if choice == "approve" and self._pending:
-            entry_id, idx, _ = self._pending[0]
-            try:
-                self._controller.approve_proposal(entry_id, idx)
-            except Exception as exc:  # noqa: BLE001
-                self.notify(f"Approval failed: {exc}", severity="warning")
-        elif choice == "stop":
+
+        if choice == "stop":
             self._stop_evt.set()
             self._do_dismiss("stopped", self._last_summary)
             return
-        # "approve" or "dismiss" → release the worker from the proposal pause
-        # and resume polling on the UI thread.
+
+        # S5: batch approval — approve all pending proposals.
+        if choice in ("approve", "approve_all") and self._pending:
+            proposals_to_approve = (
+                self._pending if choice == "approve_all" else [self._pending[0]]
+            )
+            for entry_id, idx, _ in proposals_to_approve:
+                try:
+                    self._controller.approve_proposal(entry_id, idx)
+                except Exception as exc:  # noqa: BLE001
+                    self.notify(f"Approval failed: {exc}", severity="warning")
+                    break
+
+        # "approve", "approve_all", "dismiss", "dismiss_all" → release the
+        # worker from the proposal pause and resume polling on the UI thread.
         self._pending = []
         self._pause_evt.set()
         self.set_timer(0.05, self._poll)
@@ -499,10 +524,16 @@ class ReflectionModal(BaseAgentXModalScreen[str]):
     Constructor receives proposals as ``list[dict]`` (already converted by
     ``RunningModal`` so this modal imports no Model types).
 
-    Dismisses with ``"approve"``, ``"dismiss"``, or ``"stop"``.
+    Dismisses with ``"approve"``, ``"approve_all"``, ``"dismiss"``,
+    ``"dismiss_all"``, or ``"stop"``.
     """
 
-    BINDINGS = [Binding("escape", "dismiss_choice", "Dismiss", show=False)]
+    # S5 (feature_015): A = approve all, D = dismiss all (batch operations).
+    BINDINGS = [
+        Binding("escape", "dismiss_choice", "Dismiss", show=False),
+        Binding("a", "approve_all", "Approve All", show=False),
+        Binding("d", "dismiss_all", "Dismiss All", show=False),
+    ]
 
     DEFAULT_CSS = """
     ReflectionModal {
@@ -545,9 +576,11 @@ class ReflectionModal(BaseAgentXModalScreen[str]):
     }
     """
 
-    def __init__(self, proposals: list[dict[str, Any]]) -> None:
+    def __init__(self, proposals: list[dict[str, Any]], full_count: int | None = None) -> None:
         super().__init__()
         self._proposals = proposals
+        # S2 (feature_015): real full count from the caller (not a stub).
+        self._full_count = full_count if full_count is not None else len(proposals)
 
     def compose(self) -> ComposeResult:
         with Vertical():
@@ -572,8 +605,8 @@ class ReflectionModal(BaseAgentXModalScreen[str]):
                 yield Button("⏹ Stop", id="btn-stop", variant="error")
 
     def _full_count_hint(self) -> int:
-        """Placeholder for future use — currently equals len(proposals)."""
-        return len(self._proposals)
+        """S2 (feature_015): return the real full count (no longer a stub)."""
+        return self._full_count
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-approve":
@@ -586,6 +619,15 @@ class ReflectionModal(BaseAgentXModalScreen[str]):
     def action_dismiss_choice(self) -> None:
         """Escape → Dismiss (leave proposal pending, resume run)."""
         self.dismiss("dismiss")
+
+    # S5 (feature_015): batch approval/dismissal via keybindings.
+    def action_approve_all(self) -> None:
+        """A → Approve All pending proposals."""
+        self.dismiss("approve_all")
+
+    def action_dismiss_all(self) -> None:
+        """D → Dismiss All pending proposals."""
+        self.dismiss("dismiss_all")
 
 
 # ============================================================================

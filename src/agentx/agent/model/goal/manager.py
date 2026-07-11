@@ -7,6 +7,7 @@ depends on the :class:`IGoalManager` abstraction, not this concrete class.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -21,6 +22,8 @@ from agentx.agent.types import (
     GoalType,
     SuccessCriteria,
 )
+
+_log = logging.getLogger(__name__)
 
 
 class GoalManager(IGoalManager):
@@ -70,7 +73,13 @@ class GoalManager(IGoalManager):
         if goal is None:
             return
         if isinstance(status, str):
-            status = GoalStatus(status)
+            try:
+                status = GoalStatus(status)
+            except ValueError:
+                # L9 (feature_015): catch invalid status strings instead of
+                # crashing the entire goal manager.
+                _log.warning("invalid goal status: %s", status)
+                return
         goal.status = status
         goal.updated_at = datetime.now(timezone.utc)
         if self._repository is not None:
@@ -82,13 +91,17 @@ class GoalManager(IGoalManager):
     # ----------------------------------------------------------- helpers
 
     def _promote_next(self, completed_id: str) -> None:
-        for goal in self._tree.nodes.values():
-            if goal.status == GoalStatus.PENDING:
-                goal.status = GoalStatus.ACTIVE
-                goal.updated_at = datetime.now(timezone.utc)
-                if self._repository is not None:
-                    self._repository.save(self._agent_id, goal)
-                return
+        # H1 (feature_015): promote the highest-priority pending goal, not
+        # the first-inserted one.  The class docstring promises "priority-
+        # based activation" — dict iteration order was being used instead.
+        pending = [g for g in self._tree.nodes.values() if g.status == GoalStatus.PENDING]
+        if not pending:
+            return
+        goal = max(pending, key=lambda g: g.priority)
+        goal.status = GoalStatus.ACTIVE
+        goal.updated_at = datetime.now(timezone.utc)
+        if self._repository is not None:
+            self._repository.save(self._agent_id, goal)
 
     def create_goal(
         self,
@@ -123,20 +136,43 @@ class GoalManager(IGoalManager):
             return ""
         old_priority = goal.priority
         old_status = goal.status
+        # M5 (feature_015): track if update_status promotes another goal so
+        # revert_adjustment can undo the side-effect.
+        promoted_id = ""
         if "priority" in content:
             goal.priority = int(content["priority"])
         if "status" in content:
+            old_active = self.active_goal()
             self.update_status(goal_id, content["status"])
-        return f"{goal_id}:{old_priority}:{old_status.value}"
+            new_active = self.active_goal()
+            if (
+                new_active is not None
+                and new_active.id != goal_id
+                and (old_active is None or old_active.id != new_active.id)
+            ):
+                promoted_id = new_active.id
+        return f"{goal_id}:{old_priority}:{old_status.value}:{promoted_id}"
 
     def revert_adjustment(self, token: str) -> None:
-        """Roll back a previously applied goal adjustment."""
+        """Roll back a previously applied goal adjustment.
+
+        M5 (feature_015): also demotes a goal that was promoted as a side-
+        effect of the original adjustment.
+        """
         try:
-            goal_id, old_prio, old_status = token.split(":")
+            parts = token.split(":")
+            goal_id, old_prio, old_status = parts[0], parts[1], parts[2]
+            promoted_id = parts[3] if len(parts) > 3 else ""
             goal = self._tree.get(goal_id)
             if goal is not None:
                 goal.priority = int(old_prio)
                 goal.status = GoalStatus(old_status)
+            # M5: demote the side-effected promotion back to PENDING.
+            if promoted_id:
+                promoted = self._tree.get(promoted_id)
+                if promoted is not None and promoted.status == GoalStatus.ACTIVE:
+                    promoted.status = GoalStatus.PENDING
+                    promoted.updated_at = datetime.now(timezone.utc)
         except (ValueError, KeyError):
             pass
 

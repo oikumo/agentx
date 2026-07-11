@@ -83,7 +83,10 @@ class FileSystemTool(ISensor, IActuator):
         if not path:
             return ValidationResult(valid=False, errors=["missing 'path' parameter"])
         target = (self._root / path).resolve()
-        if not str(target).startswith(str(self._root)):
+        # C1 (feature_015): use is_relative_to for true path-containment.
+        # str().startswith() is a string-prefix check — a sibling directory
+        # whose name starts with the sandbox name (e.g. sandbox_evil) bypasses it.
+        if not target.is_relative_to(self._root):
             return ValidationResult(valid=False, errors=["path escapes sandbox"])
         # Read the canonical command.action (set by _decision_to_command); fall
         # back to parameters for backward compat with direct callers (feature_010

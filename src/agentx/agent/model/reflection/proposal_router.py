@@ -6,7 +6,9 @@ bad proposal can be reverted (feeds §7.5 rollback).
 
 from __future__ import annotations
 
+import json
 import logging
+import uuid
 from typing import Any, Callable
 
 from agentx.agent.model.memory.manager import MemoryManager
@@ -14,10 +16,15 @@ from agentx.agent.model.goal.manager import GoalManager
 from agentx.agent.model.policy.evaluator import PolicyEngine
 from agentx.agent.model.tools.registry import ToolRegistry
 from agentx.agent.types import (
+    ActionType,
+    PolicyAction,
+    PolicyRule,
     Proposal,
     ProposalOutcome,
     ProposalStatus,
     ProposalType,
+    RuleMetadata,
+    RuleSource,
 )
 
 _log = logging.getLogger(__name__)
@@ -44,7 +51,7 @@ class ProposalRouter:
             ProposalType.TOOL_CONFIGURATION: self._apply_tool_config,
         }
         self._reverters: dict[ProposalType, Callable[[str], None]] = {
-            ProposalType.POLICY_CHANGE: self._policy.revert_rule,
+            ProposalType.POLICY_CHANGE: self._revert_policy_change,
             ProposalType.MEMORY_UPDATE: self._memory.revert_update,
             ProposalType.GOAL_ADJUSTMENT: self._goals.revert_adjustment,
             ProposalType.TOOL_CONFIGURATION: self._revert_tool_config,
@@ -76,15 +83,6 @@ class ProposalRouter:
     # ----------------------------------------------------------- route impls
 
     def _apply_policy_change(self, content: dict[str, Any]) -> str:
-        from agentx.agent.types import (
-            ActionType,
-            PolicyAction,
-            PolicyRule,
-            RuleMetadata,
-            RuleSource,
-        )
-        import uuid
-
         rule_id = content.get("id", str(uuid.uuid4()))
         action_type = ActionType(content.get("action_type", ActionType.PAUSE.value))
         rule = PolicyRule(
@@ -102,9 +100,32 @@ class ProposalRouter:
                 created_by=f"reflection:{rule_id}",
             ),
         )
+        # M6 (feature_015): capture the previous rule so revert can restore
+        # it instead of deleting.  The token is "rule_id:{json of previous}".
+        existing = self._policy.rules.get(rule_id)
         if self._policy.add_rule_safely(rule):
-            return rule_id
+            prev_json = json.dumps(_rule_to_dict(existing)) if existing else ""
+            return f"{rule_id}:{prev_json}"
         raise ValueError("policy rule rejected by safe-add")
+
+    def _revert_policy_change(self, token: str) -> None:
+        """M6 (feature_015): restore the previous rule (or delete if none)."""
+        try:
+            sep = token.index(":")
+            rule_id = token[:sep]
+            prev_json = token[sep + 1:]
+        except ValueError:
+            rule_id = token
+            prev_json = ""
+        if prev_json:
+            try:
+                prev_data = json.loads(prev_json)
+                previous = _dict_to_rule(prev_data)
+                self._policy.revert_rule(rule_id, previous=previous)
+                return
+            except (json.JSONDecodeError, KeyError, ValueError, TypeError):
+                _log.warning("policy revert: failed to decode previous rule from token")
+        self._policy.revert_rule(rule_id)
 
     def _apply_memory_update(self, content: dict[str, Any]) -> str:
         return self._memory.apply_update(content)
@@ -131,3 +152,48 @@ class ProposalRouter:
             self._tools.set_tool_enabled(tool_id, op == "disable")
         except (ValueError, KeyError):
             pass
+
+
+# ---------------------------------------------------------------------------
+# M6 (feature_015): rule serialisation helpers for policy revert.
+# ---------------------------------------------------------------------------
+
+
+def _rule_to_dict(rule: PolicyRule) -> dict[str, Any]:
+    return {
+        "id": rule.id,
+        "condition_expr": rule.condition_expr,
+        "action": {
+            "type": rule.action.type.value,
+            "parameters": rule.action.parameters,
+            "target_goal": rule.action.target_goal,
+        },
+        "priority": rule.priority,
+        "enabled": rule.enabled,
+        "metadata": {
+            "source": rule.metadata.source.value,
+            "created_by": rule.metadata.created_by,
+            "version": rule.metadata.version,
+        },
+    }
+
+
+def _dict_to_rule(data: dict[str, Any]) -> PolicyRule:
+    action_data = data.get("action", {})
+    meta_data = data.get("metadata", {})
+    return PolicyRule(
+        id=data.get("id", str(uuid.uuid4())),
+        condition_expr=data.get("condition_expr", "true"),
+        action=PolicyAction(
+            type=ActionType(action_data.get("type", ActionType.PAUSE.value)),
+            parameters=action_data.get("parameters", {}),
+            target_goal=action_data.get("target_goal"),
+        ),
+        priority=int(data.get("priority", 500)),
+        enabled=bool(data.get("enabled", True)),
+        metadata=RuleMetadata(
+            source=RuleSource(meta_data.get("source", RuleSource.DEFAULT.value)),
+            created_by=meta_data.get("created_by", "default"),
+            version=int(meta_data.get("version", 1)),
+        ),
+    )

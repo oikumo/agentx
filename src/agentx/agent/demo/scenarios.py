@@ -184,13 +184,14 @@ def seed_sandbox_files(scenario: DemoScenario, sandbox_root: str | Path) -> list
     Overwrites existing files so a re-seed (reset) is idempotent.  Returns the
     list of relative paths written.  Parent directories are created as needed.
     """
-    root = Path(sandbox_root)
+    root = Path(sandbox_root).resolve()
     root.mkdir(parents=True, exist_ok=True)
     written: list[str] = []
     for relpath, content in scenario.files.items():
         target = (root / relpath).resolve()
-        # Guard against path escape (defence in depth, mirrors FileSystemTool).
-        if not str(target).startswith(str(root.resolve())):
+        # C1 (feature_015): use is_relative_to for true path-containment.
+        # str().startswith() is a string-prefix check, not path-containment.
+        if not target.is_relative_to(root):
             raise ValueError(f"scenario file escapes sandbox: {relpath}")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")

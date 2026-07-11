@@ -86,17 +86,16 @@ class FastAgentTUIScreen(BaseAgentXScreen):
         constraints = value.get("constraints", "")
         # Submit the goal to the controller.  Fast Agent uses manual success
         # criteria (the user presses Stop when done).
+        # S3+S8 (feature_015): pass constraints and manual=True so the goal
+        # is created with kind="manual" and constraints are visible.
         if self._controller:
             try:
-                # SuccessCriteria with kind="manual" — goal never auto-completes.
-                self._controller.submit_goal(description)
+                self._controller.submit_goal(description, constraints=constraints, manual=True)
             except Exception as exc:  # noqa: BLE001
                 self.notify(f"Failed to submit goal: {exc}", severity="error")
                 self.app.pop_screen()
                 return
-        # Constraints are captured but unused in v1 (design §5 note).
-        if constraints:
-            self.notify("Constraints noted (not used in v1)", timeout=2)
+        # S3: constraints are now passed to the controller (no longer dead).
         # Push the RunningModal — it auto-runs cycles.
         self.app.push_screen(
             RunningModal(self._controller, description),
@@ -122,23 +121,44 @@ class FastAgentTUIScreen(BaseAgentXScreen):
         if action is None:
             action = "back"
         if action == "save":
-            # Save is a side-effect — save and re-show the ResultModal.
+            # S4 (feature_015): save asynchronously via run_blocking so the
+            # UI thread is not blocked on SQLite I/O (mirrors AgentTUIScreen).
             if self._controller:
-                try:
-                    snap_id = self._controller.save_snapshot()
-                    self.notify(f"Session saved ({snap_id[:8]}…)", timeout=3)
-                except Exception as exc:  # noqa: BLE001
-                    self.notify(f"Save failed: {exc}", severity="error")
-            self.app.push_screen(
-                ResultModal(self._last_outcome, self._last_summary),
-                callback=self._on_result,
-            )
+                self.run_blocking(
+                    self._controller.save_snapshot,
+                    on_result=self._on_save_done,
+                    on_error=self._on_save_error,
+                )
+            else:
+                self.app.push_screen(
+                    ResultModal(self._last_outcome, self._last_summary),
+                    callback=self._on_result,
+                )
         elif action == "new":
             # Fresh goal, same agent/controller.
             self.app.push_screen(GoalModal(), callback=self._on_goal)
         elif action == "back":
             # Pop the host screen → back to Main.
             self.app.pop_screen()
+
+    def _on_save_done(self, snap_id: str) -> None:
+        """S4 (feature_015): callback for successful async save."""
+        if snap_id:
+            self.notify(f"Session saved ({snap_id[:8]}…)", timeout=3)
+        else:
+            self.notify("Save failed (persistence error)", severity="error")
+        self.app.push_screen(
+            ResultModal(self._last_outcome, self._last_summary),
+            callback=self._on_result,
+        )
+
+    def _on_save_error(self, exc: Exception) -> None:
+        """S4 (feature_015): callback for failed async save."""
+        self.notify(f"Save failed: {exc}", severity="error")
+        self.app.push_screen(
+            ResultModal(self._last_outcome, self._last_summary),
+            callback=self._on_result,
+        )
 
     # ----------------------------------------------------------- actions
 

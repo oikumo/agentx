@@ -263,8 +263,14 @@ class EnvironmentModel:
 
     @property
     def memory_pressure(self) -> float:
-        """Heuristic 0.0-1.0 pressure indicator used by policy conditions."""
-        return 0.0
+        """Heuristic 0.0-1.0 pressure indicator used by policy conditions.
+
+        S1 (feature_015): previously a stub always returning 0.0.  Now based
+        on the ratio of sensor readings to a nominal capacity (100).
+        """
+        if not self.sensor_readings:
+            return 0.0
+        return min(1.0, len(self.sensor_readings) / 100.0)
 
 
 @dataclass
@@ -380,6 +386,14 @@ class PolicyRule:
     enabled: bool = True
     metadata: RuleMetadata = field(default_factory=RuleMetadata)
 
+    def __post_init__(self) -> None:
+        # M3 (feature_015): validate priority bounds to prevent
+        # confidence > 1.0 in the policy evaluator.
+        if not (0 <= self.priority <= 1000):
+            raise ValueError(
+                f"priority must be 0-1000, got {self.priority}"
+            )
+
 
 # ---------------------------------------------------------------------------
 # Goal management
@@ -398,6 +412,8 @@ class SuccessCriteria:
       satisfies the criteria (C6); when ``None`` any successful tool action
       satisfies it.
     * ``"expression"`` — a policy-DSL expression evaluated against the context
+    * ``"manual"`` — never auto-completes (S8: used by Fast Agent; user
+      presses Stop when done)
     """
 
     kind: str = "always"
