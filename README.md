@@ -305,17 +305,17 @@ A runtime AI model provider selector accessible from the main TUI screen (press 
 
 ```text
 ┌─ Models ────────────────────────────────────────────────────┐
-│  Select your AI model provider:                              │
-│                                                              │
+│  Select your AI model provider:                             │
+│                                                             │
 │  ● OpenRouter (cloud)     — 100+ models, auto-routing       │
 │    OpenAI (cloud)         — GPT-4, GPT-3.5                  │
 │    Google Gemini (cloud)  — Gemini Pro                      │
 │    NVIDIA NIM (cloud)     — Nemotron, Llama                 │
 │    Ollama (local)         — Local models                    │
 │    LlamaCpp (local)       — Local GGUF models               │
-│                                                              │
+│                                                             │
 │  [Enter] Select  [Esc/b] Back                               │
-└──────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
 ```
 
 The selected provider is persisted to `~/.agentx/model_selection.json` and used across all features (chat, RAG, agent). The registry uses a unified `LLMProvider` ABC with lazy imports — adding a new provider is a single class + one catalog entry.
@@ -650,11 +650,11 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
                             │ Implemented By
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  VIEW LAYER                              │
+│  VIEW LAYER                                                 │
 │  Console: MainView, RagView, ChatView, AgentView            │
-│  TUI:     BaseAgentXScreen framework, ModalScreen,           │
-│           AgentTUIScreen, AgentDemoScreen, ModelsScreen      │
-│           BlockingTaskRunner (non-blocking daemon thread)    │
+│  TUI:     BaseAgentXScreen framework, ModalScreen,          │
+│           AgentTUIScreen, AgentDemoScreen, ModelsScreen     │
+│           BlockingTaskRunner (non-blocking daemon thread)   │
 └─────────────────────────────────────────────────────────────┘
                             │
                             │ Depends On
@@ -808,18 +808,18 @@ For genuine emergencies: `omt_skip{ reason: "...", scope: "src|tests|all" }`. Ev
 For `major_feature` and `new_screen` tasks, the gate automatically activates **TDD mode** — a Kent Beck-style Red → Green → Refactor cycle enforced mechanically:
 
 ```text
-  ┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
-  │  TESTLIST   │ →   │  RED (test)  │ →   │  GREEN (code)   │
-  │  behaviors  │     │  write test  │     │  write code     │
+  ┌──────────────┐     ┌──────────────┐     ┌─────────────────┐
+  │  TESTLIST    │ →   │  RED (test)  │ →   │  GREEN (code)   │
+  │  behaviors   │     │  write test  │     │  write code     │
   │  to implement│     │  that FAILS  │     │  to make it PASS│
-  └─────────────┘     └──────────────┘     └─────────────────┘
+  └──────────────┘     └──────────────┘     └─────────────────┘
                                                   │
                                                   ▼
-                                         ┌─────────────────┐
-                                         │  REFACTOR       │
-                                         │  improve code   │
+                                         ┌──────────────────┐
+                                         │  REFACTOR        │
+                                         │  improve code    │
                                          │  tests stay GREEN│
-                                         └─────────────────┘
+                                         └──────────────────┘
                                                   │
                                                   ▼
                                          ┌─────────────────┐
