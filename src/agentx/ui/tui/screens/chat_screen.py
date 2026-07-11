@@ -176,6 +176,11 @@ class ChatTUIScreen(BaseAgentXScreen):
         self._streaming_widget: ChatMessage | None = None
         self._sidebar_visible: bool = False
         self._conversations: list[Conversation] = []
+        # LLM attribute — initialized to None; actual LLM creation is deferred
+        # to on_mount() to avoid blocking screen construction (provider
+        # factories may validate API keys / network).  The controller also
+        # holds its own LLM; this attribute is for fallback / inspection.
+        self.llm = None
 
     # action_quit / action_back are inherited from BaseAgentXScreen.
 
@@ -209,9 +214,6 @@ class ChatTUIScreen(BaseAgentXScreen):
             
             # Load conversations for sidebar
             self._load_conversations()
-
-        # Show welcome message
-        self._add_message("Welcome to AgentX Chat! Ask me anything.", "assistant")
 
         # Focus input
         try:

@@ -42,6 +42,141 @@ class TestChatTUIScreenConstruction:
         assert hasattr(screen, 'llm')
 
 
+class TestChatMessageDisplayRegression:
+    """Regression tests for feature_017 chat message display bug.
+
+    Root cause: ChatMessage.__init__ accepted only (message, role) but
+    chat_screen.py called it with (message, role, timestamp). The TypeError
+    was silently swallowed by ``except Exception: pass``, so NO messages
+    ever appeared on screen — not welcome, not user, not assistant.
+    """
+
+    def test_chat_message_accepts_timestamp(self):
+        """ChatMessage must accept (message, role, timestamp) — 3 args.
+
+        This is the core regression: before the fix, ChatMessage.__init__
+        only accepted 2 args, so every _add_message / show_partial_message
+        call raised TypeError (silently swallowed).
+        """
+        from datetime import datetime
+        from agentx.ui.tui.framework import ChatMessage
+
+        # Must not raise
+        ts = datetime(2025, 1, 15, 10, 30, 0)
+        msg = ChatMessage("hello", "assistant", ts)
+        assert msg.role == "assistant"
+        assert msg.timestamp == ts
+        assert "assistant" in msg.classes
+
+    def test_add_message_calls_chat_message_with_3_args(self):
+        """_add_message must successfully create a ChatMessage with timestamp.
+
+        Before the fix, the ChatMessage(message, role, timestamp) call inside
+        _add_message raised TypeError, which was swallowed by except:pass,
+        so no widget was ever mounted.
+        """
+        from unittest.mock import MagicMock, patch, call
+        from datetime import datetime
+        from agentx.ui.tui.framework import ChatMessage
+
+        screen = ChatTUIScreen()
+        mock_container = MagicMock()
+        with patch.object(screen, 'query_one', return_value=mock_container):
+            with patch.object(screen, 'call_later') as mock_call_later:
+                # This must not raise — before the fix it was silently failing
+                screen._add_message("test content", "user")
+
+                # Verify ChatMessage was created and mounted
+                assert mock_container.mount.called
+                mounted_widget = mock_container.mount.call_args[0][0]
+                assert isinstance(mounted_widget, ChatMessage)
+                assert mounted_widget.role == "user"
+                assert isinstance(mounted_widget.timestamp, datetime)
+
+    def test_show_message_creates_chat_message(self):
+        """show_message must create and mount a ChatMessage widget."""
+        from unittest.mock import MagicMock, patch
+        from agentx.ui.tui.framework import ChatMessage
+
+        screen = ChatTUIScreen()
+        mock_container = MagicMock()
+        with patch.object(screen, 'query_one', return_value=mock_container):
+            with patch.object(screen, 'call_later'):
+                screen.show_message("assistant response")
+
+                assert mock_container.mount.called
+                widget = mock_container.mount.call_args[0][0]
+                assert isinstance(widget, ChatMessage)
+                assert widget.role == "assistant"
+
+    def test_show_partial_message_creates_chat_message(self):
+        """show_partial_message must create a ChatMessage on first chunk.
+
+        Before the fix, the ChatMessage(message, 'assistant', datetime.now())
+        call raised TypeError, so streaming responses never appeared.
+        """
+        from unittest.mock import MagicMock, patch
+        from agentx.ui.tui.framework import ChatMessage
+
+        screen = ChatTUIScreen()
+        mock_container = MagicMock()
+        with patch.object(screen, 'query_one', return_value=mock_container):
+            with patch.object(screen, 'call_later'):
+                screen.show_partial_message("chunk 1")
+
+                assert mock_container.mount.called
+                widget = mock_container.mount.call_args[0][0]
+                assert isinstance(widget, ChatMessage)
+                assert widget.role == "assistant"
+                assert screen._is_streaming is True
+
+    def test_show_partial_message_appends_to_streaming(self):
+        """Subsequent show_partial_message calls append to the streaming widget."""
+        from unittest.mock import MagicMock, patch
+        from agentx.ui.tui.framework import ChatMessage
+
+        screen = ChatTUIScreen()
+        mock_container = MagicMock()
+        mock_widget = MagicMock()
+        with patch.object(screen, 'query_one', return_value=mock_container):
+            with patch.object(screen, 'call_later'):
+                # First chunk creates the widget
+                screen.show_partial_message("Hello")
+                assert mock_container.mount.call_count == 1
+
+                # Second chunk appends
+                screen._streaming_widget = mock_widget
+                screen.show_partial_message(" world")
+                # mount should NOT be called again
+                assert mock_container.mount.call_count == 1
+                # widget.update should be called with accumulated message
+                mock_widget.update.assert_called_with("Hello world")
+
+    def test_on_input_submitted_displays_user_message(self):
+        """User input must create a ChatMessage with role='user'."""
+        from unittest.mock import MagicMock, patch
+        from agentx.ui.tui.framework import ChatMessage
+
+        screen = ChatTUIScreen()
+        mock_input = MagicMock()
+        mock_input.id = "chat-input"
+        mock_input.value = "  user question  "
+
+        mock_container = MagicMock()
+        with patch.object(screen, 'query_one', return_value=mock_container):
+            with patch.object(screen, 'call_later'):
+                # No controller — should still show user message
+                screen.on_input_submitted(
+                    type('Event', (), {'input': mock_input, 'value': '  user question  '})()
+                )
+
+                # A ChatMessage with role='user' must have been mounted (first call)
+                assert mock_container.mount.call_count >= 1
+                first_widget = mock_container.mount.call_args_list[0][0][0]
+                assert isinstance(first_widget, ChatMessage)
+                assert first_widget.role == "user"
+
+
 class TestChatTUIScreenBindings:
     """Chat screen key bindings tests."""
 

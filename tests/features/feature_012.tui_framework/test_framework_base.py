@@ -325,3 +325,36 @@ class TestWidgets:
         m = ChatMessage("hi", "user")
         assert m.role == "user"
         assert "user" in m.classes
+
+    def test_chat_message_with_timestamp(self):
+        """ChatMessage accepts an optional timestamp (feature_017 regression)."""
+        from datetime import datetime
+
+        ts = datetime(2025, 1, 15, 10, 30, 0)
+        m = ChatMessage("hello", "assistant", ts)
+        assert m.role == "assistant"
+        assert "assistant" in m.classes
+        assert m.timestamp == ts
+
+    def test_chat_message_default_timestamp(self):
+        """ChatMessage defaults timestamp to now if not provided."""
+        from datetime import datetime
+
+        before = datetime.now()
+        m = ChatMessage("hi", "user")
+        after = datetime.now()
+        assert before <= m.timestamp <= after
+
+    def test_chat_message_3_arg_no_crash(self):
+        """ChatMessage must not crash when called with (message, role, timestamp).
+
+        This is the regression test for the feature_017 bug where
+        chat_screen.py passed 3 args but ChatMessage.__init__ only accepted 2,
+        causing a silently-swallowed TypeError that prevented ALL messages
+        from displaying.
+        """
+        from datetime import datetime
+
+        # This must not raise
+        m = ChatMessage("test", "assistant", datetime.now())
+        assert m is not None

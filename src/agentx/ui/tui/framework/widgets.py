@@ -197,15 +197,32 @@ class ChatMessage(Static):
         text-align: left;
         border: solid $secondary;
     }
+
+    ChatMessage .timestamp {
+        color: $text-muted;
+        text-style: italic;
+        font-size: 80%;
+        margin-bottom: 0;
+    }
     """
 
-    def __init__(self, message: str, role: str = "user") -> None:
+    def __init__(
+        self,
+        message: str,
+        role: str = "user",
+        timestamp: datetime | None = None,
+    ) -> None:
         """Initialize chat message.
 
         Args:
-            message: Message content.
-            role:    'user' or 'assistant'.
+            message:   Message content.
+            role:      'user' or 'assistant'.
+            timestamp: Optional timestamp for the message (defaults to now).
         """
-        super().__init__(message)
         self.role = role
+        self.timestamp = timestamp if timestamp is not None else datetime.now()
+        # Format the display: timestamp line + message content
+        time_str = self.timestamp.strftime("%H:%M:%S")
+        display = f"[{time_str}] {message}"
+        super().__init__(display)
         self.add_class(role)
