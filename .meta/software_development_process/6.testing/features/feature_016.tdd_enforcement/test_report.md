@@ -5,9 +5,10 @@
 | Suite | Tests | Passed | Failed | Result |
 |---|---|---|---|---|
 | tdd_check unit tests | 29 | 29 | 0 | ✅ |
+| feature_016 feature tests | 23 | 23 | 0 | ✅ |
 | e2e harness test | 1 | 1 | 0 | ✅ |
 | mvc_check unit tests | 24 | 24 | 0 | ✅ |
-| Full project suite | 745 | 744 | 1 | ✅ (pre-existing) |
+| Full project suite | 767 | 766 | 1 | ✅ (pre-existing) |
 
 **Pre-existing failure**: `tests/tui/test_chat_rag_screens.py::TestChatTUIScreenConstruction::test_llm_initialization_attempted` — unchanged by this feature.
 
