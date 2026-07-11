@@ -117,9 +117,18 @@ class ChatTUIScreen(BaseAgentXScreen):
 
     def on_mount(self) -> None:
         """Called when screen is mounted."""
-        # Initialize controller if provided
+        # Initialize controller if provided — start a new conversation so
+        # that (a) history is initialised with the system prompt and
+        # (b) DB persistence is active (start_new_conversation sets
+        # current_conversation_id, which _save_messages requires).
         if self._controller:
-            self._controller.start_interactive_streaming(system_prompt="You are a helpful assistant.")
+            try:
+                self._controller.start_new_conversation()
+            except Exception:
+                # Fall back to in-memory-only history if DB is unavailable.
+                self._controller.start_interactive_streaming(
+                    system_prompt="You are a helpful assistant."
+                )
 
         # Focus input
         try:
@@ -243,6 +252,9 @@ class ChatTUIScreen(BaseAgentXScreen):
     def _run_llm_async(self, user_message: str) -> None:
         """Run the LLM call on a background thread with streaming via call_from_thread.
 
+        Uses the controller's accumulated ``history`` list so the LLM receives
+        the full conversation context (system prompt + all prior human/AI turns).
+
         This avoids blocking the UI thread while preserving streaming UX.
         """
         # Reset streaming state — _is_streaming must be False so the first
@@ -254,14 +266,16 @@ class ChatTUIScreen(BaseAgentXScreen):
         def worker() -> None:
             """Background worker: calls LLM and streams chunks via call_from_thread."""
             try:
-                # Access the controller's LLM and process the message
-                # We replicate the controller's streaming logic here to avoid
-                # blocking the UI thread.
-                from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+                from langchain_core.messages import HumanMessage, AIMessage
                 from agentx.model.ai.service import AIService
 
                 llm = AIService().get_current_llm()
-                history = [SystemMessage(content="You are a helpful assistant.")]
+
+                # Use the controller's accumulated history — this preserves
+                # conversation context across turns (system prompt + all prior
+                # human/AI messages).  The controller's history was initialised
+                # in on_mount() via start_interactive_streaming().
+                history = self._controller.history
                 history.append(HumanMessage(content=user_message))
 
                 full_response_parts = []
@@ -277,7 +291,8 @@ class ChatTUIScreen(BaseAgentXScreen):
                         # self.call_from_thread), so NO assistant message ever appeared.
                         self.app.call_from_thread(self.show_partial_message, content)
 
-                # Signal completion
+                # Append the assistant response to the controller's history so
+                # it is available for the next turn.
                 full_response = "".join(full_response_parts)
                 history.append(AIMessage(content=full_response))
 
@@ -287,6 +302,13 @@ class ChatTUIScreen(BaseAgentXScreen):
                     self.app.call_from_thread(self._save_via_controller, user_message, full_response)
 
             except Exception as e:
+                # On error, remove the HumanMessage we appended so the
+                # controller's history stays consistent (mirrors the
+                # controller's own process_user_message error handling).
+                try:
+                    self._controller.history.pop()
+                except (IndexError, AttributeError):
+                    pass
                 # Report error on UI thread
                 self.app.call_from_thread(self._add_message, f"Error: {str(e)}", "assistant")
             finally:
