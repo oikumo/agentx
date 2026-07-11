@@ -20,6 +20,7 @@
 9. [Model Layer Patterns](#9-model-layer-patterns)
 10. [Operation Specifications](#10-operation-specifications)
 11. [Testing Strategy — Three Stages](#11-testing-strategy--three-stages)
+    - [11.4 TDD Workflow (feature_016)](#114-tdd-workflow-feature_016)
 12. [Essential vs. Optional — Decision Guide for Agents](#12-essential-vs-optional--decision-guide-for-agents)
 13. [Artifact Production Checklist](#13-artifact-production-checklist)
 14. [Quick Reference — Do/Don't](#14-quick-reference--dodont)
@@ -701,6 +702,89 @@ Component Test Plan for "SendMessage" operation:
     - No recipient → error shown
     - Network failure → message queued, user notified
 ```
+
+### 11.4 TDD Workflow (feature_016)
+
+For `major_feature` and `new_screen` tasks in the Programming phase, TDD mode
+auto-activates. The gate mechanically enforces the Kent Beck Red → Green → Refactor
+cycle using five tools. You **must** follow this order:
+
+```
+omt_testlist  →  omt_red  →  omt_green  →  omt_refactor  →  omt_done
+  (plan)         (write       (write code   (improve code     (verify
+                  failing       to pass         keeping tests     full suite)
+                  test)         the test)       green)
+```
+
+#### The Five TDD Tools
+
+| Tool | State | Hat | What you do |
+|------|-------|-----|-------------|
+| `omt_testlist` | TESTLIST | — | List the behaviors (test names) you will implement |
+| `omt_red` | RED | test | Write ONE failing test under `tests/`. Gate verifies it truly fails (AST + pytest). |
+| `omt_green` | GREEN | code | Write the minimum code under `src/` to make the test pass. |
+| `omt_refactor` | REFACTOR | code | Improve the code. Tests must stay green. If a refactor breaks tests, the edit is **auto-reverted**. |
+| `omt_done` | DONE | — | Full suite + checklist pass. Phase exit validated. |
+
+#### Two-Hats Gate
+
+The gate tracks which "hat" you're wearing and blocks edits to the wrong layer:
+
+| State | `tests/` edits | `src/` edits |
+|-------|----------------|--------------|
+| RED | ✅ Allowed | ❌ Blocked |
+| GREEN | ❌ Blocked | ✅ Allowed |
+| REFACTOR | ❌ Blocked | ✅ Allowed (reverted if tests break) |
+
+If you try to edit the wrong layer, the gate tells you which hat to switch to.
+
+#### True-RED Verification
+
+`omt_red` doesn't just run pytest — it also performs AST analysis to verify the test
+is a **true** RED (not a false red from an import error or syntax mistake). The test
+must:
+1. Import or reference the target source module (inferred from the test file path).
+2. Fail because the target behavior doesn't exist yet (not because of a typo).
+
+#### REFACTOR Auto-Revert
+
+When in REFACTOR state, the gate snapshots the file before each edit. After the edit,
+it runs the tests. If any test fails:
+1. The file is **automatically reverted** to its pre-edit state.
+2. The edit is blocked with a message: "REFACTOR broke tests — edit reverted."
+3. You can try a different refactoring approach.
+
+This makes refactoring safe — you can't accidentally introduce a regression.
+
+#### Coverage Gap Analysis
+
+On `omt_done` (or `omt_complete`), the gate runs `tdd_check.py validate-exit` which:
+- Finds all public methods/functions in your `src/` modules.
+- Checks which ones have test coverage (by AST-extracting test function calls).
+- Reports **coverage gaps** — public methods with no test calling them.
+- Reports **dangling reds** — tests declared RED but never turned GREEN.
+
+If gaps or dangling reds exist, the phase exit is blocked until you write the missing
+tests or call `omt_skip` to override.
+
+#### TDD CLI (scripts/omt/tdd_check.py)
+
+The TDD engine is a stdlib-only Python script with 9 subcommands:
+
+```
+uv run scripts/omt/tdd_check.py testlist --behaviors "..." --feature feature_NNN
+uv run scripts/omt/tdd_check.py start --test-node tests/... --target-src src/... --feature feature_NNN
+uv run scripts/omt/tdd_check.py green --test-node tests/... --feature feature_NNN
+uv run scripts/omt/tdd_check.py refactor --test-node tests/... --feature feature_NNN
+uv run scripts/omt/tdd_check.py done --feature feature_NNN
+uv run scripts/omt/tdd_check.py gate --path <rel> --session <id>
+uv run scripts/omt/tdd_check.py after-edit --path <rel> --session <id>
+uv run scripts/omt/tdd_check.py status --session <id>
+uv run scripts/omt/tdd_check.py validate-exit --feature feature_NNN
+```
+
+The five `omt_*` wrapper tools delegate to the first five subcommands. The `gate` and
+`after-edit` subcommands are called by the enforcer hooks automatically.
 
 ---
 

@@ -47,6 +47,15 @@ your tool calls:
    `omt_skip{ reason: "...", scope: "src|tests|all" }`. Every skip is recorded in
    `.meta/.omt/ledger.jsonl` for audit. Prefer doing the process over skipping it.
 
+6. **TDD enforcement (feature_016).** For `major_feature` / `new_screen` tasks in the
+   Programming phase, TDD mode auto-activates. You must follow the Red → Green → Refactor
+   cycle using the TDD tools (`omt_testlist` → `omt_red` → `omt_green` → `omt_refactor` →
+   `omt_done`). The **two-hats gate** mechanically enforces which layer you may edit:
+   - **RED state** → only `tests/` edits allowed (write the failing test).
+   - **GREEN / REFACTOR state** → only `src/` edits allowed (write/refactor the code).
+   The `tool.execute.after` hook reverts REFACTOR edits that break tests automatically.
+   See `omt_agent_guide.md` §11.4 for the full TDD workflow.
+
 ---
 
 ## Core Directives
@@ -56,8 +65,11 @@ your tool calls:
 2. Read or modify `.env` / secrets.
 3. Add dependencies without approval.
 4. Modify `tests/` without approval (use canary tests + `omt_skip{scope:"tests"}`).
+   - In TDD mode, `tests/` edits are allowed during RED state — the TDD gate replaces
+     canary approval for the current test node.
 5. Change `README.md`, `uv.lock`, or `LICENSE` (unless explicitly asked).
 6. Edit `src/` without first declaring a phase via `omt_phase`.
+   - In TDD mode, `src/` edits are allowed during GREEN/REFACTOR state only.
 
 **ALWAYS:**
 7. Check `git log` / `git status` before changes.
@@ -66,17 +78,39 @@ your tool calls:
 10. Declare your phase (`omt_phase`) before touching `src/`.
 11. Produce the phase artifacts your task size requires (guide §12); scaffold features with
     `scripts/omt/new_feature.py` so artifacts stay consistently named (no ad-hoc `*_PROOF.md`).
+12. For major features / new screens in Programming phase: follow the TDD cycle
+    (`omt_testlist` → `omt_red` → `omt_green` → `omt_refactor` → `omt_done`).
 
 ---
 
 ## Tooling (opencode-native)
 
+### Process Gate Tools
+
 | Tool | Purpose |
 |------|---------|
 | `omt_phase` | Declare OMT++ phase; unlocks `src/` edits (plugin) |
 | `omt_skip` | Logged process-override escape hatch (plugin) |
+| `omt_complete` | Verify phase artifacts + advance to next phase |
 | `uv run scripts/omt/mvc_check.py` | MVC++ architecture linter (guide §16) |
 | `uv run scripts/omt/new_feature.py "<name>"` | Scaffold a feature's artifacts from `.meta/templates/` |
+
+### TDD Enforcement Tools (feature_016)
+
+| Tool | Purpose |
+|------|---------|
+| `omt_testlist` | Record the TDD test list (behaviors to implement). Sets state → TESTLIST. |
+| `omt_red` | Declare a failing test (TDD Red). Runs pytest + AST true-RED verification. Sets state → RED (test hat). |
+| `omt_green` | Declare a passing test (TDD Green). Runs pytest. Sets state → GREEN (code hat). |
+| `omt_refactor` | Declare refactor state. Runs pytest. Sets state → REFACTOR (code hat, tests must stay green). |
+| `omt_done` | Declare TDD completion. Runs full suite + checklist. Sets state → DONE. |
+| `uv run scripts/omt/tdd_check.py` | TDD engine CLI (9 subcommands: testlist, start, green, refactor, done, gate, after-edit, status, validate-exit) |
+
+### Status & Inspection
+
+| Tool | Purpose |
+|------|---------|
+| `omt_status` | Returns full process context: phase, unlock state, artifacts, lint baseline, TDD state, WORK.md next task |
 
 ---
 
@@ -87,5 +121,8 @@ your tool calls:
   `.meta/software_development_process/{1.project … 7.integration}/`
 - **Process enforcement plan:**
   `.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/plan/PLAN.md`
+- **TDD enforcement feature:**
+  `.meta/software_development_process/2.requirements/features/feature_016.tdd_enforcement/`
+- **TDD spec (Kent Beck):** `.meta/doc/tdd/tdd-agent-spec.md`
 
-**When in doubt: read `omt_agent_guide.md` §2 "Phase Model" and §12 "Essential vs. Optional".**
+**When in doubt: read `omt_agent_guide.md` §2 "Phase Model", §11.4 "TDD Workflow", and §12 "Essential vs. Optional".**

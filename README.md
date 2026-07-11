@@ -1,6 +1,6 @@
 # agentx
 
-> **Version**: 0.1.2  
+> **Version**: 0.2.0  
 > **Python**: 3.14+  
 > **Package Manager**: uv  
 > **License**: Apache 2.0 (Educational & Enterprise Use)
@@ -15,11 +15,13 @@
 ┌─ AgentX TUI ─────────────────────────────────────────────────┐
 │  Welcome to AgentX TUI                                       │
 │  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent │
+│  Press 'm' Models, 'h' Help, 'q' Quit                        │
 │                                                              │
 │  [c] Chat  ──→ LLM conversations with streaming responses    │
 │  [r] RAG   ──→ PDF Q&A, document ingestion, vector search    │
 │  [f] Fast Agent ──→ Modal-dialog-driven agent (simplified)   │
 │  [a] Advanced Agent ──→ Full agent workspace (tools, policy) │
+│  [m] Models ──→ Select AI model provider                     │
 │  [h] Help  ──→ Command reference                             │
 │  [q] Quit  ──→ Exit application                              │
 └──────────────────────────────────────────────────────────────┘
@@ -28,12 +30,12 @@
 
 **Key Features:**
 - 🎨 **Modern TUI** - Textual-based interface with keyboard navigation
-- 💬 **AI Chat** - Multi-provider LLM support (OpenRouter, OpenAI, Ollama, Google GenAI)
+- 💬 **AI Chat** - Multi-provider LLM support (OpenRouter, OpenAI, Google Gemini, NVIDIA NIM, Ollama, LlamaCpp)
 - 📚 **RAG** - PDF Q&A, web ingestion, Chroma/FAISS/Pinecone vector stores
 - 🤖 **Intelligent Agent** - Autonomous perceive→decide→act→reflect cycle with tool registry, policy DSL engine, and self-improvement loop
 - 🧠 **Petri Net Sessions** - Graph-based session/user objective management
 - 🔌 **LangChain/LangGraph** - Full integration for agentic workflows
-- 🧪 **512+ Tests** - Comprehensive unit + integration + automated TUI tests
+- 🧪 **766+ Tests** - Comprehensive unit + integration + automated TUI tests
 
 Developed with **opencode** using **OMT++ methodology** (Analysis → Design → Programming → Testing with visible artifacts).
 
@@ -52,7 +54,7 @@ uv sync
 uv run main.py
 ```
 
-You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
+You'll see the TUI interface. Press `c` for chat, `r` for RAG, `m` for models, `q` to quit.
 
 ---
 
@@ -64,7 +66,7 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 
 ```text
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
-│  agentx 0.1.2                                               │
+│  agentx 0.2.0                                               │
 │  Session: session_2026-06-27_18-30-00                       │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
@@ -89,6 +91,7 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `q` to quit.
 | `r` | Open RAG screen |
 | `f` | Open Fast Agent (modal-dialog-driven) |
 | `a` | Open Advanced Agent screen |
+| `m` | Open Models screen (select AI model provider) |
 | `h` | Show help |
 | `q` | Quit application |
 | `Esc` | Go back / Close screen |
@@ -129,9 +132,12 @@ Multi-provider LLM support with streaming responses:
 |----------|--------|--------|
 | OpenRouter | 100+ models (auto-routing) | `OPENROUTER_API_KEY` |
 | OpenAI | GPT-4, GPT-3.5 | `OPENAI_API_KEY` |
-| Google GenAI | Gemini Pro | `GOOGLE_API_KEY` |
+| Google Gemini | Gemini Pro | `GOOGLE_API_KEY` |
+| NVIDIA NIM | Nemotron, Llama models | `NVIDIA_API_KEY` |
 | Ollama | Local models | `OLLAMA_HOST` |
 | LlamaCpp | Local GGUF models | Manual config |
+
+Use the **Models screen** (press `m` from the main TUI) to select the active provider at runtime. The selection is persisted to `~/.agentx/model_selection.json` and used across chat, RAG, and agent features.
 
 **Example Conversation:**
 ```text
@@ -293,6 +299,29 @@ The Fast Agent reuses the same `Agent` facade + `AgentController` under the hood
 
 ---
 
+### 🎛️ Models Screen (feature_013)
+
+A runtime AI model provider selector accessible from the main TUI screen (press `m`):
+
+```text
+┌─ Models ────────────────────────────────────────────────────┐
+│  Select your AI model provider:                              │
+│                                                              │
+│  ● OpenRouter (cloud)     — 100+ models, auto-routing       │
+│    OpenAI (cloud)         — GPT-4, GPT-3.5                  │
+│    Google Gemini (cloud)  — Gemini Pro                      │
+│    NVIDIA NIM (cloud)     — Nemotron, Llama                 │
+│    Ollama (local)         — Local models                    │
+│    LlamaCpp (local)       — Local GGUF models               │
+│                                                              │
+│  [Enter] Select  [Esc/b] Back                               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+The selected provider is persisted to `~/.agentx/model_selection.json` and used across all features (chat, RAG, agent). The registry uses a unified `LLMProvider` ABC with lazy imports — adding a new provider is a single class + one catalog entry.
+
+---
+
 ### 🎬 Agent Demo (feature_010)
 
 Built-in demo scenarios that seed the agent sandbox with files, goals, and policies — perfect for exploring the agent cycle without configuration.
@@ -451,6 +480,9 @@ OPENAI_API_KEY=your_key_here
 # For Google Gemini
 GOOGLE_API_KEY=your_key_here
 
+# For NVIDIA NIM models
+NVIDIA_API_KEY=your_key_here
+
 # For Ollama (local models)
 OLLAMA_HOST=http://localhost:11434
 ```
@@ -460,6 +492,7 @@ OLLAMA_HOST=http://localhost:11434
 - Tavily: https://app.tavily.com/
 - OpenAI: https://platform.openai.com/api-keys
 - Google: https://makersuite.google.com/app/apikey
+- NVIDIA: https://build.nvidia.com/
 
 If `OPENROUTER_API_KEY` is not set, the application will prompt for it on startup.
 
@@ -477,12 +510,12 @@ uv run main.py
 ```text
 🎨 Starting modern TUI... (press 'q' to quit, 'h' for help)
 
-agentx 0.1.2
+agentx 0.2.0
 
 ┌─ AgentX TUI ────────────────────────────────────────────────┐
 │  Welcome to AgentX TUI                                      │
 │  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent│
-│  Press 'h' for help, 'q' to quit                            │
+│  Press 'm' for Models, 'h' for help, 'q' to quit            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -493,7 +526,7 @@ uv run main.py --no-tui
 ```text
 💻 Using console mode...
 
-agentx 0.1.1
+agentx 0.2.0
 
 (agentx) > 
 ```
@@ -506,6 +539,7 @@ agentx 0.1.1
 | `r` | Open RAG screen |
 | `f` | Open Fast Agent (modal-dialog-driven) |
 | `a` | Open Advanced Agent screen |
+| `m` | Open Models screen (select AI provider) |
 | `h` | Show help/commands |
 | `q` | Quit application |
 | `Esc` | Go back to previous screen |
@@ -534,7 +568,7 @@ agentx 0.1.1
 (agentx) > new my-session
 (agentx) > history
 (agentx) > version
-agentx 0.1.1
+agentx 0.2.0
 (agentx) > quit
 ```
 
@@ -616,10 +650,11 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
                             │ Implemented By
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     VIEW LAYER                              │
+│  VIEW LAYER                              │
 │  Console: MainView, RagView, ChatView, AgentView            │
-│  TUI:     TUIAdapter, TUIRagAdapter, TUIChatAdapter         │
-│           AgentTUIScreen, AgentDemoScreen                   │
+│  TUI:     BaseAgentXScreen framework, ModalScreen,           │
+│           AgentTUIScreen, AgentDemoScreen, ModelsScreen      │
+│           BlockingTaskRunner (non-blocking daemon thread)    │
 └─────────────────────────────────────────────────────────────┘
                             │
                             │ Depends On
@@ -658,7 +693,7 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 
 ## 🧪 Testing
 
-agentx includes **469 comprehensive tests** covering all core modules:
+agentx includes **766 comprehensive tests** covering all core modules:
 
 ```bash
 # Run all tests
@@ -676,6 +711,9 @@ uv run pytest tests/tui/ -v
 # Run MVC++ architecture check
 uv run scripts/omt/mvc_check.py
 
+# Run TDD enforcement status check
+uv run scripts/omt/tdd_check.py status
+
 # Run with coverage (if pytest-cov installed)
 uv run pytest tests/ --cov=agentx --cov-report=html
 ```
@@ -692,6 +730,7 @@ uv run pytest tests/ --cov=agentx --cov-report=html
 - ✅ Agent persistence (stdlib sqlite3 repositories)
 - ✅ Agent facade cycle (perceive→decide→act→reflect→persist)
 - ✅ Demo scenarios & Textual pilot e2e tests
+- ✅ TDD enforcement engine (AST analysis, two-hats gate, coverage gap detection)
 
 **Characteristics:**
 - **Isolation**: All tests are isolated with mocking (no external dependencies)
@@ -754,8 +793,52 @@ For genuine emergencies: `omt_skip{ reason: "...", scope: "src|tests|all" }`. Ev
 |------|---------|
 | `omt_phase` | Declare OMT++ phase; unlocks `src/` edits |
 | `omt_skip` | Logged process-override escape hatch |
+| `omt_complete` | Verify phase artifacts + advance to next phase |
+| `omt_testlist` | Record TDD test list (behaviors to implement) |
+| `omt_red` | Declare a failing test (TDD Red — test hat) |
+| `omt_green` | Declare a passing test (TDD Green — code hat) |
+| `omt_refactor` | Declare refactor state (TDD Refactor — code hat) |
+| `omt_done` | Declare TDD completion (runs full suite + checklist) |
 | `uv run scripts/omt/mvc_check.py` | MVC++ architecture linter (guide §16) |
-| `uv run scripts/omt/new_feature.py "<name>"` | Scaffold feature artifacts from `.meta/templates/` |
+| `uv run scripts/omt/tdd_check.py` | TDD enforcement engine (9 subcommands) |
+| `uv run scripts/omt/new_feature.py "<name>"` | Scaffold a feature's artifacts from `.meta/templates/` |
+
+#### TDD Enforcement (feature_016)
+
+For `major_feature` and `new_screen` tasks, the gate automatically activates **TDD mode** — a Kent Beck-style Red → Green → Refactor cycle enforced mechanically:
+
+```text
+  ┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
+  │  TESTLIST   │ →   │  RED (test)  │ →   │  GREEN (code)   │
+  │  behaviors  │     │  write test  │     │  write code     │
+  │  to implement│     │  that FAILS  │     │  to make it PASS│
+  └─────────────┘     └──────────────┘     └─────────────────┘
+                                                  │
+                                                  ▼
+                                         ┌─────────────────┐
+                                         │  REFACTOR       │
+                                         │  improve code   │
+                                         │  tests stay GREEN│
+                                         └─────────────────┘
+                                                  │
+                                                  ▼
+                                         ┌─────────────────┐
+                                         │  DONE           │
+                                         │  full suite +   │
+                                         │  checklist pass │
+                                         └─────────────────┘
+```
+
+**Two-Hats Gate:** The enforcer tracks which "hat" you're wearing:
+- **RED state** → only `tests/` edits are allowed (you write the failing test)
+- **GREEN / REFACTOR state** → only `src/` edits are allowed (you write/refactor the code)
+- If you try to edit the wrong layer, the gate blocks you with a message telling you which hat to switch to
+
+**REFACTOR Revert:** If a refactor edit breaks tests, the gate automatically reverts the file to its pre-edit state and blocks the edit — you can't accidentally introduce a regression during refactoring.
+
+**Phase-Exit Validation:** `omt_complete` runs `tdd_check.py validate-exit` which checks for:
+- Dangling RED cycles (tests declared RED but never turned GREEN)
+- Coverage gaps (public methods with no test coverage)
 
 #### References
 
@@ -799,6 +882,10 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_007**: Intelligent agent behaviour (tools, policy DSL, reflection, self-improvement)
 - ✅ **feature_010**: Agent demo screen (seeded scenarios A & B)
 - ✅ **feature_011**: Fast Agent modal UX (Goal → Running → Reflection → Result)
+- ✅ **feature_012**: TUI framework (reusable base-class library for all screens)
+- ✅ **feature_013**: AI model provider selector (6 providers: OpenRouter, OpenAI, Gemini, NVIDIA, Ollama, LlamaCpp)
+- ✅ **feature_014**: Non-blocking TUI runner (daemon thread + queue poll, no UI freeze)
+- ✅ **feature_016**: TDD enforcement (Kent Beck Red→Green→Refactor cycle, two-hats gate, AST analysis)
 
 ### Pending
 - 🔲 **feature_001**: Session/user objectives driven by Petri Nets
@@ -824,6 +911,7 @@ For deep dives into architecture, design decisions, and development methodology:
 | `.meta/software_development_process/4.design/structure/STRUCTURE.md` | Architecture deep dive |
 | `.meta/software_development_process/4.design/behavior/BEHAVIOR.md` | Runtime behavior specifications |
 | `.meta/software_development_process/2.requirements/features/feature_007.agentx_intelligent_agent_behaviour/` | Agent feature analysis, design & test artifacts |
+| `.meta/software_development_process/2.requirements/features/feature_016.tdd_enforcement/` | TDD enforcement feature artifacts |
 | `AGENTS.md` | Enforcement rules for opencode agents |
 
 ---
@@ -836,8 +924,9 @@ agentx is an educational project. Contributions are welcome!
 1. Read `AGENTS.md` for agent behavior rules
 2. Read `.meta/software_development_process/omt_agent_guide.md` for OMT++ methodology
 3. Declare your phase with `omt_phase` before editing `src/`
-4. Run tests: `uv run pytest tests/ -v`
-5. Run MVC++ check: `uv run scripts/omt/mvc_check.py`
+4. For major features: follow TDD cycle (`omt_testlist` → `omt_red` → `omt_green` → `omt_refactor` → `omt_done`)
+5. Run tests: `uv run pytest tests/ -v`
+6. Run MVC++ check: `uv run scripts/omt/mvc_check.py`
 
 **Note**: This project uses opencode for development. All code changes must follow the OMT++ process with visible artifacts.
 
