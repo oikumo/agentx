@@ -163,6 +163,20 @@ function runLintBaseline(): { errors: number; warnings: number; timestamp: strin
   }
 }
 
+function runTddStatus(sessionId?: string): { tdd_mode: boolean; state: string; test_node: string | null; cycles_count: number; testlist: any } | null {
+  try {
+    const out = execSync(`uv run scripts/omt/tdd_check.py status --session "${sessionId || ""}"`, {
+      cwd: REPO_ROOT,
+      encoding: "utf8",
+      timeout: 10000,
+      stdio: ["ignore", "pipe", "ignore"]
+    })
+    return JSON.parse(out || "{}")
+  } catch {
+    return null
+  }
+}
+
 function getWorkMdNextTask(): string | null {
   if (!existsSync(WORK_MD_PATH)) return null
   const content = readFileSync(WORK_MD_PATH, "utf8")
@@ -310,6 +324,17 @@ const omt_status = tool({
         ...Object.entries(featureHealth).map(([f, h]) =>
           `  ${f}: overall ${Math.round(h.overall * 100)}% (R:${h.requirements} A:${h.analysis} D:${h.design} I:${h.implementation} T:${h.testing})`
         )
+      )
+    }
+
+    const tddStatus = runTddStatus(sessionId)
+    result.tdd_status = tddStatus
+    if (tddStatus && tddStatus.tdd_mode) {
+      lines.push(
+        "",
+        `TDD Mode: ACTIVE (${tddStatus.state.toUpperCase()})`,
+        ...(tddStatus.test_node ? [`  Current test: ${tddStatus.test_node}`] : []),
+        `  Cycles completed: ${tddStatus.cycles_count}`,
       )
     }
 

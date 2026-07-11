@@ -20,14 +20,14 @@ economics_of_steps: smaller steps = more frequent feedback = cheaper mistakes = 
 courage_enabled_by_safety_net: a green suite is what makes bold refactoring safe. never refactor without a passing suite as the safety net(see FAILURE_RECOVERY)
 
 ## FSM
-TESTLIST(enumerate behaviors,no code)->RED(write 1 test fn;`uv run pytest -x -q f`;require exit!=0,reason∈{AssertionError,ModuleNotFoundError,AttributeError,ImportError};else fix test,retry)->GREEN(min prod code;`uv run pytest -x -q`;require exit==0)->REFACTOR(dedupe;`uv run pytest -q` after EACH micro-edit;fail->revert edit)->loop RED until test_list empty & no new items surfaced=DONE
+TESTLIST(enumerate behaviors,no code)->RED(write 1 test fn;`uv run pytest -x -q f`;require exit!=0,reason∈{AssertionError,ModuleNotFoundError,AttributeError,ImportError};else fix test,retry)->GREEN(min prod code;`uv run pytest -x -q`;require exit==0)->REFACTOR(apply refactor triggers,none-found valid;`uv run pytest -q` after EACH micro-edit;fail->revert edit)->RED(loop) until test_list empty & no new items surfaced=DONE
 
 ## GREEN strategy select
 first_test&rule_unclear->FAKE_IT(return literal const) | rule_obvious&low_risk->OBVIOUS(write real logic; >1 unrelated test breaks->abort,fallback FAKE_IT+TRIANGULATE) | else->TRIANGULATE(add 2nd example breaking current const->forces generalization; collapse to `@pytest.mark.parametrize` only in REFACTOR, never RED/GREEN)
 ```python
-def total(xs): return 0                    # FAKE_IT
-def add(a:int,b:int)->int: return a+b       # OBVIOUS
-def test_a(): assert total([])==0           # green via fake
+def total(xs): return 0                    # FAKE_IT (return literal)
+def add(a:int,b:int)->int: return a+b       # OBVIOUS (separate example, real logic)
+def test_a(): assert total([])==0           # TRIANGULATE: green via fake
 def test_b(): assert total([5])==5          # breaks fake->generalize:
 def total(xs:list[int])->int: return sum(xs)
 ```
@@ -36,7 +36,7 @@ def total(xs:list[int])->int: return sum(xs)
 fn-scoped `@pytest.fixture`, no globals, order-independent | deterministic: inject time/random/io via `monkeypatch`/`unittest.mock.patch`, no live net/clock/unseeded-rand | 1 behavior/test | name=`test_<subject>_<behavior>` | plain `assert` not `unittest.TestCase`
 
 ## refactor triggers (apply only on GREEN, never mixed w/ RED/GREEN edits)
-dup_setup->fixture | dup_shape_diff_vals->parametrize | magic_literal->const/Enum | mutable_shared_state->`@dataclass(frozen=True)` | repeated_pattern->functools/itertools/collections | missing_types->add hints,`uv run mypy f` | new_behavior_noticed->append test_list,DO NOT implement now
+dup_setup->fixture | dup_shape_diff_vals->parametrize | magic_literal->const/Enum | mutable_shared_state->`@dataclass(frozen=True)` | repeated_pattern->functools/itertools/collections | missing_types->add hints,`uv run mypy f`(optional:requires `uv add --dev mypy`) | new_behavior_noticed->append test_list,DO NOT implement now
 
 ## anti-patterns->fix
 prod-before-test->test first | test+impl same step unverified->run,observe fail first | full-solution-on-test#1->FAKE_IT first | batch-N-tests-batch-fix->1 test:1 min impl loop | refactor-while-red->fix green first | new-behavior-during-refactor->defer to test_list | skip-refactor-bc-green->always scan,"none found" valid | `skip`/`xfail`-to-force-green->forbidden | test-written-only-to-hit-coverage%->forbidden, test only for real uncovered behavior
@@ -46,7 +46,7 @@ GREEN raises unexpected SyntaxError/TypeError -> discard edit, revert last-pass 
 REFACTOR breaks suite -> `git checkout -- f` (or in-mem revert), restore last-GREEN state exactly, never patch-forward on red
 
 ## uv commands
-`uv run pytest -x -q f` 1file-stop-on-fail | `uv run pytest -x -q f::test_name` 1fn | `uv run pytest -q` full | `uv run pytest -m "not slow"` skip-slow | `uv run pytest --cov=pkg --cov-report=term-missing` coverage | `uv run pytest --lf` rerun-failed | `uv run mypy pkg/` typecheck
+`uv run pytest -x -q f` 1file-stop-on-fail | `uv run pytest -x -q f::test_name` 1fn | `uv run pytest -q` full | `uv run pytest -m "not slow"` skip-slow | `uv run pytest --cov=pkg --cov-report=term-missing` coverage(optional:requires `uv add --dev pytest-cov`) | `uv run pytest --lf` rerun-failed | `uv run mypy pkg/` typecheck(optional:requires `uv add --dev mypy`)
 
 ## trace: money/dollar (canonical)
 test_list=[5*2=10, immutability]

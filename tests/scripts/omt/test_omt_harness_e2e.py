@@ -38,6 +38,7 @@ HARNESS_FILES = [
     ".meta/software_development_process/omt_agent_guide.md",
     "scripts/omt/mvc_check.py",
     "scripts/omt/new_feature.py",
+    "scripts/omt/tdd_check.py",
     "tests/scripts/omt/test_omt_harness_e2e.py",
 ]
 
@@ -161,6 +162,26 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     assert "FEATURE.md" in scaffolder.stdout
     assert "plan/PLAN.md" in scaffolder.stdout
     checks.append("new_feature scaffolder dry-run succeeds")
+
+    # 7. TDD enforcement tools are wired in the enforcer (feature_016).
+    assert "const omt_testlist" in enforcer
+    assert "const omt_red" in enforcer
+    assert "const omt_green" in enforcer
+    assert "const omt_refactor" in enforcer
+    assert "const omt_done" in enforcer
+    assert "tdd_check.py" in enforcer
+    assert "tdd_mode" in enforcer
+    assert "refactorSnapshots" in enforcer
+    assert "revert_needed" in enforcer
+    checks.append("TDD tools and gate are wired in omt_enforcer")
+
+    # 8. tdd_check.py runs successfully through uv.
+    tdd = _run(["uv", "run", "scripts/omt/tdd_check.py", "status", "--session", ""])
+    assert tdd.returncode == 0, tdd.stdout + tdd.stderr
+    tdd_data = json.loads(tdd.stdout)
+    assert "tdd_mode" in tdd_data
+    assert "state" in tdd_data
+    checks.append("tdd_check.py status subcommand returns valid JSON")
 
     _write_receipt(checks)
     assert RECEIPT_PATH.exists()

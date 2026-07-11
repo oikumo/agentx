@@ -248,6 +248,7 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     return m
   }
   const hardSnapshot = new Map()  // abs path -> {rule: errorCount} captured pre-edit
+  const refactorSnapshots = new Map()  // abs path -> file content captured pre-edit (REFACTOR revert)
 
   const safeLog = (level, message) => {
     try { client?.app?.log?.({ service: "omt-enforcer", level, message }) }
@@ -367,6 +368,8 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
       feature: tool.schema.string().optional().describe("feature slug, e.g. feature_006.x"),
       design_doc: tool.schema.string().optional().describe(
         "repo-relative path to the design/analysis artifact (required for major_feature/new_screen)"),
+      tdd: tool.schema.boolean().optional().describe(
+        "activate TDD enforcement for Programming phase (auto-on for major_feature/new_screen)"),
     },
     async execute(args, context) {
       const tt = String(args.task_type || "").trim()
@@ -394,9 +397,11 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         }
       }
 
+      const tddMode = args.tdd === true || (ARTIFACT_REQUIRED.has(tt) && args.phase === "Programming")
       writeLedger({
         kind: "phase", session, task_type: tt, phase: args.phase || "",
         scope: args.scope || "", feature: args.feature || "", design_doc: args.design_doc || "",
+        tdd_mode: tddMode,
       })
       const lines = [
         "📋 OMT++ PROCESS CHECK (recorded)",
@@ -482,6 +487,26 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
       }
 
       // All artifacts present - record completion
+      // TDD validate-exit: check coverage gaps and dangling reds
+      try {
+        const tddRes = await $`uv run scripts/omt/tdd_check.py validate-exit --feature ${feature}`
+          .cwd(directory).quiet().nothrow()
+        const tddData = JSON.parse(tddRes.stdout.toString() || '{"ok":true}')
+        if (!tddData.ok) {
+          let msg = `⛔ TDD phase exit blocked:\n`
+          if (tddData.dangling_reds?.length)
+            msg += `  Dangling RED cycles: ${tddData.dangling_reds.join(", ")}\n`
+          if (tddData.coverage_gaps?.length) {
+            msg += `  Coverage gaps:\n`
+            for (const g of tddData.coverage_gaps) {
+              const names = g.untested.map((m: any) => m.class ? `${m.class}.${m.method}` : m.method).join(", ")
+              msg += `    ${g.file}: ${names}\n`
+            }
+          }
+          return msg + `Write tests or call omt_skip{reason:"..."} to override.`
+        }
+      } catch { /* fail open */ }
+
       writeLedger({
         kind: "complete",
         session,
@@ -514,7 +539,47 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     },
   })
 
-  // --- WORK.md auto-sync from ledger ---
+  // --- TDD tools (feature_016: thin wrappers delegating to tdd_check.py) ---
+  const tddTool = (name: string, subcmd: string, desc: string, argNames: string[]) => tool({
+    description: desc,
+    args: Object.fromEntries(
+      argNames.map(n => [n, tool.schema.string().optional()])
+    ),
+    async execute(args, context) {
+      const session = context?.sessionID || ""
+      const flags = [subcmd]
+      for (const [k, v] of Object.entries(args)) {
+        if (v !== undefined && v !== null && v !== "")
+          flags.push(`--${k.replace(/_/g, "-")}`, String(v))
+      }
+      flags.push("--session", session)
+      try {
+        const res = await $`uv run scripts/omt/tdd_check.py ${flags}`
+          .cwd(directory).quiet().nothrow()
+        const data = JSON.parse(res.stdout.toString() || "{}")
+        return data.message || JSON.stringify(data)
+      } catch (e) {
+        safeLog("warn", `tdd_check.py ${subcmd} failed: ${e?.message || e}`)
+        return `⚠️ TDD engine error: ${e?.message || e}`
+      }
+    },
+  })
+
+  const omt_testlist = tddTool("omt_testlist", "testlist",
+    "Record the TDD test list (behaviors to implement). Sets TDD state to TESTLIST.",
+    ["behaviors", "feature"])
+  const omt_red = tddTool("omt_red", "start",
+    "Declare a failing test (TDD Red). Runs pytest to verify the test fails, then AST analysis for true-RED verification. Sets TDD state to RED (test hat: only tests/ edits allowed).",
+    ["test_node", "target_src", "feature"])
+  const omt_green = tddTool("omt_green", "green",
+    "Declare a passing test (TDD Green). Runs pytest to verify the test passes. Sets TDD state to GREEN (code hat: only src/ edits allowed).",
+    ["test_node", "feature"])
+  const omt_refactor = tddTool("omt_refactor", "refactor",
+    "Declare refactor state (TDD Refactor). Runs pytest to verify tests are green. Sets TDD state to REFACTOR (refactor hat: only src/ edits allowed, tests must stay green per micro-edit).",
+    ["test_node", "feature"])
+  const omt_done = tddTool("omt_done", "done",
+    "Declare TDD completion. Runs full suite + checklist verification. Sets TDD state to DONE.",
+    ["feature"])
   async function syncWorkMdFromLedger() {
     const workMdPath = join(directory, "WORK.md")
     if (!existsSync(workMdPath)) return
@@ -566,7 +631,7 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
 
   // --- hooks ---------------------------------------------------------------
   return {
-    tool: { omt_phase, omt_skip, omt_complete },
+    tool: { omt_phase, omt_skip, omt_complete, omt_testlist, omt_red, omt_green, omt_refactor, omt_done },
 
     "tool.execute.before": async (input, output) => {
       try {
@@ -596,7 +661,15 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
 
 
         if (isTests(rel)) {
+          // TDD gate: if TDD mode active, let tdd_check.py decide (two-hats)
           const unlock = getActiveUnlock(session)
+          if (unlock?.record?.tdd_mode) {
+            const tddRes = await $`uv run scripts/omt/tdd_check.py gate --path ${rel} --is-tests --session ${session || ""}`
+              .cwd(directory).quiet().nothrow()
+            const tddData = JSON.parse(tddRes.stdout.toString() || '{"allowed":true}')
+            if (!tddData.allowed) throw new OmtBlock(tddData.reason)
+            return  // TDD allows tests/ — skip canary approval
+          }
           const approved = unlock && (unlock.type === "skip"
             ? unlock.record.tests_approved
             : unlock.record.tests_approved === true)
@@ -613,6 +686,13 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
               throw new OmtBlock(artifactMsg(tt, unlock.record))
             }
           }
+          // TDD gate: if TDD mode active, check two-hats state
+          if (unlock.record.tdd_mode) {
+            const tddRes = await $`uv run scripts/omt/tdd_check.py gate --path ${rel} --session ${session || ""}`
+              .cwd(directory).quiet().nothrow()
+            const tddData = JSON.parse(tddRes.stdout.toString() || '{"allowed":true}')
+            if (!tddData.allowed) throw new OmtBlock(tddData.reason)
+          }
           // Gate passed → snapshot pre-edit hard errors so the after-hook blocks
           // only violations THIS edit introduces (pre-existing legacy errors don't block).
           if (rel.endsWith(".py")) {
@@ -620,6 +700,10 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
               ? countByRule((await lintFindings(abs)).filter((f) => f.severity === "error"))
               : {}
             hardSnapshot.set(abs, pre)
+            // TDD REFACTOR: save pre-edit content for revert if tests break
+            if (unlock.record.tdd_mode && existsSync(abs)) {
+              refactorSnapshots.set(abs, readFileSync(abs, "utf8"))
+            }
           }
         }
       } catch (e) {
@@ -666,6 +750,31 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         await notify(`MVC++ on ${rel}: ${warns.length} warning(s) (advisory).\n${top}\n` +
           `Run: uv run scripts/omt/mvc_check.py ${rel}`)
       }
+
+      // TDD after-edit: advisory + REFACTOR revert check
+      try {
+        const tddSession = input?.sessionID || ""
+        const tddUnlock = getActiveUnlock(tddSession)
+        if (tddUnlock?.record?.tdd_mode) {
+          const tddRes = await $`uv run scripts/omt/tdd_check.py after-edit --path ${rel} --session ${tddSession}`
+            .cwd(directory).quiet().nothrow()
+          const tddData = JSON.parse(tddRes.stdout.toString() || "{}")
+          if (tddData.action === "revert_needed") {
+            const content = refactorSnapshots.get(abs)
+            if (content !== undefined) {
+              writeFileSync(abs, content, "utf8")
+              throw new OmtBlock(tddData.reason || "REFACTOR broke tests — edit reverted.")
+            }
+          }
+          if (tddData.advisories?.length) {
+            await notify(tddData.advisories.join("\n"))
+          }
+        }
+      } catch (e) {
+        if (e instanceof OmtBlock) throw e
+        safeLog("warn", "TDD after-edit check failed: " + (e?.message || e))
+      }
+      refactorSnapshots.delete(abs)
     },
 
     event: async ({ event }) => {
