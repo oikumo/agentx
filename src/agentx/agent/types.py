@@ -172,7 +172,7 @@ class PolicyConfig:
 @dataclass
 class MemoryConfig:
     volatile_capacity: int = 10_000
-    persistent_path: str = ".agentx/memory"
+    persistent_path: str = "local_sessions/current"
     consolidation_interval: float = 300.0  # seconds (5 min)
     embedding_model: str = "nomic-embed-text"
     max_persistent_entries: int = 100_000

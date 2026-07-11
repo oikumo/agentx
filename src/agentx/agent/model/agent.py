@@ -724,7 +724,7 @@ def _dict_to_policy_config(data: dict[str, Any]) -> PolicyConfig:
 def _dict_to_memory_config(data: dict[str, Any]) -> MemoryConfig:
     return MemoryConfig(
         volatile_capacity=int(data.get("volatile_capacity", 10_000)),
-        persistent_path=data.get("persistent_path", ".agentx/memory"),
+        persistent_path=data.get("persistent_path", "local_sessions/current"),
         consolidation_interval=float(data.get("consolidation_interval", 300.0)),
         embedding_model=data.get("embedding_model", "nomic-embed-text"),
         max_persistent_entries=int(data.get("max_persistent_entries", 100_000)),
