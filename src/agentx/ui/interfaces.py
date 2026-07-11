@@ -93,8 +93,13 @@ class IChatView(ABC):
         pass
 
     @abstractmethod
-    def show_message(self, message: str) -> None:
-        """Show message."""
+    def show_message(self, message: str, role: str = "assistant") -> None:
+        """Show message.
+
+        Args:
+            message: The message content.
+            role: Either "user" or "assistant" (default: "assistant").
+        """
         pass
 
     @abstractmethod

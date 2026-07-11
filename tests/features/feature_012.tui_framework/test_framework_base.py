@@ -326,35 +326,25 @@ class TestWidgets:
         assert m.role == "user"
         assert "user" in m.classes
 
-    def test_chat_message_with_timestamp(self):
-        """ChatMessage accepts an optional timestamp (feature_017 regression)."""
-        from datetime import datetime
+    def test_chat_message_no_timestamp(self):
+        """ChatMessage no longer accepts timestamp (feature_018 simplification).
 
-        ts = datetime(2025, 1, 15, 10, 30, 0)
-        m = ChatMessage("hello", "assistant", ts)
+        Feature_018 removes timestamps for cleaner UI. ChatMessage now only
+        accepts (message, role) - 2 positional arguments.
+        """
+        m = ChatMessage("hello", "assistant")
         assert m.role == "assistant"
         assert "assistant" in m.classes
-        assert m.timestamp == ts
+        assert not hasattr(m, 'timestamp')  # No timestamp attribute
 
-    def test_chat_message_default_timestamp(self):
-        """ChatMessage defaults timestamp to now if not provided."""
-        from datetime import datetime
+    def test_chat_message_user_has_you_prefix(self):
+        """User messages display with 'You:' prefix."""
+        m = ChatMessage("hello", "user")
+        # The display text should include "You:" prefix
+        assert "You:" in str(m.content)
 
-        before = datetime.now()
-        m = ChatMessage("hi", "user")
-        after = datetime.now()
-        assert before <= m.timestamp <= after
-
-    def test_chat_message_3_arg_no_crash(self):
-        """ChatMessage must not crash when called with (message, role, timestamp).
-
-        This is the regression test for the feature_017 bug where
-        chat_screen.py passed 3 args but ChatMessage.__init__ only accepted 2,
-        causing a silently-swallowed TypeError that prevented ALL messages
-        from displaying.
-        """
-        from datetime import datetime
-
-        # This must not raise
-        m = ChatMessage("test", "assistant", datetime.now())
-        assert m is not None
+    def test_chat_message_assistant_has_assistant_prefix(self):
+        """Assistant messages display with 'Assistant:' prefix."""
+        m = ChatMessage("hello", "assistant")
+        # The display text should include "Assistant:" prefix
+        assert "Assistant:" in str(m.content)

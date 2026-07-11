@@ -49,34 +49,36 @@ class TestChatMessageDisplayRegression:
     chat_screen.py called it with (message, role, timestamp). The TypeError
     was silently swallowed by ``except Exception: pass``, so NO messages
     ever appeared on screen — not welcome, not user, not assistant.
+
+    Feature_018 simplifies: ChatMessage now takes (message, role) only,
+    no timestamp. Visual distinction is via role prefix and alignment.
     """
 
-    def test_chat_message_accepts_timestamp(self):
-        """ChatMessage must accept (message, role, timestamp) — 3 args.
+    def test_chat_message_accepts_message_and_role(self):
+        """ChatMessage must accept (message, role) — 2 args.
 
-        This is the core regression: before the fix, ChatMessage.__init__
-        only accepted 2 args, so every _add_message / show_partial_message
-        call raised TypeError (silently swallowed).
+        Feature_018: timestamp parameter removed for cleaner display.
         """
-        from datetime import datetime
         from agentx.ui.tui.framework import ChatMessage
 
         # Must not raise
-        ts = datetime(2025, 1, 15, 10, 30, 0)
-        msg = ChatMessage("hello", "assistant", ts)
+        msg = ChatMessage("hello", "assistant")
         assert msg.role == "assistant"
-        assert msg.timestamp == ts
         assert "assistant" in msg.classes
+        # No timestamp attribute
+        assert not hasattr(msg, 'timestamp')
+        # Content includes role prefix
+        assert "Assistant:" in msg.content
+        assert "hello" in msg.content
 
-    def test_add_message_calls_chat_message_with_3_args(self):
-        """_add_message must successfully create a ChatMessage with timestamp.
+    def test_add_message_calls_chat_message_with_2_args(self):
+        """_add_message must successfully create a ChatMessage without timestamp.
 
         Before the fix, the ChatMessage(message, role, timestamp) call inside
         _add_message raised TypeError, which was swallowed by except:pass,
         so no widget was ever mounted.
         """
-        from unittest.mock import MagicMock, patch, call
-        from datetime import datetime
+        from unittest.mock import MagicMock, patch
         from agentx.ui.tui.framework import ChatMessage
 
         screen = ChatTUIScreen()
@@ -91,7 +93,11 @@ class TestChatMessageDisplayRegression:
                 mounted_widget = mock_container.mount.call_args[0][0]
                 assert isinstance(mounted_widget, ChatMessage)
                 assert mounted_widget.role == "user"
-                assert isinstance(mounted_widget.timestamp, datetime)
+                # No timestamp attribute
+                assert not hasattr(mounted_widget, 'timestamp')
+                # Content includes role prefix
+                assert "You:" in mounted_widget.content
+                assert "test content" in mounted_widget.content
 
     def test_show_message_creates_chat_message(self):
         """show_message must create and mount a ChatMessage widget."""

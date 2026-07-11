@@ -136,7 +136,7 @@ class ChatController(IChatViewPartner):
             self.view.show_initial_message()
             for msg in messages:
                 if msg.role != "system":
-                    self.view.show_message(f"[{msg.timestamp.strftime('%H:%M')}] {msg.role.capitalize()}: {msg.content}")
+                    self.view.show_message(msg.content, msg.role)
         
         return True
 

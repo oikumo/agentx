@@ -124,7 +124,7 @@ class TestTUIChatAdapterMessage:
         
         adapter.show_message("Hello world")
         
-        mock_screen.show_message.assert_called_once_with("Hello world")
+        mock_screen.show_message.assert_called_once_with("Hello world", "assistant")
 
     def test_show_message_empty_string(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
@@ -132,7 +132,7 @@ class TestTUIChatAdapterMessage:
         adapter.set_screen(mock_screen)
         
         adapter.show_message("")  # should not raise
-        mock_screen.show_message.assert_called_once_with("")
+        mock_screen.show_message.assert_called_once_with("", "assistant")
 
     def test_show_message_unicode(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
@@ -140,7 +140,7 @@ class TestTUIChatAdapterMessage:
         adapter.set_screen(mock_screen)
         
         adapter.show_message("🎉 Unicode ✓")
-        mock_screen.show_message.assert_called_once_with("🎉 Unicode ✓")
+        mock_screen.show_message.assert_called_once_with("🎉 Unicode ✓", "assistant")
 
     def test_show_message_multiple_calls(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
@@ -151,8 +151,8 @@ class TestTUIChatAdapterMessage:
         adapter.show_message("second")
         
         assert mock_screen.show_message.call_count == 2
-        mock_screen.show_message.assert_any_call("first")
-        mock_screen.show_message.assert_any_call("second")
+        mock_screen.show_message.assert_any_call("first", "assistant")
+        mock_screen.show_message.assert_any_call("second", "assistant")
 
 
 # ---------------------------------------------------------------------------
@@ -268,7 +268,7 @@ class TestTUIChatAdapterEdgeCases:
         adapter.show_message_chat_error()
         
         mock_screen.show_initial_message.assert_called_once()
-        mock_screen.show_message.assert_called_once_with("msg")
+        mock_screen.show_message.assert_called_once_with("msg", "assistant")
         mock_screen.show_partial_message.assert_called_once_with("partial")
         mock_screen.show_stream_message.assert_called_once_with("stream")
         mock_screen.show_message_chat_error.assert_called_once()
@@ -281,7 +281,7 @@ class TestTUIChatAdapterEdgeCases:
         long_msg = "x" * 10000
         adapter.show_message(long_msg)
         
-        mock_screen.show_message.assert_called_once_with(long_msg)
+        mock_screen.show_message.assert_called_once_with(long_msg, "assistant")
 
     def test_message_with_newlines(self, mock_chat_controller):
         adapter = TUIChatAdapter(mock_chat_controller)
@@ -290,4 +290,4 @@ class TestTUIChatAdapterEdgeCases:
         
         adapter.show_message("line1\nline2\nline3")
         
-        mock_screen.show_message.assert_called_once_with("line1\nline2\nline3")
+        mock_screen.show_message.assert_called_once_with("line1\nline2\nline3", "assistant")

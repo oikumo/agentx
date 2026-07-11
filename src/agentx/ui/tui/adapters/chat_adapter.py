@@ -33,14 +33,15 @@ class TUIChatAdapter(BaseScreenAdapter, IChatView):
         if self._screen:
             self._screen.show_initial_message()
 
-    def show_message(self, message: str) -> None:
+    def show_message(self, message: str, role: str = "assistant") -> None:
         """Show message.
 
         Args:
             message: Message to display
+            role: Either "user" or "assistant" (default: "assistant")
         """
         if self._screen:
-            self._screen.show_message(message)
+            self._screen.show_message(message, role)
 
     def show_partial_message(self, message: str) -> None:
         """Show partial (streaming) message.

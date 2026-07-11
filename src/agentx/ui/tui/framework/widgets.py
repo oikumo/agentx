@@ -175,12 +175,18 @@ class CommandInput(Vertical):
 
 
 class ChatMessage(Static):
-    """A single chat message widget (user or assistant role)."""
+    """A single chat message widget (user or assistant role).
+    
+    Visual design:
+    - User messages: right-aligned, distinct background, white text, "You:" prefix
+    - Assistant messages: left-aligned, transparent background, "Assistant:" prefix
+    - No timestamps for cleaner, simpler display
+    """
 
     DEFAULT_CSS = """
     ChatMessage {
         width: 100%;
-        padding: 1;
+        padding: 1 2;
         margin: 0 0 1 0;
     }
 
@@ -188,21 +194,12 @@ class ChatMessage(Static):
         background: $primary-darken-2;
         color: white;
         text-align: right;
-        border: solid $primary;
     }
 
     ChatMessage.assistant {
-        background: $surface;
+        background: transparent;
         color: $text;
         text-align: left;
-        border: solid $secondary;
-    }
-
-    ChatMessage .timestamp {
-        color: $text-muted;
-        text-style: italic;
-        font-size: 80%;
-        margin-bottom: 0;
     }
     """
 
@@ -210,19 +207,16 @@ class ChatMessage(Static):
         self,
         message: str,
         role: str = "user",
-        timestamp: datetime | None = None,
     ) -> None:
         """Initialize chat message.
 
         Args:
             message:   Message content.
             role:      'user' or 'assistant'.
-            timestamp: Optional timestamp for the message (defaults to now).
         """
         self.role = role
-        self.timestamp = timestamp if timestamp is not None else datetime.now()
-        # Format the display: timestamp line + message content
-        time_str = self.timestamp.strftime("%H:%M:%S")
-        display = f"[{time_str}] {message}"
+        # Format the display with role prefix for clarity
+        prefix = "You:" if role == "user" else "Assistant:"
+        display = f"{prefix} {message}"
         super().__init__(display)
         self.add_class(role)

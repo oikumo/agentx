@@ -81,6 +81,19 @@
   - [x] 26 unit tests for ChatHistoryRepository, 5 regression tests for RagChatHistory bug fix
   - [x] Verification: 797/798 tests pass (1 pre-existing), MVC++ 0 errors/33 warnings (baseline)
 
+- [x] Implement feature_018.chat_screen_improvements <!-- id:T-018-prio-high agent:true -->
+  - [x] ChatMessage widget: Removed timestamp parameter, added "You:"/"Assistant:" prefixes, improved visual distinction (user=right-aligned primary-bg, assistant=left-aligned transparent)
+  - [x] ChatTUIScreen: Removed conversation sidebar, removed timestamps, simplified to 3 key bindings (q/escape/ctrl+enter)
+  - [x] Removed: ConversationSidebar class, sidebar CSS, Ctrl+L/N/E/D bindings, conversation loading/persistence logic from TUI
+  - [x] Controller persistence methods retained in ChatController for future use
+  - [x] Updated regression tests (feature_012 framework + chat_rag_screens) to match new 2-arg ChatMessage signature
+  - [x] Verification: 807 tests pass, MVC++ 0 errors/33 warnings (baseline)
+
+- [x] Fix chat screen "no assistant message" bug <!-- id:T-chat-callfromthread prio:high agent:true -->
+  - [x] Root cause: ChatTUIScreen._run_llm_async called self.call_from_thread() from a background thread, but Screen does NOT have call_from_thread — only App does. Every call raised AttributeError; the except block also called self.call_from_thread (also failed), silently swallowing the error. No assistant message ever appeared.
+  - [x] Fix: Changed all 4 occurrences of self.call_from_thread(...) → self.app.call_from_thread(...) in _run_llm_async(). Screen.app returns the App instance; App.call_from_thread is the correct method for marshalling calls from background threads to the UI thread.
+  - [x] Verification: 807 tests pass, MVC++ 0 errors, 0 regressions
+
 ---
 
 ## Agent Scratchpad (auto‑managed, do not edit manually)
@@ -111,4 +124,5 @@
 [2026-07-11] Agent: Integrated feature_016 TDD enforcement into meta harness documentation. Updated README.md: version 0.1.2→0.2.0, test count 512+→766+, added NVIDIA NIM to providers table, added Models screen (m key) section, added TDD enforcement section with Red→Green→Refactor diagram and two-hats gate explanation, expanded tooling table with all TDD tools + omt_status, updated roadmap with features 012-016, updated contributing workflow with TDD cycle step. Updated AGENTS.md: added enforcement point §6 (TDD two-hats gate), added TDD mode exceptions to Core Directives NEVER #4/#6, added TDD enforcement tools table + status tools table, added feature_016 + TDD spec references. Updated omt_agent_guide.md: added §11.4 TDD Workflow (five TDD tools table, two-hats gate matrix, true-RED verification, REFACTOR auto-revert, coverage gap analysis, tdd_check.py CLI reference with all 9 subcommands), updated TOC. OMT harness e2e test passes after each edit (receipt refreshed). Logged omt_skip{scope:all} for README.md edit (user explicitly requested).
 [2026-07-11] Agent: Fixed feature_017 bug - conversation history disorder in RagChatHistory. Root cause: class attributes (shared lists) instead of instance attributes. Fixed by converting to @dataclass with field(default_factory=list). Added 5 regression tests verifying instance isolation. 5/5 pass. Full suite 771/772 (1 pre-existing failure). MVC++ 0/0.
 [2026-07-11] Agent: Implemented feature_017 chat screen improvements — conversation history persistence and UI enhancements. ChatHistoryRepository (SQLite at ~/.agentx/chat_history.db), ChatController/RagChatController persistence, ChatTUIScreen sidebar (Ctrl+L), timestamps, new/export/delete keys. 31 new tests. Full suite 797/798 pass. MVC++ 0/33 warnings (baseline).
+[2026-07-11] Agent: Fixed chat screen "no assistant message" bug. Root cause: ChatTUIScreen._run_llm_async() called self.call_from_thread() from a background worker thread, but Screen does NOT have call_from_thread — only App does. Every call raised AttributeError; the except block also called self.call_from_thread (also failed), silently swallowing the error so NO assistant message ever appeared. Fix: changed all 4 occurrences self.call_from_thread(...) → self.app.call_from_thread(...). Screen.app returns the App; App.call_from_thread is the correct method for marshalling calls from background threads to the UI thread. 807 tests pass, 0 regressions, MVC++ 0 errors.
 ```
