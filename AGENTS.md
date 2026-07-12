@@ -47,14 +47,25 @@ your tool calls:
    `omt_skip{ reason: "...", scope: "src|tests|all" }`. Every skip is recorded in
    `.meta/.omt/ledger.jsonl` for audit. Prefer doing the process over skipping it.
 
-6. **TDD enforcement (feature_016).** For `major_feature` / `new_screen` tasks in the
-   Programming phase, TDD mode auto-activates. You must follow the Red → Green → Refactor
-   cycle using the TDD tools (`omt_testlist` → `omt_red` → `omt_green` → `omt_refactor` →
-   `omt_done`). The **two-hats gate** mechanically enforces which layer you may edit:
-   - **RED state** → only `tests/` edits allowed (write the failing test).
-   - **GREEN / REFACTOR state** → only `src/` edits allowed (write/refactor the code).
-   The `tool.execute.after` hook reverts REFACTOR edits that break tests automatically.
-   See `omt_agent_guide.md` §11.4 for the full TDD workflow.
+6. **TDD enforcement (feature_016).** For `major_feature` / `new_screen` tasks in the **Programming** phase, **TDD mode auto-activates**. You must follow the **Red → Green → Refactor** cycle using the TDD tools (`omt_testlist` → `omt_red` → `omt_green` → `omt_refactor` → `omt_done`). The **two-hats gate** mechanically enforces which layer you may edit:
+- **RED state** → Only `tests/` edits allowed (write the failing test).
+- **GREEN / REFACTOR state** → Only `src/` edits allowed (write/refactor the code).
+The `tool.execute.after` hook **reverts REFACTOR edits that break tests automatically**.
+
+### Enforcement Matrix
+The gate adapts rigor to task size, including TDD enforcement:
+
+| task_type       | `omt_phase` Required? | Artifact Gate Before `src/` Edit | TDD Enforced | `tests/` Edit | MVC++ Check |
+|----------------|----------------------|----------------------------------|--------------|---------------|-------------|
+| `bug_fix`      | Yes (1-line scope)  | None (warn only)                 | ❌ No        | Canary approval | Warn (toast) |
+| `minor_feature`| Yes                  | Operation list                   | ❌ No        | Canary approval | Warn (toast) |
+| `major_feature`| Yes                  | **Design doc on disk**            | ✅ Yes       | **RED state only** | **Block hard violations** |
+| `new_screen`   | Yes                  | **Use case + design doc on disk**  | ✅ Yes       | **RED state only** | **Block hard violations** |
+| `refactor`     | Yes                  | None                              | ❌ No        | Canary approval | **Block hard violations** |
+| `test`         | Yes                  | N/A                               | ❌ No        | Canary approval | Warn (toast) |
+| `docs`         | No                   | N/A                               | ❌ No        | N/A            | N/A |
+
+See `omt_agent_guide.md §11.4` for the full TDD workflow.
 
 ---
 
