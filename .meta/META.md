@@ -2,6 +2,8 @@
 
 > **Purpose**: Central repository for all development metadata, documentation, and process artifacts following the OMT++ methodology. This directory contains everything needed to understand, maintain, and evolve the agentx project.
 
+> **⚠️ START HERE:** `.meta/META_HARNESS.md` — Token-optimized quick reference for the META HARNESS process enforcement system (137 lines, ~1,400 tokens). **Read before any coding task.**
+
 ---
 
 ## Directory Structure
@@ -9,6 +11,7 @@
 ```
 .meta/
 ├── META.md                              # This file - overview of .meta directory
+├── META_HARNESS.md                      # ⚠️ Quick reference (137 lines) — READ FIRST
 ├── doc/                                 # Maintainable technical documentation
 │   ├── README.md                        #   Index + maintenance guide
 │   ├── architecture.md                  #   MVC++, layers, provider pattern, tech stack
@@ -68,7 +71,9 @@ The complete OMT++ methodology implementation for agentx. Every feature, bug fix
 6. **Testing** - Three-stage testing strategy (unit → integration → system)
 7. **Integration** - End-to-end workflow validation against use cases
 
-**Key Document**: `omt_agent_guide.md` - The complete OMT++ methodology condensed for AI coding agents. **Must be read before any coding task.**
+**Key Documents:**
+- `META_HARNESS.md` — **Quick reference (137 lines)** — Read before any coding task
+- `omt_agent_guide.md` — Complete OMT++ methodology guide for agents (source of truth)
 
 ### proof_of_concepts/
 Validates technical feasibility and architecture decisions before full implementation. Used for:
@@ -100,11 +105,12 @@ Rapid UI mockups and interaction flows to validate use cases and dialog designs.
 3. Follow OMT++ process: Analysis (root cause) → Design (fix approach) → Implementation → Testing
 
 ### For Learning the Codebase
-1. Start at `.meta/doc/README.md` — the current-state technical documentation
+1. Read `.meta/META_HARNESS.md` — Process enforcement quick reference (**start here**)
+2. Start at `.meta/doc/README.md` — the current-state technical documentation
    (architecture, features, subsystems, data flows)
-2. Read `software_development_process/omt_agent_guide.md` for the methodology
-3. Review `1.project/PROJECT_SUMMARY.md` for high-level overview
-4. Explore phase directories to understand the development workflow
+3. Read `software_development_process/omt_agent_guide.md` for the methodology
+4. Review `1.project/PROJECT_SUMMARY.md` for high-level overview
+5. Explore phase directories to understand the development workflow
 
 ---
 

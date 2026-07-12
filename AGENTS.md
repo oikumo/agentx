@@ -4,14 +4,17 @@
 >
 > **⚠️ MANDATORY SECOND STEP:** Read this `AGENTS.md` in full.
 >
-> **⚠️ MANDATORY THIRD STEP:** Follow the OMT++ methodology in
+> **⚠️ MANDATORY THIRD STEP:** Read `.meta/META_HARNESS.md` (token-optimized quick reference).
+>
+> **⚠️ MANDATORY FOURTH STEP:** Follow the OMT++ methodology in
 > `.meta/software_development_process/omt_agent_guide.md` for any programming task.
 >
 > **⚠️ MANDATORY:** Always use `uv` to run Python (including tests). Bare
 > `python`/`pip`/`pytest` are denied by `opencode.jsonc`.
 
-> **Harness:** This project is driven by **opencode only**. Enforcement lives in
-> `opencode.jsonc` (permissions) and `.opencode/plugin/omt_enforcer.ts` (the OMT++ gate).
+> **Harness:** This project is driven by **opencode only**. The **META HARNESS** enforces
+> OMT++ process mechanically via `opencode.jsonc` (permissions) and
+> `.opencode/plugin/omt_enforcer.ts` (the gate). Quick reference: `.meta/META_HARNESS.md`.
 
 ---
 
@@ -85,11 +88,12 @@ See `omt_agent_guide.md §11.4` for the full TDD workflow.
 **ALWAYS:**
 7. Check `git log` / `git status` before changes.
 8. Understand the project by reading the `META.md` file in each directory.
-9. Follow OMT++ (`omt_agent_guide.md`) for all code changes.
-10. Declare your phase (`omt_phase`) before touching `src/`.
-11. Produce the phase artifacts your task size requires (guide §12); scaffold features with
+9. Read `.meta/META_HARNESS.md` before any coding task (token-optimized reference).
+10. Follow OMT++ (`omt_agent_guide.md`) for all code changes.
+11. Declare your phase (`omt_phase`) before touching `src/`.
+12. Produce the phase artifacts your task size requires (guide §12); scaffold features with
     `scripts/omt/new_feature.py` so artifacts stay consistently named (no ad-hoc `*_PROOF.md`).
-12. For major features / new screens in Programming phase: follow the TDD cycle
+13. For major features / new screens in Programming phase: follow the TDD cycle
     (`omt_testlist` → `omt_red` → `omt_green` → `omt_refactor` → `omt_done`).
 
 ---
@@ -127,6 +131,7 @@ See `omt_agent_guide.md §11.4` for the full TDD workflow.
 
 ## 📖 References
 
+- **META HARNESS quick reference:** `.meta/META_HARNESS.md` (read this first — 137 lines, ~1,400 tokens)
 - **OMT++ methodology:** `.meta/software_development_process/omt_agent_guide.md` (source of truth)
 - **Project / requirements / analysis / design / impl / testing:**
   `.meta/software_development_process/{1.project … 7.integration}/`
@@ -136,4 +141,4 @@ See `omt_agent_guide.md §11.4` for the full TDD workflow.
   `.meta/software_development_process/2.requirements/features/feature_016.tdd_enforcement/`
 - **TDD spec (Kent Beck):** `.meta/doc/tdd/tdd-agent-spec.md`
 
-**When in doubt: read `omt_agent_guide.md` §2 "Phase Model", §11.4 "TDD Workflow", and §12 "Essential vs. Optional".**
+**When in doubt: read `META_HARNESS.md` first, then `omt_agent_guide.md` §2 "Phase Model", §11.4 "TDD Workflow", and §12 "Essential vs. Optional".**
