@@ -52,6 +52,7 @@ class MainTUIScreen(BaseAgentXScreen):
         Binding("a", "open_agent", "Advanced Agent", show=True),
         Binding("m", "open_models", "Models", show=True),
         Binding("t", "open_react", "ReAct", show=True),
+        Binding("d", "open_coding", "Coding", show=True),
         Binding("h", "show_help", "Help", show=True),
         Binding("ctrl+l", "focus_input", "Focus Input", show=False),
     ]
@@ -112,6 +113,8 @@ class MainTUIScreen(BaseAgentXScreen):
             self.action_open_models()
         elif button_id == "btn-react":
             self.action_open_react()
+        elif button_id == "btn-coding":
+            self.action_open_coding()
         elif button_id == "btn-help":
             self.action_show_help()
 
@@ -229,6 +232,21 @@ class MainTUIScreen(BaseAgentXScreen):
             ),
         )
 
+    def action_open_coding(self) -> None:
+        """Open the Coding screen (file operations chat)."""
+        from agentx.ui.tui.screens.coding.coding_screen import CodingTUIScreen
+
+        self.navigate_to_child(
+            CodingTUIScreen,
+            controller=self._controller,
+            setup=lambda c: c.show_coding() if hasattr(c, "show_coding") else None,
+            getter=lambda c: (
+                c.get_coding_controller()
+                if hasattr(c, "get_coding_controller")
+                else None
+            ),
+        )
+
     # ----------------------------------------------------------- other actions
 
     def action_show_help(self) -> None:
@@ -244,6 +262,7 @@ class MainTUIScreen(BaseAgentXScreen):
 - `a` - Open Advanced Agent (full workspace)
 - `m` - Open Models (select AI model provider)
 - `t` - Open ReAct (reasoning + acting chat)
+- `d` - Open Coding (file operations chat)
 - `h` - Show this help
 - `Ctrl+L` - Focus command input
 

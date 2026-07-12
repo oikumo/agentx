@@ -15,13 +15,14 @@
 ┌─ AgentX TUI ─────────────────────────────────────────────────┐
 │  Welcome to AgentX TUI                                       │
 │  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent │
-│  Press 't' ReAct, 'm' Models, 'h' Help, 'q' Quit             │
+│  Press 't' ReAct, 'd' Coding, 'm' Models, 'h' Help, 'q' Quit │
 │                                                              │
 │  [c] Chat  ──→ LLM conversations with streaming responses    │
 │  [r] RAG   ──→ PDF Q&A, document ingestion, vector search    │
 │  [f] Fast Agent ──→ Modal-dialog-driven agent (simplified)   │
 │  [a] Advanced Agent ──→ Full agent workspace (tools, policy) │
 │  [t] ReAct  ──→ Reasoning + Acting with visible thinking     │
+│  [d] Coding ──→ File system tools (search, read, edit, create)│
 │  [m] Models ──→ Select AI model provider                     │
 │  [h] Help  ──→ Command reference                             │
 │  [q] Quit  ──→ Exit application                              │
@@ -78,6 +79,9 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `m` for models, `
 │    [r] RAG   ──→ Document Q&A and ingestion                 │
 │    [f] Fast Agent ──→ Simple modal agent                    │
 │    [a] Advanced Agent ──→ Full agent workspace              │
+│    [t] ReAct  ──→ Reasoning + Acting with visible thinking  │
+│    [d] Coding ──→ File system tools (search, read, edit)    │
+│    [m] Models ──→ Select AI model provider                  │
 │    [h] Help  ──→ View all commands                          │
 │    [q] Quit  ──→ Exit application                           │
 │                                                             │
@@ -93,6 +97,7 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `m` for models, `
 | `f` | Open Fast Agent (modal-dialog-driven) |
 | `a` | Open Advanced Agent screen |
 | `t` | Open ReAct screen (reasoning + acting) |
+| `d` | Open Coding screen (file system tools) |
 | `m` | Open Models screen (select AI model provider) |
 | `h` | Show help |
 | `q` | Quit application |
@@ -378,7 +383,79 @@ A new **Reasoning + Acting** chat screen that uses LangChain's `create_agent` (R
 | `Esc` / `q` | Return to Main (cancels running agent) |
 
 ---
-
+ 
+### 💻 Coding Agent Screen (feature_019)
+ 
+A new **Coding Agent** chat screen that uses LangChain's `create_agent` with file system tools to search, read, edit, list, and create files in your workspace — with visible thinking, tool calls, and diff highlighting.
+ 
+```text
+┌─ Coding ───────────────────────────────────────────────────────┐
+│  Ask me to explore, edit, or create files!                     │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  You: Find all Python files in the src/ directory              │
+│                                                                │
+│  💭 The user wants to find Python files. I'll use file_search. │
+│                                                                │
+│  🔧 file_search(pattern="src/**/*.py")                         │
+│                                                                │
+│  📊 Found 3 files: src/main.py, src/utils.py, src/test.py      │
+│                                                                │
+│  💭 Let me read main.py to understand the structure.           │
+│                                                                │
+│  🔧 file_read(path="src/main.py")                              │
+│                                                                │
+│  📊 def main():\n    print('Hello from main')\n                │
+│                                                                │
+│  💭 Now I'll add a new function to utils.py.                   │
+│                                                                │
+│  🔧 file_edit(path="src/utils.py", old_str="def helper():",    │
+│               new_str="def helper():\n    return 42\n\n\ndef new_func():") │
+│                                                                │
+│  📊 --- a/src/utils.py\n+++ b/src/utils.py\n@@ -1,2 +1,5 @@\n │
+│   def helper():\n+    return 42\n+\n+def new_func():            │
+│                                                                │
+│  Assistant: Found 3 Python files. Read main.py and added       │
+│  new_func() to utils.py.                                       │
+│                                                                │
+│  > _                                                           │
+└────────────────────────────────────────────────────────────────┘
+```
+ 
+**Key Features:**
+- 💭 **Thinking** — Visible chain-of-thought reasoning from the agent
+- 🔧 **Tool calls** — See which file tools the agent uses with arguments
+- 📊 **Tool results** — Tool outputs displayed inline with diff highlighting for edits
+- 💬 **Streaming answers** — Final response streams token-by-token
+- 🧠 **Context preservation** — Multi-turn conversations via LangGraph checkpointer
+- 🛑 **Non-blocking UI** — Agent runs on background thread; `Esc`/`q` always responsive
+- 🔒 **Sandbox-rooted** — All file operations confined to session working directory
+ 
+**Built-in Tools:**
+| Tool | Description |
+|------|-------------|
+| `file_search` | Glob pattern file search within sandbox |
+| `file_read` | Read file with optional line range |
+| `file_edit` | Precise edit (old_str must match exactly once) |
+| `file_list` | List directory contents (recursive optional) |
+| `file_create` | Create new file with content |
+ 
+**Architecture:**
+- **Model**: `CodingAgentService` wraps `langchain.agents.create_agent` with 5 file tools + `InMemorySaver` checkpointer
+- **Controller**: `CodingController` implements `ICodingViewPartner`; spawns daemon worker thread for agent streaming
+- **View**: `CodingTUIScreen` extends `BaseAgentXScreen`; displays thinking/tool/answer blocks with diff highlighting
+- **Integration**: Added `d` binding + 💻 Coding button to Main screen; MenuGrid updated to 8 buttons
+ 
+**Key Bindings:**
+| Key | Action |
+|-----|--------|
+| `d` | Open Coding screen |
+| `Ctrl+Enter` | Send message |
+| `Ctrl+N` | New conversation |
+| `Esc` / `q` | Return to Main (cancels running agent) |
+ 
+---
+ 
 ### 🎬 Agent Demo (feature_010)
 
 Built-in demo scenarios that seed the agent sandbox with files, goals, and policies — perfect for exploring the agent cycle without configuration.
@@ -944,6 +1021,7 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_014**: Non-blocking TUI runner (daemon thread + queue poll, no UI freeze)
 - ✅ **feature_016**: TDD enforcement (Kent Beck Red→Green→Refactor cycle, two-hats gate, AST analysis)
 - ✅ **feature_018**: ReAct chat screen (Reasoning + Acting with visible thinking, tool calls, streaming)
+- ✅ **feature_019**: Coding Agent screen (File system tools: search, read, edit, list, create with diff highlighting)
 
 ### Pending
 - 🔲 **feature_001**: Session/user objectives driven by Petri Nets

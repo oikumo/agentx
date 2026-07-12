@@ -312,10 +312,10 @@ class TestWidgets:
         from textual.widgets import Button
 
         items = list(MenuGrid().compose())
-        assert len(items) == 7
+        assert len(items) == 8
         assert all(isinstance(i, Button) for i in items)
         ids = [b.id for b in items]
-        assert "btn-chat" in ids and "btn-rag" in ids and "btn-models" in ids and "btn-react" in ids
+        assert "btn-chat" in ids and "btn-rag" in ids and "btn-models" in ids and "btn-react" in ids and "btn-coding" in ids
 
     def test_command_input_compose(self):
         items = list(CommandInput().compose())

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from agentx.agent.interfaces import IAgentViewPartner
     from agentx.ui.screens.models.models_controller import ModelsController
     from agentx.ui.screens.react.react_controller import ReactController
+    from agentx.ui.tui.screens.coding.coding_controller import CodingController
 
 
 class MainController(IMainViewPartner):
@@ -38,6 +39,7 @@ class MainController(IMainViewPartner):
         self._fast_agent_controller: AgentController | None = None
         self._models_controller: "ModelsController | None" = None
         self._react_controller: "ReactController | None" = None
+        self._coding_controller: "CodingController | None" = None
         self.load_commands()
 
     def load_commands(self):
@@ -215,6 +217,22 @@ class MainController(IMainViewPartner):
     def get_react_controller(self) -> "ReactController | None":
         """Get the ReAct controller for screen connection."""
         return self._react_controller
+
+    def show_coding(self) -> None:
+        """Create and wire a CodingController for the Coding screen.
+
+        Reuses an already-wired controller (C5 pattern) so the conversation
+        survives a close/reopen.
+        """
+        if self._coding_controller is not None:
+            return
+        from agentx.ui.tui.screens.coding.coding_controller import CodingController
+
+        self._coding_controller = CodingController()
+
+    def get_coding_controller(self) -> "CodingController | None":
+        """Get the Coding controller for screen connection."""
+        return self._coding_controller
 
     def print_message(self, message: str):
         self.view.print_message(message)

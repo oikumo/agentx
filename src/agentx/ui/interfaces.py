@@ -304,3 +304,53 @@ class IReactViewPartner(ABC):
     def start_new_conversation(self) -> None:
         """Start a new conversation (reset thread)."""
         pass
+
+
+class ICodingViewPartner(ABC):
+    """Abstract partner for Coding View (implemented by CodingController).
+
+    This is the interface the TUI View calls to interact with the Controller.
+    The View receives this via constructor injection and should type-hint it
+    as ``Any`` (duck-typed) to avoid a metaclass conflict with Textual's
+    Screen. ``register_partner`` virtually registers the screen as a
+    subclass of this ABC.
+    """
+
+    @abstractmethod
+    def send_message(self, user_message: str) -> bool:
+        """Send a user message to the Coding agent.
+
+        Args:
+            user_message: The user's input text.
+
+        Returns:
+            True if the message was accepted (agent started), False if the
+            agent is already running.
+        """
+        pass
+
+    @abstractmethod
+    def cancel(self) -> None:
+        """Cancel an in-progress agent run."""
+        pass
+
+    @property
+    @abstractmethod
+    def is_running(self) -> bool:
+        """Whether the agent is currently running."""
+        pass
+
+    @abstractmethod
+    def get_history(self) -> list:
+        """Get the conversation message history."""
+        pass
+
+    @abstractmethod
+    def close(self) -> None:
+        """Close the controller and cancel any running agent."""
+        pass
+
+    @abstractmethod
+    def start_new_conversation(self) -> None:
+        """Start a new conversation (reset thread)."""
+        pass

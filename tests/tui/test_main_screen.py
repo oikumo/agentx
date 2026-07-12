@@ -161,12 +161,12 @@ class TestWelcomePanel:
 # ===================================================================
 
 class TestMenuGrid:
-    """Menu grid contains 7 action buttons (Chat, RAG, Fast Agent, Advanced Agent, Models, ReAct, Help)."""
+    """Menu grid contains 7 action buttons (Chat, RAG, Fast Agent, Advanced Agent, Models, ReAct, Coding, Help)."""
 
     def test_compose_yields_seven_buttons(self):
         grid = MenuGrid()
         composed = list(grid.compose())
-        assert len(composed) == 7
+        assert len(composed) == 8
 
         from textual.widgets import Button
         assert all(isinstance(w, Button) for w in composed)
@@ -175,7 +175,7 @@ class TestMenuGrid:
         grid = MenuGrid()
         composed = list(grid.compose())
         ids = [b.id for b in composed]
-        assert ids == ["btn-chat", "btn-rag", "btn-fast-agent", "btn-agent", "btn-models", "btn-react", "btn-help"]
+        assert ids == ["btn-chat", "btn-rag", "btn-fast-agent", "btn-agent", "btn-models", "btn-react", "btn-coding", "btn-help"]
 
     def test_button_variants(self):
         grid = MenuGrid()
@@ -187,7 +187,8 @@ class TestMenuGrid:
         assert composed[3].variant == "success"    # Advanced Agent
         assert composed[4].variant == "primary"    # Models
         assert composed[5].variant == "primary"    # ReAct
-        assert composed[6].variant == "default"    # Help
+        assert composed[6].variant == "success"    # Coding
+        assert composed[7].variant == "default"    # Help
 
     def test_css_grid_size(self):
         css = MenuGrid.DEFAULT_CSS
@@ -242,10 +243,10 @@ class TestCommandInput:
 # ===================================================================
 
 class TestMainTUIScreenBindings:
-    """All 9 keyboard bindings are correctly defined."""
+    """All 10 keyboard bindings are correctly defined."""
 
     def test_bindings_count(self):
-        assert len(MainTUIScreen.BINDINGS) == 9
+        assert len(MainTUIScreen.BINDINGS) == 10
 
     def test_binding_q_quit(self):
         binding = self._find_binding("q")
@@ -264,6 +265,13 @@ class TestMainTUIScreenBindings:
         assert binding.action == "open_react"
         assert binding.description == "ReAct"
         assert binding.show is True
+        assert binding.show is True
+
+    def test_binding_d_coding(self):
+        binding = self._find_binding("d")
+        assert binding is not None
+        assert binding.action == "open_coding"
+        assert binding.description == "Coding"
         assert binding.show is True
 
     def test_binding_r_rag(self):

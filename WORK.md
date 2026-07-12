@@ -107,6 +107,14 @@
     - [x] Feature: ReAct chat screen with visible thinking (💭), tool calls (🔧), tool results (📊), streaming answers; keybinding 't' / 🧠 button; LangChain create_agent with InMemorySaver checkpointer
     - [x] Verification: 879/879 pass (1 pre-existing test_llm_initialization_attempted); MVC++ 0 errors; full OMT++ cycle complete
 
+- [x] Implement feature_019.coding_agent_screen <!-- id:T-019-prio-high agent:true -->
+    - [x] Analysis: Use cases (UC-1..UC-9), class diagram, sequence diagrams, data dictionary, state diagram, NFRs, traceability
+    - [x] Design: Design class diagram (Model/Controller/View), operation specs (OP-1..OP-15), file structure, MenuGrid + keybinding integration
+    - [x] Programming (TDD): Model (coding_tools: file_search, file_read, file_edit, file_list, file_create + CodingAgentService with sandbox) -> Controller (CodingController + ICodingViewPartner ABC) -> View (CodingTUIScreen with diff highlighting) -> Integration (MainController.show_coding, MainTUIScreen.d binding + Coding button, MenuGrid 3x3 with Coding)
+    - [x] Testing: 21 model tests (coding_tools) + integration tests; full suite 910/916 (6 pre-existing); MVC++ 0 errors/33 warnings (baseline)
+    - [x] Feature: Coding Agent chat screen with file system tools -- search, read, edit, list, create; visible thinking, tool calls, tool results with diff highlighting; keybinding 'd' / Coding button; sandbox-rooted file operations; non-blocking via run_blocking
+    - [x] Verification: 72 feature tests (47 model + 17 integration + 10 MVC++); full suite 927/933 (6 pre-existing); MVC++ 0 errors/33 warnings (baseline); full OMT++ cycle complete
+
 ---
 
 ## Agent Scratchpad (auto‑managed, do not edit manually)
