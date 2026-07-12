@@ -597,6 +597,23 @@ def cmd_done(args) -> dict:
     })
 
     all_ok = suite_clean and refactor_recorded and naming_ok
+
+    # Clean up TDD snapshots for this feature's source files
+    if all_ok:
+        try:
+            test_dir = REPO_ROOT / "tests" / "features" / args.feature
+            test_files = list(test_dir.rglob("test_*.py")) if test_dir.exists() else []
+            all_targets: set[str] = set()
+            for tf in test_files:
+                all_targets.update(infer_target_src(tf))
+            for target in all_targets:
+                src_path = _resolve_src_path(target)
+                if src_path.exists():
+                    snap_file = SNAPSHOT_DIR / f"{src_path.stem}.json"
+                    if snap_file.exists():
+                        snap_file.unlink()
+        except Exception:
+            pass  # cleanup is best-effort
     if all_ok:
         return {
             "ok": True, "checklist": checklist, "coverage_gaps": [],

@@ -23,6 +23,7 @@ import { appendFileSync, mkdirSync, existsSync, readFileSync, readdirSync, write
 import { join, relative, isAbsolute, dirname } from "node:path"
 import { execFileSync } from "node:child_process"
 
+
 const EDIT_TOOLS = new Set(["edit", "write", "patch", "multiedit"])
 const VALID_TASK_TYPES = new Set([
   "bug_fix", "minor_feature", "major_feature", "new_screen", "refactor", "test", "docs",
@@ -41,7 +42,11 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   Testing: ["Analysis", "Design", "Programming", "Done"],
 }
 
+// 8-hour unlock window (shared with tdd_check.py and omt_status.ts)
+const UNLOCK_WINDOW_MS = 8 * 60 * 60 * 1000
+
 // Phase exit requirements per guide §12 — only enforced for ARTIFACT_REQUIRED task types
+const PHASE_EXIT_REQUIREMENTS: Record<string, { phase: string; patterns: string[]; description: string }[]> = {
 const PHASE_EXIT_REQUIREMENTS: Record<string, { phase: string; patterns: string[]; description: string }[]> = {
   // Analysis → Design requires: Use case, Operation list, Analysis artifacts
   Analysis: [
@@ -91,6 +96,13 @@ function resolveFeatureDir(featuresParent: string, feature: string, featureNum: 
   } catch { return null }
 }
 
+function globToRegex(pattern: string): RegExp {
+  const escaped = pattern
+    .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*");
+  return new RegExp(`^${escaped}$`);
+}
+
 // Check if required artifacts for a phase exist for a feature
 function checkPhaseExitArtifacts(repoRoot: string, feature: string, fromPhase: string): { ok: boolean; missing: string[] } {
   if (!feature) return { ok: true, missing: [] }
@@ -124,7 +136,8 @@ function checkPhaseExitArtifacts(repoRoot: string, feature: string, fromPhase: s
       try {
         if (dir) {
           const files = readdirSync(dir, { recursive: true })
-          exists = files.some(f => new RegExp(pattern.replace("*", ".*")).test(f))
+          const regex = globToRegex(pattern)
+          exists = files.some(f => regex.test(f))
           if (exists) break
         }
       } catch { /* ignore */ }
@@ -505,7 +518,10 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
           }
           return msg + `Write tests or call omt_skip{reason:"..."} to override.`
         }
-      } catch { /* fail open */ }
+      } catch (e) {
+        safeLog("warn", `TDD validate-exit failed: ${e?.message || e}`)
+        return `⛔ TDD validate-exit error: ${e?.message || e}. Phase completion blocked.`
+      }
 
       writeLedger({
         kind: "complete",
@@ -773,8 +789,9 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
       } catch (e) {
         if (e instanceof OmtBlock) throw e
         safeLog("warn", "TDD after-edit check failed: " + (e?.message || e))
+      } finally {
+        refactorSnapshots.delete(abs)
       }
-      refactorSnapshots.delete(abs)
     },
 
     event: async ({ event }) => {
