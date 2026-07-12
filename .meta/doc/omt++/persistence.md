@@ -1,26 +1,18 @@
-# Persistence
+# persistence.md — Databases & Filesystem (compressed)
 
-> **Scope:** the databases, their schemas, the no-ORM/DP convention, and the
-> filesystem layout.
-
----
-
-## 1. Convention: stdlib sqlite3, no ORM
-
-agentx uses **only Python's stdlib `sqlite3`** for relational persistence. There
-is **no SQLAlchemy, no Alembic, no migrations framework**. This is a deliberate
-architectural decision (recorded in `WORK.md`):
-
-- DDL is idempotent: `CREATE TABLE IF NOT EXISTS` (defined as string constants
-  in `Table*` classes). Creating the DB on first use is enough.
-- All SQL lives in `DP_*` / `*Database` classes (the Data Partner pattern) —
-  never in controllers or views. Enforced by `mvc_check.py` (`SQL_OUTSIDE_DP`).
-- Schemas are simple enough that versioned migrations are not needed; the
-  `config_version` field on `SessionSnapshot` tracks agent config shape.
+**SCOPE:** DBs, schemas, no-ORM/DP convention, filesystem layout.
 
 ---
 
-## 2. The three databases
+## 1. Convention: stdlib sqlite3, No ORM
+- **Only** Python stdlib `sqlite3`. No SQLAlchemy, Alembic, migrations framework. Architectural decision (in `WORK.md`).
+- DDL = idempotent `CREATE TABLE IF NOT EXISTS` (string constants in `Table*` classes). DB created on first use.
+- All SQL in `DP_*` / `*Database` classes — never in controllers/views. Enforced by `mvc_check.py` (`SQL_OUTSIDE_DP`).
+- Schemas simple; versioned migrations not needed. `config_version` on `SessionSnapshot` tracks agent config shape.
+
+---
+
+## 2. The Three Databases
 
 | DB file | Created by | Lives under | Tables |
 |---------|-----------|-------------|--------|
@@ -28,66 +20,59 @@ architectural decision (recorded in `WORK.md`):
 | `rag.db` | `RagDatabase` (`DP_Rag`) | `<session_dir>/rag/<repo_id>/rag.db` | `ingestion` |
 | `agent_session.db` | `SessionDatabase` (agent) | `<session_dir>/agent_session.db` (or `./`) | `agents`, `session_snapshots`, `memory_entries`, `policy_rules`, `goals`, `reflection_entries` |
 
-> **Naming collision note:** both the session subsystem and the agent subsystem
-> define a class named `SessionDatabase`. They are distinct classes in
-> different modules:
+> **Naming collision:** Both session and agent subsystems define `SessionDatabase` — distinct classes in different modules:
 > - `model/session/session_db.py` → session history DB
 > - `agent/persistence/agent_db.py` → agent snapshot/repo DB
 
 ---
 
-## 3. Agent DB schema (`agent_session.db`)
+## 3. Agent DB Schema (`agent_session.db`)
 
-Defined in `agent/persistence/schema_db.py` as `Table*` classes; repositories
-in `agent/persistence/repositories_db.py`.
+Defined in `agent/persistence/schema_db.py` (`Table*` classes); repos in `agent/persistence/repositories_db.py`.
 
 | Table | Purpose | Key columns |
 |-------|---------|-------------|
-| `agents` | one row per agent instance | `agent_id`, `name`, `autonomy_level`, `config_json`, `created_at` |
-| `session_snapshots` | serialised `SessionSnapshot` rows | `snapshot_id`, `agent_id`, `config_version`, `volatility_data` (JSON), `policy_store` (JSON), `goal_tree` (JSON), `reflection_log_position`, `created_at` |
-| `memory_entries` | persistent memory tier (volatile is in-memory) | `agent_id`, `entry_id`, `tier`, `content` (JSON), `metadata` (JSON) |
-| `policy_rules` | policy rule store (N3: source of truth) | `agent_id`, `rule_id`, `condition_expr`, `action` (JSON), `priority`, `enabled`, `metadata` (JSON) |
-| `goals` | goal tree nodes | `agent_id`, `goal_id`, `parent`, `description`, `type`, `status`, `priority`, `success_criteria` (JSON) |
-| `reflection_entries` | reflection log | `agent_id`, `entry_id`, `trace` (JSON), `critique` (JSON), `proposals` (JSON), `created_at` |
+| `agents` | One row per agent instance | `agent_id`, `name`, `autonomy_level`, `config_json`, `created_at` |
+| `session_snapshots` | Serialised `SessionSnapshot` rows | `snapshot_id`, `agent_id`, `config_version`, `volatility_data` (JSON), `policy_store` (JSON), `goal_tree` (JSON), `reflection_log_position`, `created_at` |
+| `memory_entries` | Persistent memory tier (volatile = in-memory) | `agent_id`, `entry_id`, `tier`, `content` (JSON), `metadata` (JSON) |
+| `policy_rules` | Policy rule store (N3: source of truth) | `agent_id`, `rule_id`, `condition_expr`, `action` (JSON), `priority`, `enabled`, `metadata` (JSON) |
+| `goals` | Goal tree nodes | `agent_id`, `goal_id`, `parent`, `description`, `type`, `status`, `priority`, `success_criteria` (JSON) |
+| `reflection_entries` | Reflection log | `agent_id`, `entry_id`, `trace` (JSON), `critique` (JSON), `proposals` (JSON), `created_at` |
 
-**Snapshot model:** `Agent.persist()` writes a `SessionSnapshot` row capturing
-the *full* volatile state (config, volatile memory, policy store, goal-tree
-root, reflection-log position). `resume_session(id)` rebuilds in-memory state
-from it. See [data_flow.md](data_flow.md) §9.
+**Snapshot model:** `Agent.persist()` writes `SessionSnapshot` capturing full volatile state (config, volatile memory, policy store, goal-tree root, reflection-log position). `resume_session(id)` rebuilds in-memory state from it. See data_flow.md §9.
 
 ---
 
-## 4. Session DB schema (`session.db`)
+## 4. Session DB Schema (`session.db`)
 
 Defined in `model/session/session_db.py` (`TableHistory`, `TableUser`).
 
 | Table | Purpose | Columns |
 |-------|---------|---------|
-| `history` | command history (per session) | `id` PK, `command`, `created_at` |
-| `users` | (reserved/legacy) | `id` PK, `name`, `age` |
+| `history` | Command history (per session) | `id` PK, `command`, `created_at` |
+| `users` | Reserved/legacy | `id` PK, `name`, `age` |
 
-`SessionDatabase._select_all` is guarded by an allowlist `{history, users}`.
+`SessionDatabase._select_all` guarded by allowlist `{history, users}`.
 
 ---
 
-## 5. RAG DB schema (`rag.db`)
+## 5. RAG DB Schema (`rag.db`)
 
 Defined in `model/rag/rag_db.py` (`TableIngestion`).
 
 | Table | Purpose | Columns |
 |-------|---------|---------|
-| `ingestion` | ingestion records | `id` PK, `vector_db_path`, `created_at` |
+| `ingestion` | Ingestion records | `id` PK, `vector_db_path`, `created_at` |
 
-The bulk of RAG data is **not** in sqlite — it's in the Chroma vector store
-(`<repo>/db/`) and the JSONL document store (`<repo>/docs/`).
+**Bulk of RAG data NOT in sqlite** — it's in Chroma vector store (`<repo>/db/`) and JSONL document store (`<repo>/docs/`).
 
 ---
 
-## 6. Filesystem layout
+## 6. Filesystem Layout
 
 ```
 local_sessions/                       # SESSION_DEFAULT_BASE_DIRECTORY
-└── current/                          # the active session (SESSION_CURRENT_NAME)
+└── current/                          # active session (SESSION_CURRENT_NAME)
     ├── session.db                    # session history
     ├── agent_session.db              # agent snapshots + repos (if agent opened)
     ├── current_backup_<timestamp>/   # created on "new [name]"
@@ -98,19 +83,16 @@ local_sessions/                       # SESSION_DEFAULT_BASE_DIRECTORY
             └── docs/                 # ingested documents (JSONL)
 ```
 
-- Session dirs may be timestamped (`<timestamp>_<name>`) or plain (`<name>`),
-  via `utils.create_directory_{with,without}_timestamp`.
-- Deletion is guarded by `DIRECTORIES_DELETION_ALLOWED = ["local_sessions"]`
-  (`utils.is_directory_allowed_to_deletion`).
-- The agent's `sandbox_root` (for `FileSystemTool`) defaults to the session
-  directory.
+- Session dirs: timestamped (`<timestamp>_<name>`) or plain (`<name>`), via `utils.create_directory_{with,without}_timestamp`.
+- Deletion guarded by `DIRECTORIES_DELETION_ALLOWED = ["local_sessions"]` (`utils.is_directory_allowed_to_deletion`).
+- Agent's `sandbox_root` (for `FileSystemTool`) defaults to session directory.
 
 ---
 
-## 7. DP class reference
+## 7. DP Class Reference
 
-| DP class | File | DB | Methods (representative) |
-|----------|------|----|--------------------------|
+| DP class | File | DB | Representative methods |
+|----------|------|----|------------------------|
 | `SessionDatabase` (session) | `model/session/session_db.py` | `session.db` | `create_if_not_exists`, `insert_history_entry`, `select_history_entry` |
 | `RagDatabase` | `model/rag/rag_db.py` | `rag.db` | `create_if_not_exists`, `insert_ingestion_entry`, `select_ingestion_entries` |
 | `SessionDatabase` (agent) | `agent/persistence/agent_db.py` | `agent_session.db` | `save_snapshot_with_retry`, `load_snapshot`, `load_latest_snapshot`, `_persist_agent_row` |

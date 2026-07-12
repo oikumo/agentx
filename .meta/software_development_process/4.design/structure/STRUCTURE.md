@@ -1,297 +1,82 @@
-# Application Structure Overview
+# STRUCTURE.md — Application Architecture (compressed)
 
-**Feature:** agentx core architecture  
-**Date:** 2026-06-27  
-**Phase:** Design  
-**Status:** Current
+**ARCH:** MVC++ + Abstract Partner + Command + DP
+**LAYERS:**
+```
+entry: main.py → ProviderRegistry → [TUIProvider|ConsoleProvider]
+ctrl:  ui/screens/*/  implements: [IMainView|IRagView|IChatView]Partner
+view:  ui/screens/*/ + ui/tui/adapters/  implements: [IMainView|IRagView|IChatView]
+iface: ui/interfaces.py (ABCs) + providers.py
+model: model/{ai,rag,session}/  NO ui imports
+dp:    model/*/*_db.py (DP_Session, DP_Rag) — ALL SQL here
+```
+**DI:** ProviderRegistry.get("tui"|"console") → create_*_view(controller)
+**SESSION:** local_sessions/<ts>_<name>/{session.db, rag/<repo>/{db,docs}}
+**TESTS:** tests/{unit/{model,ui}, automated/tui/} — 205+ isolated
 
 ---
 
-## 1. Overview
+## Layer Rules (Hard)
 
-This document describes the overall architecture of the agentx application, following the MVC++ (Model-View-Controller) pattern with dependency inversion through Abstract Partners.
+| Layer | Imports Model | Imports View | Imports Controller | Contains UI | Contains Biz Logic | Contains SQL |
+|-------|---------------|--------------|-------------------|-------------|-------------------|--------------|
+| Controller | ✅ | ✅ | N/A | ❌ | Orchestration only | ❌ |
+| View | ❌ | N/A | ❌ (via Partner ABC) | ✅ | ❌ | ❌ |
+| Model | N/A | ❌ | ❌ | ❌ | ✅ Core | ✅ DP only |
 
 ---
 
-## 2. High-Level Architecture
+## Key Patterns
+
+| Pattern | Rule |
+|---------|------|
+| **Abstract Partner** | `I*View(ABC)` in view file → `*Controller implements I*ViewPartner` |
+| **Command (main only)** | `Command(ABC, key, controller).run(args)` — dispatch via `commands[key]` |
+| **Data Provider** | `DP_*{insert,load,update,delete}` — all SQL in `*_db.py` |
+| **Entity CRUD** | `create/load/update/delete` on persistent objects |
+
+---
+
+## Directory Map (src/agentx/)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      ENTRY POINT                                 │
-│  main.py — Bootstrap, provider selection, lifecycle              │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    CONTROLLER LAYER                              │
-│  (ui/screens/*/ — Command handling, state management)           │
-│                                                                  │
-│  MainController ────┬──── RagController ────┬──── ChatController│
-│                     │                       │                   │
-│  Implements:        │                       │                   │
-│  - IMainViewPartner │                       │                   │
-│  - IRagViewPartner  │                       │                   │
-│  - IChatViewPartner │                       │                   │
-└─────────────────────┼───────────────────────┼───────────────────┘
-                      │                       │
-                      │ Uses                  │ Uses
-                      ▼                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     INTERFACE LAYER                              │
-│  (ui/interfaces.py — Abstract Base Classes)                     │
-│                                                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │ IMainView    │  │ IRagView     │  │ IChatView    │          │
-│  │ (ABC)        │  │ (ABC)        │  │ (ABC)        │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────┐           │
-│  │ IUIProvider (ABC) — Abstract Factory             │           │
-│  │  - create_main_view(), create_rag_view(), ...    │           │
-│  └──────────────────────────────────────────────────┘           │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                │ Implemented By
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      VIEW LAYER                                  │
-│  (ui/screens/*/, ui/tui/adapters/ — UI rendering)              │
-│                                                                  │
-│  Console Views:                    TUI Views (Textual):         │
-│  - MainView                        - TUIAdapter                 │
-│  - RagView                         - TUIRagAdapter              │
-│  - ChatView                        - TUIChatAdapter             │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                │ Depends On
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     MODEL LAYER                                  │
-│  (model/ — Business logic, data, external services)            │
-│                                                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
-│  │ AI Module   │  │ RAG Module  │  │ Session     │             │
-│  │ (LLM prov.) │  │ (Vector DB) │  │ (History)   │             │
-│  └─────────────┘  └─────────────┘  └─────────────┘             │
-└─────────────────────────────────────────────────────────────────┘
+main.py
+model/
+  ai/          # LLM providers (AIService facade)
+  rag/         # Rag, RagRepository, query/, rag_db.py
+  session/     # Session, SessionManager, session_db.py
+ui/
+  interfaces.py    # IMainView, IRagView, IChatView, IUIProvider (all ABC)
+  providers.py     # ProviderRegistry
+  common/          # Shared UI (ui_console.py, input/*)
+  screens/
+    main/   main_controller.py, main_view.py, commands/
+    chat/   chat_controller.py, chat_view.py
+    rag/    rag_controller.py, rag_view.py, rag_chat_*, rag_repo_selection_*
+  tui/
+    adapters/      # TUIAdapter, TUIRagAdapter, TUIChatAdapter
 ```
 
 ---
 
-## 3. Directory Structure (Simplified)
+## Config & Enforcement
 
-```
-agentx/
-├── src/agentx/
-│   ├── main.py                 # Entry point
-│   ├── model/                  # Model layer (business logic)
-│   │   ├── ai/                 # LLM providers (OpenAI, Ollama, etc.)
-│   │   ├── rag/                # RAG orchestration, vector stores
-│   │   └── session/            # Session management, history
-│   └── ui/                     # View + Controller layers
-│       ├── interfaces.py       # Abstract Base Classes
-│       ├── providers.py        # Provider registry
-│       ├── common/             # Shared UI components
-│       ├── screens/            # Screen MVC triads (main, chat, rag)
-│       └── tui/                # Textual TUI implementation
-├── tests/                      # Unit tests + automated TUI tests
-├── local_sessions/             # Runtime data (gitignored)
-├── .meta/                      # OMT++ documentation artifacts
-├── scripts/omt/                # OMT++ tooling (linter, scaffolder)
-└── .opencode/                  # opencode plugin enforcement
-```
+| File | Role |
+|------|------|
+| `opencode.jsonc` | Deny: git commit/push, bare python/pip/pytest, .env, README/uv.lock/LICENSE |
+| `.opencode/plugin/omt_enforcer.ts` | Gate: `omt_phase` before src/, MVC++ lint after, TDD two-hats |
+| `AGENTS.md` | Agent rules |
+| `.env` | Secrets (gitignored) |
 
 ---
 
-## 4. Layer Responsibilities
-
-### 4.1 Model Layer (`model/`)
-
-**Responsibility:** Business logic, data persistence, external service integration.
-
-**Key Principles:**
-- NO imports from `ui` module (strict layer isolation)
-- SQL operations confined to `*_db.py` (Data Provider pattern)
-- Entities implement CRUD lifecycle (`create`/`load`/`update`/`delete`)
-
-**Modules:**
-
-| Module | Responsibility |
-|--------|----------------|
-| `ai/` | LLM provider abstraction and factory (AIService) |
-| `rag/` | RAG orchestration, vector store, web ingestion |
-| `session/` | Session lifecycle, SQLite history persistence |
-
-### 4.2 View Layer (`ui/screens/`, `ui/tui/`)
-
-**Responsibility:** User interface rendering, input capture.
-
-**Key Principles:**
-- NO business logic (delegates to controller)
-- NO direct model access
-- Implements interfaces from `interfaces.py`
-
-**Implementations:**
-- **Console:** Traditional ANSI terminal (`*_view.py`)
-- **TUI:** Textual framework adapters (`tui/adapters/`)
-
-### 4.3 Controller Layer (`ui/screens/*/_controller.py`)
-
-**Responsibility:** Command handling, state management, view-model mediation.
-
-**Key Principles:**
-- Implements Abstract Partner interfaces
-- NO UI rendering code (no `print`, `console`, Textual widgets)
-- Main screen uses Command pattern for dispatch
+## OMT++ Tools
+`omt_phase` · `omt_skip` · `omt_complete` · `omt_testlist` · `omt_red` · `omt_green` · `omt_refactor` · `omt_done` · `omt_status`
+`mvc_check.py` · `new_feature.py` · `tdd_check.py`
 
 ---
 
-## 5. Dependency Injection (Provider Pattern)
-
-UI providers enable runtime selection between Console and TUI implementations:
-
-```
-┌──────────────────┐
-│  main.py         │
-│  (Entry Point)   │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ ProviderRegistry │
-│  - get("tui")    │
-│  - get("console")│
-└────────┬─────────┘
-         │
-         ├─────────────┐
-         ▼             ▼
-┌────────────────┐ ┌────────────────┐
-│  TUIProvider   │ │ ConsoleProvider│
-│  (Textual)     │ │ (ANSI console) │
-└────────────────┘ └────────────────┘
-```
-
-**Usage:**
-```python
-ui_provider = ProviderRegistry.get_default()
-ui_provider.initialize()
-main_view = ui_provider.create_main_view(main_controller)
-```
-
----
-
-## 6. Key Design Patterns
-
-### 6.1 Abstract Partner Pattern
-
-All view-controller partnerships use Abstract Base Classes:
-
-| Interface | Implemented By | Partner |
-|-----------|----------------|---------|
-| `IMainView` | `MainView`, `TUIAdapter` | `MainController` |
-| `IRagView` | `RagView`, `TUIRagAdapter` | `RagController` |
-| `IChatView` | `ChatView`, `TUIChatAdapter` | `ChatController` |
-
-### 6.2 Command Pattern (Main Screen Only)
-
-Commands encapsulate user actions at the main screen:
-
-```python
-class Command(ABC):
-    def __init__(self, key: str, controller): ...
-    @abstractmethod
-    def run(self, arguments: list[str]) -> None: ...
-```
-
-**Built-in Commands:** `help`, `quit`, `clear`, `chat`, `rag`, `new`, `history`, `sum`, `version`
-
-### 6.3 Data Provider (DP) Pattern
-
-All SQL operations encapsulated in `DP_*` classes:
-
-| File | Contains |
-|------|----------|
-| `model/session/session_db.py` | `DP_Session` — session CRUD |
-| `model/rag/rag_db.py` | `DP_Rag` — RAG CRUD |
-
----
-
-## 7. Session & RAG Data Flow
-
-### 7.1 Session Storage
-
-```
-local_sessions/
-└── <timestamp>_<name>/
-    ├── session.db      # SQLite: command_history
-    └── rag/
-        └── <repo_id>/
-            ├── db/     # Chroma vector store
-            └── docs/   # Ingested documents
-```
-
-### 7.2 RAG Architecture
-
-```
-┌─────────────────┐
-│ RagController   │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ RagRepository   │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Rag             │
-│  - ingest()     │
-│  - query()      │
-└────────┬────────┘
-         │
-    ┌────┴────┐
-    ▼         ▼
-┌───────┐ ┌──────────┐
-│Vector │ │ Web      │
-│Store  │ │ Ingestion│
-└───────┘ └──────────┘
-```
-
----
-
-## 8. Testing Structure
-
-```
-tests/
-├── unit/                 # Isolated unit tests (mocked)
-│   ├── model/            # AI, RAG, session tests
-│   └── ui/               # Controller/view tests
-└── automated/
-    └── tui/              # Textual Pilot E2E tests
-```
-
-**Characteristics:** 205+ tests, all isolated, no external dependencies.
-
----
-
-## 9. Configuration & Enforcement
-
-| File | Purpose |
-|------|---------|
-| `opencode.jsonc` | Permission gates (deny git commit, bare python) |
-| `.opencode/plugin/omt_enforcer.ts` | OMT++ process gate |
-| `AGENTS.md` | Agent instructions |
-| `.env` | API keys (gitignored) |
-
-**OMT++ Tools:**
-- `omt_phase` — Declare phase before `src/` edits
-- `uv run scripts/omt/mvc_check.py` — Architecture linter
-- `uv run scripts/omt/new_feature.py` — Feature scaffolder
-
----
-
-## 10. Related Documents
-
-- **Behavior Overview:** `../behavior/BEHAVIOR.md`
-- **OMT++ Methodology:** `../../omt_agent_guide.md`
-- **Feature Designs:** `./features/feature_*/design_*.md`
+## Refs
+- Behavior: `../behavior/BEHAVIOR.md`
+- Methodology: `../../omt_agent_guide.md`
+- Feature designs: `./features/feature_*/design_*.md`

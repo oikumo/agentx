@@ -1,229 +1,138 @@
-# Architecture
+# architecture.md — MVC++ Architecture (compressed)
 
-> **Scope:** MVC++ layering, dependency rules, the provider/adapter pattern,
-> core design patterns, tech stack, and configuration/enforcement.
-> **See also:** [subsystems.md](subsystems.md) for per-subsystem internals.
+**SCOPE:** Layering, dependency rules, patterns, stack, enforcement.
 
 ---
 
-## 1. MVC++ — the core architecture
-
-Every feature is split into exactly three layers. No mixing.
+## 1. MVC++ — Layer Rules (Hard)
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                    CONTROLLER                         │
-│  Application logic, orchestration, command dispatch   │
-│  Knows: View + Model        Seen by: View (Partner)   │
-├──────────────────────────────────────────────────────┤
-│                       VIEW                            │
-│  UI rendering, input capture                          │
-│  Knows: Controller (via Abstract Partner only)        │
-├──────────────────────────────────────────────────────┤
-│                      MODEL                            │
-│  Domain logic, business rules, data persistence       │
-│  Knows: nothing about UI layers                       │
-└──────────────────────────────────────────────────────┘
+CONTROLLER: App logic, orchestration, dispatch | knows: View+Model | seen by: View(Partner)
+VIEW:       UI render, input capture           | knows: Controller(Partner only)
+MODEL:      Domain logic, biz rules, data      | knows: nothing about UI
 ```
-
-### Layer dependency rules (absolute)
 
 | What | Controller | View | Model |
 |------|-----------|------|-------|
-| Imports Model? | ✅ Yes | ❌ Never | N/A |
-| Imports View? | ✅ Yes | N/A | ❌ Never |
-| Imports Controller? | N/A | ❌ Only via Abstract Partner | ❌ Never |
-| Contains UI code? | ❌ Never | ✅ Yes | ❌ Never |
-| Contains business logic? | ✅ Orchestration only | ❌ Never | ✅ Core logic |
-| Contains SQL? | ❌ Never | ❌ Never | ✅ In `DP_*` classes only |
+| Imports Model | ✅ | ❌ | N/A |
+| Imports View | ✅ | N/A | ❌ |
+| Imports Controller | N/A | ❌ (Partner only) | ❌ |
+| Contains UI code | ❌ | ✅ | ❌ |
+| Contains biz logic | Orchestration | ❌ | ✅ Core |
+| Contains SQL | ❌ | ❌ | ✅ DP only |
 
-> Enforced by `uv run scripts/omt/mvc_check.py` (0 errors is the baseline).
-
-### File naming
-
-```
-<layer>/<screen>/<screen>_<layer>.py
-ui/screens/main/main_controller.py
-ui/screens/main/main_view.py
-model/session/session.py            # model files omit the suffix
-```
+> Enforced: `uv run scripts/omt/mvc_check.py` (0 errors baseline)
 
 ---
 
-## 2. Abstract Partner pattern
-
-The **only** way a View talks to its Controller. A View never constructs or
-imports a concrete controller — it receives an `ABC` partner in its constructor.
+## 2. Abstract Partner Pattern
 
 ```
-View ──calls──▶ I*ViewPartner (ABC) ◀──implements── Controller
-Controller ──calls──▶ I*View (ABC) ◀──implements── View
+View ──calls──▶ I*ViewPartner(ABC) ◀──implements── Controller
+Controller ──calls──▶ I*View(ABC) ◀──implements── View
 ```
 
-**Rules:**
-1. Always `ABC` with `@abstractmethod` (never a plain class).
-2. Name starts with `I`: `IMainViewPartner`, `IChatViewPartner`, `IRagViewPartner`.
-3. The View interface (`I*View`) and the partner interface (`I*ViewPartner`)
-   are both defined in `src/agentx/ui/interfaces.py`.
-4. Controller implements `I*ViewPartner`; View implements `I*View`.
+**Rules:** ABC + @abstractmethod only | Name: `I*ViewPartner` | Defined in `ui/interfaces.py` / `agent/interfaces.py`
 
-**Screen partner interfaces** (`src/agentx/ui/interfaces.py`):
-
-| Interface | Implemented by (Controller) | View interface |
-|-----------|------------------------------|----------------|
+| Interface | Controller | View |
+|-----------|------------|------|
 | `IMainViewPartner` | `MainController` | `IMainView` |
 | `IChatViewPartner` | `ChatController` | `IChatView` |
 | `IRagViewPartner` | `RagController` | `IRagView` |
+| `IAgentViewPartner` | `AgentController` | `IAgentView` |
+| ... | 7 more in `agent/interfaces.py` |
 
-**Agent subsystem partners** (`src/agentx/agent/interfaces.py`):
-`IAgentViewPartner`, `IAgentModelPartner`, `IAIServicePartner`,
-`IMemoryStorePartner`, `IPolicyStorePartner`, `IToolRegistryPartner`,
-`IGoalManager`, `IPersistencePartner`, `ISafetyEvaluator`.
-
-> The agent's Textual screens (`AgentTUIScreen`, `AgentDemoScreen`) and the
-> Fast Agent's no-op partner (`FastAgentTUIView`) are registered as
-> **virtual subclasses** of `IAgentViewPartner` (avoids the Textual/abc
-> metaclass conflict) — see `agent_screen.py` / `demo_screen.py` /
-> `fast_agent_view.py` footers.
+> Textual screens: register as virtual subclass: `IAgentViewPartner.register(MyScreen)`
 
 ---
 
-## 2.5. Fast Agent — modal dialog UX (feature_011)
-
-The **Fast Agent** (`feature_011.fast_agent`) is a new, streamlined entry point
-to the existing feature_007 `Agent` facade. It is the **first use of
-`textual.screen.ModalScreen`** in the codebase.
+## 2.5. Fast Agent (feature_011) — Modal UX
 
 | Aspect | Detail |
 |--------|--------|
-| Entry point | Main menu `f` key / `⚡ Fast Agent` button |
-| UX model | Stack of `ModalScreen`s: `GoalModal` → `RunningModal` → `ReflectionModal` → `ResultModal` |
-| Engine | Reuses feature_007 `Agent` + `AgentController` (zero Model changes) |
-| Auto-run | `call_after_refresh` chain — cycles run back-to-back; pauses only on reflection proposals |
-| Goal completion | Manual (`SuccessCriteria(kind="manual")`); user presses Stop when "done enough" |
-| No-op partner | `FastAgentTUIView` swallows controller UI callbacks during `run_cycle()`; modal flow queries `get_cycle_summary()` instead |
-| Existing Agent button | Relabeled `⚙️ Advanced Agent`; unchanged behaviour |
-
-The Fast Agent is a **View-only addition** (3 new View files, 4 edited files,
-44 tests). It demonstrates the extensibility of the MVC++ agent subsystem.
+| Entry | `f` key / `⚡ Fast Agent` button |
+| Flow | GoalModal → RunningModal → ReflectionModal → ResultModal (ModalScreen stack) |
+| Engine | Reuses feature_007 `Agent` + `AgentController` |
+| Auto-run | `call_after_refresh` chain; pauses only on reflection proposals |
+| Goal completion | Manual (`SuccessCriteria(kind="manual")`) |
+| No-op partner | `FastAgentTUIView` swallows UI callbacks during `run_cycle()` |
+| Existing Agent | Relabeled `⚙️ Advanced Agent` |
 
 ---
 
-## 3. Provider / Adapter pattern (Console ⇄ TUI)
-
-A **Strategy + Abstract Factory** lets the app switch between a Console UI and a
-rich Textual TUI at boot. Controllers depend only on `IUIProvider` / `I*View`;
-the concrete backend is chosen at startup.
+## 3. Provider / Adapter Pattern (Console ⇄ TUI)
 
 ```
 main.py → ProviderRegistry.get_default()
-              │
-      ┌───────┴───────┐
-      ▼               ▼
- TUIProvider     ConsoleProvider      (both implement IUIProvider)
-      │               │
-      ▼               ▼
- TUIAdapter      MainView             (both implement IMainView)
- TUIChatAdapter  ChatView             (both implement IChatView)
- TUIRagAdapter   RagView              (both implement IRagView)
+  ├─ TUIProvider → TUIAdapter → MainTUIScreen (IMainView)
+  └─ ConsoleProvider → MainView (IMainView)
 ```
-
-- `ProviderRegistry` (`src/agentx/ui/providers.py`) holds named providers; the
-  `tui` provider self-registers as default on import (if Textual is available).
-- `TUIProvider` (`src/agentx/ui/tui/provider.py`) creates adapters that wrap
-  Textual screens.
-- Adapters are thin delegates: `TUIChatAdapter` / `TUIRagAdapter` hold a
-  `_screen` connected later via `set_screen()` (the Textual screen is pushed by
-  `MainTUIScreen.action_open_*()` and the adapter is wired afterwards).
-- **Fallback:** if the TUI raises at runtime, `main.py` falls back to the
-  console provider.
+- `ProviderRegistry` (`ui/providers.py`) holds providers; `tui` auto-registers default
+- Adapters: thin delegates; `TUIChatAdapter`/`TUIRagAdapter` wired via `set_screen()`
+- Fallback: TUI exception → ConsoleProvider
 
 ---
 
-## 4. Command pattern (main screen dispatch)
-
-Used **only** at the main screen to route typed input.
+## 4. Command Pattern (Main Screen Only)
 
 ```
 ui/screens/main/commands/
-├── commands_base.py     # Command(ABC): __init__(key, controller); run(args)
-├── commands_parser.py   # CommandParser → CommandData(key, arguments)
-└── commands.py          # concrete commands
+  commands_base.py   # Command(ABC): __init__(key, controller); run(args)
+  commands_parser.py # CommandParser → CommandData(key, args)
+  commands.py        # 10 concrete commands
 ```
-
-Flow: `User input → CommandParser.parse() → MainController.run_command() →
-commands[key].run(args)`. Commands are registered in
-`MainController.load_commands()`. See [extending.md](extending.md) §"Add a
-command".
-
-> The agent screens have their **own** internal command dispatch (in
-> `AgentTUIScreen._dispatch_command`), separate from this main-screen system.
+Flow: `Input → Parser → MainController.run_command() → commands[key].run(args)`
 
 ---
 
-## 5. Database Partner (DP) pattern
+## 5. Database Partner (DP) Pattern
 
-**All** SQL lives in `DP_*` / `*Database` classes. No SQL in controllers or
-views.
+**All SQL in `DP_*` classes only** (enforced by `mvc_check.py:SQL_OUTSIDE_DP`)
 
-| DP class | File | DB |
-|----------|------|----|
+| DP Class | File | DB |
+|----------|------|-----|
 | `SessionDatabase` (`DP_Session`) | `model/session/session_db.py` | `session.db` |
 | `RagDatabase` (`DP_Rag`) | `model/rag/rag_db.py` | `rag.db` |
-| `SessionDatabase` + repositories | `agent/persistence/` | `agent_session.db` |
+| `SessionDatabase` (agent) | `agent/persistence/agent_db.py` | `agent_session.db` |
 
-All use **stdlib `sqlite3`** with idempotent `CREATE TABLE IF NOT EXISTS` DDL —
-**no ORM, no Alembic**. See [persistence.md](persistence.md).
-
----
-
-## 6. Tech stack
-
-| Concern | Technology |
-|---------|-----------|
-| Language | Python (run via `uv` — bare `python`/`pytest` are denied) |
-| TUI framework | [Textual](https://textual.textualize.io/) (`Screen`, widgets, pilot tests) |
-| LLM orchestration | LangChain (`BaseChatModel`, retrieval chains, stuff-documents) |
-| LLM providers | OpenRouter (default), OpenAI, Google Gemini, Ollama, llama.cpp |
-| Vector store | Chroma (local), Pinecone (cloud) |
-| Web ingestion | Tavily (`TavilyMap`, `TavilyExtract`) |
-| Persistence | stdlib `sqlite3` (no ORM) |
-| Process enforcement | opencode + `.opencode/plugin/omt_enforcer.ts` |
-
-### Environment configuration
-
-- `.env` (gitignored) — API keys. `OPENROUTER_API_KEY` is prompted at boot if
-  unset (see `main.py`).
-- `LLAMA_CPP_MODELS_CACHE_PATH` — for local llama.cpp models.
-- `--no-tui` flag or no TTY → console mode.
+All: stdlib `sqlite3`, idempotent `CREATE TABLE IF NOT EXISTS`, no ORM/Alembic.
 
 ---
 
-## 7. Configuration & enforcement
+## 6. Tech Stack
+
+| Concern | Tech |
+|---------|------|
+| Language | Python via `uv` (bare python/pip/pytest denied) |
+| TUI | Textual (Screen, widgets, pilot tests) |
+| LLM | LangChain (BaseChatModel, retrieval chains) |
+| Providers | OpenRouter (default), OpenAI, Gemini, Ollama, llama.cpp |
+| Vector | Chroma (local), Pinecone (cloud) |
+| Web | Tavily (Map + Extract) |
+| Persistence | stdlib sqlite3 |
+| Enforcement | opencode + `.opencode/plugin/omt_enforcer.ts` |
+
+**Env:** `.env` (gitignored) — `OPENROUTER_API_KEY` prompted at boot | `--no-tui` or no TTY → console
+
+---
+
+## 7. Config & Enforcement
 
 | File | Purpose |
 |------|---------|
-| `opencode.jsonc` | Permission gates: deny `git commit`/`git push`, bare `python`/`pip`/`pytest`; `.env` deny; `bash` default `ask` |
-| `.opencode/plugin/omt_enforcer.ts` | OMT++ process gate — blocks `src/` edits without `omt_phase`; blocks `tests/` without approval; runs `mvc_check.py` on edits |
-| `AGENTS.md` | Agent behaviour rules (mandatory read) |
-| `scripts/omt/mvc_check.py` | MVC++ architecture linter (View↔Model leaks, non-ABC partners, SQL outside DP, god controllers) |
-| `scripts/omt/new_feature.py` | Feature scaffolder (creates `requirements/features/feature_NNN.<slug>/`) |
+| `opencode.jsonc` | Deny: git commit/push, bare python/pip/pytest, .env; bash default ask |
+| `.opencode/plugin/omt_enforcer.ts` | OMT++ gate: blocks src/ w/o `omt_phase`; blocks tests/ w/o approval; runs mvc_check |
+| `AGENTS.md` | Agent rules |
+| `scripts/omt/mvc_check.py` | MVC++ linter (View↔Model leaks, non-ABC partners, SQL outside DP, god controllers) |
+| `scripts/omt/new_feature.py` | Feature scaffolder |
 
-**OMT++ process in one line:** declare `omt_phase` before editing `src/`;
-`new_screen`/`major_feature` require a design doc; produce phase artifacts;
-advance phases with `omt_complete`. See `omt_agent_guide.md`.
+**Process:** `omt_phase` before `src/` edits → design doc for new_screen/major_feature → artifacts per phase → `omt_complete` to advance.
 
 ---
 
-## 8. Key design decisions (recorded)
+## 8. Key Design Decisions
 
-- **No ORM, no Alembic** — stdlib `sqlite3` with explicit DDL, matching the
-  existing `SessionDatabase`/`RagDatabase` convention (decided during
-  feature_007 design; recorded in `WORK.md`).
-- **Agent persistence is snapshot-based** — a `SessionSnapshot` captures
-  config, volatile memory, policy store, goal tree root, and reflection log
-  position; `resume_session()` rebuilds in-memory state from it.
-- **Single-active goal model** — `GoalManager` activates one goal at a time;
-  completing a goal promotes the next pending one.
-- **Reflection is AI-optional** — skipped entirely when no AI service is wired
-  (N11), so cycles run cleanly offline.
+- **No ORM/Alembic** — stdlib sqlite3 + explicit DDL
+- **Agent persistence = snapshot** — `SessionSnapshot` captures config, volatile memory, policy, goal tree root, reflection log position
+- **Single-active goal** — `GoalManager` activates one goal; completion promotes next
+- **Reflection AI-optional** — skipped when no AI service wired (N11)
