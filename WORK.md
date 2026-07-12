@@ -1,7 +1,6 @@
 # WORK
 
-> Single‑developer + coding‑agent roadmap.  
-> Machine‑parseable, minimal friction, git‑friendly.
+> Single-developer + coding-agent roadmap. Machine-parseable, minimal friction, git-friendly.
 
 ---
 
@@ -14,137 +13,87 @@
 | `[x]`  | Done |
 | `[!]`  | Blocked / needs decision |
 
-**Hierarchy** – top‑level task → optional subtasks (indented 4 spaces).  
-**Metadata** – optional inline comment: `<!-- id:T‑123 prio:medium agent:true -->`  
-**Thoughts** – separate `---` line then bullet list; tools can strip it.
+**Hierarchy** - top-level task -> optional subtasks (indented 4 spaces).
+**Metadata** - optional inline comment: `<!-- id:T-123 prio:medium agent:true -->`
+**Thoughts** - separate `---` line then bullet list; tools can strip it.
 
 ---
 
 ## Tasks
 
-- [x] Implement feature_007.agentx_intelligent_agent_behaviour
-  - [x] Full OMT++ cycle: Analysis (8 artifacts) → Design (framework, tools, policy DSL, reflection) → Implementation (model, controllers, views, persistence, integrations) → Testing (132 tests, 0 regressions); user validated
-
-- [x] Fix feature_007 bugs per BUG_FIX_PLAN.md <!-- id:T-007-bugfix prio:high agent:true -->
-  - [x] Independent review (39 files); all P0–P3 bugs fixed across 9 groups; 32 regression tests; 169/169 feature_007 pass; full suite 434/435; MVC++ 0/0
-
-- [x] Implement feature_004.modern_ui <!-- id:T-004 prio:high agent:true -->
-  - [x] TUI infrastructure, MainTUIScreen, main.py integration, e2e tests; 4 rounds of TUI fixes (navigation, chat conversation, RAG freeze); user accepted; FEATURE.md written
-
-- [x] Update README.md with feature_006 and agentic workflow <!-- id:T-006-readme prio:med agent:true -->
-- [x] Update application design overview in `.meta/.../4.design/` <!-- id:T-006-design prio:med agent:true -->
-
-- [ ] Implement feature_001.session_user_objectives_driven_by_Petri_Net <!-- id:T-001-prio-high agent:false -->
-  - [ ] Define scope & success criteria
-
-- [x] Implement feature_006.opencode_process_enforcement <!-- id:T-006-prio-high agent:true -->
-  - [x] MVC++ linter, feature scaffolder, live permissions, process gate plugin, AGENTS.md; phase exit validation, omt_status/omt_complete tools, e2e harness guard; user accepted
-
-- [ ] Implement feature_002.rag_retrieval_augmented_generation <!-- id:T-002-prio-med agent:false -->
-  - [ ] Scaffold design doc
-
-- [x] Implement feature_012.tui_framework <!-- id:T-012-prio-high agent:true -->
-  - [x] Major feature: reusable TUI base-class library (ui/tui/framework/: base screen, modal, app, adapter, navigation mixin, widgets, register_partner) + refactor 9 existing screens/adapters to inherit from it; 62 framework tests; full suite 578/579 (1 pre-existing); MVC++ 0/6; fast-agent freeze-fix preserved
-
-- [x] Implement feature_010.agent_demo_screen <!-- id:T-010-prio-med agent:true -->
-  - [x] Design, model (scenarios A+B), controller, view (AgentDemoScreen), 34 tests; full suite 468/469; MVC++ 0/6
-
-- [x] Implement feature_011.fast_agent <!-- id:T-011-prio-high agent:true -->
-  - [x] Design (design_001 + operation_spec_001), Implementation (3 new View files + 4 edited files), Testing (44 tests, 0 regressions); MVC++ 0/6; full suite 512/513 (1 pre-existing)
-
-- [x] Implement feature_013.ai_model_provider_selector <!-- id:T-013-prio-med agent:true -->
-  - [x] New_screen: Models module on Main screen (m key / 🎛️ Models button) to select the current AI model provider; ModelRegistry (catalog + JSON-persisted selection + factory) unifies OpenRouter/OpenAI/Gemini/Ollama/LlamaCpp under LLMProvider; AIService.get_current_llm() delegates to registry; 4 hardcoded openrouter call sites refactored (chat, rag-chat, rag, agent ai_adapter w/ legacy fallback preserved); ModelsController + IModelsViewPartner(ABC) + ModelsTUIScreen(BaseAgentXScreen, OptionList); 56 feature tests + 5 refactor-driven test updates + 1 new binding test; full suite 635/636 (1 pre-existing); MVC++ 0/6 (baseline)
-
-- [x] Implement feature_014.tui_nonblocking_runner <!-- id:T-014-prio-high agent:true -->
-  - [x] Major feature: reusable BlockingTaskRunner in ui/tui/framework/ (async_runner.py) runs blocking callables off the Textual UI thread via daemon worker + queue.Queue + set_timer poller; BaseAgentXScreen gains run_blocking(func, on_result, on_error) → TaskHandle + on_unmount cleanup; AgentTUIScreen.action_run_cycle + action_save + AgentDemoScreen.action_run_cycle refactored from synchronous (UI freeze on llm.invoke) to run_blocking (non-blocking); RunningModal.on_unmount calls super() for cleanup chain; 38 new tests (23 unit runner/handle/base-screen + 7 freeze regression off-thread+responsive+escape + 8 MVC++ compliance); full suite 678/679 (1 pre-existing test_llm_initialization_attempted); MVC++ 0/1 (pre-existing rag_screens warning, untouched); existing 4 TestRunningModalFreezeFix tests preserved
-
-- [x] Fix feature_011.fast_agent UI freeze <!-- id:T-011-freeze prio:high agent:true -->
-  - [x] **Root cause**: Two bugs — (1) `RunningModal.__init__` set `self._running = True`, shadowing Textual's `DOMNode._running` attribute; this made `push_screen` skip `_register` → screen's message pump never started → `on_mount` never fired → worker never started → screen dead. (2) The original `_tick()` ran `run_cycle()` synchronously on the UI thread, blocking on `llm.invoke()`.
-  - [x] **Fix**: Renamed `_running` → `_auto_running` (avoids Textual attribute collision); rewrote `RunningModal` to run `run_cycle()` on a daemon worker thread, communicating via `queue.Queue` + `threading.Event` (stop/pause); UI thread polls the queue via `set_timer(0.05, _poll)` — never blocks on LLM calls. `_dismissed` flag guards double-dismiss. Reflection proposals pause the worker via `_pause_evt` and resume on `_on_reflection`.
-  - [x] **Regression tests**: 4 new tests in `TestRunningModalFreezeFix` — `test_run_cycle_runs_off_ui_thread`, `test_event_loop_responsive_during_blocking_cycle`, `test_stop_works_while_cycle_blocks`, `test_pause_resumes_after_blocking_cycle`. All use `_pump_until` (asyncio.sleep yields) instead of `pilot.pause()` (which times out on the recurring poll timer).
-  - [x] **Results**: 48/48 feature_011 pass; full suite 516/517 (1 pre-existing); MVC++ 0/0
-
-- [x] Implement feature_016.tdd_enforcement <!-- id:T-016-prio-high agent:true -->
-  - [x] Major feature: TDD enforcement engine (scripts/omt/tdd_check.py, ~803 LOC, stdlib-only) implementing Kent Beck TDD spec — 9 subcommands (testlist/start/green/refactor/done/gate/after-edit/status/validate-exit), AST-based test→target inference, true-RED verification, coverage gap analysis, anti-pattern detection, two-hats gate (RED→tests only, GREEN/REFACTOR→src only); 5 thin wrapper tools in omt_enforcer.ts (omt_testlist/red/green/refactor/done) delegate to Python; tool.execute.before enforces two-hats gate on every src/+tests/ edit; tool.execute.after reverts REFACTOR edits that break tests (refactorSnapshots Map); omt_complete calls validate-exit; omt_status.ts shows TDD state; 52 new tests (29 unit AST/gate/subprocess + 23 feature CLI/gate-rules/enforcer-integration); full suite 766/767 (1 pre-existing test_llm_initialization_attempted); MVC++ 0 errors/6 baseline warnings; 0 regressions
-  - [x] Integrate feature_016 into meta harness docs: updated README.md (TDD enforcement section, TDD tools table, 6-provider Models screen, NVIDIA, roadmap 012-016, version 0.2.0, 766 tests), AGENTS.md (TDD enforcement §6, two-hats gate in directives, TDD + status tooling tables, TDD references), omt_agent_guide.md (§11.4 TDD Workflow: five tools, two-hats gate, true-RED verification, REFACTOR auto-revert, coverage gap analysis, CLI reference); e2e harness test passes with all TDD checks
-
-- [x] Fix feature_017.chat_screen_conversation_history_bug <!-- id:T-017-bugfix prio:high agent:true -->
-  - [x] Root cause: RagChatHistory class attributes (chat_answers_history, user_prompt_history, chat_history) were shared across ALL instances, causing cross-session history contamination and disordered conversations
-  - [x] Fix: Converted to @dataclass with field(default_factory=list) for proper instance isolation
-  - [x] Verification: 771 tests pass (5 new), 1 pre-existing failure unchanged; multiple concurrent RAG sessions now maintain independent history
-
-- [x] Implement feature_017.improve_chat_screen <!-- id:T-017-feature prio:med agent:true -->
-  - [x] ChatHistoryRepository: SQLite-backed conversation storage at ~/.agentx/chat_history.db with full CRUD
-  - [x] ChatController & RagChatController: Integrated persistence (start_new_conversation, load_conversation, list, delete, export)
-  - [x] ChatTUIScreen: Conversation sidebar (Ctrl+L toggle), message timestamps, new (Ctrl+N), export (Ctrl+E), delete (Ctrl+D)
-  - [x] ChatMessage widget: Timestamp display support
-  - [x] 26 unit tests for ChatHistoryRepository, 5 regression tests for RagChatHistory bug fix
-  - [x] Verification: 797/798 tests pass (1 pre-existing), MVC++ 0 errors/33 warnings (baseline)
-
-- [x] Implement feature_018.chat_screen_improvements <!-- id:T-018-prio-high agent:true -->
-  - [x] ChatMessage widget: Removed timestamp parameter, added "You:"/"Assistant:" prefixes, improved visual distinction (user=right-aligned primary-bg, assistant=left-aligned transparent)
-  - [x] ChatTUIScreen: Removed conversation sidebar, removed timestamps, simplified to 3 key bindings (q/escape/ctrl+enter)
-  - [x] Removed: ConversationSidebar class, sidebar CSS, Ctrl+L/N/E/D bindings, conversation loading/persistence logic from TUI
-  - [x] Controller persistence methods retained in ChatController for future use
-  - [x] Updated regression tests (feature_012 framework + chat_rag_screens) to match new 2-arg ChatMessage signature
-  - [x] Verification: 807 tests pass, MVC++ 0 errors/33 warnings (baseline)
-
-- [x] Fix chat screen "no assistant message" bug <!-- id:T-chat-callfromthread prio:high agent:true -->
-  - [x] Root cause: ChatTUIScreen._run_llm_async called self.call_from_thread() from a background thread, but Screen does NOT have call_from_thread — only App does. Every call raised AttributeError; the except block also called self.call_from_thread (also failed), silently swallowing the error. No assistant message ever appeared.
-  - [x] Fix: Changed all 4 occurrences of self.call_from_thread(...) → self.app.call_from_thread(...) in _run_llm_async(). Screen.app returns the App instance; App.call_from_thread is the correct method for marshalling calls from background threads to the UI thread.
-  - [x] Verification: 807 tests pass, MVC++ 0 errors, 0 regressions
-
-- [x] Fix chat screen "no conversation history" bug <!-- id:T-chat-nohistory prio:high agent:true -->
-    - [x] Root cause: ChatTUIScreen._run_llm_async built a throwaway local `history = [SystemMessage, HumanMessage(current)]` on every turn. Prior turns were never included and the AIMessage was appended to the local list (discarded when the worker thread exited). The controller's accumulated self.history was never touched — stayed frozen at [SystemMessage]. Each message was sent to the LLM as if it were the first in a brand-new conversation.
-    - [x] Fix: _run_llm_async worker now uses self._controller.history (the accumulated list) — appends HumanMessage, streams from full history, appends AIMessage back, pops on error. on_mount now calls start_new_conversation() (initializes history + creates DB conversation so _save_messages persists) with fallback to start_interactive_streaming() if DB unavailable.
-    - [x] Verification: 807 tests pass, MVC++ 0 errors, 0 regressions
-
-- [x] Implement feature_018.react_screen <!-- id:T-018-prio-high agent:true -->
-    - [x] Analysis: Use cases (UC-1..UC-5), operation list (OP-1..OP-11), dialog diagram, class diagram, data dictionary, NFRs, traceability
-    - [x] Design: Design class diagram (Model/Controller/View), sequence diagrams (send message, tool call, cancel), operation specifications (OP-1..OP-15), file structure
-    - [x] Programming (TDD): Model (ReactAgentService, react_tools: calculator, get_current_time) → Controller (ReactController + IReactViewPartner ABC) → View (ReactTUIScreen) → Integration (MainController.show_react, MainTUIScreen.t binding + 🧠 button, MenuGrid 3×3)
-    - [x] Testing: 87 feature tests (17 model + 16 controller + 18 view + 11 integration + 16 MVC++ + 9 freeze); full suite 879/879 (1 pre-existing); MVC++ 0 errors
-    - [x] Feature: ReAct chat screen with visible thinking (💭), tool calls (🔧), tool results (📊), streaming answers; keybinding 't' / 🧠 button; LangChain create_agent with InMemorySaver checkpointer
-    - [x] Verification: 879/879 pass (1 pre-existing test_llm_initialization_attempted); MVC++ 0 errors; full OMT++ cycle complete
-
-- [x] Implement feature_019.coding_agent_screen <!-- id:T-019-prio-high agent:true -->
-    - [x] Analysis: Use cases (UC-1..UC-9), class diagram, sequence diagrams, data dictionary, state diagram, NFRs, traceability
-    - [x] Design: Design class diagram (Model/Controller/View), operation specs (OP-1..OP-15), file structure, MenuGrid + keybinding integration
-    - [x] Programming (TDD): Model (coding_tools: file_search, file_read, file_edit, file_list, file_create + CodingAgentService with sandbox) -> Controller (CodingController + ICodingViewPartner ABC) -> View (CodingTUIScreen with diff highlighting) -> Integration (MainController.show_coding, MainTUIScreen.d binding + Coding button, MenuGrid 3x3 with Coding)
-    - [x] Testing: 21 model tests (coding_tools) + integration tests; full suite 910/916 (6 pre-existing); MVC++ 0 errors/33 warnings (baseline)
-    - [x] Feature: Coding Agent chat screen with file system tools -- search, read, edit, list, create; visible thinking, tool calls, tool results with diff highlighting; keybinding 'd' / Coding button; sandbox-rooted file operations; non-blocking via run_blocking
-    - [x] Verification: 72 feature tests (47 model + 17 integration + 10 MVC++); full suite 927/933 (6 pre-existing); MVC++ 0 errors/33 warnings (baseline); full OMT++ cycle complete
+- [x] **feature_007.agentx_intelligent_agent_behaviour**
+    - Full OMT++ cycle: Analysis (8) -> Design -> Impl -> 132 tests, 0 regressions; user validated
+- [x] **Fix feature_007 bugs per BUG_FIX_PLAN.md**
+    - 39 files, all P0-P3 fixed, 32 regression tests, 169/169 pass, MVC++ 0/0
+- [x] **feature_004.modern_ui**
+    - TUI infra, MainTUIScreen, main.py, e2e; 4 fix rounds; user accepted; FEATURE.md
+- [x] **Update README.md with feature_006 and agentic workflow**
+- [x] **Update application design overview in .meta/.../4.design/**
+- [ ] **feature_001.session_user_objectives_driven_by_Petri_Net**
+    - Define scope & success criteria
+- [x] **feature_006.opencode_process_enforcement**
+    - MVC++ linter, scaffolder, permissions, gate plugin, AGENTS.md, phase exit, omt_status/omt_complete, e2e guard; user accepted
+- [ ] **feature_002.rag_retrieval_augmented_generation**
+    - Scaffold design doc
+- [x] **feature_012.tui_framework**
+    - Reusable TUI base-class lib (framework/), 9 screens refactored, MVC++ 0/6
+- [x] **feature_010.agent_demo_screen**
+    - Design, model (A+B), controller, AgentDemoScreen, MVC++ 0/6
+- [x] **feature_011.fast_agent**
+    - Design + impl (3 View + 4 edited), 44 tests, 0 regressions, MVC++ 0/6
+- [x] **feature_013.ai_model_provider_selector**
+    - Models screen (m), ModelRegistry (5 providers, JSON persist, factory), AIService delegates, 4 call sites refactored, MVC++ 0/6
+- [x] **feature_014.tui_nonblocking_runner**
+    - BlockingTaskRunner (async_runner.py), BaseAgentXScreen.run_blocking(), refactored Agent/Demo, MVC++ 0/1
+- [x] **Fix feature_011.fast_agent UI freeze**
+    - Root cause: _running shadowed DOMNode._running + sync llm.invoke(); fix: _auto_running, daemon thread + queue + polling; MVC++ 0/0
+- [x] **feature_016.tdd_enforcement**
+    - TDD engine (tdd_check.py, 9 cmds), AST inference, true-RED, two-hats gate, 5 tools, hooks, MVC++ 0/6; docs updated
+- [x] **Fix feature_017.chat_screen_conversation_history_bug**
+    - RagChatHistory class attrs shared; fix: @dataclass + default_factory; MVC++ 0/0
+- [x] **feature_017.improve_chat_screen**
+    - ChatHistoryRepository (SQLite), controller persistence, TUI sidebar (Ctrl+L), timestamps, CRUD keys, MVC++ 0/33
+- [x] **feature_018.chat_screen_improvements**
+    - ChatMessage: prefixes, visual distinction; ChatTUIScreen: no sidebar/timestamps, 3 keys; removed ConversationSidebar; MVC++ 0/33
+- [x] **Fix chat screen "no assistant message" bug**
+    - _run_llm_async used self.call_from_thread() on Screen; fix: self.app.call_from_thread(); MVC++ 0
+- [x] **Fix chat screen "no conversation history" bug**
+    - Throwaway local history per turn; fix: worker uses controller.history + on_mount calls start_new_conversation(); MVC++ 0
+- [x] **feature_018.react_screen**
+    - Analysis, Design, TDD: Model (ReactAgentService, 2 tools) -> Controller -> View (ReactTUIScreen) -> Integration (t, 3x3); MVC++ 0; ReAct with thinking, tools, results, streaming
+- [x] **feature_019.coding_agent_screen**
+    - Analysis, Design, TDD: Model (5 file tools + CodingAgentService) -> Controller -> View (diff highlighting) -> Integration (d, 3x3); MVC++ 0/33; Coding Agent with file tools, sandbox, non-blocking
 
 ---
 
-## Agent Scratchpad (auto‑managed, do not edit manually)
+## Agent Scratchpad (auto-managed, do not edit manually)
 
 ```
-[2026-06-27T18:26] Agent: Completed feature_004 navigation fixes, all tests pass.
-[2026-06-27T18:30] Agent: Next action - write FEATURE.md for feature_004.
-[2026-06-27T19:15] Agent: Fixed TUI RAG screen freeze on Select button - replaced blocking console input with TUI screens.
-[2026-06-28] Agent: Moved feature_003 content to feature_007 (scaffolded via new_feature.py); Analysis phase started
-[2026-06-29] Agent: Completed all 8 Analysis artifacts for feature_007 (use cases, class diagrams, sequence diagrams, state diagrams, data dictionary, NFRs, traceability, architecture summary); Usability validated with User; Ready for Design phase
-[2026-06-29] Agent: Updated WORK.md with detailed sub-tasks per PLAN.md; Creating Design phase scaffold and design_001_agent_framework.md
-[2026-06-29] Agent: Architecture decision — persistence uses stdlib sqlite3 only (no SQLAlchemy, no Alembic); updated PLAN.md, design_001 (§5.1/5.2/5.3/9/10/11.2/13/15), analysis_001, analysis_007, and WORK.md to match existing SessionDatabase/RagDatabase convention.
-[2026-06-29] Agent: Completed Design D6/D7/D8 — expanded design_001 §6 (ToolSpec, ToolRegistry, discovery, built-in tools), §7 (priority resolution, conflict detection, adaptation hooks), §8 (critique parser, safety evaluator, proposal routing); aligned interfaces with class diagram & data dictionary; corrected TOOL_CONFIG→TOOL_CONFIGURATION.
-[2026-06-29] Agent: Fixed META HARNESS bug — omt_enforcer.ts checkPhaseExitArtifacts + omt_status.ts getArtifactStatus resolved feature dirs as short "feature_NNN" but new_feature.py scaffolds full-slug dirs (feature_007.agentx_intelligent_agent_behaviour), causing false-negative artifact detection. Added resolveFeatureDir() (exact + prefix match) to both. Harness e2e test passes (receipt refreshed); both plugins load OK via node --experimental-strip-types. Also created operation_spec_001_agent_operations.md (Design deliverable, guide §10). NOTE: advancing Design→Programming via omt_complete is blocked until opencode restarts so the plugin fix reloads.
-[2026-06-29] Agent: Verified OMT harness after restart — omt_status works (no p.split error), plugin fix loaded. Advanced feature_007 Design→Programming via omt_complete. Implemented full agent framework (I1-I13): types.py (38 enums+dataclasses), interfaces.py (8 Abstract Partners), persistence (schema_db/agent_db/repositories_db — stdlib sqlite3), tool registry (ToolRegistry + ISensor/IActuator + 3 built-in tools), policy engine (condition DSL parser+AST+evaluator+conflict resolver), reflection engine (critique parser+safety evaluator+proposal router), Agent facade (perceive/decide/act/reflect/persist), 3 controllers, console+TUI views, AgentAdapter (feature_004 integration). MVC check: 0 errors, 0 warnings on src/agentx/agent/. Full cycle test passed (goal+policy→decide→act→reflect→persist). impl_notes.md written. Ready for Testing phase.
-[2026-06-29] Agent: Testing phase complete (T1-T6). Wrote 132 tests across 11 test files: unit tests (types, tool registry, memory, goals, policy DSL, reflection, persistence), integration tests (agent facade cycle, controllers, multi-cycle), MVC++ compliance tests (mvc_check.py, ABC check, loc check, view/model isolation), TUI e2e tests (Textual pilot). All 132 pass. Zero regressions on existing 262 tests (1 pre-existing failure in test_chat_rag_screens.py unrelated to feature_007). Moved agent_adapter.py from view/tui/ to top-level agent/ to fix view-imports-model MVC++ violation. test_report.md written.
-[2026-06-29] Agent: Fixed AI service wiring — created AIServiceAdapter implementing IAIServicePartner, wired into MainController.show_agent(), improved ReflectionEngine to show clear "AI service unavailable" message when API keys missing. All 137 feature_007 tests pass, full suite 372/373 pass (1 pre-existing failure), MVC++ 0 errors / 6 warnings. Feature complete and validated.
-[2026-07-04] Agent: Independent review of feature_007 (39 files). Verified 17/18 original bugs (M4 false-positive, C7 downgraded). Found 9 NEW bugs (N1 volatile-memory loss on resume, N2 double correlation_id, N3 dead _pol_repo, N4 inert self-improvement loop, N5 tool-disable no-op, N6 View→Model leaks, N7 config not restored, N8 goal-root drift, N9 no state-clear on resume). Updated BUG_FIX_PLAN.md.
-[2026-07-04] Agent: Implemented all P0/P1 bug fixes (Groups 1-9). resume_session() now restores tools+volatile memory+config+goal root+reflection log and clears stale state (N1/N7/N8/N9/M2/C1/C3). run_cycle uses a single command (N2); goal completion scoped via SuccessCriteria.tool_id (C6). reflect() returns ReflectionEntry (C2); load_snapshot on facade (C4); SessionTool calls resume_session (M8). perceive() surfaces failed readings (M1); reflection skipped w/o AI (N11); safety deny-list expanded (M7); un-routed proposals visible (M3). Tool enablement enforced in perceive+execute (N5/M6). PolicyEngine now repo-based like GoalManager (N3). AgentAdapter owns AI wiring + resume (C5/I1/I4). Approval flow closes the reflection loop: pending_proposals/approve_proposal + TUI proposals/approve commands (N4). Controller partner methods replace get_agent() reach-through (N6). Added 21 regression tests. 158/158 feature_007 pass, full suite 423/424 (1 pre-existing), MVC++ 0/0.
-[2026-07-04] Agent: Completed ALL remaining P2/P3 fixes. M5 (compare TypeError logged), N12 (RagSensorTool now a hybrid actuator — EXECUTE_TOOL rag_query retrieves knowledge), m1 (empty tool_id dropped), m2 (context_memory_limit config), m4 (dead limit clause removed), m5 (greedy regex for nested JSON), m7 (IPersistencePartner.load_snapshot return type), m9 (adapter runtime isinstance check), m10 (filesystem MAX_FILES=2000 cap), C7* (persistent_path canonicalized), N13 (ReflectionEngine.set_ai_service public API), N14 (list_tools/register_tool/etc. on facade; ToolController no longer reaches into tool_registry), N15 (conflict overlap on identifiers only), N16 (perception keys joined cleanly in prompt). 32 regression tests total. 169/169 feature_007 pass, full suite 434/435 (1 pre-existing), MVC++ 0/0. ALL bugs in BUG_FIX_PLAN.md resolved (only M4 dropped as false positive).
-[2026-07-04] Agent: Implemented feature_011.fast_agent — a new "⚡ Fast Agent" main-menu option (f key) that drives the existing feature_007 Agent via a stack of Textual ModalScreen dialogs (Goal → Running → Reflection → Result). First ModalScreen use in codebase. 3 new View files (fast_agent_screen.py, fast_agent_modals.py, fast_agent_view.py), 4 edited files (agent_controller.py +get_cycle_summary, adapter.py +create_fast, main_controller.py +show_fast_agent, main_screen.py +f binding +5th button +grid 3x2 +relabel Advanced Agent). No Model-layer changes. 44 new tests + 5 updated existing tests. 512/513 full suite (1 pre-existing), MVC++ 0/6.
-[2026-07-05] Agent: Fixed feature_011.fast_agent UI freeze. Found TWO root causes: (1) RunningModal.__init__ set self._running=True, shadowing Textual's DOMNode._running — push_screen's _get_screen saw is_running=True, skipped _register, the screen's message pump never started, on_mount never fired, worker never started. Renamed to _auto_running. (2) The original _tick() ran run_cycle() synchronously on the UI thread, blocking on llm.invoke(). Rewrote RunningModal to use a daemon worker thread + queue.Queue + threading.Event for stop/pause; UI thread polls via set_timer(0.05, _poll). 4 regression tests (TestRunningModalFreezeFix): off-thread execution, event-loop responsiveness during block, Stop-during-block, pause/resume. 48/48 feature_011 pass; 516/517 full suite (1 pre-existing); MVC++ 0/0.
-[2026-07-05] Agent: Implemented feature_012.tui_framework — a reusable TUI base-class library at src/agentx/ui/tui/framework/ (partner.py register_partner; base_screen.py BaseAgentXScreen + NavigationMixin; base_modal.py BaseAgentXModalScreen; base_app.py BaseAgentXApp; base_adapter.py BaseScreenAdapter; widgets.py 5 extracted widgets; __init__.py). Refactored 9 existing TUI screens/adapters + app to inherit: MainTUIScreen/ChatTUIScreen/RagTUIScreen/AgentTUIScreen/AgentDemoScreen/FastAgentTUIScreen → BaseAgentXScreen; 4 fast-agent modals → BaseAgentXModalScreen; TUIApplication → BaseAgentXApp; 3 adapters → BaseScreenAdapter; MainTUIScreen 4 navigation methods → navigate_to_child (≈240→40 LOC); _log → safe_log; IAgentViewPartner.register → register_partner. Key design correction: BaseAgentXModalScreen(BaseAgentXScreen, ModalScreen[T]) ordering so super().__init__(controller) chains (design doc's ModalScreen-first ordering was wrong). _controller typed Any (duck-typed convention). Main adapter is app-delegating (overrides __init__+show). RunningModal worker/queue/poll loop UNCHANGED (freeze-fix preserved). 2 refactor-driven test updates (logged omt_skip{scope:tests}): feature_011 mvc test repointed main_screen.py→framework/widgets.py for MenuGrid source; bug-repro test RAG/Chat assertion made case-insensitive for navigate_to_child's screen_cls.__name__ error message. 62 new framework tests (base/nav/mvc+regression). Full suite 578/579 (1 pre-existing test_llm_initialization_attempted); MVC++ 0 errors/6 warnings (baseline, all pre-existing); framework 0/0.
-[2026-07-05] Agent: Implemented feature_013.ai_model_provider_selector — a "Models" module on the Main screen (m key / 🎛️ Models button) that lets the user select the current AI model provider. Model layer: new model/ai/model_registry.py (ProviderInfo dataclass + ModelRegistry: 5-provider catalog, current selection, JSON persistence at ~/.agentx/model_selection.json best-effort, create_current_llm factory; default_registry singleton; config_path injectable for tests). Unified the ad-hoc Ollama class and get_remote_llm_google_gemini() fn under the LLMProvider ABC as OllamaProvider + GeminiProvider (lazy imports). AIService gains get_current_llm()/get_current_provider_info()/get_registry() delegating to the registry; legacy openrouter/cloud/local factories kept for backward-compat. Refactored the 4 hardcoded AIService().openrouter_llm_provider().create_llm() call sites → get_current_llm(): chat_controller, rag_chat_controller, rag.py. agent/ai_adapter._ensure_llm now tries the user-selected provider FIRST, then the legacy OpenRouter→OpenAI fallback chain (preserves graceful degradation the reflection engine relied on). Controller: new ui/screens/models/models_controller.py (IModelsViewPartner ABC + ModelsController). View: new ui/tui/screens/models_screen.py (ModelsTUIScreen extends BaseAgentXScreen; OptionList of providers, ● marks current, Enter selects, Esc/b back; pure View — no agentx.model import). Main wiring: MainController.show_models() (idempotent C5 pattern) + get_models_controller(); MainTUIScreen m binding + action_open_models (navigate_to_child) + button handler + help text; MenuGrid 6th button 🎛️ Models (btn-models). Persistence = JSON not sqlite (selection is one scalar, not entity CRUD — proportionate per guide §1). 56 new feature tests (25 unit model_registry + 18 integration controller/callsites/pilot + 13 mvc compliance) + 5 refactor-driven test updates (menu grid 5→6 buttons, bindings 7→8, button ids/variants) + 1 new test_binding_m_models; test... (line truncated to 2000 chars)
-[2026-07-05] Agent: Added NVIDIA as a 6th selectable AI provider to the feature_013 model registry (minor_feature, OMT++ Programming phase). New dependency langchain-nvidia-ai-endpoints==1.4.3 added to pyproject.toml (uv.lock is gitignored, managed locally by uv; uv lock --check passes). Model layer: providers.py +NvidiaProvider(LLMProvider) wrapping langchain_nvidia_ai_endpoints.ChatNVIDIA (lazy import, matches Gemini/Ollama pattern; auth via NVIDIA_API_KEY env var); model_registry.py +DEFAULT_NVIDIA_MODEL="nvidia/nemotron-3-ultra-550b-a55b" + "nvidia" catalog entry (kind=cloud, placed after gemini to preserve cloud-first ordering; name "NVIDIA NIM"). No Controller/View/call-site changes (catalog-driven; Models screen renders dynamically). Tests extended (user-approved, logged omt_skip{scope:tests}): test_model_registry 5→6 providers (catalog ids, kinds, select-each) + new TestNvidiaProvider (default model, custom passthrough, create_llm→ChatNVIDIA wiring via monkeypatched lazy import); test_models_integration len==6 + option_count==6 + nvidia at index 3 + select/status test. feature_013 suite 56→61 pass; full suite 640/641 (1 pre-existing test_llm_initialization_attempted, untouched); MVC++ 0 errors/6 warnings (baseline). 0 regressions.
-[2026-07-05] Agent: Implemented feature_014.tui_nonblocking_runner — a reusable BlockingTaskRunner at the TUI framework level (src/agentx/ui/tui/framework/async_runner.py) that fixes the agent-screen freeze. Root cause: AgentTUIScreen.action_run_cycle() and AgentDemoScreen.action_run_cycle() called controller.run_cycle() synchronously on the Textual UI thread, blocking on llm.invoke() HTTP calls and freezing the entire event loop (Escape/Back unresponsive). The Fast Agent's RunningModal already solved this with a daemon worker thread + queue.Queue + threading.Event + set_timer poll loop, but that ~100 LOC was hardcoded inline and not reusable. Solution: extracted the pattern into BlockingTaskRunner (runs func on daemon thread, delivers result/error to UI thread via queue + set_timer(0.05) poller, supports cancel via threading.Event, cleans up on unmount). BaseAgentXScreen gains run_blocking(func, on_result, on_error) → TaskHandle + on_unmount() that cancels all active handles. Refactored AgentTUIScreen (action_run_cycle, action_save) and AgentDemoScreen (action_run_cycle) to use run_blocking — rendering logic moved to _on_cycle_result/_on_cycle_error callbacks that run on the UI thread. RunningModal.on_unmount now calls super().on_unmount() for cleanup chain (modal's own threading unchanged — deferred full refactor per design §6.4). Full OMT++ cycle: Analysis (3 artifacts) → Design (design_001 + operation_spec_001) → Programming → Testing. 38 new tests: 23 unit (runner start/result/error/cancel/unmount/concurrency, TaskHandle delegation, BaseAgentXScreen integration) + 7 freeze regression (AgentTUIScreen run_cycle off-thread + event-loop responsive + escape during block + save off-thread; AgentDemoScreen run_cycle off-thread + responsive) + 8 MVC++ compliance (no Model imports, run_blocking/on_unmount on base, modal inheritance, exports, mvc_check.py lint). All 38 pass; full suite 678/679 (1 pre-existing test_llm_initialization_attempted, untouched); MVC++ 0 errors/... (line truncated to 2000 chars)
-[2026-07-11] Agent: Reviewed and closed out feature_016.tdd_enforcement. Previous session built the full feature but left bookkeeping incomplete (WORK.md entry, FEATURE.md/PLAN.md templates, formal phase completion). Verified implementation: scripts/omt/tdd_check.py (~803 LOC, stdlib-only, 9 subcommands), 5 TDD wrapper tools in omt_enforcer.ts, two-hats gate in tool.execute.before, REFACTOR revert in tool.execute.after, validate-exit in omt_complete, TDD state in omt_status.ts. Ran all 52 feature tests (29 unit + 23 feature) — all pass. Full suite 766/767 (1 pre-existing test_llm_initialization_attempted). MVC++ 0 errors/6 baseline warnings. Filled in FEATURE.md, PLAN.md, added WORK.md task entry. Advanced Testing → Done via omt_complete.
-[2026-07-11] Agent: Integrated feature_016 TDD enforcement into meta harness documentation. Updated README.md: version 0.1.2→0.2.0, test count 512+→766+, added NVIDIA NIM to providers table, added Models screen (m key) section, added TDD enforcement section with Red→Green→Refactor diagram and two-hats gate explanation, expanded tooling table with all TDD tools + omt_status, updated roadmap with features 012-016, updated contributing workflow with TDD cycle step. Updated AGENTS.md: added enforcement point §6 (TDD two-hats gate), added TDD mode exceptions to Core Directives NEVER #4/#6, added TDD enforcement tools table + status tools table, added feature_016 + TDD spec references. Updated omt_agent_guide.md: added §11.4 TDD Workflow (five TDD tools table, two-hats gate matrix, true-RED verification, REFACTOR auto-revert, coverage gap analysis, tdd_check.py CLI reference with all 9 subcommands), updated TOC. OMT harness e2e test passes after each edit (receipt refreshed). Logged omt_skip{scope:all} for README.md edit (user explicitly requested).
-[2026-07-11] Agent: Fixed feature_017 bug - conversation history disorder in RagChatHistory. Root cause: class attributes (shared lists) instead of instance attributes. Fixed by converting to @dataclass with field(default_factory=list). Added 5 regression tests verifying instance isolation. 5/5 pass. Full suite 771/772 (1 pre-existing failure). MVC++ 0/0.
-[2026-07-11] Agent: Implemented feature_017 chat screen improvements — conversation history persistence and UI enhancements. ChatHistoryRepository (SQLite at ~/.agentx/chat_history.db), ChatController/RagChatController persistence, ChatTUIScreen sidebar (Ctrl+L), timestamps, new/export/delete keys. 31 new tests. Full suite 797/798 pass. MVC++ 0/33 warnings (baseline).
-[2026-07-11] Agent: Fixed chat screen "no assistant message" bug. Root cause: ChatTUIScreen._run_llm_async() called self.call_from_thread() from a background worker thread, but Screen does NOT have call_from_thread — only App does. Every call raised AttributeError; the except block also called self.call_from_thread (also failed), silently swallowing the error so NO assistant message ever appeared. Fix: changed all 4 occurrences self.call_from_thread(...) → self.app.call_from_thread(...). Screen.app returns the App; App.call_from_thread is the correct method for marshalling calls from background threads to the UI thread. 807 tests pass, 0 regressions, MVC++ 0 errors.
-[2026-07-11] Agent: Fixed chat screen "no conversation history" bug. Root cause: ChatTUIScreen._run_llm_async built a throwaway local history=[SystemMessage, HumanMessage(current)] on every turn — prior turns never included, AIMessage appended to local list discarded when worker thread exited. Controller's accumulated self.history never touched, stayed frozen at [SystemMessage]. Fix: worker now uses self._controller.history (appends HumanMessage, streams from full accumulated history, appends AIMessage back, pops on error). on_mount now calls start_new_conversation() (initializes history + creates DB conversation so _save_messages persists) with fallback to start_interactive_streaming() if DB unavailable. 807 tests pass, 0 regressions, MVC++ 0 errors.
+[2026-06-27] Completed feature_004 nav fixes; all tests pass
+[2026-06-27] Next: write FEATURE.md for feature_004
+[2026-06-27] Fixed TUI RAG screen freeze on Select - replaced blocking console with TUI
+[2026-06-28] Moved feature_003 to feature_007 (scaffolded); Analysis started
+[2026-06-29] Completed 8 Analysis artifacts for feature_007; usability validated; Design next
+[2026-06-29] Updated WORK.md per PLAN.md; creating design_001_agent_framework.md
+[2026-06-29] Architecture decision: persistence = stdlib sqlite3 only (no SQLAlchemy/Alembic)
+[2026-06-29] Design D6/D7/D8 done: ToolSpec, ToolRegistry, policy engine, reflection engine
+[2026-06-29] Fixed META HARNESS bug: feature dir resolution (short vs full-slug); added resolveFeatureDir(); e2e passes
+[2026-06-29] OMT harness verified post-restart; advanced feature_007 Design->Programming; implemented full agent framework; MVC 0/0; cycle test passed
+[2026-06-29] Testing complete (T1-T6): 132 tests, 11 files, all pass; 0 regressions on 262 existing; moved agent_adapter.py to fix MVC++ violation
+[2026-06-29] Fixed AI service wiring: AIServiceAdapter + IAIServicePartner; ReflectionEngine shows "AI unavailable" without keys; 137/137 pass
+[2026-07-04] Independent review feature_007 (39 files): 17/18 bugs verified, 9 new found; updated BUG_FIX_PLAN.md
+[2026-07-04] All P0/P1 fixes done (Groups 1-9): resume_session restores tools/memory/config/goal/reflection; 21 regression tests; 158/158 pass, MVC++ 0/0
+[2026-07-04] All P2/P3 fixes done: 32 regression tests total; 169/169 feature_007 pass, MVC++ 0/0; ALL bugs resolved (M4 dropped)
+[2026-07-04] Implemented feature_011.fast_agent: "Fast Agent" (f key), ModalScreen stack (Goal->Running->Reflection->Result); 3 View files, 4 edited; 44 tests + 5 updated; MVC++ 0/6
+[2026-07-05] Fixed feature_011 UI freeze: (1) _running shadowed DOMNode._running; (2) sync run_cycle on UI thread; fix: _auto_running + daemon worker + queue + polling; 4 regression tests; 48/48 pass, MVC++ 0/0
+[2026-07-05] Implemented feature_012.tui_framework: reusable base-class lib at src/agentx/ui/tui/framework/; refactored 9 screens/adapters + app; 62 tests; MVC++ 0/6
+[2026-07-05] Implemented feature_013.ai_model_provider_selector: Models screen (m), ModelRegistry (5 providers, JSON persist, factory), AIService delegates, 4 call sites refactored; 56 tests + 6 updates; MVC++ 0/6
+[2026-07-05] Added NVIDIA as 6th provider (minor_feature): langchain-nvidia-ai-endpoints, NvidiaProvider, catalog entry changes; tests extended; MVC++ 0/6
+[2026-07-05] Implemented feature_014.tui_nonblocking_runner: BlockingTaskRunner (async_runner.py), BaseAgentXScreen.run_blocking(), refactored Agent/Demo screens; 38 tests; MVC++ 0/1
+[2026-07-11] Closed feature_016.tdd_enforcement: verified impl, 52 tests pass, MVC++ 0/6; filled FEATURE.md/PLAN.md/WORK.md; Testing->Done via omt_complete
+[2026-07-11] Integrated TDD into meta docs: README (v0.2.0, TDD section, roadmap), AGENTS.md (enforcement 6), omt_agent_guide.md (11.4); e2e passes
+[2026-07-11] Fixed feature_017 bug: RagChatHistory class attrs shared; fix: @dataclass + default_factory; 5 tests; MVC++ 0/0
+[2026-07-11] Implemented feature_017 chat improvements: ChatHistoryRepository (SQLite), controller persistence, TUI sidebar (Ctrl+L), timestamps, CRUD keys; 31 tests; MVC++ 0/33
+[2026-07-11] Fixed "no assistant message": _run_llm_async used self.call_from_thread() on Screen; fix: self.app.call_from_thread(); MVC++ 0
+[2026-07-11] Fixed "no conversation history": throwaway local history; fix: worker uses controller.history + on_mount calls start_new_conversation(); MVC++ 0
 ```
