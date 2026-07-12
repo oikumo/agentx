@@ -1,19 +1,18 @@
-# persistence.md — Databases & Filesystem (compressed)
+# persistence.md — Databases & Filesystem (compressed) (grep:PERSIST_)
 
 **SCOPE:** DBs, schemas, no-ORM/DP convention, filesystem layout.
 
 ---
 
-## 1. Convention: stdlib sqlite3, No ORM
-- **Only** Python stdlib `sqlite3`. No SQLAlchemy, Alembic, migrations framework. Architectural decision (in `WORK.md`).
+# SECTION:CONVENTION — Convention (grep:PERSIST_CONVENTION_)
+**stdlib sqlite3 only.** No SQLAlchemy, Alembic, migrations. Architectural decision (in `WORK.md`).
 - DDL = idempotent `CREATE TABLE IF NOT EXISTS` (string constants in `Table*` classes). DB created on first use.
 - All SQL in `DP_*` / `*Database` classes — never in controllers/views. Enforced by `mvc_check.py` (`SQL_OUTSIDE_DP`).
 - Schemas simple; versioned migrations not needed. `config_version` on `SessionSnapshot` tracks agent config shape.
 
 ---
 
-## 2. The Three Databases
-
+# SECTION:DATABASES — The Three Databases (grep:PERSIST_DBS_)
 | DB file | Created by | Lives under | Tables |
 |---------|-----------|-------------|--------|
 | `session.db` | `SessionDatabase` (`DP_Session`) | `<session_dir>/session.db` | `history`, `users` |
@@ -26,8 +25,7 @@
 
 ---
 
-## 3. Agent DB Schema (`agent_session.db`)
-
+# SECTION:AGENT_SCHEMA — Agent DB Schema (grep:PERSIST_AGENT_SCHEMA_)
 Defined in `agent/persistence/schema_db.py` (`Table*` classes); repos in `agent/persistence/repositories_db.py`.
 
 | Table | Purpose | Key columns |
@@ -43,8 +41,7 @@ Defined in `agent/persistence/schema_db.py` (`Table*` classes); repos in `agent/
 
 ---
 
-## 4. Session DB Schema (`session.db`)
-
+# SECTION:SESSION_SCHEMA — Session DB Schema (grep:PERSIST_SESSION_SCHEMA_)
 Defined in `model/session/session_db.py` (`TableHistory`, `TableUser`).
 
 | Table | Purpose | Columns |
@@ -56,8 +53,7 @@ Defined in `model/session/session_db.py` (`TableHistory`, `TableUser`).
 
 ---
 
-## 5. RAG DB Schema (`rag.db`)
-
+# SECTION:RAG_SCHEMA — RAG DB Schema (grep:PERSIST_RAG_SCHEMA_)
 Defined in `model/rag/rag_db.py` (`TableIngestion`).
 
 | Table | Purpose | Columns |
@@ -68,8 +64,7 @@ Defined in `model/rag/rag_db.py` (`TableIngestion`).
 
 ---
 
-## 6. Filesystem Layout
-
+# SECTION:FILESYSTEM — Filesystem Layout (grep:PERSIST_FS_)
 ```
 local_sessions/                       # SESSION_DEFAULT_BASE_DIRECTORY
 └── current/                          # active session (SESSION_CURRENT_NAME)
@@ -82,15 +77,13 @@ local_sessions/                       # SESSION_DEFAULT_BASE_DIRECTORY
             ├── db/                   # Chroma vector store
             └── docs/                 # ingested documents (JSONL)
 ```
-
 - Session dirs: timestamped (`<timestamp>_<name>`) or plain (`<name>`), via `utils.create_directory_{with,without}_timestamp`.
 - Deletion guarded by `DIRECTORIES_DELETION_ALLOWED = ["local_sessions"]` (`utils.is_directory_allowed_to_deletion`).
 - Agent's `sandbox_root` (for `FileSystemTool`) defaults to session directory.
 
 ---
 
-## 7. DP Class Reference
-
+# SECTION:DP_CLASSES — DP Class Reference (grep:PERSIST_DP_)
 | DP class | File | DB | Representative methods |
 |----------|------|----|------------------------|
 | `SessionDatabase` (session) | `model/session/session_db.py` | `session.db` | `create_if_not_exists`, `insert_history_entry`, `select_history_entry` |
@@ -102,3 +95,10 @@ local_sessions/                       # SESSION_DEFAULT_BASE_DIRECTORY
 | `ReflectionRepository` | same | same | `save`, `load_recent_entries` |
 
 All repositories take `(db_path, agent_id)` and use parameterised queries.
+
+---
+
+# SECTION:XREF — Cross-References (grep:PERSIST_XREF_)
+XREF_DATA_FLOW: `data_flow.md` §9 (Agent Persistence flow)
+XREF_ARCH: `architecture.md` §5 (DP Pattern)
+XREF_SUBSYSTEMS: `subsystems.md` §1.8 (Agent Persistence), §2 (RAG), §3 (Session)

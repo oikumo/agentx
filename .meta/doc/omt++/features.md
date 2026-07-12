@@ -1,7 +1,9 @@
-# features.md — Feature Catalog (compressed)
+# features.md — Feature Catalog (compressed) (grep:FEATURES_)
 
-**SCOPE:** Every feature — status, summary, code + artifact locations. Status: ✅ done · 🔨 in progress · ⏳ pending · 🅿️ placeholder
+**SCOPE:** Every feature — status, summary, code + artifact locations.
+**Status:** ✅ done · 🔨 in progress · ⏳ pending · 🅿️ placeholder
 
+# SECTION:CATALOG — Feature Catalog Table (grep:FEATURES_CATALOG_)
 | # | Feature | Status | Summary |
 |---|---------|--------|---------|
 | 001 | session_user_objectives_driven_by_Petri_Net | ⏳ | Petri-net-driven session objectives (will swap into agent's `IGoalManager`) |
@@ -17,46 +19,46 @@
 
 ---
 
-## feature_001 — Session Objectives (Petri Net) ⏳
+# SECTION:F001 — feature_001 — Session Objectives (Petri Net) ⏳ (grep:FEATURE_001_)
 **Goal:** Drive session objectives through Petri-net model. Provides concrete `IGoalManager` impl replacing current stub (`agent/model/goal/manager.py`). Agent facade depends on `IGoalManager` abstraction → swaps at runtime.
 - **Status:** Scope & success criteria not yet defined (`WORK.md`).
 - **Integration point:** `agent/model/goal/manager.py` → `IGoalManager`.
 
-## feature_002 — RAG (Retrieval Augmented Generation) ⏳
+# SECTION:F002 — feature_002 — RAG (Retrieval Augmented Generation) ⏳ (grep:FEATURE_002_)
 **Goal:** Ingest documents (web + local) into vector store, answer questions with retrieval-augmented LLM responses. `Rag` orchestrator and `RagQuery` pipeline exist and wired into RAG screen; needs design scaffold.
 - **Status:** Partially implemented (see subsystems.md §RAG); design doc pending.
 - **Key code:** `src/agentx/model/rag/`.
 
-## feature_004 — Modern UI ✅
+# SECTION:F004 — feature_004 — Modern UI ✅ (grep:FEATURE_004_)
 **Goal:** Rich Textual TUI replacing legacy console-only flow, with full screen navigation (Main → Chat → RAG → Agent), streaming chat, non-blocking RAG repository selection.
 - **Key code:** `src/agentx/ui/tui/` (app, screens, adapters, provider).
 - **Highlights:** `MainTUIScreen` pushes sub-screens directly AND calls `controller.show_*()` for wiring (dual-path fix for navigation freezes); `TUIChatAdapter` streams chunks into single growing widget; RAG screens use TUI modal screens instead of blocking console input.
 - **Artifacts:** `.meta/.../features/feature_004.modern_ui/`.
 
-## feature_005 — Agentic File System Tools ✅
+# SECTION:F005 — feature_005 — Agentic File System Tools ✅ (grep:FEATURE_005_)
 **Goal:** Agentic filesystem tools. Folded into feature_007's tool registry as `FileSystemTool` (hybrid sensor/actuator).
 - **Key code:** `src/agentx/agent/model/tools/filesystem_tool.py`.
 
-## feature_006 — Opencode Process Enforcement ✅
+# SECTION:F006 — feature_006 — Opencode Process Enforcement ✅ (grep:FEATURE_006_)
 **Goal:** Mechanically enforce OMT++ methodology via opencode. Provides MVC++ linter, feature scaffolder, live permissions, process gate plugin with phase-exit validation.
 - **Key code:** `scripts/omt/mvc_check.py`, `scripts/omt/new_feature.py`, `.opencode/plugin/omt_enforcer.ts`, `.opencode/plugin/omt_status.ts`, `opencode.jsonc`.
 - **Artifacts:** `.meta/.../features/feature_006.opencode_process_enforcement/`.
 
-## feature_007 — Intelligent Agent Behaviour ✅
+# SECTION:F007 — feature_007 — Intelligent Agent Behaviour ✅ (grep:FEATURE_007_)
 **Goal:** Complete intelligent-agent subsystem running perceive → decide → act → reflect cycle driven by goals, policy condition DSL, tool registry, volatile/persistent memory, reflection engine with self-improvement proposals.
 - **Key code:** `src/agentx/agent/` (model, controller, view, persistence, interfaces, types).
 - **Subsystems:** Agent facade, GoalManager, PolicyEngine (condition DSL + conflict resolver), MemoryManager, ReflectionEngine (critique parser + safety evaluator + proposal router), ToolRegistry (FileSystemTool, RagSensorTool, SessionTool), `agent_session.db`.
 - **Bug-fix pass:** All bugs in `BUG_FIX_PLAN.md` resolved (P0–P3); 169 tests pass; MVC++ 0/0.
 - **Artifacts:** `.meta/.../features/feature_007.agentx_intelligent_agent_behaviour/` (8 analysis docs + design + operation specs + impl notes + test report).
 
-## feature_010 — Agent Demo Screen ✅
+# SECTION:F010 — feature_010 — Agent Demo Screen ✅ (grep:FEATURE_010_)
 **Goal:** Dedicated Textual screen demonstrating feature_007 with one trigger. From Agent screen, press `d` (or type `demo [a|b]`) — seeds goal + rules + sandbox file, auto-runs cycle, offers Run/Reset/Back buttons.
 - **Key code:** `src/agentx/agent/view/tui/demo_screen.py`, `src/agentx/agent/demo/scenarios.py`, `AgentController.load_demo_scenario_by_name()` / `reset_state()` / `Agent.clear_state()`.
 - **Scenarios:** A = File Reader (1 cycle); B = Knowledge Assistant (read notes → write summary, multi-step, condition DSL showcase).
 - **Side effect:** Fixed latent feature_007 bug (tools reading `command.parameters` instead of `command.action`) breaking runtime `EXECUTE_TOOL` create/query/update actions.
 - **Artifacts:** `.meta/.../features/feature_010.agent_demo_screen/`.
 
-## feature_011 — Fast Agent ✅
+# SECTION:F011 — feature_011 — Fast Agent ✅ (grep:FEATURE_011_)
 **Goal:** Streamlined, modal-dialog-driven agent UX reusing existing feature_007 `Agent` engine through stack of Textual `ModalScreen` dialogs. Existing `🤖 Agent` button relabeled `⚙️ Advanced Agent`; new `⚡ Fast Agent` (`f` key) offers simpler UX.
 - **Flow:** Goal → Running (auto-runs cycles) → Reflection (on proposal) → Result
 - **Simplicity:** One goal at a time, natural-language input, no raw policy authoring, auto-runs cycles pausing only on reflection proposals, auto-resumes latest snapshot
@@ -68,8 +70,17 @@
 
 ---
 
-## Cross-Cutting Characteristics
+# SECTION:CROSSCUT — Cross-Cutting Characteristics (grep:FEATURES_CROSSCUT_)
 - **Persistence:** stdlib `sqlite3`, no ORM, idempotent DDL — three databases (`session.db`, `rag.db`, `agent_session.db`). See persistence.md.
 - **AI-optional:** Agent cycle runs offline; reflection skipped when no AI service wired. Chat/RAG require LLM provider (OpenRouter default).
 - **Two UIs, one controller layer:** Console and TUI share controllers via provider pattern — see architecture.md §3.
 - **Test coverage:** ~470 tests including Textual pilot e2e; feature tests under `tests/features/<feature_slug>/`.
+
+---
+
+# SECTION:XREF — Cross-References (grep:FEATURES_XREF_)
+XREF_HARNESS: `.meta/META_HARNESS.md` — SECTION:RULES, SECTION:TDD, SECTION:RIGOR
+XREF_GUIDE: `omt_agent_guide.md` — §12(Artifacts), §13(Checklist)
+XREF_SUBSYSTEMS: `subsystems.md` — Agent, RAG, Session, AI, UI, Demo, Utils
+XREF_DOC: `.meta/doc/` — architecture.md, features.md, subsystems.md, data_flow.md, persistence.md, extending.md
+XREF_SDP: `.meta/software_development_process/` — phase artifacts per feature

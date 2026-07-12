@@ -952,6 +952,10 @@ For genuine emergencies: `omt_skip{ reason: "...", scope: "src|tests|all" }`. Ev
 | `omt_green` | Declare a passing test (TDD Green — code hat) |
 | `omt_refactor` | Declare refactor state (TDD Refactor — code hat) |
 | `omt_done` | Declare TDD completion (runs full suite + checklist) |
+| **`omt_nav`** | **Navigate META HARNESS docs using grep-friendly tags (SECTION:/XREF_/CMD_/etc.)** |
+| **`omt_list_sections`** | **List all SECTION: headers across documentation** |
+| **`omt_cross_ref`** | **Resolve XREF_ cross-references to related sections** |
+| **`omt_quick_ref`** | **Get QUICK_ workflow patterns for common tasks** |
 | `uv run scripts/omt/mvc_check.py` | MVC++ architecture linter (guide §16) |
 | `uv run scripts/omt/tdd_check.py` | TDD enforcement engine (9 subcommands) |
 | `uv run scripts/omt/new_feature.py "<name>"` | Scaffold a feature's artifacts from `.meta/templates/` |
@@ -1042,6 +1046,7 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_016**: TDD enforcement (Kent Beck Red→Green→Refactor cycle, two-hats gate, AST analysis)
 - ✅ **feature_018**: ReAct chat screen (Reasoning + Acting with visible thinking, tool calls, streaming)
 - ✅ **feature_019**: Coding Agent screen (File system tools: search, read, edit, list, create with diff highlighting)
+- ✅ **feature_020**: Meta Harness Navigation (grep-optimized docs, opencode plugin tools: `omt_nav`, `omt_list_sections`, `omt_cross_ref`, `omt_quick_ref`)
 
 ### Pending
 - 🔲 **feature_001**: Session/user objectives driven by Petri Nets

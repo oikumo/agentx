@@ -1,10 +1,14 @@
 # subsystems.md — Subsystem Internals (compressed)
 
-**SCOPE:** How each subsystem works internally. Layering: architecture.md; Flows: data_flow.md.
+# SECTION:META — File Identity (grep:SECTION_META)
+# FILE:subsystems.md | SCOPE:How each subsystem works internally. Layering: architecture.md; Flows: data_flow.md.
+
+# SECTION:SCOPE — What This Covers (grep:SCOPE_)
+Agent subsystem internals (largest), RAG, Session, AI, UI/Command, Agent demo, Utils. Cross-references: architecture.md (layering), data_flow.md (runtime sequences).
 
 ---
 
-## 1. Intelligent Agent (`src/agentx/agent/`)
+# SECTION:AGENT — Intelligent Agent Subsystem (src/agentx/agent/) (grep:SUBSYSTEM_AGENT_)
 
 Self-contained MVC++ triad: goal-driven, policy-based agent with perceive → decide → act → reflect cycle. Largest subsystem.
 
@@ -98,7 +102,7 @@ Volatile (OrderedDict, capacity-bounded LRU) + persistent (repo-backed) tiers.
 
 ---
 
-## 2. RAG Subsystem (`src/agentx/model/rag/`)
+# SECTION:RAG — RAG Subsystem (src/agentx/model/rag/) (grep:SUBSYSTEM_RAG_)
 
 Retrieval-augmented generation: ingest docs into vector store, answer questions with retrieval-augmented LLM responses.
 
@@ -120,7 +124,7 @@ Retrieval-augmented generation: ingest docs into vector store, answer questions 
 
 ---
 
-## 3. Session Subsystem (`src/agentx/model/session/`)
+# SECTION:SESSION — Session Subsystem (src/agentx/model/session/) (grep:SUBSYSTEM_SESSION_)
 
 Manages per-session working dirs + command history.
 
@@ -135,7 +139,7 @@ Manages per-session working dirs + command history.
 
 ---
 
-## 4. AI Subsystem (`src/agentx/model/ai/`)
+# SECTION:AI — AI Subsystem (src/agentx/model/ai/) (grep:SUBSYSTEM_AI_)
 
 LLM provider abstraction + vectorstores.
 
@@ -153,7 +157,7 @@ LLM provider abstraction + vectorstores.
 
 ---
 
-## 5. UI / Command Subsystem (`src/agentx/ui/`)
+# SECTION:UI — UI / Command Subsystem (src/agentx/ui/) (grep:SUBSYSTEM_UI_)
 
 ### 5.1 Screens (MVC Triads)
 | Screen | Controller | View (console) | View (TUI) | Partner |
@@ -185,14 +189,14 @@ Bindings: `q`/`c`/`r`/`a`/`h`/`ctrl+l`.
 
 ---
 
-## 6. Agent Demo (`src/agentx/agent/demo/`)
+# SECTION:DEMO — Agent Demo (src/agentx/agent/demo/) (grep:SUBSYSTEM_DEMO_)
 Feature_010's seeded scenarios, launched from `AgentTUIScreen` via `d` / `demo [a|b]`.
 - `scenarios.py` — `DemoScenario` dataclass + `SCENARIO_A` (File Reader) + `SCENARIO_B` (Knowledge Assistant) + `get_scenario(name)` + `seed_sandbox_files(scenario, root)`. Pure data; controller translates specs into real `Goal`/`PolicyRule`.
 - See data_flow.md §"Demo flow" for runtime sequence.
 
 ---
 
-## 7. Utils (`src/agentx/utils/`)
+# SECTION:UTILS — Utils (src/agentx/utils/) (grep:SUBSYSTEM_UTILS_)
 | File | Role |
 |------|------|
 | `constants.py` | `SESSION_DEFAULT_BASE_DIRECTORY`, `APP_VERSION`, deletion allowlist |

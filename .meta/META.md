@@ -1,143 +1,123 @@
-# .meta 
+# .meta — Central Metadata Repository (grep-friendly)
 
-> **Purpose**: Central repository for all development metadata, documentation, and process artifacts following the OMT++ methodology. This directory contains everything needed to understand, maintain, and evolve the agentx project.
-
-> **⚠️ START HERE:** `.meta/META_HARNESS.md` — Token-optimized quick reference for the META HARNESS process enforcement system (137 lines, ~1,400 tokens). **Read before any coding task.**
+> **Purpose**: Central repository for all development metadata, documentation, and process artifacts following OMT++ methodology.
+> **⚠️ START HERE**: `.meta/META_HARNESS.md` — Token-optimized quick reference for META HARNESS process enforcement (170 lines, ~2,000 tokens). **Read before any coding task.**
 
 ---
 
-## Directory Structure
-
+# SECTION:STRUCTURE — Directory Tree (grep:STRUCTURE_)
 ```
 .meta/
-├── META.md                              # This file - overview of .meta directory
-├── META_HARNESS.md                      # ⚠️ Quick reference (137 lines) — READ FIRST
-├── doc/                                 # Maintainable technical documentation
+├── META.md                              # This file - overview
+├── META_HARNESS.md                      # ⚠️ Quick reference — READ FIRST
+├── doc/                                 # Technical documentation (current-state)
 │   ├── README.md                        #   Index + maintenance guide
 │   ├── architecture.md                  #   MVC++, layers, provider pattern, tech stack
 │   ├── features.md                      #   Feature catalog (all features + status)
 │   ├── subsystems.md                    #   Deep dives: Agent, RAG, Session, AI, UI
 │   ├── data_flow.md                     #   Boot, navigation, agent cycle, RAG flow
-│   ├── persistence.md                   #   DBs, schemas, no-ORM convention
+│   ├── persistence.md                   #   DBs, schemas, no-ORM/DP convention
 │   └── extending.md                     #   How-to: add command/screen/tool/feature
-├── software_development_process/        # OMT++ SDLC artifacts organized by phase
+├── software_development_process/        # OMT++ SDLC artifacts by phase
 │   ├── META.md                          # Process overview
-│   ├── omt_agent_guide.md               # Complete OMT++ methodology guide for agents
-│   ├── 1.project/                       # Project scoping & feasibility studies
+│   ├── omt_agent_guide.md               # Complete OMT++ methodology for agents
+│   ├── 1.project/                       # Project scoping & feasibility
 │   │   ├── META.md
-│   │   └── PROJECT_SUMMARY.md           # agentx project summary
-│   ├── 2.requirements/                  # Use cases, operation lists, analysis classes
+│   │   └── PROJECT_SUMMARY.md
+│   ├── 2.requirements/                  # Use cases, operations, analysis
 │   │   ├── META.md
-│   │   ├── documentation/               # Requirements documentation
-│   │   └── features/                    # Feature-specific requirements
-│   ├── 3.analysis/                      # Domain concepts, analysis class diagrams
+│   │   ├── documentation/
+│   │   └── features/
+│   ├── 3.analysis/                      # Domain concepts, UI specs
 │   │   └── META.md
-│   ├── 4.design/                        # Architecture, component diagrams, interfaces
+│   ├── 4.design/                        # Architecture, components, interfaces
+│   │   ├── META.md
+│   │   ├── behavior/BEHAVIOR.md
+│   │   ├── structure/STRUCTURE.md
+│   │   └── features/
+│   ├── 5.implementation/                # Source code, MVC++ patterns
 │   │   └── META.md
-│   ├── 5.implementation/                # Source code guidelines, MVC++ patterns
+│   ├── 6.testing/                       # Unit/integration/system testing
 │   │   └── META.md
-│   ├── 6.testing/                       # Unit, integration, system test strategies
-│   │   └── META.md
-│   └── 7.integration/                   # Full workflow validation
+│   └── 7.integration/                   # End-to-end validation
 │       └── META.md
 ├── proof_of_concepts/                   # Technical feasibility validation
 │   └── META.md
-└── prototypes/                          # UI mockups & interaction flow validation
+└── prototypes/                          # UI mockups & interaction flows
     └── META.md
 ```
 
 ---
 
-## Directory Descriptions
+# SECTION:DIRECTORIES — Directory Descriptions (grep:DIR_)
+**DIR_DOC**: `doc/` — Maintainable technical documentation (current-state reference). Start at `doc/README.md`. Covers: architecture (MVC++), feature catalog, subsystem deep dives, runtime data flows, persistence, extension how-to. Updated on code changes; NOT historical.
 
-### doc/
-**Maintainable technical documentation** of agentx features and characteristics —
-the current-state reference for developers and AI coding agents. Start at
-`doc/README.md` for an index and the maintenance guide. Unlike the phase
-artifacts under `software_development_process/` (which are historical records of
-individual features), `doc/` summarises the system as it exists today and is
-kept up to date as the code changes. Covers: architecture (MVC++), feature
-catalog, subsystem deep dives, runtime data flows, persistence, and extension
-how-to guides.
+**DIR_SDP**: `software_development_process/` — Complete OMT++ methodology implementation. Every feature/bugfix moves through phases with visible artifacts:
+| Phase | Dir | Purpose |
+|-------|-----|---------|
+| 1 | `1.project/` | Feasibility studies - "should we do this?" |
+| 2 | `2.requirements/` | WHAT users need (use cases, operations, analysis) |
+| 3 | `3.analysis/` | Domain concepts, UI behavior specs |
+| 4 | `4.design/` | HOW to implement (architecture, components, interfaces) |
+| 5 | `5.implementation/` | Source code following MVC++ + Abstract Partner |
+| 6 | `6.testing/` | Three-stage testing (unit → integration → system) |
+| 7 | `7.integration/` | End-to-end workflow validation |
 
-### software_development_process/
-The complete OMT++ methodology implementation for agentx. Every feature, bug fix, and enhancement moves through these phases with visible artifacts:
+**DIR_POC**: `proof_of_concepts/` — Technical feasibility validation before full implementation (LLM providers, DB schemas, architectural patterns, risk reduction).
 
-1. **Project** - Feasibility studies answering "should we do this?" before any work begins
-2. **Requirements** - WHAT users need (use cases, operations, analysis models)
-3. **Analysis** - Domain concepts and UI behavior specifications
-4. **Design** - HOW we implement it (architecture, components, interfaces)
-5. **Implementation** - Source code following MVC++ and Abstract Partner patterns
-6. **Testing** - Three-stage testing strategy (unit → integration → system)
-7. **Integration** - End-to-end workflow validation against use cases
-
-**Key Documents:**
-- `META_HARNESS.md` — **Quick reference (137 lines)** — Read before any coding task
-- `omt_agent_guide.md` — Complete OMT++ methodology guide for agents (source of truth)
-
-### proof_of_concepts/
-Validates technical feasibility and architecture decisions before full implementation. Used for:
-- Testing new LLM provider integrations
-- Validating database schema changes
-- Proving architectural patterns work
-- Risk reduction for high-complexity features
-
-### prototypes/
-Rapid UI mockups and interaction flows to validate use cases and dialog designs. Used for:
-- Testing new screen layouts
-- Validating command interaction patterns
-- User experience experiments
-- Abstract Partner interface designs
+**DIR_PROTO**: `prototypes/` — Rapid UI mockups & interaction flows (screen layouts, command patterns, UX experiments, Abstract Partner interfaces).
 
 ---
 
-## How to Use This Directory
+# SECTION:KEY_DOCS — Key Entry Points (grep:KEY_)
+| File | Role |
+|------|------|
+| `.meta/META_HARNESS.md` | ⚠️ Process enforcement quick reference — **READ FIRST** |
+| `.meta/software_development_process/omt_agent_guide.md` | Complete OMT++ methodology (source of truth) |
+| `.meta/doc/README.md` | Technical documentation index + maintenance guide |
+| `.meta/software_development_process/1.project/PROJECT_SUMMARY.md` | High-level project overview |
 
-### For New Features
-1. Start in `software_development_process/1.project/` - assess feasibility
-2. Move to `2.requirements/` - define use cases and operations
+---
+
+# SECTION:WORKFLOW — How to Use (grep:WORKFLOW_)
+**WORKFLOW_NEW_FEATURE**:
+1. Start in `software_development_process/1.project/` — assess feasibility
+2. Move to `2.requirements/` — define use cases and operations
 3. Proceed through Analysis → Design → Implementation → Testing
 4. Create artifacts in each phase directory before coding
 
-### For Bug Fixes
-1. Identify the affected component in `5.implementation/`
+**WORKFLOW_BUG_FIX**:
+1. Identify affected component in `5.implementation/`
 2. Check `6.testing/` for existing test coverage
-3. Follow OMT++ process: Analysis (root cause) → Design (fix approach) → Implementation → Testing
+3. Follow OMT++: Analysis (root cause) → Design (fix approach) → Implementation → Testing
 
-### For Learning the Codebase
-1. Read `.meta/META_HARNESS.md` — Process enforcement quick reference (**start here**)
-2. Start at `.meta/doc/README.md` — the current-state technical documentation
-   (architecture, features, subsystems, data flows)
-3. Read `software_development_process/omt_agent_guide.md` for the methodology
-4. Review `1.project/PROJECT_SUMMARY.md` for high-level overview
-5. Explore phase directories to understand the development workflow
-
----
-
-## OMT++ Methodology Quick Reference
-
-**Four Phases** (never skip):
-- **Analysis** → WHAT is the problem?
-- **Design** → HOW will we solve it?
-- **Programming** → Write the code
-- **Testing** → Does it work?
-
-**Two Parallel Paths** (model both):
-- **Static** → Classes, components, file structure
-- **Functional** → Use cases, sequences, interactions
-
-**Core Architecture**:
-- **MVC++** → Model-View-Controller with strict layer separation
-- **Abstract Partner** → Interface-based View↔Controller communication
-- **Command Pattern** → Top-level input dispatch
-- **Database Partner (DP)** → All SQL encapsulated in DP classes
+**WORKFLOW_LEARN_CODEBASE**:
+1. Read `.meta/META_HARNESS.md` — process enforcement quick reference
+2. Read `.meta/doc/README.md` — current-state technical docs (arch, features, subsystems)
+4. Read `software_development_process/omt_agent_guide.md` — methodology
+5. Review `1.project/PROJECT_SUMMARY.md` — high-level overview
+6. Explore phase directories for development workflow
 
 ---
 
-## Related Files
+# SECTION:OMT_QUICK — OMT++ Methodology Quick Ref (grep:OMT_)
+**PHASES** (never skip): ANALYSIS → DESIGN → PROGRAMMING → TESTING
+**PATHS** (model both): STATIC (classes, components, files) + FUNCTIONAL (use cases, sequences, interactions)
+**ARCHITECTURE**: MVC++ (strict layer separation) + Abstract Partner (interface-based View↔Controller) + Command Pattern (top-level dispatch) + Database Partner (all SQL in DP classes)
 
-- **WORK.md** (root) - Active development task tracking
-- **AGENTS.md** (root) - Agent behavior rules and process enforcement
-- **README.md** (root) - User-facing project documentation
+---
 
+# SECTION:RELATED — Related Root Files (grep:REL_)
+| File | Role |
+|------|------|
+| `WORK.md` (root) | Active task tracking |
+| `AGENTS.md` (root) | Agent behavior rules + process enforcement |
+| `README.md` (root) | User-facing project overview |
 
+---
+
+# SECTION:XREF — Cross-References (grep:XREF_)
+XREF_HARNESS: `.meta/META_HARNESS.md` — SECTION:RULES, SECTION:TDD, SECTION:ERRORS, SECTION:CMDS, SECTION:QUICK
+XREF_GUIDE: `omt_agent_guide.md` — §2(Phase), §11.4(TDD), §12(Artifacts), §13(Checklist), §14(Do/Don't), §16(Mistakes)
+XREF_DOC: `.meta/doc/` — architecture.md, features.md, subsystems.md, data_flow.md, persistence.md, extending.md
+XREF_SDP: `software_development_process/` — phase dirs 1-7 + META.md each

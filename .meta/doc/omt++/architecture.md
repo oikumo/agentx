@@ -1,10 +1,14 @@
 # architecture.md — MVC++ Architecture (compressed)
 
-**SCOPE:** Layering, dependency rules, patterns, stack, enforcement.
+# SECTION:META — File Identity (grep:SECTION_META)
+# FILE:architecture.md | SCOPE:Layering, dependency rules, patterns, stack, enforcement
+
+# SECTION:SCOPE — What This Covers (grep:SCOPE_)
+Layering, dependency rules, core patterns, tech stack, configuration & enforcement.
 
 ---
 
-## 1. MVC++ — Layer Rules (Hard)
+# SECTION:MVCPP — MVC++ Layer Rules (Hard) (grep:MVCPP_)
 
 ```
 CONTROLLER: App logic, orchestration, dispatch | knows: View+Model | seen by: View(Partner)
@@ -25,7 +29,7 @@ MODEL:      Domain logic, biz rules, data      | knows: nothing about UI
 
 ---
 
-## 2. Abstract Partner Pattern
+# SECTION:PARTNER — Abstract Partner Pattern (grep:PARTNER_)
 
 ```
 View ──calls──▶ I*ViewPartner(ABC) ◀──implements── Controller
@@ -46,7 +50,7 @@ Controller ──calls──▶ I*View(ABC) ◀──implements── View
 
 ---
 
-## 2.5. Fast Agent (feature_011) — Modal UX
+# SECTION:FAST_AGENT — Fast Agent (feature_011) Modal UX (grep:FAST_)
 
 | Aspect | Detail |
 |--------|--------|
@@ -60,7 +64,7 @@ Controller ──calls──▶ I*View(ABC) ◀──implements── View
 
 ---
 
-## 3. Provider / Adapter Pattern (Console ⇄ TUI)
+# SECTION:PROVIDER — Provider / Adapter Pattern (Console ⇄ TUI) (grep:PROVIDER_)
 
 ```
 main.py → ProviderRegistry.get_default()
@@ -73,7 +77,7 @@ main.py → ProviderRegistry.get_default()
 
 ---
 
-## 4. Command Pattern (Main Screen Only)
+# SECTION:COMMAND — Command Pattern (Main Screen Only) (grep:COMMAND_)
 
 ```
 ui/screens/main/commands/
@@ -85,7 +89,7 @@ Flow: `Input → Parser → MainController.run_command() → commands[key].run(a
 
 ---
 
-## 5. Database Partner (DP) Pattern
+# SECTION:DP — Database Partner (DP) Pattern (grep:DP_)
 
 **All SQL in `DP_*` classes only** (enforced by `mvc_check.py:SQL_OUTSIDE_DP`)
 
@@ -99,7 +103,7 @@ All: stdlib `sqlite3`, idempotent `CREATE TABLE IF NOT EXISTS`, no ORM/Alembic.
 
 ---
 
-## 6. Tech Stack
+# SECTION:STACK — Tech Stack (grep:STACK_)
 
 | Concern | Tech |
 |---------|------|
@@ -116,7 +120,7 @@ All: stdlib `sqlite3`, idempotent `CREATE TABLE IF NOT EXISTS`, no ORM/Alembic.
 
 ---
 
-## 7. Config & Enforcement
+# SECTION:CONFIG — Config & Enforcement (grep:CONFIG_)
 
 | File | Purpose |
 |------|---------|
@@ -130,7 +134,7 @@ All: stdlib `sqlite3`, idempotent `CREATE TABLE IF NOT EXISTS`, no ORM/Alembic.
 
 ---
 
-## 8. Key Design Decisions
+# SECTION:DECISIONS — Key Design Decisions (grep:DECISIONS_)
 
 - **No ORM/Alembic** — stdlib sqlite3 + explicit DDL
 - **Agent persistence = snapshot** — `SessionSnapshot` captures config, volatile memory, policy, goal tree root, reflection log position

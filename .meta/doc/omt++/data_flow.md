@@ -1,10 +1,14 @@
 # data_flow.md — Runtime Sequences (compressed)
 
-**SCOPE:** Boot, navigation, agent cycle, demo, chat, RAG ingestion/query, session, persistence.
+# SECTION:META — File Identity (grep:SECTION_META)
+# FILE:data_flow.md | SCOPE:Boot, navigation, agent cycle, demo, chat, RAG ingestion/query, session, persistence
+
+# SECTION:SCOPE — What This Covers (grep:SCOPE_)
+Boot sequence, screen navigation, agent cycle, demo flow, chat streaming, RAG ingestion/query, session lifecycle, agent persistence.
 
 ---
 
-## 1. Boot (`main.py`)
+# SECTION:BOOT — Boot Sequence (main.py) (grep:BOOT_)
 
 ```
 load_dotenv() → prompt API key if missing
@@ -24,7 +28,7 @@ main():
 
 ---
 
-## 2. TUI Screen Navigation
+# SECTION:NAV — TUI Screen Navigation (grep:NAV_)
 
 ```
 TUIApplication.on_mount → push MainTUIScreen
@@ -41,7 +45,7 @@ Agent screen → demo: d / "demo [a|b]" → action_open_demo(name) → push Agen
 
 ---
 
-## 3. Agent Cycle (`Agent.run_cycle`)
+# SECTION:AGENT_CYCLE — Agent Cycle (Agent.run_cycle) (grep:AGENT_CYCLE_)
 
 ```
 perceive()          ── PERCEIVING
@@ -76,7 +80,7 @@ return CycleResult(perception, decision, action_result, reflection)
 
 ---
 
-## 4. Demo Flow (feature_010)
+# SECTION:DEMO — Demo Flow (feature_010) (grep:DEMO_)
 
 ```
 AgentTUIScreen: d / "demo [a|b]"
@@ -104,7 +108,7 @@ Back (Escape)   → app.pop_screen() → back to AgentTUIScreen
 
 ---
 
-## 5. Chat Flow (Streaming)
+# SECTION:CHAT — Chat Flow (Streaming) (grep:CHAT_)
 
 ```
 User types message
@@ -121,7 +125,7 @@ User types message
 
 ---
 
-## 6. RAG Ingestion
+# SECTION:RAG_INGEST — RAG Ingestion Flow (grep:RAG_INGEST_)
 
 ```
 RagTUIScreen: Ingest / "i"
@@ -140,7 +144,7 @@ RagTUIScreen: Ingest / "i"
 
 ---
 
-## 7. RAG Query
+# SECTION:RAG_QUERY — RAG Query Flow (grep:RAG_QUERY_)
 
 ```
 RagTUIScreen: question input
@@ -158,7 +162,7 @@ RagTUIScreen: question input
 
 ---
 
-## 8. Session Lifecycle
+# SECTION:SESSION — Session Lifecycle (grep:SESSION_)
 
 ```
 no session (default "current" under local_sessions/)
@@ -174,6 +178,8 @@ each run_command:
 Sessions = working dir root. RAG repos under `<session>/rag/`. Agent persistence (`agent_session.db`) in session dir (or `.` if no session).
 
 ---
+
+# SECTION:PERSISTENCE_FLOW — Agent Persistence Flow (grep:PERSISTENCE_FLOW_)
 
 ## 9. Agent Persistence
 

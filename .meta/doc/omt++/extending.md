@@ -1,10 +1,14 @@
-# Extending AgentX (compressed)
+# Extending AgentX (compressed) (grep:EXT_)
 
-> **Scope:** how-to guides for common additions + conventions checklist. Follow OMT++ process (`omt_agent_guide.md`) for every change.
+# SECTION:META — File Identity (grep:SECTION_META)
+# FILE:extending.md | SCOPE:How-to guides for common additions + conventions checklist. Follow OMT++ process (`omt_agent_guide.md`) for every change.
+
+# SECTION:SCOPE — What This Covers (grep:SCOPE_)
+How-to guides for common additions (commands, screens, tools, features, AI providers) plus conventions checklist for verification before completion.
 
 ---
 
-## 0. Before You Start (Every Change)
+# SECTION:BEFORE — Before You Start (Every Change) (grep:BEFORE_)
 1. Read `WORK.md` (current state) + `AGENTS.md` (rules).
 2. Declare phase before editing `src/`:
    `omt_phase{ task_type, scope, phase, feature, design_doc? }`
@@ -15,7 +19,7 @@
 
 ---
 
-## 1. Add a Command (Main Screen)
+# SECTION:CMD — Add a Command (Main Screen) (grep:CMD_)
 Commands = top-level typed-keyword dispatchers.
 
 1. **Create** `Command` subclass in `src/agentx/ui/screens/main/commands/commands.py`:
@@ -32,11 +36,11 @@ Commands = top-level typed-keyword dispatchers.
    ```
 3. Reachable by typing `foo <args>` in main screen; appears in `help` automatically.
 
-> Commands call controller, never view directly. To open a new screen, add `controller.show_<thing>()` and a screen triad (§2) — see `chat`/`rag`/`agent`.
+> Commands call controller, never view directly. To open a new screen, add `controller.show_<thing>()` and a screen triad (§SCREEN) — see `chat`/`rag`/`agent`.
 
 ---
 
-## 2. Add a Screen (MVC++ Triad)
+# SECTION:SCREEN — Add a Screen (MVC++ Triad) (grep:SCREEN_)
 Each screen = self-contained Model-View-Controller triad.
 
 1. **Scaffold:** `uv run scripts/omt/new_feature.py "<screen name>" --type new_screen` (creates requirements feature dir; then create design doc under `.meta/.../4.design/features/<feature>/design_001_*.md` + `operation_spec_001_*.md`).
@@ -53,7 +57,7 @@ Each screen = self-contained Model-View-Controller triad.
 
 ---
 
-## 3. Add an Agent Tool
+# SECTION:TOOL — Add an Agent Tool (grep:TOOL_)
 Tools = sensors (`ISensor`), actuators (`IActuator`), or hybrid (both).
 
 1. **Implement** in `src/agentx/agent/model/tools/<your_tool>.py`:
@@ -74,7 +78,7 @@ Tools = sensors (`ISensor`), actuators (`IActuator`), or hybrid (both).
 
 ---
 
-## 4. Conventions Checklist (Verify Before Complete)
+# SECTION:CHECKLIST — Conventions Checklist (Verify Before Complete) (grep:CHECKLIST_)
 
 | Area | Rule |
 |------|------|
@@ -89,7 +93,7 @@ Tools = sensors (`ISensor`), actuators (`IActuator`), or hybrid (both).
 
 ---
 
-## 5. Quick Ref: Key Files to Touch
+# SECTION:QUICKREF — Quick Ref: Key Files to Touch (grep:QUICKREF_)
 
 | Task | Files |
 |------|-------|
@@ -102,10 +106,10 @@ Tools = sensors (`ISensor`), actuators (`IActuator`), or hybrid (both).
 
 ---
 
-## 6. Related Docs
-- Process: `omt_agent_guide.md` (§2 Phase Model, §12 Essential vs Optional, §13 Checklist)
-- Architecture: `architecture.md` (layering, patterns, tech stack)
-- Data flows: `data_flow.md` (boot, navigation, agent cycle, RAG, chat, session, persistence)
-- Subsystem internals: `subsystems.md`
-- Persistence: `persistence.md`
-- Feature catalog: `features.md`
+# SECTION:XREF — Related Docs (grep:EXT_XREF_)
+XREF_PROCESS: `omt_agent_guide.md` (§2 Phase Model, §12 Essential vs Optional, §13 Checklist)
+XREF_ARCH: `architecture.md` (layering, patterns, tech stack)
+XREF_DATA_FLOW: `data_flow.md` (boot, navigation, agent cycle, RAG, chat, session, persistence)
+XREF_SUBSYSTEMS: `subsystems.md` (Agent, RAG, Session, AI, UI, Demo, Utils internals)
+XREF_PERSIST: `persistence.md` (DBs, schemas, DP convention, filesystem)
+XREF_FEATURES: `features.md` (Feature catalog)

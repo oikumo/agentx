@@ -36,6 +36,7 @@ omt_testlist → omt_red → omt_green → omt_refactor → omt_done
 | TDD | `omt_testlist`, `omt_red`, `omt_green`, `omt_refactor`, `omt_done` |
 | Lint/Scaffold | `mvc_check.py`, `new_feature.py`, `tdd_check.py` |
 | Status | `omt_status` |
+| **Navigation** | `omt_nav`, `omt_list_sections`, `omt_cross_ref`, `omt_quick_ref` |
 
 ## Quick Reference
 - **Declare phase:** `omt_phase{task_type:"bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs", phase:"Analysis|Design|Programming|Testing", scope:"done definition"}`
