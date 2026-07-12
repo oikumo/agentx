@@ -339,7 +339,10 @@ class SomeClass:
         for f in [REPO_ROOT / "tests" / "features" / feature, REPO_ROOT / "src" / "agentx" / "some_module.py"]:
             if f.exists():
                 import shutil
-                shutil.rmtree(f.parent) if f.is_dir() else f.unlink()
+                if f.is_dir():
+                    shutil.rmtree(f)
+                else:
+                    f.unlink()
 
 
 def test_glob_to_regex():
@@ -517,7 +520,10 @@ class RevertClass:
         for f in [REPO_ROOT / "tests" / "features" / feature, REPO_ROOT / "src" / "agentx" / "revert_module.py"]:
             if f.exists():
                 import shutil
-                shutil.rmtree(f.parent) if f.is_dir() else f.unlink()
+                if f.is_dir():
+                    shutil.rmtree(f)
+                else:
+                    f.unlink()
 
 
 def test_tdd_validate_exit():
@@ -657,7 +663,10 @@ def test_subject_method_c():
         for f in [REPO_ROOT / "tests" / "features" / feature, REPO_ROOT / "src" / "agentx" / "target.py"]:
             if f.exists():
                 import shutil
-                shutil.rmtree(f.parent) if f.is_dir() else f.unlink()
+                if f.is_dir():
+                    shutil.rmtree(f)
+                else:
+                    f.unlink()
 
 
 def test_mvc_check_integration():
@@ -679,6 +688,9 @@ class TestView:
         self._partner = partner
 """)
 
+    # Test files created during this test - track them for cleanup
+    test_files_to_cleanup = []
+
     try:
         result = run_mvc(str(test_view.relative_to(REPO_ROOT)))
         print(f"  errors: {result.get('errors')}, warnings: {result.get('warnings')}")
@@ -686,6 +698,7 @@ class TestView:
         view_imports_model = [f for f in findings if f.get("rule") == "VIEW_IMPORTS_MODEL"]
         assert len(view_imports_model) == 1, f"Expected VIEW_IMPORTS_MODEL error, got {findings}"
         print("  ✓ VIEW_IMPORTS_MODEL caught")
+        test_files_to_cleanup.append(test_view)
 
         # Test PARTNER_NOT_ABC
         test_partner = REPO_ROOT / "src" / "agentx" / "ui" / "screens" / "test" / "test_view2.py"
@@ -698,6 +711,7 @@ class TestView2:
     def __init__(self, partner: ITestPartner):
         self._partner = partner
 """)
+        test_files_to_cleanup.append(test_partner)
         result = run_mvc(str(test_partner.relative_to(REPO_ROOT)))
         findings = result.get("findings", [])
         partner_not_abc = [f for f in findings if f.get("rule") == "PARTNER_NOT_ABC"]
@@ -711,6 +725,7 @@ class TestView2:
 class TestController:  # Controller in model/ - VIOLATION
     pass
 """)
+        test_files_to_cleanup.append(test_model_ctrl)
         result = run_mvc(str(test_model_ctrl.relative_to(REPO_ROOT)))
         findings = result.get("findings", [])
         ctrl_in_model = [f for f in findings if f.get("rule") == "CONTROLLER_IN_MODEL"]
@@ -721,7 +736,13 @@ class TestController:  # Controller in model/ - VIOLATION
         return True
     finally:
         import shutil
-        shutil.rmtree(test_view.parent.parent, ignore_errors=True)
+        # Clean up only the specific test files created
+        for f in test_files_to_cleanup:
+            if f.exists():
+                if f.is_dir():
+                    shutil.rmtree(f)
+                else:
+                    f.unlink()
 
 
 def test_omt_skip_escape_hatch():
