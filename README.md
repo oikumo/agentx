@@ -15,12 +15,13 @@
 ┌─ AgentX TUI ─────────────────────────────────────────────────┐
 │  Welcome to AgentX TUI                                       │
 │  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent │
-│  Press 'm' Models, 'h' Help, 'q' Quit                        │
+│  Press 't' ReAct, 'm' Models, 'h' Help, 'q' Quit             │
 │                                                              │
 │  [c] Chat  ──→ LLM conversations with streaming responses    │
 │  [r] RAG   ──→ PDF Q&A, document ingestion, vector search    │
 │  [f] Fast Agent ──→ Modal-dialog-driven agent (simplified)   │
 │  [a] Advanced Agent ──→ Full agent workspace (tools, policy) │
+│  [t] ReAct  ──→ Reasoning + Acting with visible thinking     │
 │  [m] Models ──→ Select AI model provider                     │
 │  [h] Help  ──→ Command reference                             │
 │  [q] Quit  ──→ Exit application                              │
@@ -35,7 +36,7 @@
 - 🤖 **Intelligent Agent** - Autonomous perceive→decide→act→reflect cycle with tool registry, policy DSL engine, and self-improvement loop
 - 🧠 **Petri Net Sessions** - Graph-based session/user objective management
 - 🔌 **LangChain/LangGraph** - Full integration for agentic workflows
-- 🧪 **766+ Tests** - Comprehensive unit + integration + automated TUI tests
+- 🧪 **879+ Tests** - Comprehensive unit + integration + automated TUI tests
 
 Developed with **opencode** using **OMT++ methodology** (Analysis → Design → Programming → Testing with visible artifacts).
 
@@ -91,6 +92,7 @@ You'll see the TUI interface. Press `c` for chat, `r` for RAG, `m` for models, `
 | `r` | Open RAG screen |
 | `f` | Open Fast Agent (modal-dialog-driven) |
 | `a` | Open Advanced Agent screen |
+| `t` | Open ReAct screen (reasoning + acting) |
 | `m` | Open Models screen (select AI model provider) |
 | `h` | Show help |
 | `q` | Quit application |
@@ -318,7 +320,62 @@ A runtime AI model provider selector accessible from the main TUI screen (press 
 └─────────────────────────────────────────────────────────────┘
 ```
 
-The selected provider is persisted to `~/.agentx/model_selection.json` and used across all features (chat, RAG, agent). The registry uses a unified `LLMProvider` ABC with lazy imports — adding a new provider is a single class + one catalog entry.
+The selected provider is persisted to `~/.agentx/model_selection.json` and used across all features (chat, RAG, agent, ReAct). The registry uses a unified `LLMProvider` ABC with lazy imports — adding a new provider is a single class + one catalog entry.
+
+---
+
+### 🧠 ReAct Screen (feature_018)
+
+A new **Reasoning + Acting** chat screen that uses LangChain's `create_agent` (ReAct pattern) to show the agent's **thinking process**, **tool calls**, and **streaming answers** in real-time.
+
+```text
+┌─ ReAct ──────────────────────────────────────────────────────┐
+│  Ask me anything — I'll show my reasoning!                   │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  You: What is 15% of 240?                                    │
+│                                                              │
+│  💭 The user wants 15% of 240. I can calculate this          │
+│     with the calculator tool.                                │
+│                                                              │
+│  🔧 calculator(expression="240*0.15")                        │
+│                                                              │
+│  📊 36.0                                                     │
+│                                                              │
+│  💭 The calculator returned 36.0. 15% of 240 is 36.          │
+│                                                              │
+│  Assistant: 15% of 240 is 36.                                │
+│                                                              │
+│  > _                                                         │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Key Features:**
+- 💭 **Thinking** — Visible chain-of-thought reasoning from the agent
+- 🔧 **Tool calls** — See which tools the agent uses and with what arguments
+- 📊 **Tool results** — Tool outputs displayed inline
+- 💬 **Streaming answers** — Final response streams token-by-token
+- 🧠 **Context preservation** — Multi-turn conversations via LangGraph checkpointer
+- 🛑 **Non-blocking UI** — Agent runs on background thread; `Esc`/`q` always responsive
+
+**Built-in Tools:**
+| Tool | Description |
+|------|-------------|
+| `calculator` | Safe math evaluation (AST-based, no `eval`) |
+| `get_current_time` | Returns current ISO 8601 timestamp |
+
+**Architecture:**
+- **Model**: `ReactAgentService` wraps `langchain.agents.create_agent` with `InMemorySaver` checkpointer
+- **Controller**: `ReactController` implements `IReactViewPartner`; spawns daemon worker thread for agent streaming
+- **View**: `ReactTUIScreen` extends `BaseAgentXScreen`; displays thinking/tool/answer blocks with distinct styling
+- **Integration**: Added `t` binding + 🧠 ReAct button to Main screen; MenuGrid expanded to 3×3 (7 buttons)
+
+**Key Bindings:**
+| Key | Action |
+|-----|--------|
+| `t` | Open ReAct screen |
+| `Ctrl+Enter` | Send message |
+| `Esc` / `q` | Return to Main (cancels running agent) |
 
 ---
 
@@ -693,7 +750,7 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 
 ## 🧪 Testing
 
-agentx includes **766 comprehensive tests** covering all core modules:
+agentx includes **879+ comprehensive tests** covering all core modules:
 
 ```bash
 # Run all tests
@@ -886,6 +943,7 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_013**: AI model provider selector (6 providers: OpenRouter, OpenAI, Gemini, NVIDIA, Ollama, LlamaCpp)
 - ✅ **feature_014**: Non-blocking TUI runner (daemon thread + queue poll, no UI freeze)
 - ✅ **feature_016**: TDD enforcement (Kent Beck Red→Green→Refactor cycle, two-hats gate, AST analysis)
+- ✅ **feature_018**: ReAct chat screen (Reasoning + Acting with visible thinking, tool calls, streaming)
 
 ### Pending
 - 🔲 **feature_001**: Session/user objectives driven by Petri Nets
