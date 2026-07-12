@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from agentx.agent.controller.agent_controller import AgentController
     from agentx.agent.interfaces import IAgentViewPartner
     from agentx.ui.screens.models.models_controller import ModelsController
+    from agentx.ui.screens.react.react_controller import ReactController
 
 
 class MainController(IMainViewPartner):
@@ -36,6 +37,7 @@ class MainController(IMainViewPartner):
         self._agent_controller: AgentController | None = None
         self._fast_agent_controller: AgentController | None = None
         self._models_controller: "ModelsController | None" = None
+        self._react_controller: "ReactController | None" = None
         self.load_commands()
 
     def load_commands(self):
@@ -198,10 +200,21 @@ class MainController(IMainViewPartner):
         """Get the Models controller for screen connection."""
         return self._models_controller
 
-    def show_react(self):
-        from agentx.ui.screens.react.react_controller import ReActController
-        react_controller = ReActController()
-        react_controller.show()
+    def show_react(self) -> None:
+        """Create and wire a ReactController for the ReAct screen.
+
+        Reuses an already-wired controller (C5 pattern) so the conversation
+        survives a close/reopen.
+        """
+        if self._react_controller is not None:
+            return
+        from agentx.ui.screens.react.react_controller import ReactController
+
+        self._react_controller = ReactController()
+
+    def get_react_controller(self) -> "ReactController | None":
+        """Get the ReAct controller for screen connection."""
+        return self._react_controller
 
     def print_message(self, message: str):
         self.view.print_message(message)

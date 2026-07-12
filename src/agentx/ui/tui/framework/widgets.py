@@ -117,7 +117,7 @@ class MenuGrid(Grid):
 
     DEFAULT_CSS = """
     MenuGrid {
-        grid-size: 3 2;
+        grid-size: 3 3;
         grid-gutter: 1 1;
         margin: 1 0;
         height: auto;
@@ -140,6 +140,7 @@ class MenuGrid(Grid):
         yield Button("⚡ Fast Agent", id="btn-fast-agent", variant="warning")
         yield Button("⚙️ Advanced Agent", id="btn-agent", variant="success")
         yield Button("🎛️ Models", id="btn-models", variant="primary")
+        yield Button("🧠 ReAct", id="btn-react", variant="primary")
         yield Button("❓ Help", id="btn-help", variant="default")
 
 

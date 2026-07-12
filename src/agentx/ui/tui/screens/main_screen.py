@@ -38,7 +38,7 @@ class MainTUIScreen(BaseAgentXScreen):
     Features:
     - Header with clock
     - Welcome panel
-    - Menu buttons (Chat, RAG, Fast Agent, Advanced Agent, Help)
+    - Menu buttons (Chat, RAG, Fast Agent, Advanced Agent, Models, ReAct, Help)
     - Command input field
     - Session status bar
     - Footer with key bindings
@@ -51,6 +51,7 @@ class MainTUIScreen(BaseAgentXScreen):
         Binding("f", "open_fast_agent", "Fast Agent", show=True),
         Binding("a", "open_agent", "Advanced Agent", show=True),
         Binding("m", "open_models", "Models", show=True),
+        Binding("t", "open_react", "ReAct", show=True),
         Binding("h", "show_help", "Help", show=True),
         Binding("ctrl+l", "focus_input", "Focus Input", show=False),
     ]
@@ -109,6 +110,8 @@ class MainTUIScreen(BaseAgentXScreen):
             self.action_open_agent()
         elif button_id == "btn-models":
             self.action_open_models()
+        elif button_id == "btn-react":
+            self.action_open_react()
         elif button_id == "btn-help":
             self.action_show_help()
 
@@ -211,6 +214,21 @@ class MainTUIScreen(BaseAgentXScreen):
             ),
         )
 
+    def action_open_react(self) -> None:
+        """Open the ReAct screen (reasoning + acting chat)."""
+        from agentx.ui.tui.screens.react_screen import ReactTUIScreen
+
+        self.navigate_to_child(
+            ReactTUIScreen,
+            controller=self._controller,
+            setup=lambda c: c.show_react() if hasattr(c, "show_react") else None,
+            getter=lambda c: (
+                c.get_react_controller()
+                if hasattr(c, "get_react_controller")
+                else None
+            ),
+        )
+
     # ----------------------------------------------------------- other actions
 
     def action_show_help(self) -> None:
@@ -225,6 +243,7 @@ class MainTUIScreen(BaseAgentXScreen):
 - `f` - Open Fast Agent (simple modal UX)
 - `a` - Open Advanced Agent (full workspace)
 - `m` - Open Models (select AI model provider)
+- `t` - Open ReAct (reasoning + acting chat)
 - `h` - Show this help
 - `Ctrl+L` - Focus command input
 

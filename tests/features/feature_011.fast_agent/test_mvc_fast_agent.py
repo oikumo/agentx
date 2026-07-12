@@ -98,16 +98,17 @@ class TestMvcFastAgent:
         ).read_text()
         assert 'id="btn-fast-agent"' in source, "Missing btn-fast-agent button"
 
-    def test_grid_is_3x2(self):
-        """MenuGrid CSS must use grid-size: 3 2 (to fit 5 buttons).
+    def test_grid_is_3x3(self):
+        """MenuGrid CSS must use grid-size: 3 3 (to fit 7 buttons: Chat, RAG, Fast Agent, Advanced Agent, Models, ReAct, Help).
 
         Note (feature_012): MenuGrid CSS now lives in
         ``ui/tui/framework/widgets.py``.
+        Note (feature_018): Added ReAct button, changed from 3x2 to 3x3.
         """
         source = Path(
             _SRC / "ui" / "tui" / "framework" / "widgets.py"
         ).read_text()
-        assert "grid-size: 3 2" in source, "MenuGrid should use grid-size: 3 2"
+        assert "grid-size: 3 3" in source, "MenuGrid should use grid-size: 3 3"
 
     def test_controller_has_get_cycle_summary(self):
         """AgentController must have the get_cycle_summary method."""

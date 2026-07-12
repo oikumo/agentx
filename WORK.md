@@ -95,9 +95,17 @@
   - [x] Verification: 807 tests pass, MVC++ 0 errors, 0 regressions
 
 - [x] Fix chat screen "no conversation history" bug <!-- id:T-chat-nohistory prio:high agent:true -->
-  - [x] Root cause: ChatTUIScreen._run_llm_async built a throwaway local `history = [SystemMessage, HumanMessage(current)]` on every turn. Prior turns were never included and the AIMessage was appended to the local list (discarded when the worker thread exited). The controller's accumulated self.history was never touched — stayed frozen at [SystemMessage]. Each message was sent to the LLM as if it were the first in a brand-new conversation.
-  - [x] Fix: _run_llm_async worker now uses self._controller.history (the accumulated list) — appends HumanMessage, streams from full history, appends AIMessage back, pops on error. on_mount now calls start_new_conversation() (initializes history + creates DB conversation so _save_messages persists) with fallback to start_interactive_streaming() if DB unavailable.
-  - [x] Verification: 807 tests pass, MVC++ 0 errors, 0 regressions
+    - [x] Root cause: ChatTUIScreen._run_llm_async built a throwaway local `history = [SystemMessage, HumanMessage(current)]` on every turn. Prior turns were never included and the AIMessage was appended to the local list (discarded when the worker thread exited). The controller's accumulated self.history was never touched — stayed frozen at [SystemMessage]. Each message was sent to the LLM as if it were the first in a brand-new conversation.
+    - [x] Fix: _run_llm_async worker now uses self._controller.history (the accumulated list) — appends HumanMessage, streams from full history, appends AIMessage back, pops on error. on_mount now calls start_new_conversation() (initializes history + creates DB conversation so _save_messages persists) with fallback to start_interactive_streaming() if DB unavailable.
+    - [x] Verification: 807 tests pass, MVC++ 0 errors, 0 regressions
+
+- [x] Implement feature_018.react_screen <!-- id:T-018-prio-high agent:true -->
+    - [x] Analysis: Use cases (UC-1..UC-5), operation list (OP-1..OP-11), dialog diagram, class diagram, data dictionary, NFRs, traceability
+    - [x] Design: Design class diagram (Model/Controller/View), sequence diagrams (send message, tool call, cancel), operation specifications (OP-1..OP-15), file structure
+    - [x] Programming (TDD): Model (ReactAgentService, react_tools: calculator, get_current_time) → Controller (ReactController + IReactViewPartner ABC) → View (ReactTUIScreen) → Integration (MainController.show_react, MainTUIScreen.t binding + 🧠 button, MenuGrid 3×3)
+    - [x] Testing: 87 feature tests (17 model + 16 controller + 18 view + 11 integration + 16 MVC++ + 9 freeze); full suite 879/879 (1 pre-existing); MVC++ 0 errors
+    - [x] Feature: ReAct chat screen with visible thinking (💭), tool calls (🔧), tool results (📊), streaming answers; keybinding 't' / 🧠 button; LangChain create_agent with InMemorySaver checkpointer
+    - [x] Verification: 879/879 pass (1 pre-existing test_llm_initialization_attempted); MVC++ 0 errors; full OMT++ cycle complete
 
 ---
 

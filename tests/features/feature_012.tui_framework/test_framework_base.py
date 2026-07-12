@@ -308,14 +308,14 @@ class TestWidgets:
         assert len(items) == 2
         assert all(isinstance(i, Static) for i in items)
 
-    def test_menu_grid_has_six_buttons(self):
+    def test_menu_grid_has_seven_buttons(self):
         from textual.widgets import Button
 
         items = list(MenuGrid().compose())
-        assert len(items) == 6
+        assert len(items) == 7
         assert all(isinstance(i, Button) for i in items)
         ids = [b.id for b in items]
-        assert "btn-chat" in ids and "btn-rag" in ids and "btn-models" in ids
+        assert "btn-chat" in ids and "btn-rag" in ids and "btn-models" in ids and "btn-react" in ids
 
     def test_command_input_compose(self):
         items = list(CommandInput().compose())
