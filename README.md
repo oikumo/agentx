@@ -39,7 +39,7 @@
 - 🔌 **LangChain/LangGraph** - Full integration for agentic workflows
 - 🧪 **879+ Tests** - Comprehensive unit + integration + automated TUI tests
 
-Developed with **opencode** using **OMT++ methodology** (Analysis → Design → Programming → Testing with visible artifacts).
+Developed with **opencode** using the **META HARNESS** (OMT++ methodology: Analysis → Design → Programming → Testing with visible artifacts).
 
 ---
 
@@ -874,9 +874,28 @@ uv run pytest tests/ --cov=agentx --cov-report=html
 
 ---
 
-## 📖 opencode Process Enforcement
+## 📖 META HARNESS: Process Enforcement System
 
-agentx development is driven by **opencode only** with a mechanically enforced **OMT++** (Object Modeling Technique++) process harness. This ensures every code change follows a structured Analysis → Design → Programming → Testing workflow with visible artifacts.
+agentx development is driven by **opencode only** with a mechanically enforced **META HARNESS** — the collective name for the OMT++ (Object Modeling Technique++) process enforcement system. The META HARNESS ensures every code change follows a structured Analysis → Design → Programming → Testing workflow with visible, auditable artifacts.
+
+**The META HARNESS consists of:**
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **Documentation Structure** | `.meta/` | All development artifacts organized by OMT++ phases |
+| **Enforcement Plugin** | `.opencode/plugin/omt_enforcer.ts` | Gates `src/` edits; requires phase declarations and design artifacts |
+| **Status Tool** | `.opencode/plugin/omt_status.ts` | Returns current phase, unlock state, artifact status, TDD state |
+| **MVC++ Linter** | `scripts/omt/mvc_check.py` | Architecture checker for layer violations (View↔Model leaks, SQL outside DP, etc.) |
+| **TDD Engine** | `scripts/omt/tdd_check.py` + `omt_*` tools | Mechanically enforces Red→Green→Refactor cycles (two-hats gate) |
+| **Feature Scaffold** | `scripts/omt/new_feature.py` | Creates consistently-named feature directories from templates |
+| **Ledger** | `.meta/.omt/ledger.jsonl` | Audit trail of all phase declarations and completions |
+| **Configuration** | `opencode.jsonc`, `AGENTS.md` | Defines protected files, denied commands, and process rules |
+
+Together, these components form an automated enforcement system that makes the development process **visible, auditable, and consistently followed** without relying on manual discipline.
+
+---
+
+### How Enforcement Works
 
 ### How Enforcement Works
 
@@ -887,7 +906,7 @@ The enforcement lives in two layers:
 | **Coarse permissions** | `opencode.jsonc` | Declarative deny/allow rules (git commit, bare python, .env edits, etc.) |
 | **Fine process gate** | `.opencode/plugin/omt_enforcer.ts` | Programmatic phase checking, MVC++ linting, artifact scaffolding |
 
-#### The OMT++ Gate
+#### The META HARNESS Gate
 
 Before editing any file under `src/`, you **must** declare your OMT++ phase using the `omt_phase` tool:
 
@@ -937,7 +956,7 @@ For genuine emergencies: `omt_skip{ reason: "...", scope: "src|tests|all" }`. Ev
 | `uv run scripts/omt/tdd_check.py` | TDD enforcement engine (9 subcommands) |
 | `uv run scripts/omt/new_feature.py "<name>"` | Scaffold a feature's artifacts from `.meta/templates/` |
 
-#### TDD Enforcement (feature_016)
+#### TDD Enforcement (feature_016) — Part of the META HARNESS
 
 For `major_feature` and `new_screen` tasks, the gate automatically activates **TDD mode** — a Kent Beck-style Red → Green → Refactor cycle enforced mechanically:
 
@@ -977,6 +996,7 @@ For `major_feature` and `new_screen` tasks, the gate automatically activates **T
 #### References
 
 - **OMT++ methodology**: `.meta/software_development_process/omt_agent_guide.md` (source of truth)
+- **META HARNESS design**: `.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/`
 - **Process enforcement plan**: `.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/plan/PLAN.md`
 - **AGENTS.md**: Complete enforcement rules for opencode agents
 
@@ -1058,13 +1078,13 @@ agentx is an educational project. Contributions are welcome!
 
 **Development Workflow:**
 1. Read `AGENTS.md` for agent behavior rules
-2. Read `.meta/software_development_process/omt_agent_guide.md` for OMT++ methodology
+2. Read `.meta/software_development_process/omt_agent_guide.md` for OMT++ methodology and the META HARNESS
 3. Declare your phase with `omt_phase` before editing `src/`
 4. For major features: follow TDD cycle (`omt_testlist` → `omt_red` → `omt_green` → `omt_refactor` → `omt_done`)
 5. Run tests: `uv run pytest tests/ -v`
 6. Run MVC++ check: `uv run scripts/omt/mvc_check.py`
 
-**Note**: This project uses opencode for development. All code changes must follow the OMT++ process with visible artifacts.
+**Note**: This project uses opencode for development. All code changes must follow the META HARNESS process with visible artifacts.
 
 ---
 
