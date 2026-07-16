@@ -57,6 +57,10 @@
     "glob": "allow",
     "list": "allow",
     "lsp": "allow",
-    "skill": "allow"
+    "skill": "allow",
+    "omt_nav": "allow",
+    "omt_list_sections": "allow",
+    "omt_cross_ref": "allow",
+    "omt_quick_ref": "allow"
   }
 }

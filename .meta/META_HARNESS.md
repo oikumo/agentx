@@ -71,9 +71,10 @@ PROT_FILES: README.md, uv.lock, LICENSE, .env*, tests/ (requires omt_skip{scope:
 # ============================================================
 # SECTION:ESCAPE — Override Hatch (grep:ESC_)
 # ============================================================
-ESC_SKIP: omt_skip{reason,scope:src|tests|all} → logged to ledger
+ESC_SKIP: omt_skip{reason,scope:src|tests|nav|all} → logged to ledger
 ESC_SCOPE_SRC: unlocks src/ edits without phase
 ESC_SCOPE_TESTS: unlocks tests/ edits (canary approval)
+ESC_SCOPE_NAV: unlocks feature_020 nav gate (grep/glob on docs no longer require prior omt_nav)
 ESC_SCOPE_ALL: unlocks all including PROT_FILES (except .env*)
 
 # ============================================================
@@ -87,6 +88,16 @@ EXT_COMPLETE: omt_complete{feature,advance_to:Design|Programming|Testing|Done}
 # ============================================================
 STS_CMD: uv run scripts/omt/tdd_check.py status{--check.py status
 STS_OUT: phase, TDD_state, pending_items, unlock_expiry
+
+# ============================================================
+# SECTION:NAV — Navigation Enforcement (grep:NAV_)
+# ============================================================
+NAV_020: feature_020.meta_harness_navigation — mandatory doc navigation before grep/glob/read
+NAV_TOOLS: omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref (opencode plugin tools)
+NAV_FILES: .opencode/plugin/omt_nav.ts (implementation), AGENTS.md (enforcement), META_HARNESS.md (docs)
+NAV_ENFORCEMENT: scoped gate in omt_enforcer.ts — blocks grep/glob on doc paths until nav used; read & src/non-doc searches exempt; omt_skip{scope:nav} escape; AGENTS.md "MANDATORY" section
+NAV_TAGS: SECTION:, RULE_, ERR_, WRN_, CMD_, QUICK_, XREF_, TT_, PHASE_, FEAT_ (grep-friendly prefixes)
+NAV_WORKFLOW: omt_nav{query} → omt_list_sections → omt_cross_ref → omt_quick_ref (fallback to grep only if no results)
 
 # ============================================================
 # SECTION:PATHS — Key Filesystem Paths (grep:PTH_)
@@ -118,6 +129,10 @@ CMD_TDD_DONE: omt_done{feature}
 CMD_LINT: uv run scripts/omt/mvc_check.py [path]
 CMD_SCAFFOLD: uv run scripts/omt/new_feature.py "<name>" --type major_feature|new_screen
 CMD_STATUS: omt_status{include_ledger?}
+CMD_NAV: omt_nav{query,file?,tag_type?,include_context?} — grep-based doc navigation (feature_020)
+CMD_LIST_SECTIONS: omt_list_sections{file?} — list all SECTION: headers
+CMD_CROSS_REF: omt_cross_ref{xref} — resolve XREF_ cross-references
+CMD_QUICK_REF: omt_quick_ref{workflow?} — get QUICK_ workflow patterns
 
 # ============================================================
 # SECTION:PHASES — Phase Names (grep:PHASE_)
@@ -153,6 +168,7 @@ QUICK_SKIP_SRC: omt_skip{reason:"emergency",scope:"src"} (logged)
 QUICK_SKIP_TESTS: omt_skip{reason:"canary approved",scope:"tests"} (logged)
 QUICK_STATUS: omt_status → phase, unlock, artifacts, lint, next phases, WORK.md next
 QUICK_LINT: uv run scripts/omt/mvc_check.py [file|dir]
+QUICK_NAV_DOCS: omt_nav{query:"SECTION:"} → omt_list_sections → omt_cross_ref{xref} → omt_quick_ref{workflow} (feature_020 mandatory before grep/glob/read)
 
 # ============================================================
 # SECTION:XREF — Cross-Reference Map (grep:XREF_)
@@ -163,6 +179,8 @@ XREF_TDD: tdd_check.py subcommands: testlist,start,green,refactor,done,gate,afte
 XREF_SCAFFOLD: new_feature.py creates: FEATURE.md, plan/PLAN.md under .meta/.../2.requirements/features/feature_XXX.<slug>/
 XREF_LEDGER: .meta/.omt/ledger.jsonl — JSONL lines: {ts,kind:phase|skip|complete,session,task_type,phase,scope,feature,design_doc,tdd_mode}
 XREF_WORK: WORK.md — task list with [x]/[~]/[ ]/![], auto-synced by omt_complete
+XREF_NAV: .opencode/plugin/omt_nav.ts — feature_020 navigation tools (omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref)
+XREF_NAV_ENF: .opencode/plugin/omt_enforcer.ts — session.start reminder, AGENTS.md mandatory requirement
 
 # ============================================================
 # FOOTER

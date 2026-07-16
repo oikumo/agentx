@@ -25,6 +25,8 @@ import { execFileSync } from "node:child_process"
 
 
 const EDIT_TOOLS = new Set(["edit", "write", "patch", "multiedit"])
+const NAV_TOOLS = new Set(["omt_nav", "omt_list_sections", "omt_cross_ref", "omt_quick_ref"])
+const SEARCH_TOOLS = new Set(["grep", "glob", "read", "rg", "find"])
 const VALID_TASK_TYPES = new Set([
   "bug_fix", "minor_feature", "major_feature", "new_screen", "refactor", "test", "docs",
 ])
@@ -46,7 +48,6 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 const UNLOCK_WINDOW_MS = 8 * 60 * 60 * 1000
 
 // Phase exit requirements per guide §12 — only enforced for ARTIFACT_REQUIRED task types
-const PHASE_EXIT_REQUIREMENTS: Record<string, { phase: string; patterns: string[]; description: string }[]> = {
 const PHASE_EXIT_REQUIREMENTS: Record<string, { phase: string; patterns: string[]; description: string }[]> = {
   // Analysis → Design requires: Use case, Operation list, Analysis artifacts
   Analysis: [
@@ -146,12 +147,43 @@ function checkPhaseExitArtifacts(repoRoot: string, feature: string, fromPhase: s
   }
   return { ok: missing.length === 0, missing }
 }
-const UNLOCK_WINDOW_MS = 8 * 60 * 60 * 1000
 
 class OmtBlock extends Error {}
 
+// --- feature_020 navigation gate (module-level, pure, unit-testable) --------
+// Whether a repo-relative path is a META HARNESS *documentation* path. The nav
+// tools index docs only, so the "try nav first" expectation applies solely to
+// doc-scoped searches.
+export function isDocPath(rel: string): boolean {
+  return rel === "AGENTS.md" || rel === "WORK.md" || rel.startsWith(".meta/")
+}
+
+// Decide whether a search-tool call must be blocked until navigation is used.
+// Returns "allow" | "block". Pure (no I/O) so it can be unit-tested directly.
+//   - `read` is never gated (M1: targeted file access is not a conceptual
+//     search — e.g. reading WORK.md at startup or a file the user named).
+//   - grep/glob/rg/find scoped to src/ or other non-doc paths are never gated
+//     (M2: nav indexes docs, not code). A path-less search is treated as
+//     doc-capable (conservative — it may hit docs).
+export function navGateDecision(opts: {
+  tool: string
+  targetRel: string | null
+  usedNav: boolean
+  navUnlock: boolean
+}): "allow" | "block" {
+  const { tool, targetRel, usedNav, navUnlock } = opts
+  if (tool === "read") return "allow"
+  const docScoped = !targetRel || isDocPath(targetRel)
+  if (docScoped && !usedNav && !navUnlock) return "block"
+  return "allow"
+}
+
 export const OmtEnforcer = async ({ client, $, directory }) => {
   const ledgerPath = join(directory, ".meta", ".omt", "ledger.jsonl")
+
+  // --- session state for feature_020 navigation enforcement ---
+  // Track which sessions have used navigation tools vs search tools
+  const sessionNavState = new Map<string, { usedNav: boolean; usedSearch: boolean; searchCount: number }>()
 
   // --- ledger helpers ------------------------------------------------------
   const nowIso = () => new Date().toISOString()
@@ -189,6 +221,28 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
       chosen = recent.length ? recent[recent.length - 1] : null
     }
     return chosen ? { type: chosen.kind, record: chosen } : null
+  }
+
+  // feature_020 nav escape: is there an active omt_skip{scope:"nav"|"all"} for
+  // this session (or, fallback, within the unlock window)? Unlike
+  // getActiveUnlock(), this ignores phase records so a later phase declaration
+  // does not shadow a nav skip. (M1 escape hatch.)
+  const hasNavUnlock = (session) => {
+    const recs = readLedger().filter(
+      (r) => r.kind === "skip" && (r.scope === "nav" || r.scope === "all"),
+    )
+    if (!recs.length) return false
+    const mine = session ? recs.filter((r) => r.session === session) : []
+    let chosen = mine.length ? mine[mine.length - 1] : null
+    if (!chosen) {
+      const now = Date.now()
+      const recent = recs.filter((r) => {
+        const t = Date.parse(r.ts || "")
+        return !Number.isNaN(t) && now - t < UNLOCK_WINDOW_MS
+      })
+      chosen = recent.length ? recent[recent.length - 1] : null
+    }
+    return !!chosen
   }
 
   // Latest phase record for a specific feature. Exact session match is preferred,
@@ -293,6 +347,14 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     rel.startsWith(".meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/") ||
     rel.startsWith("tests/scripts/omt/")
 
+  // feature_020: extract the repo-relative search target from a grep/glob call
+  // (the `path` arg). Returns null when no path is supplied (whole-repo search).
+  const getSearchPath = (output) => {
+    const raw = output?.args?.path ?? output?.args?.filePath ?? output?.args?.file
+    if (!raw) return null
+    return relOf(raw).rel
+  }
+
   const receiptTimestampMs = () => {
     const receipt = join(directory, OMT_HARNESS_E2E_RECEIPT)
     if (!existsSync(receipt)) return 0
@@ -355,6 +417,22 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     `⛔ OMT++ gate: declare your OMT++ phase before editing src/ ('${rel}'). ` +
     `Run omt_phase{ task_type, scope } first (guide §2, §13). ` +
     `Trivial fix? omt_phase{task_type:"bug_fix", scope:"..."} is enough. To override: omt_skip{reason:"..."}.`
+
+  const navReminderMsg = () =>
+    `💡 NAVIGATION TIP (feature_020): Before searching META HARNESS *docs* with grep/glob, ` +
+    `try the navigation tools first:\n` +
+    `  • omt_nav{query:"SECTION:", tag_type:"CMD"} — find commands\n` +
+    `  • omt_list_sections — list all documentation sections\n` +
+    `  • omt_cross_ref{xref:"XREF_GUIDE"} — resolve cross-references\n` +
+    `  • omt_quick_ref{workflow:"START_MAJOR"} — get workflow patterns\n` +
+    `Note: \`read\` and src/code searches are exempt. To skip the nav gate: omt_skip{reason:"...", scope:"nav"}.`
+
+  const navRequiredMsg = () =>
+    `⛔ OMT++ gate (feature_020): before grep/glob on META HARNESS docs, use ` +
+    `omt_nav / omt_list_sections / omt_cross_ref / omt_quick_ref first (AGENTS.md MANDATORY). ` +
+    `Only fall back to grep/glob if navigation returns nothing. ` +
+    `\`read\` and src/non-doc searches are exempt. To override: omt_skip{reason:"...", scope:"nav"}.\n` +
+    `Navigation tools: omt_nav{query:"SECTION:"}, omt_list_sections, omt_cross_ref{xref:"..."}, omt_quick_ref{workflow:"..."}`
 
   const artifactMsg = (tt, record) =>
     `⛔ OMT++ gate: task_type '${tt}' may not edit src/ until a design artifact exists ` +
@@ -438,11 +516,12 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
 
   const omt_skip = tool({
     description:
-      "Logged escape hatch. Unlocks edits without a full phase declaration; the reason is " +
-      "recorded in the ledger for audit. Use sparingly (emergencies, approved canary tests).",
+      "Logged escape hatch. Unlocks edits (or the feature_020 nav gate) without a full phase " +
+      "declaration; the reason is recorded in the ledger for audit. Use sparingly (emergencies, " +
+      "approved canary tests). Scopes: src | tests | nav | all (default: all).",
     args: {
       reason: tool.schema.string().describe("why the process is being skipped"),
-      scope: tool.schema.string().optional().describe("src | tests | all (default: all)"),
+      scope: tool.schema.string().optional().describe("src | tests | nav | all (default: all)"),
     },
     async execute(args, context) {
       const session = context?.sessionID || undefined
@@ -451,11 +530,13 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         kind: "skip", session, reason: args.reason || "(none)", scope,
         tests_approved: scope === "tests" || scope === "all",
       })
-      return `⚠️ OMT++ skip recorded (scope=${scope}): "${args.reason}". Edits unlocked; ` +
-        "this override is logged in .meta/.omt/ledger.jsonl. " +
-        (scope === "all"
-          ? "scope=all also permits README.md/uv.lock/LICENSE edits (AGENTS.md #5 'unless explicitly asked'); .env stays denied."
-          : "")
+      const scopeNote =
+        scope === "all" ? "scope=all unlocks src/tests/nav; also permits README.md/uv.lock/LICENSE edits (AGENTS.md #5 'unless explicitly asked'); .env stays denied."
+        : scope === "nav" ? "scope=nav unlocks the feature_020 navigation gate for this session (grep/glob on docs no longer require prior omt_nav)."
+        : scope === "tests" ? "scope=tests unlocks tests/ edits (canary approval)."
+        : "scope=src unlocks src/ edits."
+      return `⚠️ OMT++ skip recorded (scope=${scope}): "${args.reason}". ` +
+        "This override is logged in .meta/.omt/ledger.jsonl. " + scopeNote
     },
   })
 
@@ -649,13 +730,56 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
   return {
     tool: { omt_phase, omt_skip, omt_complete, omt_testlist, omt_red, omt_green, omt_refactor, omt_done },
 
+    "session.start": async () => {
+      // Remind about feature_020 navigation tools on session start
+      return navReminderMsg()
+    },
+
     "tool.execute.before": async (input, output) => {
       try {
+        const session = input?.sessionID || undefined
+        
+        // feature_020: Track navigation vs search tool usage
+        if (session) {
+          const toolName = input?.tool
+          if (!sessionNavState.has(session)) {
+            sessionNavState.set(session, { usedNav: false, usedSearch: false, searchCount: 0 })
+          }
+          const state = sessionNavState.get(session)!
+          
+          // Track navigation tool usage
+          if (NAV_TOOLS.has(toolName)) {
+            state.usedNav = true
+            safeLog("info", `Session ${session}: navigation tool ${toolName} used`)
+          }
+          
+          // Nav-gate search tools — but only for documentation-scoped searches.
+          if (SEARCH_TOOLS.has(toolName)) {
+            state.usedSearch = true
+            state.searchCount++
+
+            // M1: `read` is never gated (targeted file access).
+            // M2: grep/glob scoped to src/ or non-doc paths are never gated
+            //     (nav indexes docs, not code). No path = doc-capable.
+            const targetRel = toolName === "read" ? null : getSearchPath(output)
+            const decision = navGateDecision({
+              tool: toolName,
+              targetRel,
+              usedNav: state.usedNav,
+              navUnlock: hasNavUnlock(session),
+            })
+            if (decision === "block") {
+              safeLog("warn", `Session ${session}: blocked ${toolName} (doc search '${targetRel || "repo"}') without prior navigation`)
+              throw new OmtBlock(navRequiredMsg())
+            }
+            safeLog("info", `Session ${session}: ${toolName} allowed (nav-gate passed)`)
+          }
+        }
+        
         if (!EDIT_TOOLS.has(input?.tool)) return
         const raw = output?.args?.filePath ?? output?.args?.path ?? output?.args?.file
         if (!raw) return
         const { abs, rel } = relOf(raw)
-        const session = input?.sessionID || undefined
 
         if (isProtected(rel)) {
           // .env / secrets are never editable (AGENTS.md #2 — no override).

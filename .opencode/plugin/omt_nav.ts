@@ -5,10 +5,17 @@
 import { tool } from "@opencode-ai/plugin"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join, relative } from "node:path"
-import { execSync } from "node:child_process"
+import { execFileSync } from "node:child_process"
 
 const REPO_ROOT = process.cwd()
 const META_ROOT = join(REPO_ROOT, ".meta")
+
+// Auto-discover .meta/doc/omt++/*.md so newly added docs are covered without
+// editing this list. Sorted for deterministic output.
+const OMT_PP_DIR = join(META_ROOT, "doc", "omt++")
+const omtPpFiles: string[] = existsSync(OMT_PP_DIR)
+  ? readdirSync(OMT_PP_DIR).filter(f => f.endsWith(".md")).sort().map(f => `.meta/doc/omt++/${f}`)
+  : []
 
 // Core documentation files in the META HARNESS ecosystem
 const META_FILES = [
@@ -16,20 +23,18 @@ const META_FILES = [
   ".meta/META.md",
   ".meta/software_development_process/META.md",
   ".meta/software_development_process/omt_agent_guide.md",
-  ".meta/doc/omt++/README.md",
-  ".meta/doc/omt++/architecture.md",
-  ".meta/doc/omt++/data_flow.md",
-  ".meta/doc/omt++/subsystems.md",
-  ".meta/doc/omt++/persistence.md",
-  ".meta/doc/omt++/features.md",
-  ".meta/doc/omt++/extending.md",
+  ...omtPpFiles,
   "AGENTS.md",
   "WORK.md",
 ]
 
-// Tag patterns for structured navigation
+// Tag patterns for structured navigation.
+// NOTE: these validate the `tag_type` input and document the canonical tag
+// shapes. The actual grep patterns are built per-tool in runGrep(); grep uses
+// BRE by default, so `+` is literal there — see omt_list_sections for the
+// BRE-safe one-or-more-`#` pattern (`^##* SECTION:`).
 const TAG_PATTERNS = {
-  SECTION: /^##+ SECTION:/m,
+  SECTION: /^#+ SECTION:/m,
   RULE_: /^RULE_[A-Z0-9]+:/m,
   ERR_: /^ERR_[A-Z0-9]+:/m,
   WRN_: /^WRN_[A-Z0-9]+:/m,
@@ -56,21 +61,29 @@ interface NavResponse {
   suggestions: string[]
 }
 
-// Execute grep command and parse results
+// Execute grep command and parse results.
+// Uses execFileSync with array argv (no shell) so the pattern is passed as a
+// literal argument — no shell injection and no quoting breakage. grep still
+// interprets the pattern as a BRE regex, which is intentional for tag nav.
 function runGrep(pattern: string, files: string[]): NavResult[] {
   const results: NavResult[] = []
   const existingFiles = files.filter(f => existsSync(join(REPO_ROOT, f)))
-  
+
   if (existingFiles.length === 0) return results
 
   try {
-    const cmd = `grep -n "${pattern}" ${existingFiles.map(f => `"${join(REPO_ROOT, f)}"`).join(" ")}`
-    const output = execSync(cmd, { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] })
-    
+    const absFiles = existingFiles.map(f => join(REPO_ROOT, f))
+    const output = execFileSync("grep", ["-n", "--", pattern, ...absFiles], {
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "ignore"],
+    })
+
     for (const line of output.trim().split("\n")) {
       if (!line) continue
       // Parse grep output: file:line:content
-      const match = line.match(/^(.+):(\d+):(.+)$/)
+      // Non-greedy file group binds to the first :<digits>: (the real line
+      // number), so colons/digits inside content don't misparse.
+      const match = line.match(/^(.+?):(\d+):(.*)$/)
       if (match) {
         const [, file, lineNum, content] = match
         const relPath = relative(REPO_ROOT, file)
@@ -82,10 +95,10 @@ function runGrep(pattern: string, files: string[]): NavResult[] {
         })
       }
     }
-  } catch (e) {
+  } catch {
     // grep returns non-zero when no matches, which is fine
   }
-  
+
   return results
 }
 
@@ -209,7 +222,11 @@ const omt_list_sections = tool({
     const { file } = input
     const filesToSearch = file ? [file] : META_FILES
     
-    const rawResults = runGrep("^##+ SECTION:", filesToSearch)
+    // BRE-safe "one or more leading '#'": `##*` = first '#' literal, then
+    // zero-or-more '#' (i.e. one-or-more '#'). Matches the `# SECTION:` style
+    // used across META HARNESS docs. (`^##+` would be wrong in BRE: `+` is
+    // literal there, and even in ERE `##+` requires two-or-more '#'.)
+    const rawResults = runGrep("^##* SECTION:", filesToSearch)
     
     const sections = rawResults.map(r => {
       // Extract section title from content (remove ## and SECTION: prefix)

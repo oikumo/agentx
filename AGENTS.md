@@ -38,9 +38,23 @@ omt_testlist → omt_red → omt_green → omt_refactor → omt_done
 | Status | `omt_status` |
 | **Navigation** | `omt_nav`, `omt_list_sections`, `omt_cross_ref`, `omt_quick_ref` |
 
+## Navigation Enforcement (feature_020)
+**MANDATORY:** Before answering ANY question about the project (classes, components, features, architecture, codebase structure, workflows, etc.), agents MUST:
+1. Use `omt_nav` / `omt_list_sections` / `omt_cross_ref` / `omt_quick_ref` to search META HARNESS documentation
+2. Only fall back to `grep`/`glob` if navigation tools return no results
+3. Cite documentation sections found via navigation tools in responses
+
+**Scope of the mechanical gate:** the gate blocks `grep`/`glob` scoped to **doc paths** (`.meta/`, `AGENTS.md`, `WORK.md`) until a nav tool is used. It does **not** block:
+- `read` (targeted file access — e.g. `WORK.md` at startup, or a file the user named)
+- searches scoped to `src/` or other non-doc paths (nav indexes docs, not code)
+
+**Escape hatch:** `omt_skip{reason:"...", scope:"nav"}` (logged) bypasses the nav gate for the session.
+
+**Rationale:** Navigation tools provide structured, grep-based retrieval with proper section context and cross-references.
+
 ## Quick Reference
 - **Declare phase:** `omt_phase{task_type:"bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs", phase:"Analysis|Design|Programming|Testing", scope:"done definition"}`
 - **Major/new needs design:** `uv run scripts/omt/new_feature.py "<name>" --type major_feature`
-- **Escape hatch:** `omt_skip{reason:"...", scope:"src|tests|all"}` (logged)
+- **Escape hatch:** `omt_skip{reason:"...", scope:"src|tests|nav|all"}` (logged)
 - **Complete phase:** `omt_complete{feature:"feature_XXX", advance_to:"Design|Programming|Testing|Done"}`
 - **Architecture check:** `uv run scripts/omt/mvc_check.py [path]`
