@@ -18,11 +18,16 @@ try {
   process.exit(3)
 }
 
+// omt_nav.ts exports tools via the default plugin factory (opencode's loader
+// requires all exports to be functions, so tool objects cannot be named-exported).
+// Call the factory to retrieve the `tool` map.
+const plugin = typeof mod.default === "function" ? await mod.default() : null
+const toolMap = plugin?.tool ?? mod
 const tools = {
-  omt_nav: mod.omt_nav,
-  omt_list_sections: mod.omt_list_sections,
-  omt_cross_ref: mod.omt_cross_ref,
-  omt_quick_ref: mod.omt_quick_ref,
+  omt_nav: toolMap.omt_nav,
+  omt_list_sections: toolMap.omt_list_sections,
+  omt_cross_ref: toolMap.omt_cross_ref,
+  omt_quick_ref: toolMap.omt_quick_ref,
 }
 
 const name = process.argv[2]

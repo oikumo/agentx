@@ -308,4 +308,18 @@ const omt_quick_ref = tool({
   },
 })
 
-export { omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref }
+// Standalone opencode plugin. This file lives under .opencode/plugin/, so it
+// must export a default plugin FUNCTION. opencode's plugin loader (sk/nk)
+// iterates Object.values(module) and requires EACH export to be a function (or
+// an object with a .server function). The tool objects below are NOT functions,
+// so they must NOT be named-exported from this file — only the default export
+// is allowed. Mirrors omt_status.ts lines 364-366.
+//
+// (Prior defect A: this file ended with a named tool-object export only — no
+// default factory — so opencode rejected it with "Plugin export is not a
+// function" and the nav tools were never registered, making the feature_020
+// nav-gate a catch-22. The test fixture _nav_runner.mjs now retrieves the tools
+// via the default export's `tool` property instead of named imports.)
+export default async () => ({
+  tool: { omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref },
+})

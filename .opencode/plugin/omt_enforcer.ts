@@ -154,7 +154,10 @@ class OmtBlock extends Error {}
 // Whether a repo-relative path is a META HARNESS *documentation* path. The nav
 // tools index docs only, so the "try nav first" expectation applies solely to
 // doc-scoped searches.
+// Defensive (DEFECT B): opencode's real tool-call shape can pass arrays/objects
+// here, not just strings; guard so a non-string never reaches .startsWith.
 export function isDocPath(rel: string): boolean {
+  if (typeof rel !== "string") return false
   return rel === "AGENTS.md" || rel === "WORK.md" || rel.startsWith(".meta/")
 }
 
@@ -173,7 +176,10 @@ export function navGateDecision(opts: {
 }): "allow" | "block" {
   const { tool, targetRel, usedNav, navUnlock } = opts
   if (tool === "read") return "allow"
-  const docScoped = !targetRel || isDocPath(targetRel)
+  // Defensive (DEFECT B): a non-string targetRel (array/object from opencode's
+  // real tool-call shape) is treated as null (whole-repo / unknown scope).
+  const rel = typeof targetRel === "string" ? targetRel : null
+  const docScoped = !rel || isDocPath(rel)
   if (docScoped && !usedNav && !navUnlock) return "block"
   return "allow"
 }
@@ -349,10 +355,19 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
 
   // feature_020: extract the repo-relative search target from a grep/glob call
   // (the `path` arg). Returns null when no path is supplied (whole-repo search).
+  // Defensive (DEFECT B): opencode's real tool-call shape can pass arrays or
+  // objects for path/filePath/file (not just strings). Without coercion,
+  // relOf() calls isAbsolute/join on a non-string and the plugin crashes at
+  // bootstrap ("rel.startsWith is not a function"). Coerce: arrays -> first
+  // string element; non-string -> null.
   const getSearchPath = (output) => {
     const raw = output?.args?.path ?? output?.args?.filePath ?? output?.args?.file
     if (!raw) return null
-    return relOf(raw).rel
+    const rawStr = Array.isArray(raw)
+      ? (raw.find((v) => typeof v === "string") ?? null)
+      : (typeof raw === "string" ? raw : null)
+    if (!rawStr) return null
+    return relOf(rawStr).rel
   }
 
   const receiptTimestampMs = () => {

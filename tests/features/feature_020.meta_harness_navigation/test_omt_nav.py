@@ -158,13 +158,24 @@ class TestOmtNavTool:
         assert nav_file.exists(), "omt_nav.ts should exist"
 
     def test_omt_nav_exports_tools(self):
+        """omt_nav.ts must export a default plugin function (opencode's loader
+        requires all module exports to be functions; tool objects cannot be
+        named-exported). The tools are registered via the default factory's
+        `tool` property."""
         nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
         content = nav_file.read_text()
-        assert "export {" in content, "Should have export statement"
-        assert "omt_nav" in content, "Should export omt_nav"
-        assert "omt_list_sections" in content, "Should export omt_list_sections"
-        assert "omt_cross_ref" in content, "Should export omt_cross_ref"
-        assert "omt_quick_ref" in content, "Should export omt_quick_ref"
+        assert "export default async () => ({" in content, (
+            "Should export a default async plugin function (opencode requirement)"
+        )
+        assert "tool: { omt_nav" in content, "Should register omt_nav via tool map"
+        assert "omt_list_sections" in content, "Should register omt_list_sections"
+        assert "omt_cross_ref" in content, "Should register omt_cross_ref"
+        assert "omt_quick_ref" in content, "Should register omt_quick_ref"
+        # Regression guard for DEFECT A: named tool-object exports break
+        # opencode's plugin loader (sk/nk checks ALL exports must be functions).
+        assert "export { omt_nav" not in content, (
+            "Must NOT named-export tool objects (opencode loader rejects non-function exports)"
+        )
 
     def test_omt_nav_has_tool_decorator(self):
         nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
