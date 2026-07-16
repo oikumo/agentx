@@ -45,6 +45,7 @@
 - [x] **feature_019.coding_agent_screen**
 - [x] **feature_020.meta_harness_navigation** <!-- id:T-020 prio:high agent:true -->
 - [x] **feature_020.e2e_tests_opencode_driven** <!-- id:T-020e2e prio:high agent:true -->
+- [~] **feature_021.meta_harness_think_anywhere** <!-- id:T-021 prio:high agent:true -->
 
 ---
 
@@ -62,4 +63,5 @@
 [2026-07-16] Fixed feature_019 coding screen input layout bug: invalid CSS properties (font-family, white-space) caused entire DEFAULT_CSS to fail parsing; removed invalid properties, input now docks at bottom correctly; 72/72 tests pass
 [2026-07-16] feature_020 e2e investigation: `opencode serve` reveals BOTH plugins fail to load — omt_nav.ts ("Plugin export is not a function", nav tools never registered in real session → nav-gate catch-22) and omt_enforcer.ts ("rel.startsWith is not a function" in isDocPath via getSearchPath non-string path, serve-mode crash). Existing tests are function-level (call plugin fns via _nav_runner.mjs), never run opencode → missed both. Plan saved below; scope=tests+fix, mechanism=deterministic serve-load.
 [2026-07-16] feature_020 e2e COMPLETE: Wrote test_opencode_e2e.py (real `opencode serve` spawn → /config bootstrap → assert no "failed to load plugin"). TDD: confirmed RED (3 defect-detectors failed, 2 controls passed), then fixed both defects. DEFECT A fix: omt_nav.ts — opencode's loader (sk/nk) checks ALL module exports must be functions; tool objects aren't functions → removed named exports, kept only `export default async () => ({tool:{...}})` (mirrors omt_status.ts); updated _nav_runner.mjs to retrieve tools via mod.default().tool. DEFECT B fix: omt_enforcer.ts — getSearchPath() passed non-string (array/object) path to relOf()→isAbsolute/join causing crash; made isDocPath/navGateDecision/getSearchPath defensive (typeof guard, array→first-string-element). Also restored nav tool permissions in opencode.jsonc (were removed during investigation). 54/54 feature_020 tests pass; 1030/1033 full suite (3 pre-existing feature_018 react_screen Textual/mock failures unrelated). Live serve verify: zero plugin-load errors, bootstrap completes, nav tools callable.
+[2026-07-16] feature_021 process-consistency fix: added feature_021.meta_harness_think_anywhere to WORK.md task list ([~] in progress); corrected FEATURE.md artifacts table (Design [ ]→[x] to match existing design_001_think_anywhere.md + omt_status Design✅). Tooling-detected state was already consistent (R/A/D✅, I/T pending); only human-readable tracking docs had drifted. Phase ledger: Analysis→Design→Programming all declared. Ready to implement.
 ```
