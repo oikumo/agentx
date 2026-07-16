@@ -16,7 +16,10 @@ Exercises the full OMT++ cycle through the Python CLI tools and ledger:
 
 from __future__ import annotations
 
+import atexit
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -24,16 +27,29 @@ import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-LEDGER_PATH = REPO_ROOT / ".meta" / ".omt" / "ledger.jsonl"
-SNAPSHOT_DIR = REPO_ROOT / ".meta" / ".omt" / "tdd_snapshots"
+
+# ISOLATED test ledger/snapshot dir (via env var) so clear_ledger() never wipes
+# the real .meta/.omt/ledger.jsonl. tdd_check.py honors OMT_LEDGER_PATH /
+# OMT_SNAPSHOT_DIR; run_cmd passes them to every subprocess it spawns.
+_TEST_OMT_DIR = Path(tempfile.mkdtemp(prefix="omt_lifecycle_"))
+LEDGER_PATH = _TEST_OMT_DIR / "ledger.jsonl"
+SNAPSHOT_DIR = _TEST_OMT_DIR / "tdd_snapshots"
 CONSTANTS_PATH = REPO_ROOT / ".meta" / "omt_constants.json"
 
 
+def _test_env() -> dict:
+    """Env redirecting tdd_check.py at the isolated test ledger/snapshot dir."""
+    return {**os.environ, "OMT_LEDGER_PATH": str(LEDGER_PATH), "OMT_SNAPSHOT_DIR": str(SNAPSHOT_DIR)}
+
+
 def run_cmd(cmd: list[str], cwd: Path | None = None, env: dict | None = None) -> subprocess.CompletedProcess:
-    """Run a command and return CompletedProcess."""
+    """Run a command and return CompletedProcess (test-ledger env applied by default)."""
     return subprocess.run(
-        cmd, cwd=cwd or REPO_ROOT, capture_output=True, text=True, env=env
+        cmd, cwd=cwd or REPO_ROOT, capture_output=True, text=True, env=env or _test_env()
     )
+
+
+atexit.register(lambda: shutil.rmtree(_TEST_OMT_DIR, ignore_errors=True))
 
 
 def run_tdd(cmd: list[str], session: str = "") -> dict:
@@ -317,17 +333,12 @@ class SomeClass:
         assert result["state"] == "refactor"
         print("  REFACTOR entered")
 
-        # 8. DONE - run full suite
-        result = run_tdd(["done", "--feature", feature], session)
-        # Note: full suite may have pre-existing failures, so we just check it runs
-        print(f"  DONE result: ok={result.get('ok')}, state={result.get('state', 'N/A')}")
-
-        # 9. Validate exit
-        result = run_tdd(["validate-exit", "--feature", feature], session)
-        print(f"  validate-exit: ok={result.get('ok')}")
-        if not result.get("ok"):
-            print(f"    dangling_reds: {result.get('dangling_reds')}")
-            print(f"    coverage_gaps: {result.get('coverage_gaps')}")
+        # NOTE: omt_done (which spawns the full pytest suite → re-entrancy + 120s
+        # timeout) and validate-exit are intentionally NOT called here. Running
+        # the entire suite inside a unit test is slow, flaky, and re-entrant
+        # (the nested run re-collects this very test). The two-hats
+        # Red→Green→Refactor cycle (steps 1-7) is what this test verifies;
+        # omt_done/validate-exit are covered by tdd_check.py's own unit tests.
 
         print("✓ TDD cycle enforcement works")
         return True

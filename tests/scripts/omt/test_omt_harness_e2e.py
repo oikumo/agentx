@@ -33,6 +33,7 @@ RECEIPT_PATH = REPO_ROOT / ".meta" / ".omt" / "omt_harness_e2e_last_run.json"
 HARNESS_FILES = [
     ".opencode/plugin/omt_enforcer.ts",
     ".opencode/plugin/omt_status.ts",
+    ".opencode/plugin/omt_think.ts",
     "opencode.jsonc",
     "AGENTS.md",
     ".meta/software_development_process/omt_agent_guide.md",
@@ -182,6 +183,21 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     assert "tdd_mode" in tdd_data
     assert "state" in tdd_data
     checks.append("tdd_check.py status subcommand returns valid JSON")
+
+    # 9. feature_021 think-anywhere: standalone plugin + think-gate in enforcer.
+    think = _read(".opencode/plugin/omt_think.ts")
+    assert "export default async () => ({" in think
+    assert "tool: { omt_think, omt_think_list, omt_think_remove }" in think
+    assert "commentSyntaxFor" in think
+    assert "thinkGateDecision" in enforcer
+    assert "hasConsultedThoughts" in enforcer
+    assert "think_consult" in enforcer
+    assert '"omt_think": "allow"' in config
+    assert '"omt_think_list": "allow"' in config
+    assert '"omt_think_remove": "allow"' in config
+    assert "Think Anywhere" in _read("AGENTS.md")
+    assert "SECTION:THINK" in _read(".meta/META_HARNESS.md")
+    checks.append("feature_021 think-anywhere plugin + think-gate + docs wired")
 
     _write_receipt(checks)
     assert RECEIPT_PATH.exists()

@@ -9,7 +9,7 @@
 Standard LLMs reason *before* generating code:
 
 ```
-P(c, s | x) = P(s | x) · P(c | x, s)
+P(c, s | x) = P(s | x) · P(c | x, s
               ^^^^^^^^^^^   ^^^^^^^^^^^
               reason first  then code
 ```

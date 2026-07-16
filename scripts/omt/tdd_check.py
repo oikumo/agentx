@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 import re
 import subprocess
 import sys
@@ -31,8 +32,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-LEDGER_PATH = REPO_ROOT / ".meta" / ".omt" / "ledger.jsonl"
-SNAPSHOT_DIR = REPO_ROOT / ".meta" / ".omt" / "tdd_snapshots"
+# Tests redirect the ledger/snapshot dir to a temp path via these env vars so
+# they NEVER wipe the real .meta/.omt/ledger.jsonl (clear_ledger is destructive).
+_LEDGER_ENV = os.environ.get("OMT_LEDGER_PATH")
+LEDGER_PATH = Path(_LEDGER_ENV) if _LEDGER_ENV else REPO_ROOT / ".meta" / ".omt" / "ledger.jsonl"
+_SNAPSHOT_ENV = os.environ.get("OMT_SNAPSHOT_DIR")
+SNAPSHOT_DIR = Path(_SNAPSHOT_ENV) if _SNAPSHOT_ENV else REPO_ROOT / ".meta" / ".omt" / "tdd_snapshots"
 UNLOCK_WINDOW_MS = 8 * 60 * 60 * 1000  # 8 hours (matches enforcer)
 
 # Two-hats gate rules: {state: {src: bool, tests: bool}}

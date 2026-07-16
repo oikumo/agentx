@@ -43,6 +43,8 @@ TDD_DANGLING_REDS: tests declared RED never turned GREEN → blocks phase exit
 # ============================================================
 COMP_ENF: .opencode/plugin/omt_enforcer.ts — gate plugin (tool.execute.before/after)
 COMP_STS: .opencode/plugin/omt_status.ts — omt_status tool
+COMP_NAV: .opencode/plugin/omt_nav.ts — feature_020 navigation tools (omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref)
+COMP_THINK: .opencode/plugin/omt_think.ts — feature_021 think-anywhere tools (omt_think, omt_think_list, omt_think_remove)
 COMP_LNT: scripts/omt/mvc_check.py — MVC++ linter
 COMP_TDD: scripts/omt/tdd_check.py — TDD engine (9 subcommands)
 COMP_SCAF: scripts/omt/new_feature.py — feature scaffolder
@@ -100,6 +102,20 @@ NAV_TAGS: SECTION:, RULE_, ERR_, WRN_, CMD_, QUICK_, XREF_, TT_, PHASE_, FEAT_ (
 NAV_WORKFLOW: omt_nav{query} → omt_list_sections → omt_cross_ref → omt_quick_ref (fallback to grep only if no results)
 
 # ============================================================
+# SECTION:THINK — Think Anywhere (feature_021) (grep:THINK_)
+# ============================================================
+THINK_021: feature_021.meta_harness_think_anywhere — persistent inline TA: thought-tags
+THINK_TOOLS: omt_think, omt_think_list, omt_think_remove (opencode plugin: .opencode/plugin/omt_think.ts)
+THINK_FORMAT: <comment> TA: [<category>: ] <thought> — e.g. # TA: gotcha: mutates history
+THINK_SYNTAX: .py/.toml/.sh/.yml→#  | .ts/.js/.mjs/.jsonc→//  | .md/.mdx→<!-- -->  | .css→/* */  | .json→DENIED
+THINK_PROTECTED: TA: refused on .env*, README.md, uv.lock, LICENSE, .json (no comments)
+THINK_INDEX: .meta/.omt/thoughts.jsonl — append-only sidecar {ts,path,line,category,thought}; inline TA: is source of truth
+THINK_GATE: thinkGateDecision({hasThoughts,consulted}) → block edits to TA:-carrying files until omt_think_list consulted
+THINK_GATE_NOT_SKIP: think-gate NOT bypassable by omt_skip (safety-relevant); only omt_think_list clears it
+THINK_DIGEST: session.start greps TA: repo-wide, caps at 30 lines + count (token-minimal)
+THINK_CONSULT: omt_think_list writes {kind:"think_consult"} to ledger → clears think-gate
+
+# ============================================================
 # SECTION:PATHS — Key Filesystem Paths (grep:PTH_)
 # ============================================================
 PTH_GUIDE: .meta/software_development_process/omt_agent_guide.md
@@ -133,6 +149,9 @@ CMD_NAV: omt_nav{query,file?,tag_type?,include_context?} — grep-based doc navi
 CMD_LIST_SECTIONS: omt_list_sections{file?} — list all SECTION: headers
 CMD_CROSS_REF: omt_cross_ref{xref} — resolve XREF_ cross-references
 CMD_QUICK_REF: omt_quick_ref{workflow?} — get QUICK_ workflow patterns
+CMD_THINK: omt_think{path,thought,line?,category?} — insert inline TA: thought-tag (feature_021)
+CMD_THINK_LIST: omt_think_list{path?,category?,query?} — grep TA: retrieval + clears think-gate
+CMD_THINK_REMOVE: omt_think_remove{path,line} — remove a TA: line + reconcile index
 
 # ============================================================
 # SECTION:PHASES — Phase Names (grep:PHASE_)
@@ -181,6 +200,8 @@ XREF_LEDGER: .meta/.omt/ledger.jsonl — JSONL lines: {ts,kind:phase|skip|comple
 XREF_WORK: WORK.md — task list with [x]/[~]/[ ]/![], auto-synced by omt_complete
 XREF_NAV: .opencode/plugin/omt_nav.ts — feature_020 navigation tools (omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref)
 XREF_NAV_ENF: .opencode/plugin/omt_enforcer.ts — session.start reminder, AGENTS.md mandatory requirement
+XREF_THINK: .opencode/plugin/omt_think.ts — feature_021 think-anywhere tools (omt_think, omt_think_list, omt_think_remove)
+XREF_THINK_GATE: .opencode/plugin/omt_enforcer.ts — thinkGateDecision + hasConsultedThoughts + before-hook think-gate
 
 # ============================================================
 # FOOTER

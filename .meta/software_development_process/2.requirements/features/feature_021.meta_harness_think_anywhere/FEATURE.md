@@ -1,6 +1,6 @@
 # Feature 021: Meta Harness Think Anywhere
 
-> **Status:** [~] In progress
+> **Status:** [x] Done
 > **Created:** 2026-07-16
 > **WORK.md task:** `feature_021.meta_harness_think_anywhere`
 > **Source theory:** `.meta/doc/harness/think_anywhere_langchain.md`
@@ -87,7 +87,7 @@ Per `omt_agent_guide.md §12`, fill only the rows your task type requires.
 | Requirements | Use case | `2.requirements/.../feature_021.meta_harness_think_anywhere/FEATURE.md` | [x] |
 | Analysis | Analysis doc | `3.analysis/features/feature_021.meta_harness_think_anywhere/analysis_001_think_anywhere.md` | [x] |
 | Design | Design doc | `4.design/features/feature_021.meta_harness_think_anywhere/design_001_think_anywhere.md` | [x] |
-| Implementation | Impl notes | `5.implementation/features/feature_021.meta_harness_think_anywhere/` | [ ] |
-| Testing | Test report | `6.testing/features/feature_021.meta_harness_think_anywhere/test_report.md` | [ ] |
+| Implementation | Impl notes | `5.implementation/features/feature_021.meta_harness_think_anywhere/implementation_notes.md` | [x] |
+| Testing | Test report | `6.testing/features/feature_021.meta_harness_think_anywhere/test_report.md` | [x] |
 
 **Naming convention:** phase docs are `analysis_NNN_<topic>.md`, `design_NNN_<topic>.md`.

@@ -61,6 +61,9 @@
     "omt_nav": "allow",
     "omt_list_sections": "allow",
     "omt_cross_ref": "allow",
-    "omt_quick_ref": "allow"
+    "omt_quick_ref": "allow",
+    "omt_think": "allow",
+    "omt_think_list": "allow",
+    "omt_think_remove": "allow"
   }
 }

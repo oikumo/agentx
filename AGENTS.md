@@ -37,6 +37,7 @@ omt_testlist → omt_red → omt_green → omt_refactor → omt_done
 | Lint/Scaffold | `mvc_check.py`, `new_feature.py`, `tdd_check.py` |
 | Status | `omt_status` |
 | **Navigation** | `omt_nav`, `omt_list_sections`, `omt_cross_ref`, `omt_quick_ref` |
+| **Think Anywhere** | `omt_think`, `omt_think_list`, `omt_think_remove` |
 
 ## Navigation Enforcement (feature_020)
 **MANDATORY:** Before answering ANY question about the project (classes, components, features, architecture, codebase structure, workflows, etc.), agents MUST:
@@ -51,6 +52,20 @@ omt_testlist → omt_red → omt_green → omt_refactor → omt_done
 **Escape hatch:** `omt_skip{reason:"...", scope:"nav"}` (logged) bypasses the nav gate for the session.
 
 **Rationale:** Navigation tools provide structured, grep-based retrieval with proper section context and cross-references.
+
+## Think Anywhere (feature_021)
+Persistent, grep-friendly `TA:` thought-tags dropped **inline in any non-protected file** so hard-won context (gotchas, "why this is here", risks, xrefs) survives across sessions. Token-minimal: retrieval is O(hits) via `grep`/`omt_think_list`, never whole-file reads.
+
+**Tools:**
+- `omt_think{path, thought, line?, category?}` — insert a language-aware `TA:` comment (annotation; bypasses phase/canary gates). Denied on `.env*`, `README.md`, `uv.lock`, `LICENSE`, `.json`.
+- `omt_think_list{path?, category?, query?}` — grep-backed retrieval; **marks the session consulted** (clears the think-gate).
+- `omt_think_remove{path, line}` — remove a `TA:` line + reconcile the index.
+
+**Tag format:** `<comment> TA: [<category>: ] <thought>` — e.g. `# TA: gotcha: mutates history`, `// TA: why: legacy compat`, `<!-- TA: risk: breaks if x -->`.
+
+**Think-gate (blocking):** editing a file that carries `TA:` thoughts is **blocked** until the session consults via `omt_think_list`. The block surfaces the file's own thoughts. **NOT bypassable by `omt_skip`** — thoughts are safety-relevant; only `omt_think_list` (active consult) clears it.
+
+**Session digest:** every session.start greps `TA:` across the repo and surfaces a capped digest so accumulated context is recovered immediately.
 
 ## Quick Reference
 - **Declare phase:** `omt_phase{task_type:"bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs", phase:"Analysis|Design|Programming|Testing", scope:"done definition"}`

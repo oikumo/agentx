@@ -184,6 +184,74 @@ export function navGateDecision(opts: {
   return "allow"
 }
 
+// --- feature_021 think-gate (module-level, pure/exported + ledger reader) ---
+// Pure decision: may the agent edit a file that carries TA: thoughts?
+//   hasThoughts=false → allow (nothing to review).
+//   hasThoughts=true && consulted → allow.
+//   hasThoughts=true && !consulted → block.
+export function thinkGateDecision(opts: {
+  hasThoughts: boolean
+  consulted: boolean
+}): "allow" | "block" {
+  if (!opts.hasThoughts) return "allow"
+  return opts.consulted ? "allow" : "block"
+}
+
+// Has the session consulted thoughts this session? Reads the shared ledger for
+// `think_consult` records (written by omt_think_list). Exact session match
+// preferred, else any record within UNLOCK_WINDOW_MS (mirrors hasNavUnlock).
+export function hasConsultedThoughts(session: string | undefined): boolean {
+  const ledgerPath = join(process.cwd(), ".meta", ".omt", "ledger.jsonl")
+  if (!existsSync(ledgerPath)) return false
+  const recs: any[] = []
+  try {
+    for (const line of readFileSync(ledgerPath, "utf8").split("\n")) {
+      const s = line.trim()
+      if (!s) continue
+      try { recs.push(JSON.parse(s)) } catch { /* skip corrupt line */ }
+    }
+  } catch { return false }
+  const consults = recs.filter((r) => r && r.kind === "think_consult")
+  if (!consults.length) return false
+  if (session) {
+    const mine = consults.filter((r) => r.session === session)
+    if (mine.length) return true
+  }
+  const now = Date.now()
+  return consults.some((r) => {
+    const t = Date.parse(r.ts || "")
+    return !Number.isNaN(t) && now - t < UNLOCK_WINDOW_MS
+  })
+}
+
+// Grep TA: in a single file (cheap; used by the think-gate before-hook).
+// Takes an absolute path so it works both at module level and inside the plugin.
+export function fileThoughtsIn(absFile: string): { line: number; content: string }[] {
+  if (!absFile || !existsSync(absFile)) return []
+  try {
+    const out = execFileSync("grep", ["-nH", "--", "TA:", absFile], {
+      encoding: "utf8", stdio: ["pipe", "pipe", "ignore"],
+    })
+    const res: { line: number; content: string }[] = []
+    for (const line of out.trim().split("\n")) {
+      if (!line) continue
+      const m = line.match(/^(?:.+?):(\d+):(.*)$/)
+      if (m) res.push({ line: parseInt(m[1], 10), content: m[2].trim() })
+    }
+    return res
+  } catch { return [] }
+}
+
+// Block message for the think-gate: surfaces the file's own TA: thoughts so the
+// agent has read them; the expected next action is omt_think_list{path} (clears).
+function thinkGateMsg(rel: string, thoughts: { line: number; content: string }[]): string {
+  const shown = thoughts.slice(0, 10).map((t) => `  ${rel}:${t.line}: ${t.content}`).join("\n")
+  return `⛔ OMT++ think-gate (feature_021): '${rel}' carries TA: thoughts. Review them ` +
+    `before editing, then clear the gate with omt_think_list{path:"${rel}"}:\n${shown}` +
+    (thoughts.length > 10 ? `\n  … (+${thoughts.length - 10} more)` : "") +
+    `\n(The block already shows these thoughts; call omt_think_list to record the consult.)`
+}
+
 export const OmtEnforcer = async ({ client, $, directory }) => {
   const ledgerPath = join(directory, ".meta", ".omt", "ledger.jsonl")
 
@@ -859,6 +927,18 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
             if (unlock.record.tdd_mode && existsSync(abs)) {
               refactorSnapshots.set(abs, readFileSync(abs, "utf8"))
             }
+          }
+        }
+
+        // --- feature_021 think-gate: block edits to thought-carrying files
+        // until the session has consulted thoughts (omt_think_list). NOT
+        // bypassable by omt_skip — thoughts are safety-relevant warnings. Runs
+        // only for edits already permitted by the protected/e2e/tests/src checks.
+        const thinkHits = fileThoughtsIn(abs)
+        if (thinkHits.length) {
+          const consulted = hasConsultedThoughts(session)
+          if (thinkGateDecision({ hasThoughts: true, consulted }) === "block") {
+            throw new OmtBlock(thinkGateMsg(rel, thinkHits))
           }
         }
       } catch (e) {
