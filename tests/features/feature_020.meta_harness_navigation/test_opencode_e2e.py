@@ -25,6 +25,20 @@ function-level tests gave false confidence about (see WORK.md Resume Plan):
     It survives in TUI mode because path-less globs make `targetRel` null.
     The fix must not regress TUI behavior.
 
+  NOTE on DEFECT C (arg-binding, NOT covered here): this e2e test only asserts
+  plugins LOAD (no `failed to load plugin` lines). It does NOT invoke a tool
+  through opencode's real arg-binding path, because opencode serve exposes NO
+  model-free direct-tool-call HTTP endpoint (`/tool*` return the SPA HTML;
+  `/session/{id}/message` requires an LLM to process `parts`, which is
+  non-deterministic and needs API keys). DEFECT C — omt_nav.ts using
+  `input:{type,properties}` instead of `args`/`tool.schema`, so opencode
+  registered each tool with no params and real calls crashed on undefined args
+  — is therefore covered deterministically by `TestToolSchemaReal` in
+  test_omt_nav.py, which inspects the REAL tool objects (via opencode's actual
+  `tool()` function) and asserts each exposes a proper `args` Zod schema. If
+  opencode ever adds a model-free tool-call endpoint, a serve-based invocation
+  test should be added here to close the remaining gap.
+
 Run with:
     uv run pytest tests/features/feature_020.meta_harness_navigation/test_opencode_e2e.py -q
 """

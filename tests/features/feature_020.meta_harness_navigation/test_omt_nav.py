@@ -30,6 +30,7 @@ TEST_DIR = Path(__file__).parent
 NAV_RUNNER = TEST_DIR / "_nav_runner.mjs"
 PLUGIN_LOAD = TEST_DIR / "_plugin_load.mjs"
 GATE_RUNNER = TEST_DIR / "_gate_runner.mjs"
+NAV_SCHEMA_RUNNER = TEST_DIR / "_nav_schema_runner.mjs"
 
 NODE = shutil.which("node")
 needs_node = pytest.mark.skipif(not NODE, reason="node not available")
@@ -177,12 +178,30 @@ class TestOmtNavTool:
             "Must NOT named-export tool objects (opencode loader rejects non-function exports)"
         )
 
-    def test_omt_nav_has_tool_decorator(self):
+    def test_omt_nav_uses_canonical_tool_api(self):
+        """DEFECT C regression: opencode's tool() reads `args` (param-name ->
+        tool.schema.X()) and threads resolved args into execute(args, context).
+        The old `input:{type,properties,required}` + `execute(input)` shape is a
+        raw JSON schema opencode does NOT understand — it registered each tool
+        with no params, so real calls passed undefined args and crashed on
+        .startsWith/.split. The function-level tests (calling execute(args)
+        directly via _nav_runner.mjs) never exercised opencode's arg-binding,
+        so the mismatch was invisible. The canonical shape (mirrors
+        omt_status.ts / omt_enforcer.ts) is mandatory."""
         nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
         content = nav_file.read_text()
-        assert 'tool({' in content, "Should use tool() decorator"
-        assert 'name: "omt_nav"' in content, "Should declare omt_nav tool"
         assert 'import { tool } from "@opencode-ai/plugin"' in content, "Should import tool"
+        assert 'tool({' in content, "Should use tool() decorator"
+        # Canonical API: args + tool.schema (NOT raw JSON-schema input:)
+        assert "args:" in content, "Should use args: schema (DEFECT C)"
+        assert "tool.schema.string()" in content, "Should use tool.schema.string (DEFECT C)"
+        assert "tool.schema.boolean()" in content, "Should use tool.schema.boolean (DEFECT C)"
+        assert "async execute(args, context)" in content, "Should use execute(args, context) (DEFECT C)"
+        # The broken raw-JSON-schema shape must NOT be present
+        assert 'type: "object"' not in content, \
+            "Must NOT use raw JSON-schema input:{type:object} (DEFECT C regression)"
+        assert 'name: "omt_nav"' not in content, \
+            "Must NOT set name: (inferred from tool-map key, DEFECT C)"
 
     def test_omt_nav_uses_safe_exec(self):
         """Regression for H3: runGrep must use execFileSync (array args), not
@@ -201,7 +220,8 @@ class TestOmtListSections:
         nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
         content = nav_file.read_text()
         assert "const omt_list_sections = tool({" in content, "Should define omt_list_sections"
-        assert 'name: "omt_list_sections"' in content, "Should declare tool name"
+        # DEFECT C: no `name:` property — opencode infers the tool name from the
+        # default-export tool-map key (verified in test_omt_nav_exports_tools).
 
     def test_uses_bre_safe_section_pattern(self):
         """Regression for C3: the SECTION grep pattern must be BRE-safe.
@@ -222,7 +242,8 @@ class TestOmtCrossRef:
         nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
         content = nav_file.read_text()
         assert "const omt_cross_ref = tool({" in content, "Should define omt_cross_ref"
-        assert 'name: "omt_cross_ref"' in content, "Should declare tool name"
+        # DEFECT C: no `name:` property — opencode infers the tool name from the
+        # default-export tool-map key (verified in test_omt_nav_exports_tools).
 
 
 class TestOmtQuickRef:
@@ -232,84 +253,184 @@ class TestOmtQuickRef:
         nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
         content = nav_file.read_text()
         assert "const omt_quick_ref = tool({" in content, "Should define omt_quick_ref"
-        assert 'name: "omt_quick_ref"' in content, "Should declare tool name"
+        # DEFECT C: no `name:` property — opencode infers the tool name from the
+        # default-export tool-map key (verified in test_omt_nav_exports_tools).
 
 
 # ---------------------------------------------------------------------------
-# Behavioral: invoke the REAL plugin tools (regression for C3 + general health)
+# Behavioral: invoke the REAL plugin tools (string output — DEFECT D)
 # ---------------------------------------------------------------------------
 @needs_node
 class TestToolBehaviorReal:
-    """Invoke the real omt_nav plugin tools via node and assert on output."""
+    """Invoke the real omt_nav plugin tools via node and assert on the STRING
+    output. Tools return plain strings (opencode ToolResult = string |
+    {output:str}); a raw object without `output` crashes opencode (DEFECT D:
+    result.output is undefined -> .split() -> 'u.split'). Assertions use
+    substrings / line counts — no structured-field indexing."""
 
-    def test_omt_list_sections_returns_sections(self):
-        """C3 regression: omt_list_sections must return sections (was empty)."""
+    def test_all_tools_return_strings(self):
+        """DEFECT D regression: every tool must return a string, not a raw
+        object. A raw object without `output` crashes opencode at call time."""
+        cases = [
+            ("omt_nav", {"query": "SECTION:"}),
+            ("omt_list_sections", {}),
+            ("omt_cross_ref", {"xref": "XREF_NAV"}),
+            ("omt_quick_ref", {}),
+        ]
+        for name, args in cases:
+            out = _run_tool(name, args)
+            assert out is not None, f"{name} failed to run"
+            assert isinstance(out, str), f"{name} must return a string (DEFECT D)"
+
+    def test_omt_list_sections_returns_many(self):
         out = _run_tool("omt_list_sections")
-        assert out is not None, "tool failed to load/run"
-        assert len(out["sections"]) >= 10, \
-            f"expected >=10 sections, got {len(out['sections'])}"
-        for s in out["sections"][:5]:
-            assert s["file"], "section missing file"
-            assert s["line"] > 0, "section missing line"
-            assert s["title"], "section missing title"
+        assert out is not None
+        assert len(out.splitlines()) >= 10
 
     def test_omt_list_sections_includes_meta_harness(self):
         out = _run_tool("omt_list_sections")
         assert out is not None
-        files = {s["file"] for s in out["sections"]}
-        assert ".meta/META_HARNESS.md" in files
+        assert ".meta/META_HARNESS.md" in out
 
     def test_omt_list_sections_covers_omt_plus_plus(self):
-        """M4: auto-discovery should include the doc/omt++ files."""
         out = _run_tool("omt_list_sections")
         assert out is not None
-        files = {s["file"] for s in out["sections"]}
-        assert any("doc/omt++/" in f for f in files), \
-            "omt++ docs should be covered (auto-discovery)"
+        assert "doc/omt++/" in out
 
     def test_omt_nav_finds_cmd(self):
         out = _run_tool("omt_nav", {"query": "CMD_OMT_PHASE"})
         assert out is not None
-        assert len(out["results"]) >= 1
-        assert any("omt_phase" in r["content"] for r in out["results"])
+        assert "omt_phase" in out
 
     def test_omt_nav_with_tag_type(self):
-        # tag_type="ERR" + sub-filter "V2M" builds pattern `ERR_.*V2M`, so every
-        # hit is constrained to the ERR_ tag namespace (contains ERR_ and V2M).
         out = _run_tool("omt_nav", {"query": "V2M", "tag_type": "ERR"})
         assert out is not None
-        assert len(out["results"]) >= 1
-        assert all("ERR_" in r["content"] for r in out["results"])
-        assert all("V2M" in r["content"] for r in out["results"])
+        assert "ERR_" in out
+        assert "V2M" in out
 
-    def test_omt_nav_no_match_returns_empty_with_suggestions(self):
+    def test_omt_nav_no_match_returns_message(self):
         out = _run_tool("omt_nav", {"query": "ZZZ_NOPE_NOTHING_XYZ_123"})
         assert out is not None
-        assert out["results"] == [], "no-match query should return empty results"
-        assert len(out["suggestions"]) >= 1, "should offer suggestions on no match"
+        assert "No results" in out
 
-    def test_omt_nav_include_context(self):
+    def test_omt_nav_include_context_adds_lines(self):
         out = _run_tool("omt_nav", {"query": "RULE_R1", "include_context": True})
         assert out is not None
-        assert len(out["results"]) >= 1
-        assert out["results"][0].get("context"), "context should be populated"
+        # context renders surrounding lines, so output is more than one line
+        assert len(out.splitlines()) > 1
 
     def test_omt_cross_ref_resolves(self):
         out = _run_tool("omt_cross_ref", {"xref": "XREF_NAV"})
         assert out is not None
-        assert len(out["references"]) >= 1
+        assert "XREF_" in out
 
     def test_omt_quick_ref_filtered(self):
         out = _run_tool("omt_quick_ref", {"workflow": "START_MAJOR"})
         assert out is not None
-        assert len(out["workflows"]) >= 1
-        assert out["workflows"][0]["name"].startswith("QUICK_")
+        assert "QUICK_" in out
 
     def test_omt_quick_ref_all(self):
         out = _run_tool("omt_quick_ref")
         assert out is not None
-        assert len(out["workflows"]) >= 5, \
-            f"expected >=5 workflows, got {len(out['workflows'])}"
+        assert len(out.splitlines()) >= 5
+
+
+# ---------------------------------------------------------------------------
+# Real-path schema: DEFECT C regression (opencode's actual arg-binding precondition)
+# ---------------------------------------------------------------------------
+@needs_node
+class TestToolSchemaReal:
+    """Inspect the REAL plugin tool objects (via opencode's actual `tool()`
+    function) to verify each tool exposes a proper `args` Zod-schema.
+
+    This is the test that DEFECT C slipped past. The behavioral tests above
+    (_run_tool) call `tool.execute(args)` DIRECTLY, bypassing opencode's
+    arg-binding entirely. An earlier omt_nav.ts used `input:{type,properties}`
+    (a raw JSON schema) instead of `args`/`tool.schema`. opencode's `tool()`
+    ignores `input` and registers the tool with NO parameters, so real calls
+    passed undefined args and crashed on `.startsWith`/`.split`. Because
+    _run_tool supplied args straight to execute, the broken schema was never
+    exercised and every behavioral test passed — false confidence.
+
+    opencode serve has no model-free direct-tool-call HTTP endpoint (`/tool*`
+    return the SPA; `/session/{id}/message` requires an LLM to process parts),
+    so a serve-based invocation test is impractical. Instead this test inspects
+    the schema opencode actually USES to bind args (`args`): if it's missing or
+    not Zod, opencode cannot bind args and the tool is non-functional in a real
+    session. This is deterministic, fast, and directly targets DEFECT C."""
+
+    def _schema(self):
+        node = NODE
+        if not node:
+            return None
+        proc = subprocess.run(
+            [node, "--experimental-strip-types", str(NAV_SCHEMA_RUNNER)],
+            capture_output=True, text=True, cwd=REPO_ROOT, timeout=30,
+        )
+        if proc.returncode != 0:
+            return None
+        try:
+            return json.loads(proc.stdout)
+        except json.JSONDecodeError:
+            return None
+
+    def test_plugin_loads_via_default_export(self):
+        """The default plugin factory must load (DEFECT A regression: a missing
+        default function means the tools are never registered at all)."""
+        s = self._schema()
+        assert s is not None, "plugin failed to load via default export (DEFECT A?)"
+
+    def test_all_four_tools_registered(self):
+        s = self._schema()
+        assert s is not None
+        for name in ["omt_nav", "omt_list_sections", "omt_cross_ref", "omt_quick_ref"]:
+            assert name in s, f"{name} must be registered in the tool map"
+            assert s[name]["loaded"] is True
+
+    def test_all_tools_use_args_not_input(self):
+        """DEFECT C core: each tool must expose `args` (Zod schemas) and must
+        NOT carry the raw-JSON-schema `input` property. opencode binds args from
+        `args` only; `input` is silently ignored."""
+        s = self._schema()
+        assert s is not None
+        for name in ["omt_nav", "omt_list_sections", "omt_cross_ref", "omt_quick_ref"]:
+            assert s[name]["hasArgs"] is True, (
+                f"{name} must use args: schema (DEFECT C) — hasArgs=False, "
+                f"hasInput={s[name].get('hasInput')}")
+            assert s[name]["hasInput"] is False, (
+                f"{name} must NOT use raw JSON-schema input: (DEFECT C)")
+            assert s[name]["hasExecute"] is True, f"{name} must have an execute fn"
+
+    def test_required_params_are_zod_and_required(self):
+        """omt_nav.query and omt_cross_ref.xref are required string params: they
+        must be Zod schemas with isOptional() == False. If `args` were absent
+        (DEFECT C), these entries wouldn't exist."""
+        s = self._schema()
+        assert s is not None
+        q = s["omt_nav"]["args"].get("query")
+        assert q is not None, "omt_nav.args.query must exist (DEFECT C)"
+        assert q["isZod"] is True, "query must be a Zod schema opencode can parse"
+        assert q["isOptional"] is False, "query must be required"
+
+        x = s["omt_cross_ref"]["args"].get("xref")
+        assert x is not None, "omt_cross_ref.args.xref must exist (DEFECT C)"
+        assert x["isZod"] is True, "xref must be a Zod schema opencode can parse"
+        assert x["isOptional"] is False, "xref must be required"
+
+    def test_optional_params_are_zod_and_optional(self):
+        """Optional params (file, tag_type, include_context, workflow) must be
+        Zod schemas with isOptional() == True."""
+        s = self._schema()
+        assert s is not None
+        for opt in ["file", "tag_type", "include_context"]:
+            a = s["omt_nav"]["args"].get(opt)
+            assert a is not None, f"omt_nav.args.{opt} must be declared"
+            assert a["isZod"] is True, f"{opt} must be a Zod schema"
+            assert a["isOptional"] is True, f"{opt} must be optional"
+        wf = s["omt_quick_ref"]["args"].get("workflow")
+        assert wf is not None and wf["isZod"] is True and wf["isOptional"] is True
+        lf = s["omt_list_sections"]["args"].get("file")
+        assert lf is not None and lf["isZod"] is True and lf["isOptional"] is True
 
 
 # ---------------------------------------------------------------------------

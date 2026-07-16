@@ -1,6 +1,6 @@
 // OMT++ Navigation Tool — structured navigation for META HARNESS documentation
 // Provides grep-based navigation using SECTION:/XREF_/CMD_/ERR_/WRN_/QUICK_ tags
-// Returns structured results for agent consumption
+// Returns plain-string results (opencode ToolResult: string | {output:string}).
 
 import { tool } from "@opencode-ai/plugin"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
@@ -49,16 +49,8 @@ const TAG_PATTERNS = {
 interface NavResult {
   file: string
   line: number
-  tag: string
   content: string
   context?: string
-}
-
-interface NavResponse {
-  query: string
-  results: NavResult[]
-  files_searched: string[]
-  suggestions: string[]
 }
 
 // Execute grep command and parse results.
@@ -90,7 +82,6 @@ function runGrep(pattern: string, files: string[]): NavResult[] {
         results.push({
           file: relPath,
           line: parseInt(lineNum, 10),
-          tag: pattern,
           content: content.trim(),
         })
       }
@@ -118,45 +109,48 @@ function getContext(filePath: string, lineNum: number, contextLines: number = 3)
   }
 }
 
+// Render grep hits as "file:line: content" lines — the simplest opencode
+// ToolResult is a plain string (mirrors omt_enforcer.ts tools like omt_phase).
+function render(results: NavResult[]): string {
+  return results.map(r => `${r.file}:${r.line}: ${r.content}`).join("\n")
+}
+
 // --- omt_nav: Main navigation tool ---
+// API notes:
+//  DEFECT C (fixed): use `args`/`tool.schema` + execute(args, context), NOT
+//    raw JSON-schema `input:{type,properties}` (opencode ignores `input` and
+//    registers the tool with no params -> real calls crash on undefined args).
+//  DEFECT D (fixed): execute() must return a plain string (or {output:string}).
+//    Returning a raw object {results,...} with no `output` field crashes
+//    opencode: it reads `result.output` (undefined) and .split()s it ->
+//    "undefined is not an object (evaluating 'u.split')". The function-level
+//    tests (via _nav_runner.mjs calling execute() directly + JSON.stringify)
+//    never crossed opencode's ToolResult boundary, so this was invisible.
 const omt_nav = tool({
-  name: "omt_nav",
-  description: "Navigate META HARNESS documentation using structured tags (SECTION:/XREF_/CMD_/ERR_/etc.)",
-  input: {
-    type: "object",
-    properties: {
-      query: {
-        type: "string",
-        description: "Search query: tag prefix (e.g., 'SECTION:', 'CMD_', 'ERR_') or keyword",
-      },
-      file: {
-        type: "string",
-        description: "Optional: specific file to search (e.g., '.meta/META_HARNESS.md')",
-      },
-      tag_type: {
-        type: "string",
-        description: "Optional: restrict to specific tag type (SECTION, RULE, ERR, WRN, CMD, QUICK, XREF, TT, PHASE, FEAT)",
-        enum: ["SECTION", "RULE", "ERR", "WRN", "CMD", "QUICK", "XREF", "TT", "PHASE", "FEAT", "all"],
-      },
-      include_context: {
-        type: "boolean",
-        description: "Include surrounding context for each match (default: false)",
-        default: false,
-      },
-    },
-    required: ["query"],
+  description: "Navigate META HARNESS documentation using structured tags (SECTION:/XREF_/CMD_/ERR_/etc.). Returns structured results for agent consumption.",
+  args: {
+    query: tool.schema.string().describe(
+      "Search query: tag prefix (e.g., 'SECTION:', 'CMD_', 'ERR_') or keyword"),
+    file: tool.schema.string().optional().describe(
+      "Optional: specific file to search (e.g., '.meta/META_HARNESS.md')"),
+    tag_type: tool.schema.string().optional().describe(
+      "Optional: restrict to specific tag type (SECTION, RULE, ERR, WRN, CMD, QUICK, XREF, TT, PHASE, FEAT, all)"),
+    include_context: tool.schema.boolean().optional().describe(
+      "Include surrounding context for each match (default: false)"),
   },
-  execute: async (input: { 
-    query: string
-    file?: string
-    tag_type?: string
-    include_context?: boolean
-  }): Promise<NavResponse> => {
-    const { query, file, tag_type = "all", include_context = false } = input
-    
+  async execute(args, context) {
+    const query = args?.query ?? ""
+    const file = args?.file
+    const tag_type = args?.tag_type ?? "all"
+    const include_context = args?.include_context === true
+
+    if (!query) {
+      return "'query' is required (e.g., query:'SECTION:', query:'CMD_')."
+    }
+
     // Determine which files to search
     const filesToSearch = file ? [file] : META_FILES.filter(f => existsSync(join(REPO_ROOT, f)))
-    
+
     // Build grep pattern based on tag type
     let pattern = query
     if (tag_type !== "all" && TAG_PATTERNS[tag_type as keyof typeof TAG_PATTERNS]) {
@@ -165,146 +159,100 @@ const omt_nav = tool({
         pattern = `${tag_type}_.*${query}`
       }
     }
-    
+
     // Run grep search
     const rawResults = runGrep(pattern, filesToSearch)
-    
+
     // Enrich results with context if requested
     const results: NavResult[] = rawResults.map(r => ({
       ...r,
       ...(include_context ? { context: getContext(r.file, r.line) } : {}),
     }))
-    
-    // Generate suggestions based on query
-    const suggestions: string[] = []
-    if (query.startsWith("SECTION:")) {
-      suggestions.push("Try 'CMD_' to find tool commands")
-      suggestions.push("Try 'QUICK_' to find workflow patterns")
-      suggestions.push("Try 'XREF_' to find cross-references")
-    } else if (query.startsWith("CMD_")) {
-      suggestions.push("Use omt_phase, omt_status, omt_skip, omt_complete tools")
-      suggestions.push("Check META_HARNESS.md SECTION:CMDS for full command catalog")
-    } else if (query.startsWith("ERR_") || query.startsWith("WRN_")) {
-      suggestions.push("Check mvc_check.py for implementation of these error codes")
-      suggestions.push("See META_HARNESS.md SECTION:ERRORS for error/warning catalog")
-    }
-    
-    // If no results, suggest common patterns
+
     if (results.length === 0) {
-      suggestions.push("Common patterns: 'SECTION:RULES', 'CMD_OMT_PHASE', 'ERR_', 'QUICK_START'")
-      suggestions.push("Use tag_type parameter to restrict search: SECTION, CMD, ERR, WRN, QUICK, XREF")
+      return `No results for "${query}". Try: SECTION:, CMD_, ERR_, QUICK_, XREF_`
     }
-    
-    return {
-      query,
-      results,
-      files_searched: filesToSearch,
-      suggestions,
+
+    // With context, append the context block under each hit.
+    if (include_context) {
+      return results.map(r => `${r.file}:${r.line}: ${r.content}` + (r.context ? `\n${r.context}` : "")).join("\n\n")
     }
+    return render(results)
   },
 })
 
 // --- omt_list_sections: List all SECTION: headers across META HARNESS ---
 const omt_list_sections = tool({
-  name: "omt_list_sections",
-  description: "List all SECTION: headers across META HARNESS documentation with file locations",
-  input: {
-    type: "object",
-    properties: {
-      file: {
-        type: "string",
-        description: "Optional: specific file to list sections from",
-      },
-    },
-    required: [],
+  description: "List all SECTION: headers across META HARNESS documentation with file locations.",
+  args: {
+    file: tool.schema.string().optional().describe(
+      "Optional: specific file to list sections from"),
   },
-  execute: async (input: { file?: string }): Promise<{ sections: { file: string; line: number; title: string }[] }> => {
-    const { file } = input
+  async execute(args, context) {
+    const file = args?.file
     const filesToSearch = file ? [file] : META_FILES
-    
+
     // BRE-safe "one or more leading '#'": `##*` = first '#' literal, then
     // zero-or-more '#' (i.e. one-or-more '#'). Matches the `# SECTION:` style
     // used across META HARNESS docs. (`^##+` would be wrong in BRE: `+` is
     // literal there, and even in ERE `##+` requires two-or-more '#'.)
     const rawResults = runGrep("^##* SECTION:", filesToSearch)
-    
-    const sections = rawResults.map(r => {
-      // Extract section title from content (remove ## and SECTION: prefix)
-      const title = r.content.replace(/^#+ SECTION:\s*/, "").trim()
-      return {
-        file: r.file,
-        line: r.line,
-        title,
-      }
-    })
-    
-    return { sections }
+
+    const sections = rawResults.map(r => ({
+      file: r.file,
+      line: r.line,
+      title: r.content.replace(/^#+ SECTION:\s*/, "").trim(),
+    }))
+
+    return sections.map(s => `${s.file}:${s.line}: ${s.title}`).join("\n")
   },
 })
 
 // --- omt_cross_ref: Resolve cross-references ---
 const omt_cross_ref = tool({
-  name: "omt_cross_ref",
-  description: "Resolve XREF_ cross-references to find related documentation sections",
-  input: {
-    type: "object",
-    properties: {
-      xref: {
-        type: "string",
-        description: "Cross-reference ID (e.g., 'XREF_GUIDE', 'XREF_RULES')",
-      },
-    },
-    required: ["xref"],
+  description: "Resolve XREF_ cross-references to find related documentation sections.",
+  args: {
+    xref: tool.schema.string().describe(
+      "Cross-reference ID (e.g., 'XREF_GUIDE', 'XREF_RULES')"),
   },
-  execute: async (input: { xref: string }): Promise<{ xref: string; references: { file: string; line: number; content: string }[] }> => {
-    const { xref } = input
-    const pattern = xref.startsWith("XREF_") ? xref : `XREF_.*${xref}`
-    
-    const results = runGrep(pattern, META_FILES)
-    
-    return {
-      xref,
-      references: results.map(r => ({
-        file: r.file,
-        line: r.line,
-        content: r.content,
-      })),
+  async execute(args, context) {
+    const xref = args?.xref ?? ""
+    if (!xref) {
+      return "'xref' is required (e.g., xref:'XREF_GUIDE')."
     }
+    const pattern = xref.startsWith("XREF_") ? xref : `XREF_.*${xref}`
+    const results = runGrep(pattern, META_FILES)
+    return results.length
+      ? render(results)
+      : `No references for "${xref}".`
   },
 })
 
 // --- omt_quick_ref: Get quick workflow patterns ---
 const omt_quick_ref = tool({
-  name: "omt_quick_ref",
-  description: "Get QUICK_ workflow patterns for common agent tasks",
-  input: {
-    type: "object",
-    properties: {
-      workflow: {
-        type: "string",
-        description: "Workflow name or keyword (e.g., 'START_MAJOR', 'TDD', 'DEBUG')",
-      },
-    },
-    required: [],
+  description: "Get QUICK_ workflow patterns for common agent tasks.",
+  args: {
+    workflow: tool.schema.string().optional().describe(
+      "Workflow name or keyword (e.g., 'START_MAJOR', 'TDD', 'DEBUG')"),
   },
-  execute: async (input: { workflow?: string }): Promise<{ workflows: { file: string; line: number; name: string; pattern: string }[] }> => {
-    const { workflow = "" } = input
+  async execute(args, context) {
+    const workflow = args?.workflow ?? ""
     const pattern = workflow ? `QUICK_.*${workflow}` : "^QUICK_"
-    
     const results = runGrep(pattern, META_FILES)
-    
+
     const workflows = results.map(r => {
-      // Parse QUICK_NAME: pattern format
       const match = r.content.match(/^(QUICK_[A-Z0-9_]+):\s*(.+)$/)
       return {
-        file: r.file,
-        line: r.line,
         name: match ? match[1] : "QUICK_UNKNOWN",
         pattern: match ? match[2] : r.content,
+        file: r.file,
+        line: r.line,
       }
     })
-    
-    return { workflows }
+
+    return workflows.length
+      ? workflows.map(w => `${w.name}: ${w.pattern}  (${w.file}:${w.line})`).join("\n")
+      : `No workflows${workflow ? ` matching "${workflow}"` : ""}.`
   },
 })
 
@@ -315,11 +263,14 @@ const omt_quick_ref = tool({
 // so they must NOT be named-exported from this file — only the default export
 // is allowed. Mirrors omt_status.ts lines 364-366.
 //
-// (Prior defect A: this file ended with a named tool-object export only — no
-// default factory — so opencode rejected it with "Plugin export is not a
-// function" and the nav tools were never registered, making the feature_020
-// nav-gate a catch-22. The test fixture _nav_runner.mjs now retrieves the tools
-// via the default export's `tool` property instead of named imports.)
+// (DEFECT A, prior: named tool-object export only -> "Plugin export is not a
+//  function", tools never registered. Fixed by the default factory below.)
+// (DEFECT C, prior: `input:{type,properties}` instead of `args`/`tool.schema`
+//  -> tools registered with no params -> real calls crashed on undefined args.)
+// (DEFECT D, prior: tools returned raw objects {results,...} with no `output`
+//  string -> opencode reads result.output (undefined) and .split()s it ->
+//  "undefined is not an object (evaluating 'u.split')". Fixed by returning
+//  plain strings, the simplest ToolResult (mirrors omt_enforcer.ts tools).)
 export default async () => ({
   tool: { omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref },
 })
