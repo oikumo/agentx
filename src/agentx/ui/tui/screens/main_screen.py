@@ -60,6 +60,7 @@ class MainTUIScreen(BaseAgentXScreen):
     DEFAULT_CSS = """
     MainTUIScreen {
         layout: vertical;
+        background: black;
     }
 
     MainTUIScreen #main-container {
@@ -73,6 +74,9 @@ class MainTUIScreen(BaseAgentXScreen):
     """
 
     # __init__, action_quit, action_back are inherited from BaseAgentXScreen.
+# TA: why: background: black in DEFAULT_CSS overrides base_app.py Screen{background:$surface} for main screen only
+# TA: gotcha: omt_think on a line inside a triple-quoted CSS string inserts # which breaks Textual CSS parser (feature_019 class of bug) — only place TA: on real Python comment lines outside any string
+# TA: todo: xref: feature_021 omt_think has no guard against inserting # TA: inside triple-quoted strings (CSS/SQL/etc.) — confirmed during this session, consider submitting feedback
 
     def compose(self) -> ComposeResult:
         """Compose the complete main screen layout."""
