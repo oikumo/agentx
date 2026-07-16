@@ -57,4 +57,6 @@
 [2026-07-12] All .meta META.md files updated with grep-friendly SECTION: headers
 [2026-07-12] Declared feature_020.meta_harness_navigation in Analysis phase (major_feature, requires design doc before Programming)
 [2026-07-12] feature_020 COMPLETE: Implemented omt_nav plugin tools (omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref), 18/18 tests pass, all META HARNESS docs grep-optimized
+[2026-07-12] feature_020 ENFORCEMENT: opencode.jsonc allows nav tools, AGENTS.md has MANDATORY section, omt_enforcer.ts has session.start reminder, META_HARNESS.md has SECTION:NAV, 22/22 tests pass
+[2026-07-16] Fixed feature_019 coding screen input layout bug: invalid CSS properties (font-family, white-space) caused entire DEFAULT_CSS to fail parsing; removed invalid properties, input now docks at bottom correctly; 72/72 tests pass
 ```

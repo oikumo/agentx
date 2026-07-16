@@ -109,10 +109,8 @@ class CodingTUIScreen(BaseAgentXScreen):
         width: 100%;
     }
 
-    /* Diff highlighting in tool results */
+/* Diff highlighting in tool results */
     CodingTUIScreen .coding-diff {
-        font-family: monospace;
-        white-space: pre;
     }
     CodingTUIScreen .coding-diff-add {
         color: $success;
