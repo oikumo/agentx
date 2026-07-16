@@ -37,9 +37,134 @@
 - 🤖 **Intelligent Agent** - Autonomous perceive→decide→act→reflect cycle with tool registry, policy DSL engine, and self-improvement loop
 - 🧠 **Petri Net Sessions** - Graph-based session/user objective management
 - 🔌 **LangChain/LangGraph** - Full integration for agentic workflows
-- 🧪 **879+ Tests** - Comprehensive unit + integration + automated TUI tests
+- 🧪 **1060+ Tests** - Comprehensive unit + integration + automated TUI tests
 
 Developed with **opencode** using the **META HARNESS** (OMT++ methodology: Analysis → Design → Programming → Testing with visible artifacts).
+
+---
+
+## 📖 META HARNESS: Process Enforcement System
+
+> **Why this matters:** agentx isn't just an LLM agent framework — it's a working proof that a coding agent can be mechanically constrained to follow a rigorous software development process (Analysis → Design → Programming → Testing) with visible, auditable artifacts at every step. No manual discipline required.
+
+agentx is developed with **opencode** using a mechanically enforced **META HARNESS** — the OMT++ (Object Modeling Technique++) process enforcement system. Every code change follows a structured workflow with visible artifacts, enforced by plugins, linters, and gates — not human willpower.
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                     OMT++ PHASE MODEL                            │
+│                                                                  │
+│   ANALYSIS ──→ DESIGN ──→ PROGRAMMING ──→ TESTING ──→ DONE      │
+│   (WHAT?)      (HOW?)     (CODE)         (VERIFY)                │
+│                                                                  │
+│   Each phase produces visible artifacts before the next begins. │
+│   Skipping a phase is mechanically blocked.                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **Documentation Structure** | `.meta/` | All development artifacts organized by OMT++ phases |
+| **Enforcement Plugin** | `.opencode/plugin/omt_enforcer.ts` | Gates `src/` edits; requires phase declarations, design artifacts, nav-gate + think-gate enforcement |
+| **Status Tool** | `.opencode/plugin/omt_status.ts` | Returns current phase, unlock state, artifact status, TDD state |
+| **Navigation Plugin** | `.opencode/plugin/omt_nav.ts` | feature_020: structured doc navigation (`omt_nav`, `omt_list_sections`, `omt_cross_ref`, `omt_quick_ref`) |
+| **Think Anywhere Plugin** | `.opencode/plugin/omt_think.ts` | feature_021: persistent inline `TA:` thought-tags (`omt_think`, `omt_think_list`, `omt_think_remove`) + session digest |
+| **MVC++ Linter** | `scripts/omt/mvc_check.py` | Architecture checker for layer violations (View↔Model leaks, SQL outside DP, etc.) |
+| **TDD Engine** | `scripts/omt/tdd_check.py` + `omt_*` tools | Mechanically enforces Red→Green→Refactor cycles (two-hats gate) |
+| **Feature Scaffold** | `scripts/omt/new_feature.py` | Creates consistently-named feature directories from templates |
+| **Ledger** | `.meta/.omt/ledger.jsonl` | Audit trail of all phase declarations and completions |
+| **Configuration** | `opencode.jsonc`, `AGENTS.md` | Defines protected files, denied commands, and process rules |
+
+### How Enforcement Works
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| **Coarse permissions** | `opencode.jsonc` | Declarative deny/allow rules (git commit, bare python, .env edits, etc.) |
+| **Fine process gate** | `.opencode/plugin/omt_enforcer.ts` | Programmatic phase checking, MVC++ linting, artifact scaffolding |
+
+**The META HARNESS Gate:** Before editing any file under `src/`, you **must** declare your OMT++ phase:
+
+```text
+omt_phase{ task_type: "bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs", 
+           phase: "Analysis|Design|Programming|Testing",
+           scope: "one sentence: what 'done' looks like" }
+```
+
+This creates a ledger entry in `.meta/.omt/ledger.jsonl` and unlocks `src/` edits for the session.
+
+**Rigor scales to task size:**
+
+| task_type | Required Artifacts |
+|-----------|-------------------|
+| `bug_fix` / `minor_feature` / `refactor` | Phase declaration only |
+| `major_feature` / `new_screen` | Phase declaration **+** design doc on disk |
+
+**Automatic Architecture Checks:** After every `src/` edit, the gate runs the MVC++ linter (`uv run scripts/omt/mvc_check.py`) which checks for View↔Model layer leaks, non-ABC Abstract Partners, SQL outside Data Provider classes, and God controllers (>300 lines). Violations surface as non-blocking toasts (guiding, not punishing).
+
+### TDD Enforcement (feature_016)
+
+For `major_feature` and `new_screen` tasks, the gate automatically activates **TDD mode** — a Kent Beck-style Red → Green → Refactor cycle enforced mechanically:
+
+```text
+  ┌──────────────┐     ┌──────────────┐     ┌─────────────────┐
+  │  TESTLIST    │ →   │  RED (test)  │ →   │  GREEN (code)   │
+  │  behaviors   │     │  write test  │     │  write code     │
+  │  to implement│     │  that FAILS  │     │  to make it PASS│
+  └──────────────┘     └──────────────┘     └─────────────────┘
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │  REFACTOR        │
+                                         │  improve code    │
+                                         │  tests stay GREEN│
+                                         └──────────────────┘
+                                                  │
+                                                  ▼
+                                         ┌─────────────────┐
+                                         │  DONE           │
+                                         │  full suite +   │
+                                         │  checklist pass │
+                                         └─────────────────┘
+```
+
+**Two-Hats Gate:** RED state → only `tests/` edits allowed; GREEN/REFACTOR state → only `src/` edits allowed. Wrong layer edit → gate blocks with a message telling you which hat to switch to.
+
+**REFACTOR Revert:** If a refactor edit breaks tests, the gate automatically reverts the file to its pre-edit state — you can't accidentally introduce a regression during refactoring.
+
+### Navigation Enforcement (feature_020)
+
+Before answering ANY question about the project (classes, components, features, architecture), agents MUST use the navigation tools (`omt_nav`, `omt_list_sections`, `omt_cross_ref`, `omt_quick_ref`) to search META HARNESS documentation first — only falling back to `grep`/`glob` if navigation returns no results. A mechanical gate blocks `grep`/`glob` on doc paths (`.meta/`, `AGENTS.md`, `WORK.md`) until a nav tool is used.
+
+### Think Anywhere (feature_021)
+
+Persistent, grep-friendly `TA:` thought-tags dropped **inline in any non-protected file** so hard-won context (gotchas, "why this is here", risks, cross-refs) survives across sessions. Token-minimal: retrieval is O(hits) via `grep`/`omt_think_list`.
+
+- **`omt_think`** — insert a language-aware `TA:` comment (bypasses phase/canary gates; annotation, not code)
+- **`omt_think_list`** — grep-backed retrieval; marks the session consulted (clears the think-gate)
+- **`omt_think_remove`** — remove a `TA:` line + reconcile the JSONL index
+- **Think-gate (blocking):** editing a file that carries `TA:` thoughts is blocked until the agent consults via `omt_think_list` — NOT bypassable by `omt_skip`
+- **Session digest:** every session.start greps `TA:` across the repo and surfaces a capped digest
+
+### Tooling
+
+| Tool | Purpose |
+|------|---------|
+| `omt_phase` | Declare OMT++ phase; unlocks `src/` edits |
+| `omt_skip` | Logged process-override escape hatch |
+| `omt_complete` | Verify phase artifacts + advance to next phase |
+| `omt_testlist` / `omt_red` / `omt_green` / `omt_refactor` / `omt_done` | TDD cycle (plan → failing test → code → refactor → verify) |
+| `omt_nav` / `omt_list_sections` / `omt_cross_ref` / `omt_quick_ref` | Navigate META HARNESS docs (feature_020) |
+| `omt_think` / `omt_think_list` / `omt_think_remove` | Persistent inline `TA:` thought-tags (feature_021) |
+| `uv run scripts/omt/mvc_check.py` | MVC++ architecture linter |
+| `uv run scripts/omt/tdd_check.py` | TDD enforcement engine (9 subcommands) |
+| `uv run scripts/omt/new_feature.py "<name>"` | Scaffold a feature's artifacts from `.meta/templates/` |
+
+### References
+
+- **OMT++ methodology**: `.meta/software_development_process/omt_agent_guide.md` (source of truth)
+- **META HARNESS design**: `.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/`
+- **AGENTS.md**: Complete enforcement rules for opencode agents
 
 ---
 
@@ -827,7 +952,7 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 
 ## 🧪 Testing
 
-agentx includes **879+ comprehensive tests** covering all core modules:
+agentx includes **1060+ comprehensive tests** covering all core modules:
 
 ```bash
 # Run all tests
@@ -865,144 +990,14 @@ uv run pytest tests/ --cov=agentx --cov-report=html
 - ✅ Agent facade cycle (perceive→decide→act→reflect→persist)
 - ✅ Demo scenarios & Textual pilot e2e tests
 - ✅ TDD enforcement engine (AST analysis, two-hats gate, coverage gap detection)
+- ✅ Meta Harness navigation tools (feature_020: grep-based doc nav, plugin load safety)
+- ✅ Think Anywhere thought-tags (feature_021: inline `TA:` tags, think-gate decider, session digest)
 
 **Characteristics:**
 - **Isolation**: All tests are isolated with mocking (no external dependencies)
 - **TUI Tests**: Automated end-to-end tests using Textual Pilot
 - **MVC++ Compliant**: 0 errors, 0 warnings on agent module
 - **Fast**: Full suite runs in seconds
-
----
-
-## 📖 META HARNESS: Process Enforcement System
-
-agentx development is driven by **opencode only** with a mechanically enforced **META HARNESS** — the collective name for the OMT++ (Object Modeling Technique++) process enforcement system. The META HARNESS ensures every code change follows a structured Analysis → Design → Programming → Testing workflow with visible, auditable artifacts.
-
-**The META HARNESS consists of:**
-
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| **Documentation Structure** | `.meta/` | All development artifacts organized by OMT++ phases |
-| **Enforcement Plugin** | `.opencode/plugin/omt_enforcer.ts` | Gates `src/` edits; requires phase declarations and design artifacts |
-| **Status Tool** | `.opencode/plugin/omt_status.ts` | Returns current phase, unlock state, artifact status, TDD state |
-| **MVC++ Linter** | `scripts/omt/mvc_check.py` | Architecture checker for layer violations (View↔Model leaks, SQL outside DP, etc.) |
-| **TDD Engine** | `scripts/omt/tdd_check.py` + `omt_*` tools | Mechanically enforces Red→Green→Refactor cycles (two-hats gate) |
-| **Feature Scaffold** | `scripts/omt/new_feature.py` | Creates consistently-named feature directories from templates |
-| **Ledger** | `.meta/.omt/ledger.jsonl` | Audit trail of all phase declarations and completions |
-| **Configuration** | `opencode.jsonc`, `AGENTS.md` | Defines protected files, denied commands, and process rules |
-
-Together, these components form an automated enforcement system that makes the development process **visible, auditable, and consistently followed** without relying on manual discipline.
-
----
-
-### How Enforcement Works
-
-### How Enforcement Works
-
-The enforcement lives in two layers:
-
-| Layer | File | Purpose |
-|-------|------|---------|
-| **Coarse permissions** | `opencode.jsonc` | Declarative deny/allow rules (git commit, bare python, .env edits, etc.) |
-| **Fine process gate** | `.opencode/plugin/omt_enforcer.ts` | Programmatic phase checking, MVC++ linting, artifact scaffolding |
-
-#### The META HARNESS Gate
-
-Before editing any file under `src/`, you **must** declare your OMT++ phase using the `omt_phase` tool:
-
-```text
-omt_phase{ task_type: "bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs", 
-           phase: "Analysis|Design|Programming|Testing",
-           scope: "one sentence: what 'done' looks like" }
-```
-
-This creates a ledger entry in `.meta/.omt/ledger.jsonl` and unlocks `src/` edits for the session.
-
-#### Rigor Scales to Task Size
-
-| task_type | Required Artifacts |
-|-----------|-------------------|
-| `bug_fix` / `minor_feature` / `refactor` | Phase declaration only |
-| `major_feature` / `new_screen` | Phase declaration **+** design doc on disk (scaffold with `uv run scripts/omt/new_feature.py "<name>" --type major_feature`) |
-
-#### Automatic Architecture Checks
-
-After every `src/` edit and on session idle, the gate runs the MVC++ linter (`uv run scripts/omt/mvc_check.py`) which checks for:
-- View ↔ Model layer leaks
-- Non-ABC Abstract Partners
-- SQL outside Data Provider classes
-- God controllers (>300 lines)
-- Controllers in `model/` directory
-
-Violations surface as non-blocking toasts (guiding, not punishing).
-
-#### Escape Hatch (Logged)
-
-For genuine emergencies: `omt_skip{ reason: "...", scope: "src|tests|all" }`. Every skip is recorded in the ledger for audit.
-
-#### Tooling
-
-| Tool | Purpose |
-|------|---------|
-| `omt_phase` | Declare OMT++ phase; unlocks `src/` edits |
-| `omt_skip` | Logged process-override escape hatch |
-| `omt_complete` | Verify phase artifacts + advance to next phase |
-| `omt_testlist` | Record TDD test list (behaviors to implement) |
-| `omt_red` | Declare a failing test (TDD Red — test hat) |
-| `omt_green` | Declare a passing test (TDD Green — code hat) |
-| `omt_refactor` | Declare refactor state (TDD Refactor — code hat) |
-| `omt_done` | Declare TDD completion (runs full suite + checklist) |
-| **`omt_nav`** | **Navigate META HARNESS docs using grep-friendly tags (SECTION:/XREF_/CMD_/etc.)** |
-| **`omt_list_sections`** | **List all SECTION: headers across documentation** |
-| **`omt_cross_ref`** | **Resolve XREF_ cross-references to related sections** |
-| **`omt_quick_ref`** | **Get QUICK_ workflow patterns for common tasks** |
-| `uv run scripts/omt/mvc_check.py` | MVC++ architecture linter (guide §16) |
-| `uv run scripts/omt/tdd_check.py` | TDD enforcement engine (9 subcommands) |
-| `uv run scripts/omt/new_feature.py "<name>"` | Scaffold a feature's artifacts from `.meta/templates/` |
-
-#### TDD Enforcement (feature_016) — Part of the META HARNESS
-
-For `major_feature` and `new_screen` tasks, the gate automatically activates **TDD mode** — a Kent Beck-style Red → Green → Refactor cycle enforced mechanically:
-
-```text
-  ┌──────────────┐     ┌──────────────┐     ┌─────────────────┐
-  │  TESTLIST    │ →   │  RED (test)  │ →   │  GREEN (code)   │
-  │  behaviors   │     │  write test  │     │  write code     │
-  │  to implement│     │  that FAILS  │     │  to make it PASS│
-  └──────────────┘     └──────────────┘     └─────────────────┘
-                                                  │
-                                                  ▼
-                                         ┌──────────────────┐
-                                         │  REFACTOR        │
-                                         │  improve code    │
-                                         │  tests stay GREEN│
-                                         └──────────────────┘
-                                                  │
-                                                  ▼
-                                         ┌─────────────────┐
-                                         │  DONE           │
-                                         │  full suite +   │
-                                         │  checklist pass │
-                                         └─────────────────┘
-```
-
-**Two-Hats Gate:** The enforcer tracks which "hat" you're wearing:
-- **RED state** → only `tests/` edits are allowed (you write the failing test)
-- **GREEN / REFACTOR state** → only `src/` edits are allowed (you write/refactor the code)
-- If you try to edit the wrong layer, the gate blocks you with a message telling you which hat to switch to
-
-**REFACTOR Revert:** If a refactor edit breaks tests, the gate automatically reverts the file to its pre-edit state and blocks the edit — you can't accidentally introduce a regression during refactoring.
-
-**Phase-Exit Validation:** `omt_complete` runs `tdd_check.py validate-exit` which checks for:
-- Dangling RED cycles (tests declared RED but never turned GREEN)
-- Coverage gaps (public methods with no test coverage)
-
-#### References
-
-- **OMT++ methodology**: `.meta/software_development_process/omt_agent_guide.md` (source of truth)
-- **META HARNESS design**: `.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/`
-- **Process enforcement plan**: `.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/plan/PLAN.md`
-- **AGENTS.md**: Complete enforcement rules for opencode agents
 
 ---
 
@@ -1047,6 +1042,7 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_018**: ReAct chat screen (Reasoning + Acting with visible thinking, tool calls, streaming)
 - ✅ **feature_019**: Coding Agent screen (File system tools: search, read, edit, list, create with diff highlighting)
 - ✅ **feature_020**: Meta Harness Navigation (grep-optimized docs, opencode plugin tools: `omt_nav`, `omt_list_sections`, `omt_cross_ref`, `omt_quick_ref`)
+- ✅ **feature_021**: Meta Harness Think Anywhere (persistent inline `TA:` thought-tags, `omt_think`/`omt_think_list`/`omt_think_remove`, think-gate enforcement, session digest)
 
 ### Pending
 - 🔲 **feature_001**: Session/user objectives driven by Petri Nets

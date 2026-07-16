@@ -14,6 +14,8 @@
 | 007 | agentx_intelligent_agent_behaviour | ✅ | Intelligent agent: goals, policy DSL, memory, reflection, tools |
 | 010 | agent_demo_screen | ✅ | One-trigger demo screen showcasing agent cycle (scenarios A/B) |
 | 011 | fast_agent | ✅ | Modal-dialog-driven agent UX (Goal → Running → Reflection → Result) |
+| 020 | meta_harness_navigation | ✅ | Grep-optimized docs + opencode plugin tools (omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref) |
+| 021 | meta_harness_think_anywhere | ✅ | Persistent inline `TA:` thought-tags (omt_think/_list/_remove) + think-gate + session digest |
 
 > `feature_008.agent_framework` and `feature_009.feature_007_agentx_intelligent_agent_behaviour` = empty placeholder dirs (only `FEATURE.md` + `plan/`).
 
@@ -70,11 +72,28 @@
 
 ---
 
+# SECTION:F020 — feature_020 — Meta Harness Navigation ✅ (grep:FEATURE_020_)
+**Goal:** Structured, grep-based navigation of META HARNESS documentation using tag prefixes (`SECTION:`, `RULE_`, `ERR_`, `WRN_`, `CMD_`, `QUICK_`, `XREF_`, `TT_`, `PHASE_`, `FEAT_`). Agents must consult docs via nav tools before answering project questions; a mechanical gate blocks `grep`/`glob` on doc paths until a nav tool is used.
+- **Key code:** `.opencode/plugin/omt_nav.ts` (4 tools: `omt_nav`, `omt_list_sections`, `omt_cross_ref`, `omt_quick_ref`), `.opencode/plugin/omt_enforcer.ts` (nav-gate), `opencode.jsonc` (tool permissions), `AGENTS.md` (MANDATORY section).
+- **Defects fixed (e2e):** DEFECT-A (named tool-object exports not functions → "Plugin export is not a function"; fixed: only `export default`), DEFECT-B (`getSearchPath` passed non-string to `relOf` causing crash; fixed: defensive `typeof` guards), DEFECT-C (`input:{type,properties}` ignored by opencode → tools registered with no params; fixed: `args`/`tool.schema`), DEFECT-D (tools returned raw objects → opencode `.split()` crash; fixed: return plain strings).
+- **Tests:** 54 tests (structural, behavioral via node runner, pure decider, enforcer integration, docs/config, plugin health). Serve e2e verified zero plugin-load errors.
+- **Artifacts:** `.meta/.../features/feature_020.meta_harness_navigation/` (analysis, design, impl notes, test report).
+
+# SECTION:F021 — feature_021 — Meta Harness Think Anywhere ✅ (grep:FEATURE_021_)
+**Goal:** Persistent, grep-friendly inline `TA:` thought-tag layer adapting the Think-Anywhere paper's on-demand reasoning to a cross-session annotation/memory mechanism. Agents drop compact `TA:` comments inline in non-protected files; retrieval is grep-backed (O(hits) tokens); a per-session digest surfaces accumulated thoughts; a blocking think-gate refuses to edit thought-carrying files until consulted.
+- **Key code:** `.opencode/plugin/omt_think.ts` (3 tools: `omt_think`, `omt_think_list`, `omt_think_remove` + `session.start` digest), `.opencode/plugin/omt_enforcer.ts` (`thinkGateDecision`, `hasConsultedThoughts`, `fileThoughtsIn`, before-hook integration), `.meta/.omt/thoughts.jsonl` (append-only index sidecar), `opencode.jsonc` (tool permissions), `AGENTS.md` (MANDATORY section), `.meta/META_HARNESS.md` (`SECTION:THINK`).
+- **Defect fixed:** DEFECT-A load crash — `omt_think.ts` named-exported `commentSyntaxFor` + `fileThoughts`; opencode's loader calls every named export at load with a non-string arg → `(ext||"").toLowerCase` crash → plugin never registered in real opencode. Fix: un-exported both (only `export default`); added deterministic `test_no_named_exports_except_default` structural guard.
+- **Guardrails:** Hard-deny on `.env*`, `README.md`, `uv.lock`, `LICENSE`, `.json`; never creates files; bypasses phase/canary gates (annotation, not code); think-gate NOT bypassable by `omt_skip`; digest capped at 30 lines, list capped at 50.
+- **Tests:** 30 tests across 5 classes (plugin structure incl. no-named-exports guard, real-tool behavioral, pure think-gate decider, enforcer integration/docs/config, plugin health).
+- **Artifacts:** `.meta/.../features/feature_021.meta_harness_think_anywhere/` (FEATURE.md, analysis, design, operation specs, impl notes, test report).
+
+---
+
 # SECTION:CROSSCUT — Cross-Cutting Characteristics (grep:FEATURES_CROSSCUT_)
 - **Persistence:** stdlib `sqlite3`, no ORM, idempotent DDL — three databases (`session.db`, `rag.db`, `agent_session.db`). See persistence.md.
 - **AI-optional:** Agent cycle runs offline; reflection skipped when no AI service wired. Chat/RAG require LLM provider (OpenRouter default).
 - **Two UIs, one controller layer:** Console and TUI share controllers via provider pattern — see architecture.md §3.
-- **Test coverage:** ~470 tests including Textual pilot e2e; feature tests under `tests/features/<feature_slug>/`.
+- **Test coverage:** ~1060 tests including Textual pilot e2e; feature tests under `tests/features/<feature_slug>/`.
 
 ---
 
