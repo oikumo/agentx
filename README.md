@@ -12,21 +12,21 @@
 **agentx** is a Python-based LLM agent framework with a modern **Textual TUI** and **console REPL** interface, created strictly for educational purposes. It lets you interact with language models through chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows.
 
 ```text
-┌─ AgentX TUI ─────────────────────────────────────────────────┐
-│  Welcome to AgentX TUI                                       │
-│  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent │
-│  Press 't' ReAct, 'd' Coding, 'm' Models, 'h' Help, 'q' Quit │
-│                                                              │
-│  [c] Chat  ──→ LLM conversations with streaming responses    │
-│  [r] RAG   ──→ PDF Q&A, document ingestion, vector search    │
-│  [f] Fast Agent ──→ Modal-dialog-driven agent (simplified)   │
-│  [a] Advanced Agent ──→ Full agent workspace (tools, policy) │
-│  [t] ReAct  ──→ Reasoning + Acting with visible thinking     │
+┌─ AgentX TUI ──────────────────────────────────────────────────┐
+│  Welcome to AgentX TUI                                        │
+│  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent  │
+│  Press 't' ReAct, 'd' Coding, 'm' Models, 'h' Help, 'q' Quit  │
+│                                                               │
+│  [c] Chat  ──→ LLM conversations with streaming responses     │
+│  [r] RAG   ──→ PDF Q&A, document ingestion, vector search     │
+│  [f] Fast Agent ──→ Modal-dialog-driven agent (simplified)    │
+│  [a] Advanced Agent ──→ Full agent workspace (tools, policy)  │
+│  [t] ReAct  ──→ Reasoning + Acting with visible thinking      │
 │  [d] Coding ──→ File system tools (search, read, edit, create)│
-│  [m] Models ──→ Select AI model provider                     │
-│  [h] Help  ──→ Command reference                             │
-│  [q] Quit  ──→ Exit application                              │
-└──────────────────────────────────────────────────────────────┘
+│  [m] Models ──→ Select AI model provider                      │
+│  [h] Help  ──→ Command reference                              │
+│  [q] Quit  ──→ Exit application                               │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 
@@ -37,7 +37,7 @@
 - 🤖 **Intelligent Agent** - Autonomous perceive→decide→act→reflect cycle with tool registry, policy DSL engine, and self-improvement loop
 - 🧠 **Petri Net Sessions** - Graph-based session/user objective management
 - 🔌 **LangChain/LangGraph** - Full integration for agentic workflows
-- 🧪 **1060+ Tests** - Comprehensive unit + integration + automated TUI tests
+- 🧪 **1080+ Tests** - Comprehensive unit + integration + automated TUI tests
 
 Developed with **opencode** using the **META HARNESS** (OMT++ methodology: Analysis → Design → Programming → Testing with visible artifacts).
 
@@ -50,15 +50,15 @@ Developed with **opencode** using the **META HARNESS** (OMT++ methodology: Analy
 agentx is developed with **opencode** using a mechanically enforced **META HARNESS** — the OMT++ (Object Modeling Technique++) process enforcement system. Every code change follows a structured workflow with visible artifacts, enforced by plugins, linters, and gates — not human willpower.
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │                     OMT++ PHASE MODEL                            │
 │                                                                  │
-│   ANALYSIS ──→ DESIGN ──→ PROGRAMMING ──→ TESTING ──→ DONE      │
+│   ANALYSIS ──→ DESIGN ──→ PROGRAMMING ──→ TESTING ──→ DONE       │
 │   (WHAT?)      (HOW?)     (CODE)         (VERIFY)                │
 │                                                                  │
-│   Each phase produces visible artifacts before the next begins. │
+│   Each phase produces visible artifacts before the next begins.  │
 │   Skipping a phase is mechanically blocked.                      │
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### Components
@@ -170,18 +170,32 @@ Persistent, grep-friendly `TA:` thought-tags dropped **inline in any non-protect
 
 ## ⚡ Quick Start
 
-```bash
-# Install uv (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
+### Prerequisites
 
-# Clone and run
-git clone <repository-url>
+- Python 3.14 or later
+- `uv` package manager — install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- At least one API key (OpenRouter recommended — see Configuration below)
+
+### Option 1: Development Mode (recommended)
+
+```bash
+git clone https://github.com/oikumo/agentx.git
 cd agentx
 uv sync
-uv run main.py
+uv run agentx
 ```
 
-You'll see the TUI interface. Press `c` for chat, `r` for RAG, `m` for models, `q` to quit.
+### Option 2: Global Install (run from anywhere)
+
+```bash
+git clone https://github.com/oikumo/agentx.git
+uv tool install --editable agentx
+agentx        # run from anywhere
+```
+
+Uninstall with `uv tool uninstall agentx`.
+
+You'll see the TUI interface. Press `c` for chat, `r` for RAG, `m` for models, `q` to quit. Console fallback: `uv run agentx --no-tui`.
 
 ---
 
@@ -508,43 +522,43 @@ A new **Reasoning + Acting** chat screen that uses LangChain's `create_agent` (R
 | `Esc` / `q` | Return to Main (cancels running agent) |
 
 ---
- 
+
 ### 💻 Coding Agent Screen (feature_019)
- 
+
 A new **Coding Agent** chat screen that uses LangChain's `create_agent` with file system tools to search, read, edit, list, and create files in your workspace — with visible thinking, tool calls, and diff highlighting.
- 
+
 ```text
-┌─ Coding ───────────────────────────────────────────────────────┐
-│  Ask me to explore, edit, or create files!                     │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│  You: Find all Python files in the src/ directory              │
-│                                                                │
-│  💭 The user wants to find Python files. I'll use file_search. │
-│                                                                │
-│  🔧 file_search(pattern="src/**/*.py")                         │
-│                                                                │
-│  📊 Found 3 files: src/main.py, src/utils.py, src/test.py      │
-│                                                                │
-│  💭 Let me read main.py to understand the structure.           │
-│                                                                │
-│  🔧 file_read(path="src/main.py")                              │
-│                                                                │
-│  📊 def main():\n    print('Hello from main')\n                │
-│                                                                │
-│  💭 Now I'll add a new function to utils.py.                   │
-│                                                                │
-│  🔧 file_edit(path="src/utils.py", old_str="def helper():",    │
-│               new_str="def helper():\n    return 42\n\n\ndef new_func():") │
-│                                                                │
-│  📊 --- a/src/utils.py\n+++ b/src/utils.py\n@@ -1,2 +1,5 @@\n │
-│   def helper():\n+    return 42\n+\n+def new_func():            │
-│                                                                │
-│  Assistant: Found 3 Python files. Read main.py and added       │
-│  new_func() to utils.py.                                       │
-│                                                                │
-│  > _                                                           │
-└────────────────────────────────────────────────────────────────┘
+┌─ Coding ──────────────────────────────────────────────────────────┐
+│  Ask me to explore, edit, or create files!                        │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  You: Find all Python files in the src/ directory                 │
+│                                                                   │
+│  💭 The user wants to find Python files. I'll use file_search.    │
+│                                                                   │
+│  🔧 file_search(pattern="src/**/*.py")                            │
+│                                                                   │
+│  📊 Found 3 files: src/main.py, src/utils.py, src/test.py         │
+│                                                                   │
+│  💭 Let me read main.py to understand the structure.              │
+│                                                                   │
+│  🔧 file_read(path="src/main.py")                                 │
+│                                                                   │
+│  📊 def main():\n    print('Hello from main')\n                   │
+│                                                                   │
+│  💭 Now I'll add a new function to utils.py.                      │
+│                                                                   │
+│  🔧 file_edit(path="src/utils.py", old_str="def helper():",       │
+│      new_str="def helper():\n    return 42\n\n\ndef new_func():") │
+│                                                                   │
+│  📊 --- a/src/utils.py\n+++ b/src/utils.py\n@@ -1,2 +1,5 @@\n     │
+│   def helper():\n+    return 42\n+\n+def new_func():              │
+│                                                                   │
+│  Assistant: Found 3 Python files. Read main.py and added          │
+│  new_func() to utils.py.                                          │
+│                                                                   │
+│  > _                                                              │
+└───────────────────────────────────────────────────────────────────┘
 ```
  
 **Key Features:**
@@ -569,7 +583,7 @@ A new **Coding Agent** chat screen that uses LangChain's `create_agent` with fil
 - **Model**: `CodingAgentService` wraps `langchain.agents.create_agent` with 5 file tools + `InMemorySaver` checkpointer
 - **Controller**: `CodingController` implements `ICodingViewPartner`; spawns daemon worker thread for agent streaming
 - **View**: `CodingTUIScreen` extends `BaseAgentXScreen`; displays thinking/tool/answer blocks with diff highlighting
-- **Integration**: Added `d` binding + 💻 Coding button to Main screen; MenuGrid updated to 8 buttons
+- **Integration**: Added `d` binding + 💻 Coding button to Main screen; MenuGrid grew to 8 buttons (Coding added on top of the 3×3 ReAct layout)
  
 **Key Bindings:**
 | Key | Action |
@@ -599,7 +613,7 @@ Two scenarios are available (`demo a` / `demo b`), each with pre-configured goal
 
 ### 🧠 Session Management (Petri Net Driven)
 
-**feature_001**: Session and user objectives are modeled using **Petri nets** for graph-based state management.
+**feature_001**: The session lifecycle (create → active → switch) is implemented with SQLite persistence. Petri-net-driven **user objective** management is in progress — the `GoalManager` is currently a stub awaiting full integration.
 
 **Session Lifecycle:**
 ```text
@@ -644,14 +658,7 @@ Full integration with the LangChain ecosystem:
 - **LangChain Experimental**: Advanced features
 - **Integrations**: Community, OpenAI, Tavily, Pinecone, Chroma
 
-**Example Agentic Workflow:**
-```python
-# Future feature: Custom agent graphs
-from langgraph.graph import StateGraph
-
-# Define your agent's state machine
-# Coming in future releases
-```
+**Already in use:** The ReAct (`t`) and Coding (`d`) screens run on LangChain's `create_agent` with a LangGraph `InMemorySaver` checkpointer for multi-turn context. The agent subsystem (`a`) wraps its own perceive→decide→act→reflect cycle. Custom user-defined LangGraph state machines are a future roadmap item.
 
 ---
 
@@ -673,48 +680,6 @@ This project may reference these trademarks solely for the purpose of describing
 Users are solely responsible for ensuring their use of any third-party services (such as OpenAI API, etc.) complies with those services' terms of service and applicable laws.
 
 ---
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Python 3.14 or later
-- `uv` package manager
-- At least one API key (OpenRouter recommended for beginners)
-
-### Installation
-
-#### Option 1: Direct Usage (Global Install)
-
-```bash
-# Clone the repository
-git clone <repository-url>
-
-# Install globally with uv
-uv tool install --editable agentx
-
-# Run from anywhere
-agentx
-```
-
-**Uninstall:**
-```bash
-uv tool uninstall agentx
-```
-
-#### Option 2: Development Mode
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd agentx
-
-# Install with development dependencies
-uv sync
-
-# Run with uv
-uv run main.py
-```
 
 ---
 
@@ -759,36 +724,7 @@ If `OPENROUTER_API_KEY` is not set, the application will prompt for it on startu
 
 ## 🎮 Usage
 
-### Starting the Application
-
-```bash
-uv run main.py
-```
-
-**TUI Mode (default):**
-```text
-🎨 Starting modern TUI... (press 'q' to quit, 'h' for help)
-
-agentx 0.2.0
-
-┌─ AgentX TUI ────────────────────────────────────────────────┐
-│  Welcome to AgentX TUI                                      │
-│  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent│
-│  Press 'm' for Models, 'h' for help, 'q' to quit            │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Console Mode (fallback or `--no-tui`):**
-```bash
-uv run main.py --no-tui
-```
-```text
-💻 Using console mode...
-
-agentx 0.2.0
-
-(agentx) > 
-```
+Run `uv run agentx` (or `agentx` if globally installed) — see Quick Start above. The app starts in **TUI mode** by default; pass `--no-tui` for the console REPL.
 
 ### TUI Navigation
 
@@ -884,46 +820,47 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      ENTRY POINT                            │
-│  main.py — Bootstrap, provider selection, lifecycle         │
+│  agentx/main.py — Bootstrap, provider selection, lifecycle  │
 └─────────────────────────────────────────────────────────────┘
-                            │
-                            ▼
+                             │
+                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   CONTROLLER LAYER                          │
-│  MainController, RagController, ChatController              │
-│  AgentController, SessionController, ToolController         │
-│  Implements: IMainViewPartner, IRagViewPartner,             │
-│              IAgentViewPartner, IAgentModelPartner, ...     │
+│                   UI LAYER (ui/)                            │
+│  Controllers + Views are co-located per feature screen      │
+│  (NOT a separate controller layer):                         │
+│  ui/screens/{main,chat,rag,react,models}/ — controllers     │
+│      + console views (MainController, ChatController, ...)  │
+│  ui/tui/screens/ — Textual TUI screens (BaseAgentXScreen,   │
+│      ModalScreen, BlockingTaskRunner daemon-thread runner)  │
+│  agent/controller/ — AgentController, SessionController,    │
+│      ToolController                                         │
+│  agent/view/       — AgentTUIScreen, AgentDemoScreen        │
 └─────────────────────────────────────────────────────────────┘
-                            │
-                            │ Uses (ABC interfaces)
-                            ▼
+                             │
+                             │ Talks through (ABC interfaces)
+                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    INTERFACE LAYER                          │
-│  IMainView, IRagView, IChatView, IAgentViewPartner          │
+│                INTERFACE LAYER (ABCs)                       │
+│  IMainView, IChatView, IRagView, IAgentViewPartner          │
 │  IUIProvider, IAgentModelPartner, IToolRegistryPartner      │
 │  IMemoryStorePartner, IPolicyStorePartner, IGoalManager     │
-│  ISafetyEvaluator, IAIServicePartner (ABCs)                 │
+│  ISafetyEvaluator, IAIServicePartner                        │
 └─────────────────────────────────────────────────────────────┘
-                            │
-                            │ Implemented By
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│  VIEW LAYER                                                 │
-│  Console: MainView, RagView, ChatView, AgentView            │
-│  TUI:     BaseAgentXScreen framework, ModalScreen,          │
-│           AgentTUIScreen, AgentDemoScreen, ModelsScreen     │
-│           BlockingTaskRunner (non-blocking daemon thread)   │
-└─────────────────────────────────────────────────────────────┘
-                            │
-                            │ Depends On
-                            ▼
+                             │
+                             │ Implemented By (Model)
+                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    MODEL LAYER                              │
-│  model/ai/       — LLM providers (OpenAI, Ollama, etc.)     │
+│  model/ai/       — LLM providers (OpenRouter, OpenAI,       │
+│                    Gemini, NVIDIA, Ollama, LlamaCpp) +      │
+│                    model_registry (runtime selection)       │
+│  model/chat/     — Chat service                             │
 │  model/rag/      — RAG orchestration, vector stores         │
 │  model/session/  — Session management, SQLite persistence   │
-│  agent/          — Intelligent agent subsystem              │
+│  model/react/    — ReAct agent service (LangChain)          │
+│  model/coding/   — Coding agent service + file tools        │
+│  model/program/  — Console REPL / program logic             │
+│  agent/          — Intelligent agent subsystem (nested MVC) │
 │    ├─ model/agent.py     — Agent facade (cycle orchestrator)│
 │    ├─ model/tools/       — Tool registry + built-in tools   │
 │    ├─ model/policy/      — Policy DSL engine + conflict     │
@@ -952,7 +889,7 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 
 ## 🧪 Testing
 
-agentx includes **1060+ comprehensive tests** covering all core modules:
+agentx includes **1080+ comprehensive tests** covering all core modules:
 
 ```bash
 # Run all tests
@@ -1029,6 +966,7 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 ## 🗺️ Roadmap
 
 ### Completed Features
+- ✅ **feature_002**: RAG (retrieval augmented generation — Chroma/FAISS/Pinecone, PDF/web ingestion, vector search)
 - ✅ **feature_004**: Modern TUI with Textual
 - ✅ **feature_005**: File system agentic tools
 - ✅ **feature_006**: opencode process enforcement (OMT++ gate, MVC++ linter)
@@ -1044,9 +982,10 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_020**: Meta Harness Navigation (grep-optimized docs, opencode plugin tools: `omt_nav`, `omt_list_sections`, `omt_cross_ref`, `omt_quick_ref`)
 - ✅ **feature_021**: Meta Harness Think Anywhere (persistent inline `TA:` thought-tags, `omt_think`/`omt_think_list`/`omt_think_remove`, think-gate enforcement, session digest)
 
-### Pending
-- 🔲 **feature_001**: Session/user objectives driven by Petri Nets
-- 🔲 **feature_002**: RAG retrieval augmented generation
+### In Progress
+- 🔄 **feature_001**: Petri-net-driven user objectives — session lifecycle (create → active → switch, SQLite-backed) is implemented; the Petri-net objective engine is stubbed (`GoalManager`) pending full integration
+
+> **Note:** Early feature directories in `.meta/` (003, 008, 009, 015) were superseded or folded into the shipped features listed above, so they are not listed separately.
 
 ### Future Features
 - 🔮 Custom agent graphs with LangGraph
@@ -1102,7 +1041,7 @@ Apache 2.0 - Educational and experimental purposes.
 - Developed with assistance from [opencode](https://opencode.ai) coding agent
 - Built on [LangChain](https://python.langchain.com/) ecosystem
 - TUI powered by [Textual](https://textual.textualize.io/)
-- Following [OMT++](https://example.com/omt) methodology
+- Following the OMT++ methodology (documented in [.meta/software_development_process/omt_agent_guide.md](.meta/software_development_process/omt_agent_guide.md))
 
 ---
 
