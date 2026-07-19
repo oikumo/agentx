@@ -197,11 +197,23 @@ export function thinkGateDecision(opts: {
   return opts.consulted ? "allow" : "block"
 }
 
-// Has the session consulted thoughts this session? Reads the shared ledger for
-// `think_consult` records (written by omt_think_list). Exact session match
-// preferred, else any record within UNLOCK_WINDOW_MS (mirrors hasNavUnlock).
-export function hasConsultedThoughts(session: string | undefined): boolean {
-  const ledgerPath = join(process.cwd(), ".meta", ".omt", "ledger.jsonl")
+// Has the session consulted thoughts FOR rel? (feature_022 C2: per-file
+// granularity.) Reads the shared ledger for `think_consult` records (written
+// by omt_think_list). rel omitted → whole-consult semantics identical to v1
+// (back-compat). covered(r): rel omitted → true; record without `files`
+// (legacy, pre-C2) → true (grandfathered — ages out with the window); else
+// r.files includes rel. Exact-session covering consult → true; else a
+// cross-session consult within UNLOCK_WINDOW_MS covering rel → true ONLY IF
+// NOT opts.risk (the window is dropped for risk:-carrying files — a risk
+// thought demands THIS session looked). opts.root: ledger root (default
+// process.cwd(); the production call site passes the plugin `directory` —
+// identical in real opencode; root injection enables hermetic tests).
+export function hasConsultedThoughts(
+  session: string | undefined,
+  rel?: string,
+  opts?: { risk?: boolean; root?: string },
+): boolean {
+  const ledgerPath = join(opts?.root ?? process.cwd(), ".meta", ".omt", "ledger.jsonl")
   if (!existsSync(ledgerPath)) return false
   const recs: any[] = []
   try {
@@ -213,23 +225,34 @@ export function hasConsultedThoughts(session: string | undefined): boolean {
   } catch { return false }
   const consults = recs.filter((r) => r && r.kind === "think_consult")
   if (!consults.length) return false
-  if (session) {
-    const mine = consults.filter((r) => r.session === session)
-    if (mine.length) return true
+  const covered = (r: any): boolean => {
+    if (rel === undefined) return true
+    if (!Array.isArray(r.files)) return true // legacy record — grandfathered
+    return r.files.includes(rel)
   }
+  if (session && consults.some((r) => r.session === session && covered(r))) return true
+  if (opts?.risk) return false // window dropped for risk:-carrying files
   const now = Date.now()
   return consults.some((r) => {
+    if (!covered(r)) return false
     const t = Date.parse(r.ts || "")
     return !Number.isNaN(t) && now - t < UNLOCK_WINDOW_MS
   })
 }
+
+// Anchored TA: thought pattern (feature_022 A1 / F3): matches only real
+// comment-opener thought lines, never prose mentions (META:/DATA:/string
+// literals). Covers every opener omt_think can emit (#, //, /*, <!--, --) so
+// the gate is never blind to what omt_think wrote.
+// keep in sync with omt_think.ts (byte-identical; structural test asserts it).
+const THOUGHT_PATTERN = "^\\s*(#|//|/\\*|<!--|--)\\s*TA:"
 
 // Grep TA: in a single file (cheap; used by the think-gate before-hook).
 // Takes an absolute path so it works both at module level and inside the plugin.
 export function fileThoughtsIn(absFile: string): { line: number; content: string }[] {
   if (!absFile || !existsSync(absFile)) return []
   try {
-    const out = execFileSync("grep", ["-nH", "--", "TA:", absFile], {
+    const out = execFileSync("grep", ["-nHE", "--", THOUGHT_PATTERN, absFile], {
       encoding: "utf8", stdio: ["pipe", "pipe", "ignore"],
     })
     const res: { line: number; content: string }[] = []
@@ -242,10 +265,49 @@ export function fileThoughtsIn(absFile: string): { line: number; content: string
   } catch { return [] }
 }
 
+// feature_022 C1: latest verify records for path === rel whose status is
+// "stale" → their line numbers. Reads join(root, ".meta/.omt/thoughts.jsonl")
+// (root = plugin directory at the call site; injected in tests). Fail-open:
+// missing/corrupt index → empty set (no markers, never blocks the message).
+function staleLinesFor(root: string, rel: string): Set<number> {
+  const out = new Set<number>()
+  try {
+    const indexPath = join(root, ".meta", ".omt", "thoughts.jsonl")
+    if (!existsSync(indexPath)) return out
+    const latest = new Map<number, string>()
+    for (const line of readFileSync(indexPath, "utf8").split("\n")) {
+      const s = line.trim()
+      if (!s) continue
+      let r: any
+      try { r = JSON.parse(s) } catch { continue }
+      if (r && r.kind === "verify" && r.path === rel && typeof r.line === "number") {
+        latest.set(r.line, r.status)
+      }
+    }
+    for (const [line, status] of latest) {
+      if (status === "stale") out.add(line)
+    }
+  } catch { /* fail-open */ }
+  return out
+}
+
 // Block message for the think-gate: surfaces the file's own TA: thoughts so the
 // agent has read them; the expected next action is omt_think_list{path} (clears).
-function thinkGateMsg(rel: string, thoughts: { line: number; content: string }[]): string {
-  const shown = thoughts.slice(0, 10).map((t) => `  ${rel}:${t.line}: ${t.content}`).join("\n")
+// feature_022 C1 weighting: risk:-category thoughts render first (stable sort;
+// category read from content at category position only, /TA:\s*([a-z0-9_-]+):/i
+// — a gotcha: thought mentioning "risk:" in its text does not match); a thought
+// line gains a "  ⚠️ STALE" suffix when opts.staleLines contains its line
+// (latest verify record stale). 10-line cap + "+M more" pointer unchanged.
+function thinkGateMsg(
+  rel: string,
+  thoughts: { line: number; content: string }[],
+  opts?: { staleLines?: Set<number> },
+): string {
+  const isRisk = (t: { content: string }) => /TA:\s*risk:/i.test(t.content)
+  const weighted = [...thoughts].sort((a, b) => Number(isRisk(b)) - Number(isRisk(a)))
+  const shown = weighted.slice(0, 10).map((t) =>
+    `  ${rel}:${t.line}: ${t.content}${opts?.staleLines?.has(t.line) ? "  ⚠️ STALE" : ""}`,
+  ).join("\n")
   return `⛔ OMT++ think-gate (feature_021): '${rel}' carries TA: thoughts. Review them ` +
     `before editing, then clear the gate with omt_think_list{path:"${rel}"}:\n${shown}` +
     (thoughts.length > 10 ? `\n  … (+${thoughts.length - 10} more)` : "") +
@@ -258,6 +320,11 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
   // --- session state for feature_020 navigation enforcement ---
   // Track which sessions have used navigation tools vs search tools
   const sessionNavState = new Map<string, { usedNav: boolean; usedSearch: boolean; searchCount: number }>()
+
+  // --- feature_022 D1: read-time thought injection state ---
+  // absPaths already injected per session (sessionless → shared "" bucket).
+  // Process-lifetime, mirrors sessionNavState; bounded by thought-files read.
+  const injectedThisSession = new Map<string, Set<string>>()
 
   // --- ledger helpers ------------------------------------------------------
   const nowIso = () => new Date().toISOString()
@@ -934,11 +1001,17 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         // until the session has consulted thoughts (omt_think_list). NOT
         // bypassable by omt_skip — thoughts are safety-relevant warnings. Runs
         // only for edits already permitted by the protected/e2e/tests/src checks.
+        // feature_022 C2: consult is checked per-file (rel); the cross-session
+        // window is dropped when the file carries a risk: thought. C1: the
+        // block message renders risk: first and marks ⚠️ STALE lines.
         const thinkHits = fileThoughtsIn(abs)
         if (thinkHits.length) {
-          const consulted = hasConsultedThoughts(session)
+          // risk detection anchors at category position (TA:\s*risk:) — a
+          // gotcha: thought mentioning "risk:" in its text does not match.
+          const risk = thinkHits.some(t => /TA:\s*risk:/i.test(t.content))
+          const consulted = hasConsultedThoughts(session, rel, { risk, root: directory })
           if (thinkGateDecision({ hasThoughts: true, consulted }) === "block") {
-            throw new OmtBlock(thinkGateMsg(rel, thinkHits))
+            throw new OmtBlock(thinkGateMsg(rel, thinkHits, { staleLines: staleLinesFor(directory, rel) }))
           }
         }
       } catch (e) {
@@ -948,6 +1021,43 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     },
 
     "tool.execute.after": async (input, output) => {
+      // feature_022 D1: non-blocking read-time thought injection — on the
+      // FIRST read of a thought-carrying file per session, append the file's
+      // TA: thoughts to the read result (point-of-use awareness, strictly
+      // earlier than the edit-time think-gate block). Awareness ≠ consult:
+      // NO think_consult record is written and the think-gate keeps blocking
+      // edits until omt_think_list (C2 owns per-file consult — out of scope).
+      // Fail-open: this branch never throws.
+      if (input?.tool === "read") {
+        try {
+          const raw = output?.args?.filePath ?? output?.args?.path ?? output?.args?.file
+          if (typeof raw === "string" && raw) {
+            const { abs, rel } = relOf(raw)
+            const session = input?.sessionID || ""
+            let seen = injectedThisSession.get(session)
+            if (!seen) {
+              seen = new Set<string>()
+              injectedThisSession.set(session, seen)
+            }
+            if (!seen.has(abs)) {
+              const hits = fileThoughtsIn(abs)
+              if (hits.length) {
+                seen.add(abs)
+                const shown = hits.slice(0, 10)
+                  .map((t) => `  ${rel}:${t.line}: ${t.content}`).join("\n")
+                output.output += `\n\n💡 TA: thoughts in ${rel} (${hits.length}) — review ` +
+                  `before editing (think-gate applies; omt_think_list{path:"${rel}"} ` +
+                  `records consult):\n${shown}` +
+                  (hits.length > 10
+                    ? `\n  … (+${hits.length - 10} more: omt_think_list{path:"${rel}"})`
+                    : "")
+              }
+            }
+          }
+        } catch (e) {
+          safeLog("warn", "read-injection failed open: " + (e?.message || e))
+        }
+      }
       if (!EDIT_TOOLS.has(input?.tool)) return
       const raw = output?.args?.filePath ?? output?.args?.path ?? output?.args?.file
       if (!raw) return

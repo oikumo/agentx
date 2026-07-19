@@ -187,7 +187,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     # 9. feature_021 think-anywhere: standalone plugin + think-gate in enforcer.
     think = _read(".opencode/plugin/omt_think.ts")
     assert "export default async () => ({" in think
-    assert "tool: { omt_think, omt_think_list, omt_think_remove }" in think
+    assert "tool: { omt_think, omt_think_list, omt_think_remove, omt_think_verify }" in think
     assert "commentSyntaxFor" in think
     assert "thinkGateDecision" in enforcer
     assert "hasConsultedThoughts" in enforcer
@@ -195,6 +195,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     assert '"omt_think": "allow"' in config
     assert '"omt_think_list": "allow"' in config
     assert '"omt_think_remove": "allow"' in config
+    assert '"omt_think_verify": "allow"' in config
     assert "Think Anywhere" in _read("AGENTS.md")
     assert "SECTION:THINK" in _read(".meta/META_HARNESS.md")
     checks.append("feature_021 think-anywhere plugin + think-gate + docs wired")

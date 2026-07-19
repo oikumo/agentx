@@ -64,6 +64,7 @@
     "omt_quick_ref": "allow",
     "omt_think": "allow",
     "omt_think_list": "allow",
-    "omt_think_remove": "allow"
+    "omt_think_remove": "allow",
+    "omt_think_verify": "allow"
   }
 }

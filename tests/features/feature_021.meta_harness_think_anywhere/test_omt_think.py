@@ -80,12 +80,13 @@ class TestThinkPluginStructure:
     def test_plugin_file_exists(self):
         assert PLUGIN.exists(), "omt_think.ts should exist"
 
-    def test_exports_default_factory_with_three_tools(self):
+    def test_exports_default_factory_with_four_tools(self):
         """DEFECT A: must export a default async plugin factory (no named tool-object
-        exports — opencode's loader rejects non-function exports)."""
+        exports — opencode's loader rejects non-function exports). Tool map gained
+        omt_think_verify in feature_022 Tier C."""
         c = PLUGIN.read_text()
         assert "export default async () => ({" in c
-        assert "tool: { omt_think, omt_think_list, omt_think_remove }" in c
+        assert "tool: { omt_think, omt_think_list, omt_think_remove, omt_think_verify }" in c
         assert "export { omt_think" not in c, "must NOT named-export tool objects (DEFECT A)"
 
     def test_no_named_exports_except_default(self):
