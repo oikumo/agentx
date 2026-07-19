@@ -40,13 +40,13 @@ NODE = shutil.which("node")
 needs_node = pytest.mark.skipif(not NODE, reason="node not available")
 
 
-def _run_tool(tool_name: str, args: dict | None = None):
+def _run_tool(tool_name: str, args: dict | None = None, cwd: Path = REPO_ROOT):
     """Invoke a real omt_think plugin tool via node; return its string result or None."""
     if not NODE:
         return None
     proc = subprocess.run(
         [NODE, "--experimental-strip-types", str(THINK_RUNNER), tool_name, json.dumps(args or {})],
-        capture_output=True, text=True, cwd=REPO_ROOT, timeout=30,
+        capture_output=True, text=True, cwd=cwd, timeout=30,
     )
     if proc.returncode != 0:
         return None
@@ -56,13 +56,13 @@ def _run_tool(tool_name: str, args: dict | None = None):
         return None
 
 
-def _session_start():
+def _session_start(cwd: Path = REPO_ROOT):
     """Drive the real session.start hook (thinkDigest); return the digest string or None."""
     if not NODE:
         return None
     proc = subprocess.run(
         [NODE, "--experimental-strip-types", str(THINK_RUNNER), "session-start"],
-        capture_output=True, text=True, cwd=REPO_ROOT, timeout=60,
+        capture_output=True, text=True, cwd=cwd, timeout=60,
     )
     if proc.returncode != 0:
         return None
@@ -108,11 +108,14 @@ def _before_hook_batch(directory: Path, calls: list[dict]):
 
 
 def _edit_call(path: Path, session: str, tool: str = "edit") -> dict:
-    """One fake before-hook invocation for `tool` on `path` in `session`."""
+    """One fake before-hook invocation for `tool` on `path` in `session`.
+
+    REAL SDK shape (tool.execute.before — feature_023 T1.2): input carries
+    {tool,sessionID,callID}; args on OUTPUT (the before-hook's only payload).
+    Pinned by tests/scripts/omt/test_opencode_sdk_contract.py."""
     return {
-        "input": {"tool": tool, "sessionID": session},
-        "output": {"title": tool, "output": "", "metadata": {},
-                   "args": {"filePath": str(path)}},
+        "input": {"tool": tool, "sessionID": session, "callID": "c1"},
+        "output": {"args": {"filePath": str(path)}},
     }
 
 
@@ -130,11 +133,12 @@ def _rel(p: Path) -> str:
     return os.path.relpath(str(p), str(REPO_ROOT))
 
 
-def _index_records(path_filter: str, kind: str | None = None) -> list[dict]:
+def _index_records(root: Path, path_filter: str, kind: str | None = None) -> list[dict]:
     """thoughts.jsonl records for a given rel path (optionally by kind), oldest first."""
+    index = root / ".meta" / ".omt" / "thoughts.jsonl"
     recs = []
-    if THOUGHTS_INDEX.exists():
-        for line in THOUGHTS_INDEX.read_text().splitlines():
+    if index.exists():
+        for line in index.read_text().splitlines():
             s = line.strip()
             if not s:
                 continue
@@ -148,14 +152,16 @@ def _index_records(path_filter: str, kind: str | None = None) -> list[dict]:
     return recs
 
 
-def _ledger_size() -> int:
-    return LEDGER.stat().st_size if LEDGER.exists() else 0
+def _ledger_size(root: Path) -> int:
+    ledger = root / ".meta" / ".omt" / "ledger.jsonl"
+    return ledger.stat().st_size if ledger.exists() else 0
 
 
-def _ledger_records_after(offset: int) -> list[dict]:
-    if not LEDGER.exists():
+def _ledger_records_after(root: Path, offset: int) -> list[dict]:
+    ledger = root / ".meta" / ".omt" / "ledger.jsonl"
+    if not ledger.exists():
         return []
-    data = LEDGER.read_bytes()[offset:]
+    data = ledger.read_bytes()[offset:]
     recs = []
     for line in data.decode("utf-8", errors="replace").splitlines():
         s = line.strip()
@@ -198,14 +204,14 @@ class TestC1Verify:
         kind:verify record {status:verified, basis:anchor} for (path,line)."""
         f = _write_tmp(tmp_path, "v1.py", "alpha = 1\nbeta = 2\ngamma = 3\n")
         m = _marker()
-        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "after": "beta = 2"})
+        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "after": "beta = 2"}, cwd=tmp_path)
         assert ins is not None and "✅" in ins, f"insert failed: {ins}"
-        out = _run_tool("omt_think_verify", {"path": str(f), "line": 3})
+        out = _run_tool("omt_think_verify", {"path": str(f), "line": 3}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "verified" in out, f"must verify: {out!r}"
         assert "basis: anchor" in out, f"basis must be anchor: {out!r}"
-        ver = [r for r in _index_records(_rel(f), kind="verify") if r.get("thought") == m]
-        assert ver, f"no verify record for the thought: {_index_records(_rel(f))}"
+        ver = [r for r in _index_records(tmp_path, f.name, kind="verify") if r.get("thought") == m]
+        assert ver, f"no verify record for the thought: {_index_records(tmp_path, f.name)}"
         assert ver[-1].get("status") == "verified" and ver[-1].get("basis") == "anchor", (
             f"verify record wrong: {ver[-1]}")
         assert ver[-1].get("line") == 3, f"verify record line wrong: {ver[-1]}"
@@ -215,15 +221,15 @@ class TestC1Verify:
         record {status:stale}."""
         f = _write_tmp(tmp_path, "v2.py", "alpha = 1\nbeta = 2\n")
         m = _marker()
-        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "after": "alpha = 1"})
+        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "after": "alpha = 1"}, cwd=tmp_path)
         assert ins is not None and "✅" in ins, f"insert failed: {ins}"
         # Delete the anchor line; the thought shifts up to line 1.
         lines = f.read_text().splitlines()
         f.write_text("\n".join(lines[1:]) + "\n", encoding="utf-8")
-        out = _run_tool("omt_think_verify", {"path": str(f), "line": 1})
+        out = _run_tool("omt_think_verify", {"path": str(f), "line": 1}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "STALE" in out, f"must be stale: {out!r}"
-        ver = [r for r in _index_records(_rel(f), kind="verify") if r.get("thought") == m]
+        ver = [r for r in _index_records(tmp_path, f.name, kind="verify") if r.get("thought") == m]
         assert ver and ver[-1].get("status") == "stale", f"verify record wrong: {ver[-1] if ver else None}"
 
     def test_anchor_duplicated_stale(self, tmp_path):
@@ -231,14 +237,14 @@ class TestC1Verify:
         STALE (ambiguous)."""
         f = _write_tmp(tmp_path, "v3.py", "alpha = 1\nbeta = 2\n")
         m = _marker()
-        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "after": "alpha = 1"})
+        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "after": "alpha = 1"}, cwd=tmp_path)
         assert ins is not None and "✅" in ins, f"insert failed: {ins}"
         # Duplicate the anchor text on a later line; thought stays at line 2.
         f.write_text(f.read_text() + "alpha = 1\n", encoding="utf-8")
-        out = _run_tool("omt_think_verify", {"path": str(f), "line": 2})
+        out = _run_tool("omt_think_verify", {"path": str(f), "line": 2}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "STALE" in out, f"ambiguous anchor must be stale: {out!r}"
-        ver = [r for r in _index_records(_rel(f), kind="verify") if r.get("thought") == m]
+        ver = [r for r in _index_records(tmp_path, f.name, kind="verify") if r.get("thought") == m]
         assert ver and ver[-1].get("status") == "stale", f"verify record wrong: {ver[-1] if ver else None}"
 
     def test_thought_drifted_stale_anchor_moved(self, tmp_path):
@@ -247,12 +253,12 @@ class TestC1Verify:
         thought's current line no longer matches the add-record line)."""
         f = _write_tmp(tmp_path, "v4.py", "alpha = 1\nbeta = 2\n")
         m = _marker()
-        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "after": "alpha = 1"})
+        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "after": "alpha = 1"}, cwd=tmp_path)
         assert ins is not None and "✅" in ins, f"insert failed: {ins}"
         # Insert a line between anchor (line 1) and thought (line 2 → 3).
         lines = f.read_text().splitlines()
         f.write_text("\n".join([lines[0], "gamma = 3"] + lines[1:]) + "\n", encoding="utf-8")
-        out = _run_tool("omt_think_verify", {"path": str(f), "line": 3})
+        out = _run_tool("omt_think_verify", {"path": str(f), "line": 3}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "STALE" in out, f"drifted thought must be stale: {out!r}"
         assert "anchor moved" in out, f"reason must name the move: {out!r}"
@@ -262,9 +268,9 @@ class TestC1Verify:
         basis exists (weaker: existence only)."""
         f = _write_tmp(tmp_path, "v5.py", "alpha = 1\nbeta = 2\n")
         m = _marker()
-        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "line": 1})
+        ins = _run_tool("omt_think", {"path": str(f), "thought": m, "line": 1}, cwd=tmp_path)
         assert ins is not None and "✅" in ins, f"insert failed: {ins}"
-        out = _run_tool("omt_think_verify", {"path": str(f), "line": 2})
+        out = _run_tool("omt_think_verify", {"path": str(f), "line": 2}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "verified" in out, f"must verify: {out!r}"
         assert "basis: exists" in out, f"basis must be exists: {out!r}"
@@ -274,7 +280,7 @@ class TestC1Verify:
         verified, basis exists."""
         m = _marker()
         f = _write_tmp(tmp_path, "v6.py", f"x = 1\n# TA: gotcha: {m}\n")
-        out = _run_tool("omt_think_verify", {"path": str(f), "line": 2})
+        out = _run_tool("omt_think_verify", {"path": str(f), "line": 2}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "verified" in out, f"must verify: {out!r}"
         assert "basis: exists" in out, f"basis must be exists: {out!r}"
@@ -283,14 +289,14 @@ class TestC1Verify:
         """design §3.7 — verify at a non-thought line → 'not a TA: comment'
         refusal."""
         f = _write_tmp(tmp_path, "v7.py", "x = 1\n# an ordinary comment\n")
-        out = _run_tool("omt_think_verify", {"path": str(f), "line": 1})
+        out = _run_tool("omt_think_verify", {"path": str(f), "line": 1}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "not a TA: comment" in out, f"refusal: {out!r}"
 
     def test_line_out_of_range_refused(self, tmp_path):
         """design §3.8 — line out of range → refusal naming the file length."""
         f = _write_tmp(tmp_path, "v8.py", "x = 1\ny = 2\n")
-        out = _run_tool("omt_think_verify", {"path": str(f), "line": 99})
+        out = _run_tool("omt_think_verify", {"path": str(f), "line": 99}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "out of range" in out, f"refusal: {out!r}"
         assert "file has" in out, f"must name the file length: {out!r}"
@@ -298,13 +304,13 @@ class TestC1Verify:
     def test_missing_file_refused(self, tmp_path):
         """design §3.9 — missing file → refusal."""
         out = _run_tool("omt_think_verify",
-                        {"path": str(tmp_path / "no_such_file_xyz.py"), "line": 1})
+                        {"path": str(tmp_path / "no_such_file_xyz.py"), "line": 1}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "does not exist" in out, f"refusal: {out!r}"
 
-    def test_protected_path_refused(self):
+    def test_protected_path_refused(self, tmp_path):
         """design §3.10 — protected path (.env) → refusal (never reads the file)."""
-        out = _run_tool("omt_think_verify", {"path": ".env", "line": 1})
+        out = _run_tool("omt_think_verify", {"path": ".env", "line": 1}, cwd=tmp_path)
         assert out is not None, "omt_think_verify tool missing or runner failed"
         assert "protected" in out, f"refusal: {out!r}"
 
@@ -314,29 +320,29 @@ class TestC1Verify:
 # ---------------------------------------------------------------------------
 @needs_node
 class TestC1Digest:
-    def test_digest_reports_stale(self):
+    def test_digest_reports_stale(self, tmp_path):
         """design §3.11 — one current thought marked stale → digest contains
-        'stale' + the omt_think_verify pointer. Temp file lives inside the repo
-        root (digest only greps the repo); finally: remove thought + unlink."""
+        'stale' + the omt_think_verify pointer. Temp file lives inside the tmp
+        cwd (digest greps the cwd with F17 isolation); finally: remove thought + unlink."""
         name = f"ta_digest_{uuid.uuid4().hex[:8]}.py"
-        f = REPO_ROOT / name
+        f = tmp_path / name
         m = _marker()
         try:
             f.write_text("alpha = 1\nbeta = 2\n", encoding="utf-8")
-            ins = _run_tool("omt_think", {"path": name, "thought": m, "after": "alpha = 1"})
+            ins = _run_tool("omt_think", {"path": name, "thought": m, "after": "alpha = 1"}, cwd=tmp_path)
             assert ins is not None and "✅" in ins, f"insert failed: {ins}"
             # Break the anchor; the thought shifts up to line 1 → verify → stale.
             lines = f.read_text().splitlines()
             f.write_text("\n".join(lines[1:]) + "\n", encoding="utf-8")
-            ver = _run_tool("omt_think_verify", {"path": name, "line": 1})
+            ver = _run_tool("omt_think_verify", {"path": name, "line": 1}, cwd=tmp_path)
             assert ver is not None and "STALE" in ver, f"verify must go stale: {ver}"
-            digest = _session_start()
+            digest = _session_start(tmp_path)
             assert digest is not None, "session-start mode missing or runner failed"
             assert "stale" in digest, f"digest must report stale thoughts: {digest!r}"
             assert "omt_think_verify" in digest, f"digest must point at verify: {digest!r}"
         finally:
             if f.exists():
-                _run_tool("omt_think_remove", {"path": name, "line": 1})
+                _run_tool("omt_think_remove", {"path": name, "line": 1}, cwd=tmp_path)
                 f.unlink(missing_ok=True)
 
 
@@ -405,24 +411,24 @@ class TestC2ConsultRecord:
         think_consult record has files containing the tmp file's rel path."""
         m = _marker()
         f = _write_tmp(tmp_path, "cons.py", f"x = 1\n# TA: {m}\n")
-        offset = _ledger_size()
-        out = _run_tool("omt_think_list", {"path": str(f)})
+        offset = _ledger_size(tmp_path)
+        out = _run_tool("omt_think_list", {"path": str(f)}, cwd=tmp_path)
         assert out is not None and m in out, f"list must find the thought: {out!r}"
-        new = [r for r in _ledger_records_after(offset) if r.get("kind") == "think_consult"]
+        new = [r for r in _ledger_records_after(tmp_path, offset) if r.get("kind") == "think_consult"]
         assert new, "omt_think_list must append a think_consult record"
         files = new[-1].get("files")
         assert isinstance(files, list), f"consult record must carry files[]: {new[-1]}"
-        assert _rel(f) in files, f"consulted files must include the tmp file: {files}"
+        assert f.name in files, f"consulted files must include the tmp file: {files}"
 
     def test_list_empty_result_records_empty_files(self, tmp_path):
         """design §3.16 — omt_think_list with 0 hits → new record has
         files: [] (covers nothing; no clearance granted)."""
         f = _write_tmp(tmp_path, "empty.py", "x = 1\n")
-        offset = _ledger_size()
+        offset = _ledger_size(tmp_path)
         out = _run_tool("omt_think_list",
-                        {"path": str(f), "query": "NOMATCH_" + uuid.uuid4().hex[:8]})
+                        {"path": str(f), "query": "NOMATCH_" + uuid.uuid4().hex[:8]}, cwd=tmp_path)
         assert out is not None and "0 thoughts" in out, f"must be empty: {out!r}"
-        new = [r for r in _ledger_records_after(offset) if r.get("kind") == "think_consult"]
+        new = [r for r in _ledger_records_after(tmp_path, offset) if r.get("kind") == "think_consult"]
         assert new, "omt_think_list must still record the consult"
         assert new[-1].get("files") == [], (
             f"empty result → files must be []: {new[-1]}")

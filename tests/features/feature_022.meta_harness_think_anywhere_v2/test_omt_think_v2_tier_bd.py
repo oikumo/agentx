@@ -36,13 +36,13 @@ NODE = shutil.which("node")
 needs_node = pytest.mark.skipif(not NODE, reason="node not available")
 
 
-def _run_tool(tool_name: str, args: dict | None = None):
+def _run_tool(tool_name: str, args: dict | None = None, cwd: Path = REPO_ROOT):
     """Invoke a real omt_think plugin tool via node; return its string result or None."""
     if not NODE:
         return None
     proc = subprocess.run(
         [NODE, "--experimental-strip-types", str(THINK_RUNNER), tool_name, json.dumps(args or {})],
-        capture_output=True, text=True, cwd=REPO_ROOT, timeout=30,
+        capture_output=True, text=True, cwd=cwd, timeout=30,
     )
     if proc.returncode != 0:
         return None
@@ -71,14 +71,18 @@ def _after_hook_batch(directory: Path, calls: list[dict]):
 
 
 def _read_call(path: Path, session: str, tool: str = "read") -> dict:
-    """One fake after-hook invocation for `tool` on `path` in `session`."""
+    """One fake after-hook invocation for `tool` on `path` in `session`.
+
+    REAL SDK shape (tool.execute.after — feature_023 T1.2/F14): args on INPUT,
+    output={title,output,metadata} exactly. Pinned by
+    tests/scripts/omt/test_opencode_sdk_contract.py."""
     return {
-        "input": {"tool": tool, "sessionID": session},
+        "input": {"tool": tool, "sessionID": session, "callID": "c1",
+                  "args": {"filePath": str(path)}},
         "output": {
             "title": tool,
             "output": "ORIG",
             "metadata": {},
-            "args": {"filePath": str(path)},
         },
     }
 
@@ -103,7 +107,7 @@ class TestB1AnchorInsertion:
         after the anchor line; success message names the new line."""
         f = _write_tmp(tmp_path, "anc.py", "alpha = 1\nbeta = 2\ngamma = 3\n")
         out = _run_tool("omt_think", {"path": str(f), "thought": f"m {_marker()}",
-                                      "after": "beta = 2"})
+                                      "after": "beta = 2"}, cwd=tmp_path)
         assert out is not None and "✅" in out, f"insert failed: {out}"
         m = re.search(r":(\d+)$", out)
         assert m and m.group(1) == "3", f"thought must land at line 3: {out!r}"
@@ -117,7 +121,7 @@ class TestB1AnchorInsertion:
         f = _write_tmp(tmp_path, "none.py", "alpha = 1\n")
         before = f.read_bytes()
         out = _run_tool("omt_think", {"path": str(f), "thought": "m",
-                                      "after": "no such text anywhere"})
+                                      "after": "no such text anywhere"}, cwd=tmp_path)
         assert out is not None and "refused" in out.lower(), f"must refuse: {out!r}"
         assert "anchor not found" in out, f"message: {out!r}"
         assert f.read_bytes() == before, "file must be unchanged after refusal"
@@ -127,7 +131,7 @@ class TestB1AnchorInsertion:
         candidate line numbers; file unchanged."""
         f = _write_tmp(tmp_path, "amb.py", "return x\nfoo()\nreturn y\nbar()\nreturn z\n")
         before = f.read_bytes()
-        out = _run_tool("omt_think", {"path": str(f), "thought": "m", "after": "return"})
+        out = _run_tool("omt_think", {"path": str(f), "thought": "m", "after": "return"}, cwd=tmp_path)
         assert out is not None and "refused" in out.lower(), f"must refuse: {out!r}"
         assert "matches 3 lines" in out, f"count missing: {out!r}"
         assert "1, 3, 5" in out, f"candidate lines missing: {out!r}"
@@ -139,11 +143,11 @@ class TestB1AnchorInsertion:
         f = _write_tmp(tmp_path, "c.py", "x = 1\n")
         before = f.read_bytes()
         out1 = _run_tool("omt_think", {"path": str(f), "thought": "m",
-                                       "line": 1, "after": "x"})
+                                       "line": 1, "after": "x"}, cwd=tmp_path)
         assert out1 is not None and "at most one of" in out1, f"line+after: {out1!r}"
         assert "line+after" in out1, f"combination must be named: {out1!r}"
         out2 = _run_tool("omt_think", {"path": str(f), "thought": "m",
-                                       "after": "x", "symbol": "y"})
+                                       "after": "x", "symbol": "y"}, cwd=tmp_path)
         assert out2 is not None and "at most one of" in out2, f"after+symbol: {out2!r}"
         assert "after+symbol" in out2, f"combination must be named: {out2!r}"
         assert f.read_bytes() == before, "file must be unchanged after refusal"
@@ -152,7 +156,7 @@ class TestB1AnchorInsertion:
         """design §3.5 — symbol: py def → inserted after the 'def target(' line."""
         f = _write_tmp(tmp_path, "sym.py", "def target():\n    pass\n\ny = 2\n")
         out = _run_tool("omt_think", {"path": str(f), "thought": f"m {_marker()}",
-                                      "symbol": "target"})
+                                      "symbol": "target"}, cwd=tmp_path)
         assert out is not None and "✅" in out, f"insert failed: {out}"
         lines = f.read_text().splitlines()
         assert lines[0] == "def target():"
@@ -166,7 +170,7 @@ class TestB1AnchorInsertion:
         """design §3.6 — symbol: py class and async def forms both resolve."""
         f = _write_tmp(tmp_path, "sym2.py", src)
         out = _run_tool("omt_think", {"path": str(f), "thought": f"m {_marker()}",
-                                      "symbol": name})
+                                      "symbol": name}, cwd=tmp_path)
         assert out is not None and "✅" in out, f"{name}: insert failed: {out}"
         lines = f.read_text().splitlines()
         assert lines[0].strip().startswith(("class", "async def"))
@@ -180,7 +184,7 @@ class TestB1AnchorInsertion:
         """design §3.7 — symbol: ts export function / const forms resolve."""
         f = _write_tmp(tmp_path, "sym.ts", src)
         out = _run_tool("omt_think", {"path": str(f), "thought": f"m {_marker()}",
-                                      "symbol": name})
+                                      "symbol": name}, cwd=tmp_path)
         assert out is not None and "✅" in out, f"{name}: insert failed: {out}"
         lines = f.read_text().splitlines()
         assert lines[0].startswith(opener)
@@ -191,7 +195,7 @@ class TestB1AnchorInsertion:
         after:; file unchanged."""
         f = _write_tmp(tmp_path, "q.sql", "SELECT 1\n")
         before = f.read_bytes()
-        out = _run_tool("omt_think", {"path": str(f), "thought": "m", "symbol": "whatever"})
+        out = _run_tool("omt_think", {"path": str(f), "thought": "m", "symbol": "whatever"}, cwd=tmp_path)
         assert out is not None and "refused" in out.lower(), f"must refuse: {out!r}"
         assert "not supported" in out, f"message: {out!r}"
         assert "after" in out, f"must point at after:: {out!r}"
@@ -203,13 +207,13 @@ class TestB1AnchorInsertion:
         f1 = _write_tmp(tmp_path, "m1.py", "def fooXbar():\n    pass\n")
         before = f1.read_bytes()
         out1 = _run_tool("omt_think", {"path": str(f1), "thought": "m",
-                                       "symbol": "foo.bar"})
+                                       "symbol": "foo.bar"}, cwd=tmp_path)
         assert out1 is not None and "anchor not found" in out1, (
             f"foo.bar must not match fooXbar (metachars literal): {out1!r}")
         assert f1.read_bytes() == before, "decoy file must be unchanged"
         f2 = _write_tmp(tmp_path, "m2.py", "def foo.bar():\n    pass\n")
         out2 = _run_tool("omt_think", {"path": str(f2), "thought": f"m {_marker()}",
-                                       "symbol": "foo.bar"})
+                                       "symbol": "foo.bar"}, cwd=tmp_path)
         assert out2 is not None and "✅" in out2, (
             f"literal foo.bar definition must match: {out2!r}")
         lines = f2.read_text().splitlines()
@@ -223,7 +227,7 @@ class TestB1AnchorInsertion:
         f = _write_tmp(tmp_path, "s.py", src)
         before = f.read_bytes()
         out = _run_tool("omt_think", {"path": str(f), "thought": "inside css",
-                                      "after": ".foo { color: red; }"})
+                                      "after": ".foo { color: red; }"}, cwd=tmp_path)
         assert out is not None and "refused" in out.lower(), f"must refuse: {out!r}"
         assert "string" in out.lower() or "fence" in out.lower(), f"message: {out!r}"
         assert f.read_bytes() == before, "file must be unchanged after refusal"
@@ -234,14 +238,15 @@ class TestB1AnchorInsertion:
         (records filtered to this test's tmp file)."""
         f = _write_tmp(tmp_path, "idx.py", "alpha = 1\nbeta = 2\n")
         m1, m2 = _marker(), _marker()
-        r1 = _run_tool("omt_think", {"path": str(f), "thought": m1, "after": "alpha = 1"})
+        r1 = _run_tool("omt_think", {"path": str(f), "thought": m1, "after": "alpha = 1"}, cwd=tmp_path)
         assert r1 is not None and "✅" in r1, f"after insert: {r1}"
-        r2 = _run_tool("omt_think", {"path": str(f), "thought": m2, "line": 1})
+        r2 = _run_tool("omt_think", {"path": str(f), "thought": m2, "line": 1}, cwd=tmp_path)
         assert r2 is not None and "✅" in r2, f"line insert: {r2}"
-        rel = os.path.relpath(str(f), str(REPO_ROOT))
+        # Read from tmp_path's index (F17 cwd isolation)
+        index_file = tmp_path / ".meta" / ".omt" / "thoughts.jsonl"
         recs = []
-        if THOUGHTS_INDEX.exists():
-            for line in THOUGHTS_INDEX.read_text().splitlines():
+        if index_file.exists():
+            for line in index_file.read_text().splitlines():
                 s = line.strip()
                 if not s:
                     continue
@@ -249,7 +254,7 @@ class TestB1AnchorInsertion:
                     r = json.loads(s)
                 except json.JSONDecodeError:
                     continue
-                if isinstance(r, dict) and r.get("path") == rel:
+                if isinstance(r, dict) and r.get("path") == f.name:
                     recs.append(r)
         by_thought = {r.get("thought"): r for r in recs}
         a = by_thought.get(m1)
@@ -264,7 +269,7 @@ class TestB1AnchorInsertion:
         """design §3.12 — no addressing args → EOF append exactly as Tier A
         (regression guard; passes on v1 and must keep passing)."""
         f = _write_tmp(tmp_path, "eof.py", "one = 1\n")
-        out = _run_tool("omt_think", {"path": str(f), "thought": f"m {_marker()}"})
+        out = _run_tool("omt_think", {"path": str(f), "thought": f"m {_marker()}"}, cwd=tmp_path)
         assert out is not None and "✅" in out, f"insert failed: {out}"
         lines = f.read_text().splitlines()
         assert lines[0] == "one = 1"
@@ -304,18 +309,25 @@ class TestD1ReadTimeInjection:
         assert m in results[2]["output"], "new session must re-inject"
 
     def test_thought_free_and_edit_untouched(self, tmp_path):
-        """design §3.15 — thought-free file → output unchanged; tool:'edit' on
-        a thought file → output unchanged (D1 does not alter the edit path)."""
+        """design §3.15 — thought-free file → output unchanged (except F14c nav
+        reminder on first call per session); tool:'edit' on a thought file →
+        output unchanged (D1 does not alter the edit path; no nav reminder on
+        subsequent calls in same session)."""
         m = _marker()
         clean = _write_tmp(tmp_path, "clean.py", "y = 2\n")
         carry = _write_tmp(tmp_path, "carry.py", f"x = 1\n# TA: {m}\n")
         calls = [_read_call(clean, "s1"), _read_call(carry, "s1", tool="edit")]
         results = _after_hook_batch(tmp_path, calls)
         assert results is not None, "after-hook runner failed (threw?)"
-        assert results[0]["output"] == "ORIG", (
-            f"thought-free read must be untouched: {results[0]['output']!r}")
+        # First call in session s1 gets F14c nav reminder but NOT thought injection
+        # (clean.py has no thoughts). Nav reminder is prepended to ORIG.
+        assert results[0]["output"].startswith("ORIG"), (
+            f"output must start with ORIG: {results[0]['output']!r}")
+        assert "NAVIGATION TIP" in results[0]["output"], (
+            f"first call per session must carry nav reminder: {results[0]['output']!r}")
+        # Second call same session s1: no nav reminder, D1 doesn't inject on edit
         assert results[1]["output"] == "ORIG", (
-            f"edit path must be untouched by D1: {results[1]['output']!r}")
+            f"edit path must be untouched (no nav reminder, no thought injection): {results[1]['output']!r}")
 
     def test_injection_writes_no_consult_record(self, tmp_path):
         """design §3.16 — injection writes NO think_consult record (awareness ≠

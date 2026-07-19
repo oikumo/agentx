@@ -112,7 +112,7 @@ THINK_PROTECTED: TA: refused on .env*, README.md, uv.lock, LICENSE, .json (no co
 THINK_INDEX: .meta/.omt/thoughts.jsonl — append-only sidecar {ts,path,line,category,thought}; inline TA: is source of truth
 THINK_GATE: thinkGateDecision({hasThoughts,consulted}) → block edits to TA:-carrying files until omt_think_list consulted
 THINK_GATE_NOT_SKIP: think-gate NOT bypassable by omt_skip (safety-relevant); only omt_think_list clears it
-THINK_DIGEST: session.start greps TA: repo-wide, caps at 30 lines + count (token-minimal)
+THINK_DIGEST: first tool result of each session carries the TA: digest (30-line cap + count) — session.start registration retained but inert in opencode 1.18.3 (feature_023 Tier 1c moved the live path to tool.execute.after)
 THINK_CONSULT: omt_think_list writes {kind:"think_consult"} to ledger → clears think-gate
 
 # ============================================================
@@ -199,7 +199,7 @@ XREF_SCAFFOLD: new_feature.py creates: FEATURE.md, plan/PLAN.md under .meta/.../
 XREF_LEDGER: .meta/.omt/ledger.jsonl — JSONL lines: {ts,kind:phase|skip|complete,session,task_type,phase,scope,feature,design_doc,tdd_mode}
 XREF_WORK: WORK.md — task list with [x]/[~]/[ ]/![], auto-synced by omt_complete
 XREF_NAV: .opencode/plugin/omt_nav.ts — feature_020 navigation tools (omt_nav, omt_list_sections, omt_cross_ref, omt_quick_ref)
-XREF_NAV_ENF: .opencode/plugin/omt_enforcer.ts — session.start reminder, AGENTS.md mandatory requirement
+XREF_NAV_ENF: .opencode/plugin/omt_enforcer.ts — first-tool-result nav reminder (session.start retained, inert in opencode 1.18.3; feature_023 Tier 1c moved the live path to tool.execute.after), AGENTS.md mandatory requirement
 XREF_THINK: .opencode/plugin/omt_think.ts — feature_021 think-anywhere tools (omt_think, omt_think_list, omt_think_remove)
 XREF_THINK_GATE: .opencode/plugin/omt_enforcer.ts — thinkGateDecision + hasConsultedThoughts + before-hook think-gate
 

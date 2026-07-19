@@ -16,7 +16,7 @@
 // Contract (mirrors omt_nav.ts / omt_status.ts — feature_020 defect-free):
 //   • import { tool } from "@opencode-ai/plugin"; args + tool.schema.* (DEFECT-C safe)
 //   • async execute(args, context) returns a plain string (DEFECT-D safe)
-//   • default export async () => ({ tool, "session.start" })
+//   • default export async () => ({ tool, "session.start", "tool.execute.after" })
 //   • NO named tool-object exports (DEFECT-A safe); only the default factory
 //   • file ops via execFileSync/readFileSync/writeFileSync (no shell — H3 safe)
 
@@ -85,7 +85,7 @@ function toAbs(rel: string): string {
 }
 
 // Append a record to the JSONL index (best-effort structured sidecar; inline
-// TA: tags remain the source of truth).
+// thought-tags remain the source of truth).
 function appendIndex(record: Record<string, unknown>): void {
   try {
     mkdirSync(dirname(THOUGHTS_INDEX), { recursive: true })
@@ -786,11 +786,34 @@ function thinkDigest(): string {
   return out
 }
 
+// feature_023 Tier 1c (F14c): LIVE session digest state. opencode 1.18.3
+// never dispatches `session.start` (binary audit, analysis_001 addendum) — the
+// "session.start" registration below is inert. Emit the digest once per
+// session on the FIRST tool.execute.after instead (the same mutation channel
+// as D1 — guaranteed agent-visible; notify()/toast is a no-op headless).
+// Process-lifetime, bounded by distinct sessionIDs.
+const digestSessions = new Set<string>()
+
 // Standalone opencode plugin (mirrors omt_nav.ts / omt_status.ts).
 // NO named tool-object exports — opencode's loader requires every export to be a
 // function (DEFECT-A safe). Only the default factory is exported.
 export default async () => ({
   tool: { omt_think, omt_think_list, omt_think_remove, omt_think_verify, omt_think_suggest, omt_think_reindex },
+  // Inert today (opencode 1.18.3 never dispatches it); retained for future
+  // SDKs that do — the live path is tool.execute.after (feature_023 Tier 1c).
   "session.start": async () => thinkDigest(),
+  "tool.execute.after": async (input, output) => {
+    // feature_023 Tier 1c: append the TA digest to the FIRST tool result per
+    // session (live path — session.start is never dispatched). Fail-open.
+    try {
+      const session = input?.sessionID || ""
+      if (!digestSessions.has(session)) {
+        digestSessions.add(session)
+        if (typeof output?.output === "string") {
+          output.output += "\n\n" + thinkDigest()
+        }
+      }
+    } catch { /* fail-open — the digest never blocks tool results */ }
+  },
 })
 // TA: xref: feature_022.meta_harness_think_anywhere_v2 FEATURE.md catalogs 13 flaws of this v1 (string-unaware insertion F1, unsafe # default F2, gate substring false-positives F3) + tiered fixes A-E — read before modifying

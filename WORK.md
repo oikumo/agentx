@@ -50,6 +50,7 @@
 - [x] **think_anywhere_v2 Tier B1+D1: anchor-based insertion + read-time thought injection** <!-- id:T-022BD prio:medium agent:true -->
 - [x] **think_anywhere_v2 Tier C: verify/stale lifecycle C1 + per-file consult C2** <!-- id:T-022C prio:low agent:true -->
 - [x] **think_anywhere_v2 Tier remainder: B2 suggest + E1 index strategy + E2 theory-doc fixes** <!-- id:T-022E prio:low agent:true -->
+- [x] **feature_023.meta_harness_improvement** <!-- id:T-023 prio:high agent:true -->
 
 ---
 
@@ -70,6 +71,10 @@ RECURRING GOTCHAS (apply on every future task — these cost hours when re-disco
 - omt_testlist behaviors MUST be JSON array (tdd_check.py:403 json.loads). Prose strings fail with 'Expecting value: line 1 column 1'.
 
 PENDING FEATURES (next work):
+- feature_001.session_user_objectives_driven_by_Petri_Net — scope & success criteria unset.
+- feature_002.rag_retrieval_augmented_generation — scope & success criteria unset.
+
+IN PROGRESS (resume here):
 - feature_001.session_user_objectives_driven_by_Petri_Net — scope & success criteria unset.
 - feature_002.rag_retrieval_augmented_generation — scope & success criteria unset.
 ```

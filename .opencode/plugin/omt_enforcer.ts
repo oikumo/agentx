@@ -174,7 +174,11 @@ export function navGateDecision(opts: {
   usedNav: boolean
   navUnlock: boolean
 }): "allow" | "block" {
-  const { tool, targetRel, usedNav, navUnlock } = opts
+  // feature_023 Tier 3 load-safety: opencode's loader invokes every named
+  // export with the plugin-context object (sometimes undefined / {} during
+  // reload). Destructure from {}-default so a non-object arg fails open to
+  // "block" rather than crashing (the property the loader relies on).
+  const { tool, targetRel, usedNav, navUnlock } = opts ?? {}
   if (tool === "read") return "allow"
   // Defensive (DEFECT B): a non-string targetRel (array/object from opencode's
   // real tool-call shape) is treated as null (whole-repo / unknown scope).
@@ -193,7 +197,9 @@ export function thinkGateDecision(opts: {
   hasThoughts: boolean
   consulted: boolean
 }): "allow" | "block" {
-  if (!opts.hasThoughts) return "allow"
+  // feature_023 Tier 3 load-safety: an undefined arg must fail open to "allow"
+  // (no thoughts to review) instead of crashing on `.hasThoughts` destructure.
+  if (!opts?.hasThoughts) return "allow"
   return opts.consulted ? "allow" : "block"
 }
 
@@ -325,6 +331,14 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
   // absPaths already injected per session (sessionless → shared "" bucket).
   // Process-lifetime, mirrors sessionNavState; bounded by thought-files read.
   const injectedThisSession = new Map<string, Set<string>>()
+
+  // --- feature_023 Tier 1c (F14c): live nav-reminder state ---
+  // opencode 1.18.3 NEVER dispatches `session.start` (binary audit,
+  // analysis_001 addendum) — the navReminderMsg() registration at line ~883
+  // is inert. Emit the reminder once per session on the FIRST
+  // tool.execute.after instead (any tool). Process-lifetime, mirrors the
+  // two maps above; bounded by distinct sessionIDs.
+  const navRemindedSessions = new Set<string>()
 
   // --- ledger helpers ------------------------------------------------------
   const nowIso = () => new Date().toISOString()
@@ -1021,16 +1035,37 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     },
 
     "tool.execute.after": async (input, output) => {
+      // feature_023 Tier 1c (F14c): LIVE nav-reminder path. opencode 1.18.3
+      // NEVER dispatches `session.start` (binary audit, analysis_001 addendum)
+      // — the navReminderMsg() registration at the top of this hook object is
+      // inert. Emit the feature_020 nav reminder once per session on the FIRST
+      // tool result instead (any tool; before the read/edit branches). Fail-open.
+      try {
+        const remindSession = input?.sessionID || ""
+        if (!navRemindedSessions.has(remindSession)) {
+          navRemindedSessions.add(remindSession)
+          if (typeof output?.output === "string") {
+            output.output += "\n\n" + navReminderMsg()
+          }
+        }
+      } catch (e) {
+        safeLog("warn", "nav reminder failed open: " + (e?.message || e))
+      }
+
       // feature_022 D1: non-blocking read-time thought injection — on the
       // FIRST read of a thought-carrying file per session, append the file's
-      // TA: thoughts to the read result (point-of-use awareness, strictly
+      // thought-tags to the read result (point-of-use awareness, strictly
       // earlier than the edit-time think-gate block). Awareness ≠ consult:
       // NO think_consult record is written and the think-gate keeps blocking
       // edits until omt_think_list (C2 owns per-file consult — out of scope).
       // Fail-open: this branch never throws.
+      // feature_023 Tier 1 (F14): args live on INPUT in tool.execute.after
+      // (SDK contract), so read input?.args — output.args never existed in
+      // any SDK version (the dead branch shipped in feature_022).
       if (input?.tool === "read") {
+// TA: gotcha: F14 — output.args never existed in tool.execute.after (SDK contract: args on input, output={title,output,metadata}) so this branch never fired pre-feature_023; now reads input?.args?.filePath — see 6.testing/.../evaluation_001_post_shipment.md §3
         try {
-          const raw = output?.args?.filePath ?? output?.args?.path ?? output?.args?.file
+          const raw = input?.args?.filePath ?? input?.args?.path ?? input?.args?.file
           if (typeof raw === "string" && raw) {
             const { abs, rel } = relOf(raw)
             const session = input?.sessionID || ""
@@ -1059,7 +1094,12 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         }
       }
       if (!EDIT_TOOLS.has(input?.tool)) return
-      const raw = output?.args?.filePath ?? output?.args?.path ?? output?.args?.file
+      // feature_023 Tier 1 (F14b): same input?.args fix on the edit path —
+      // output.args never existed, so the MVC++ post-edit gate was equally
+      // dead since shipment. After this fix a src .py edit that introduces a
+      // NEW mvc_check hard error throws OmtBlock post-write (correct-forward
+      // doctrine — feature_006's documented intent, live for the first time).
+      const raw = input?.args?.filePath ?? input?.args?.path ?? input?.args?.file
       if (!raw) return
       const { abs, rel } = relOf(raw)
       if (!isSrc(rel) || !rel.endsWith(".py")) return

@@ -23,11 +23,19 @@
 // isolated directory (tmpdir ledger/index); each call prints {blocked:false}
 // or {blocked:true, message} on OmtBlock (design_003 §3 — no opencode server).
 //
+// feature_023 Tier 1 extension: "after-hook-edit" mode drives the REAL
+// tool.execute.after EDIT path (MVC++ post-edit gate) with the throwing
+// dollarStub replaced per-batch by a canned-mvc stub returning injected
+// findings — no real mvc_check subprocess, deterministic hard-block assertions
+// (design_001 §2.3). Each call prints {blocked:false} or {blocked:true,message}
+// on OmtBlock.
+//
 // Usage:
 //   node --experimental-strip-types _think_gate_runner.mjs decide '<json:opts>'
 //   node --experimental-strip-types _think_gate_runner.mjs consulted ['<json:{session?,rel?,risk?,root?}>']
 //   node --experimental-strip-types _think_gate_runner.mjs file-thoughts '<absPath>'
 //   node --experimental-strip-types _think_gate_runner.mjs after-hook '<directory>' '<json:[{input,output},...]>'
+//   node --experimental-strip-types _think_gate_runner.mjs after-hook-edit '<directory>' '<json:{findings,calls}>'
 //   node --experimental-strip-types _think_gate_runner.mjs before-hook '<directory>' '<json:[{input,output},...]>'
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { dirname, resolve } from "node:path"
@@ -74,6 +82,25 @@ if (mode === "decide") {
     results.push(call.output)
   }
   process.stdout.write(JSON.stringify(results))
+} else if (mode === "after-hook-edit") {
+  const directory = process.argv[3]
+  const { findings, calls } = JSON.parse(process.argv[4]) // {findings: [...], calls: [{input,output},...]}
+  // Canned-mvc stub (feature_023 §2.3): lintFindings' `$`uv run mvc_check …``
+  // chain (.cwd().quiet().nothrow()) resolves to the injected findings; the
+  // same stub also satisfies the TDD after-edit call (action undefined → no-op).
+  const mvcStub = (strings, ...vals) => ({ cwd: () => ({ quiet: () => ({ nothrow: async () =>
+    ({ stdout: Buffer.from(JSON.stringify({ findings })) }) }) }) })
+  const plugin = await mod.OmtEnforcer({ client: null, $: mvcStub, directory })
+  const results = []
+  for (const call of calls) {
+    try {
+      await plugin["tool.execute.after"](call.input, call.output)
+      results.push({ blocked: false })
+    } catch (e) {
+      results.push({ blocked: true, message: String(e?.message || e) })
+    }
+  }
+  process.stdout.write(JSON.stringify(results))
 } else if (mode === "before-hook") {
   const directory = process.argv[3]
   const calls = JSON.parse(process.argv[4]) // [{input, output}, ...]
@@ -92,6 +119,6 @@ if (mode === "decide") {
   }
   process.stdout.write(JSON.stringify(results))
 } else {
-  console.error("USAGE: _think_gate_runner.mjs decide '<json>' | consulted ['<json>'] | file-thoughts '<absPath>' | after-hook '<directory>' '<json:[...]>' | before-hook '<directory>' '<json:[...]>'")
+  console.error("USAGE: _think_gate_runner.mjs decide '<json>' | consulted ['<json>'] | file-thoughts '<absPath>' | after-hook '<directory>' '<json:[...]>' | after-hook-edit '<directory>' '<json:{findings,calls}>' | before-hook '<directory>' '<json:[...]>'")
   process.exit(2)
 }

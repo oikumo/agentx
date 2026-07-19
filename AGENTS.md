@@ -65,7 +65,7 @@ Persistent, grep-friendly `TA:` thought-tags dropped **inline in any non-protect
 
 **Think-gate (blocking):** editing a file that carries `TA:` thoughts is **blocked** until the session consults via `omt_think_list`. The block surfaces the file's own thoughts. **NOT bypassable by `omt_skip`** — thoughts are safety-relevant; only `omt_think_list` (active consult) clears it.
 
-**Session digest:** every session.start greps `TA:` across the repo and surfaces a capped digest so accumulated context is recovered immediately.
+**Session digest:** the first tool result of each session carries the TA: digest (session.start hook retained for future SDK support — opencode 1.18.3 never dispatches it; feature_023 Tier 1c emits on `tool.execute.after` instead), so accumulated context is recovered immediately.
 
 ## Quick Reference
 - **Declare phase:** `omt_phase{task_type:"bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs", phase:"Analysis|Design|Programming|Testing", scope:"done definition"}`
