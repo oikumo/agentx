@@ -18,7 +18,7 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 import { dirname, resolve } from "node:path"
 
 const here = dirname(fileURLToPath(import.meta.url))
-const pluginPath = resolve(here, "../../../.opencode/plugin/omt_nav.ts")
+const pluginPath = resolve(here, "../../../.opencode/dist/omt_nav.js")
 
 let mod
 try {

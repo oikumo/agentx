@@ -941,7 +941,8 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         }
         
         if (!EDIT_TOOLS.has(input?.tool)) return
-        const raw = output?.args?.filePath ?? output?.args?.path ?? output?.args?.file
+        // F14 fix: args live on input in tool.execute.before (SDK contract), not output
+        const raw = input?.args?.filePath ?? input?.args?.path ?? input?.args?.file
         if (!raw) return
         const { abs, rel } = relOf(raw)
 

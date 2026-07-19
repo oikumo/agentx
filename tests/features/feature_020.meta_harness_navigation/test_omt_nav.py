@@ -155,7 +155,7 @@ class TestOmtNavTool:
     """Test omt_nav plugin tool source structure"""
 
     def test_omt_nav_tool_file_exists(self):
-        nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
+        nav_file = REPO_ROOT / ".opencode" / "plugins" / "omt_nav.ts"
         assert nav_file.exists(), "omt_nav.ts should exist"
 
     def test_omt_nav_exports_tools(self):
@@ -163,7 +163,7 @@ class TestOmtNavTool:
         requires all module exports to be functions; tool objects cannot be
         named-exported). The tools are registered via the default factory's
         `tool` property."""
-        nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
+        nav_file = REPO_ROOT / ".opencode" / "plugins" / "omt_nav.ts"
         content = nav_file.read_text()
         assert "export default async () => ({" in content, (
             "Should export a default async plugin function (opencode requirement)"
@@ -188,7 +188,7 @@ class TestOmtNavTool:
         directly via _nav_runner.mjs) never exercised opencode's arg-binding,
         so the mismatch was invisible. The canonical shape (mirrors
         omt_status.ts / omt_enforcer.ts) is mandatory."""
-        nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
+        nav_file = REPO_ROOT / ".opencode" / "plugins" / "omt_nav.ts"
         content = nav_file.read_text()
         assert 'import { tool } from "@opencode-ai/plugin"' in content, "Should import tool"
         assert 'tool({' in content, "Should use tool() decorator"
@@ -206,7 +206,7 @@ class TestOmtNavTool:
     def test_omt_nav_uses_safe_exec(self):
         """Regression for H3: runGrep must use execFileSync (array args), not
         execSync with a shell string command (shell-injection risk)."""
-        nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
+        nav_file = REPO_ROOT / ".opencode" / "plugins" / "omt_nav.ts"
         content = nav_file.read_text()
         assert "execFileSync" in content, "Should import/use execFileSync"
         assert "execSync" not in content.replace("execFileSync", ""), \
@@ -217,7 +217,7 @@ class TestOmtListSections:
     """Test omt_list_sections tool source structure"""
 
     def test_function_exists(self):
-        nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
+        nav_file = REPO_ROOT / ".opencode" / "plugins" / "omt_nav.ts"
         content = nav_file.read_text()
         assert "const omt_list_sections = tool({" in content, "Should define omt_list_sections"
         # DEFECT C: no `name:` property — opencode infers the tool name from the
@@ -227,7 +227,7 @@ class TestOmtListSections:
         """Regression for C3: the SECTION grep pattern must be BRE-safe.
         `^##+` is wrong in BRE (`+` is literal) and even in ERE requires 2+
         hashes; the headers use a single `#`. Must be `^##*` (one-or-more)."""
-        nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
+        nav_file = REPO_ROOT / ".opencode" / "plugins" / "omt_nav.ts"
         content = nav_file.read_text()
         assert '"^##* SECTION:"' in content, \
             "omt_list_sections must use the BRE-safe '^##* SECTION:' pattern"
@@ -239,7 +239,7 @@ class TestOmtCrossRef:
     """Test omt_cross_ref tool source structure"""
 
     def test_function_exists(self):
-        nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
+        nav_file = REPO_ROOT / ".opencode" / "plugins" / "omt_nav.ts"
         content = nav_file.read_text()
         assert "const omt_cross_ref = tool({" in content, "Should define omt_cross_ref"
         # DEFECT C: no `name:` property — opencode infers the tool name from the
@@ -250,7 +250,7 @@ class TestOmtQuickRef:
     """Test omt_quick_ref tool source structure"""
 
     def test_function_exists(self):
-        nav_file = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
+        nav_file = REPO_ROOT / ".opencode" / "plugins" / "omt_nav.ts"
         content = nav_file.read_text()
         assert "const omt_quick_ref = tool({" in content, "Should define omt_quick_ref"
         # DEFECT C: no `name:` property — opencode infers the tool name from the
@@ -438,11 +438,11 @@ class TestToolSchemaReal:
 # ---------------------------------------------------------------------------
 class TestEnforcerHealth:
     """Regression guard for the duplicate-`const` SyntaxError (C1) that
-    prevented .opencode/plugin/omt_enforcer.ts from loading — which silently
+    prevented .opencode/plugins/omt_enforcer.ts from loading — which silently
     disabled ALL OMT++ mechanical enforcement."""
 
     def test_no_duplicate_top_level_const(self):
-        enforcer = REPO_ROOT / ".opencode" / "plugin" / "omt_enforcer.ts"
+        enforcer = REPO_ROOT / ".opencode" / "plugins" / "omt_enforcer.ts"
         content = enforcer.read_text()
         decls = re.findall(r"^const (\w+)", content, re.MULTILINE)
         dups = [k for k, v in Counter(decls).items() if v > 1]
@@ -451,13 +451,13 @@ class TestEnforcerHealth:
     @needs_node
     def test_enforcer_plugin_loads(self):
         """The enforcer must import without a SyntaxError (C1 regression)."""
-        enforcer = REPO_ROOT / ".opencode" / "plugin" / "omt_enforcer.ts"
+        enforcer = REPO_ROOT / ".opencode" / "plugins" / "omt_enforcer.ts"
         assert _plugin_loads(enforcer), "omt_enforcer.ts failed to load (SyntaxError?)"
 
     @needs_node
     def test_nav_plugin_loads(self):
         """The nav plugin must import without a SyntaxError."""
-        nav = REPO_ROOT / ".opencode" / "plugin" / "omt_nav.ts"
+        nav = REPO_ROOT / ".opencode" / "plugins" / "omt_nav.ts"
         assert _plugin_loads(nav), "omt_nav.ts failed to load (SyntaxError?)"
 
 
@@ -509,13 +509,13 @@ class TestNavGateEnforcement:
     """Source-level + docs guards for the M1/M2 scoped nav gate."""
 
     def test_enforcer_exports_gate_helpers(self):
-        content = (REPO_ROOT / ".opencode" / "plugin" / "omt_enforcer.ts").read_text()
+        content = (REPO_ROOT / ".opencode" / "plugins" / "omt_enforcer.ts").read_text()
         assert "export function navGateDecision" in content, "navGateDecision must be exported"
         assert "export function isDocPath" in content, "isDocPath must be exported"
         assert "hasNavUnlock" in content, "hasNavUnlock escape helper must exist"
 
     def test_omt_skip_supports_nav_scope(self):
-        content = (REPO_ROOT / ".opencode" / "plugin" / "omt_enforcer.ts").read_text()
+        content = (REPO_ROOT / ".opencode" / "plugins" / "omt_enforcer.ts").read_text()
         assert "src | tests | nav | all" in content, "omt_skip must document the nav scope"
         assert 'r.scope === "nav"' in content, "hasNavUnlock must recognize scope=nav"
 
@@ -638,7 +638,7 @@ class TestEnforcement:
             "Should cross-reference nav tools"
 
     def test_enforcer_has_nav_reminder(self):
-        enforcer_file = REPO_ROOT / ".opencode" / "plugin" / "omt_enforcer.ts"
+        enforcer_file = REPO_ROOT / ".opencode" / "plugins" / "omt_enforcer.ts"
         content = enforcer_file.read_text()
         assert "navReminderMsg" in content, "Should have navReminderMsg function"
         assert "feature_020" in content, "Should reference feature_020"

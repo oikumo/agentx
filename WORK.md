@@ -52,6 +52,7 @@
 - [x] **think_anywhere_v2 Tier remainder: B2 suggest + E1 index strategy + E2 theory-doc fixes** <!-- id:T-022E prio:low agent:true -->
 - [x] **feature_023.meta_harness_improvement** <!-- id:T-023 prio:high agent:true -->
 - [x] **feature_tui_dark_mode** — TUI dark mode toggle + theme selector
+- [x] **feature_023.production_hook_effects_test** — Test 6 (MVC++ F14b gate): ROOT CAUSE FIXED in omt_enforcer.ts:944 (`output?.args` → `input?.args` per SDK contract). Fixed error-message check in test_hook_effects_production.ts:314 (check for "hard MVC++ violation"). All tests pass: `npx tsx tests/scripts/omt/test_hook_effects_production.ts` and `uv run pytest tests/features/feature_023.meta_harness_improvement/test_omt_harness_improvement.py -v` (22 passed).
 
 ---
 
@@ -61,6 +62,7 @@
 FEATURES DONE (full docs in each .meta/.../FEATURE.md + test_report.md — grep those for detail):
 - feature_019 fix: invalid CSS (font-family, white-space) kills entire Textual DEFAULT_CSS parse.
 - feature_020 nav + e2e, feature_021 think, feature_022 think-v2 (tiers A/B1+D1/C/B2+E1+E2): all shipped, harness set 246/246.
+- feature_023.meta_harness_improvement: F14-F17 fixed, 13 TDD behaviors, 99 tests passing, contract-pinning mechanized.
 - feature_tui_dark_mode: default dark mode (textual-dark), `k` toggles dark/light, `Ctrl+Shift+T` opens theme selector (21 built-in themes).
 
 RECURRING GOTCHAS (apply on every future task — these cost hours when re-discovered):
@@ -71,6 +73,7 @@ RECURRING GOTCHAS (apply on every future task — these cost hours when re-disco
 - Write tool aborts on large payloads (empty params emitted; small payloads fine). → chunked edit() + receipt refresh between chunks for guarded files.
 - TESTLIST two-hats gate blocks tests/ creation (chicken-and-egg). → omt_skip{scope:tests} to bootstrap; ledger-audited. Prior art: feature_021, feature_022 tiers A/B1+D1/C/remainder.
 - omt_testlist behaviors MUST be JSON array (tdd_check.py:403 json.loads). Prose strings fail with 'Expecting value: line 1 column 1'.
+- **SDK contract (feature_023/F14): `tool.execute.before/after` payload has `args` on `input`, NOT `output`** — output={title,output,metadata} only. Both hooks must read `input?.args?.filePath`. Before-hook missed this (line 944), breaking hardSnapshot capture → F14b gate dead.
 
 PENDING FEATURES (next work):
 - feature_001.session_user_objectives_driven_by_Petri_Net — scope & success criteria unset.
@@ -79,5 +82,8 @@ PENDING FEATURES (next work):
 IN PROGRESS (resume here):
 - feature_001.session_user_objectives_driven_by_Petri_Net — scope & success criteria unset.
 - feature_002.rag_retrieval_augmented_generation — scope & success criteria unset.
+
+CURRENT DEBUG:
+- feature_023 production hook effects test: **ALL TESTS PASS** (22/22). Root cause was F14 SDK contract violation in omt_enforcer.ts:944 (before-hook read `output?.args` but SDK puts `args` on `input`). Fixed + test message check updated ("hard MVC++ violation"). Full suite green.
 ```
 

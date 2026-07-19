@@ -25,8 +25,8 @@ REPO_ROOT = Path(__file__).parent.parent.parent.parent
 TEST_DIR = Path(__file__).parent
 THINK_RUNNER = TEST_DIR / "_think_runner.mjs"
 GATE_RUNNER = TEST_DIR / "_think_gate_runner.mjs"
-PLUGIN = REPO_ROOT / ".opencode" / "plugin" / "omt_think.ts"
-ENFORCER = REPO_ROOT / ".opencode" / "plugin" / "omt_enforcer.ts"
+PLUGIN = REPO_ROOT / ".opencode" / "plugins" / "omt_think.ts"
+ENFORCER = REPO_ROOT / ".opencode" / "plugins" / "omt_enforcer.ts"
 LEDGER = REPO_ROOT / ".meta" / ".omt" / "ledger.jsonl"
 
 NODE = shutil.which("node")

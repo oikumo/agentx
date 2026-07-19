@@ -5,6 +5,13 @@
   "$schema": "https://opencode.ai/config.json",
   "lsp": true,
 
+  "plugin": [
+    "omt_enforcer",
+    "omt_nav.js",
+    "omt_status",
+    "omt_think"
+  ],
+
   "agent": {
     "build": {
       "prompt": "{file:./.agents_prompts/build.md}"
