@@ -243,10 +243,10 @@ class TestCommandInput:
 # ===================================================================
 
 class TestMainTUIScreenBindings:
-    """All 10 keyboard bindings are correctly defined."""
+    """All 12 keyboard bindings are correctly defined."""
 
     def test_bindings_count(self):
-        assert len(MainTUIScreen.BINDINGS) == 10
+        assert len(MainTUIScreen.BINDINGS) == 12
 
     def test_binding_q_quit(self):
         binding = self._find_binding("q")

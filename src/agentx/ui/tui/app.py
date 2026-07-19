@@ -72,3 +72,4 @@ class MainTUIScreen(BaseAgentXScreen):
     def action_open_rag(self) -> None:
         """Open RAG screen (placeholder)."""
         self.safe_notify("RAG screen - coming soon!")
+# TA: analysis: Need to implement dark mode / theme improvement for the TUI module. Textual has built-in dark themes (textual-dark is default). Need to add theme selection / dark mode toggle. Feature request mentions 'code main tui module interface improvement, set to dark mode' - so this is a UI improvement feature. Need to declare phase first via omt_phase.

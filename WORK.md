@@ -51,6 +51,7 @@
 - [x] **think_anywhere_v2 Tier C: verify/stale lifecycle C1 + per-file consult C2** <!-- id:T-022C prio:low agent:true -->
 - [x] **think_anywhere_v2 Tier remainder: B2 suggest + E1 index strategy + E2 theory-doc fixes** <!-- id:T-022E prio:low agent:true -->
 - [x] **feature_023.meta_harness_improvement** <!-- id:T-023 prio:high agent:true -->
+- [x] **feature_tui_dark_mode** — TUI dark mode toggle + theme selector
 
 ---
 
@@ -60,6 +61,7 @@
 FEATURES DONE (full docs in each .meta/.../FEATURE.md + test_report.md — grep those for detail):
 - feature_019 fix: invalid CSS (font-family, white-space) kills entire Textual DEFAULT_CSS parse.
 - feature_020 nav + e2e, feature_021 think, feature_022 think-v2 (tiers A/B1+D1/C/B2+E1+E2): all shipped, harness set 246/246.
+- feature_tui_dark_mode: default dark mode (textual-dark), `k` toggles dark/light, `Ctrl+Shift+T` opens theme selector (21 built-in themes).
 
 RECURRING GOTCHAS (apply on every future task — these cost hours when re-discovered):
 - opencode loader (sk/nk) requires ALL named exports of a plugin .ts be functions; tool objects aren't. → plugins export ONLY `export default async () => ({tool:{...}})` (mirrors omt_status.ts). Deterministic guard test_no_named_exports_except_default pins omt_think only; omt_status/omt_nav/omt_enforcer load-guard is future work.

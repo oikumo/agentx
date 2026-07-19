@@ -54,7 +54,9 @@ class MainTUIScreen(BaseAgentXScreen):
         Binding("t", "open_react", "ReAct", show=True),
         Binding("d", "open_coding", "Coding", show=True),
         Binding("h", "show_help", "Help", show=True),
+        Binding("k", "toggle_dark", "Toggle Dark", show=True),
         Binding("ctrl+l", "focus_input", "Focus Input", show=False),
+        Binding("ctrl+shift+t", "change_theme", "Theme", show=True),
     ]
 
     DEFAULT_CSS = """
@@ -291,3 +293,46 @@ Use '/' for command list.
             input_widget.focus()
         except Exception:
             pass
+
+    def action_change_theme(self) -> None:
+        """Show theme selector modal."""
+        from agentx.ui.tui.framework.base_modal import BaseAgentXModalScreen
+        from textual.containers import Vertical
+        from textual.widgets import Button, Label, ListView, ListItem
+        from textual.binding import Binding
+        from textual.app import ComposeResult
+
+        class ThemeSelectorModal(BaseAgentXModalScreen):
+            """Modal for selecting a theme."""
+
+            BINDINGS = [
+                Binding("escape", "close", "Close", show=True),
+            ]
+
+            def __init__(self) -> None:
+                super().__init__()
+                self.available_themes = list(self.app.available_themes.keys())
+
+            def compose(self) -> ComposeResult:
+                yield Label("Select Theme", id="theme-title")
+                yield ListView(
+                    *[ListItem(Label(theme), id=f"theme-{theme}") for theme in self.available_themes],
+                    id="theme-list",
+                )
+                yield Button("Close", id="close-btn", variant="primary")
+
+            def on_list_view_selected(self, event: ListView.Selected) -> None:
+                theme_name = event.item.id.replace("theme-", "")
+                self.app.theme = theme_name
+                self.app.notify(f"Theme changed to: {theme_name}", severity="information", timeout=3)
+                self.dismiss()
+
+            def on_button_pressed(self, event: Button.Pressed) -> None:
+                if event.button.id == "close-btn":
+                    self.dismiss()
+
+        self.app.push_screen(ThemeSelectorModal())
+
+    def action_toggle_dark(self) -> None:
+        """Toggle dark mode."""
+        self.app.action_toggle_dark()
