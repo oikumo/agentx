@@ -9,8 +9,8 @@
 Standard LLMs reason *before* generating code:
 
 ```
-P(c, s | x) = P(s | x) · P(c | x, s
-              ^^^^^^^^^^^   ^^^^^^^^^^^
+P(c, s | x) = P(s | x) · P(c | x, s)
+              ^^^^^^^^^^^   ^^^^^^^^^^^^
               reason first  then code
 ```
 
@@ -137,6 +137,17 @@ def parse_think_anywhere(raw: str) -> ThinkAnywhereOutput:
 think_anywhere_parser = StrOutputParser() | RunnableLambda(parse_think_anywhere)
 ```
 
+> ⚠️ **Stripping safety (F13):** removing a `<thinkanywhere>` block that sits *mid-statement* can silently merge tokens and change semantics — `x = fo<thinkanywhere>…</thinkanywhere>o(1)` strips to `x = oo(1)`. The prompt rules require blocks embedded on token boundaries, but always syntax-check the stripped code before use:
+
+```python
+def assert_strip_safe(output: ThinkAnywhereOutput) -> ThinkAnywhereOutput:
+    """Fail fast if block-stripping produced unparseable code."""
+    compile(output.executable_code, "<string>", "exec")  # raises SyntaxError
+    return output
+```
+
+> Syntax validity does not prove semantics were preserved — prefer checkpoints trained to place blocks at boundaries, and keep the `validate_code` check from §9 in the pipeline.
+
 ### 4. Chain Assembly
 
 ```python
@@ -177,14 +188,6 @@ print(result.executable_code)
 ### 6. Streaming Version
 
 ```python
-async def stream_think_anywhere(problem: str):
-    """Stream raw output and parse at the end."""
-    buffer = ""
-    async for chunk in think_anywhere_chain.astream({"problem": problem}):
-        # chunk is a ThinkAnywhereOutput only at the final step;
-        # use the raw LLM stream instead for live output
-        pass
-
 # For live streaming with deferred parsing, stream the LLM directly:
 raw_chain = think_anywhere_prompt | llm | StrOutputParser()
 
@@ -199,29 +202,41 @@ async def stream_raw_then_parse(problem: str) -> ThinkAnywhereOutput:
 
 ### 7. Batch Evaluation (pass@k)
 
-```python
-from langchain_openai import ChatOpenAI
-from langchain_core.runnables import RunnableParallel
+pass@k is the probability that **at least one of k samples** passes, estimated from
+`n ≥ k` samples with the unbiased estimator (Chen et al. 2021):
+`pass@k = 1 − C(n−c, k) / C(n, k)` where `c` = number of passing samples.
+(A naive passed-over-k ratio is **not** pass@k — it is the per-sample pass rate.)
 
-def build_sampler(temperature: float = 0.8, k: int = 5) -> ChatOpenAI:
+```python
+import math
+from langchain_openai import ChatOpenAI
+
+def build_sampler(temperature: float = 0.8) -> ChatOpenAI:
     """For pass@k, sample with temperature > 0."""
     return ChatOpenAI(model="gpt-4o", temperature=temperature, max_tokens=4096)
 
-async def pass_at_k(problem: str, k: int = 5, test_fn=None) -> dict:
+async def pass_at_k(problem: str, n: int = 20, k: int = 5, test_fn=None) -> dict:
     """
-    Sample k solutions and check how many pass tests.
+    Unbiased pass@k: sample n >= k solutions, c passing, then
+        pass@k = 1 - C(n - c, k) / C(n, k)
+    With n = k the estimator degenerates to "at least one sample passed"
+    (0/1, high variance) — use n >= 2k (e.g. n=20, k=5).
     test_fn(code: str) -> bool
     """
-    sampler = build_sampler(temperature=0.8, k=k)
+    if n < k:
+        raise ValueError(f"pass@k needs n >= k (got n={n}, k={k})")
+    sampler = build_sampler(temperature=0.8)
     sample_chain = think_anywhere_prompt | sampler | think_anywhere_parser
 
-    tasks = [sample_chain.ainvoke({"problem": problem}) for _ in range(k)]
     import asyncio
+    tasks = [sample_chain.ainvoke({"problem": problem}) for _ in range(n)]
     results: list[ThinkAnywhereOutput] = await asyncio.gather(*tasks)
 
     passed = sum(1 for r in results if test_fn and test_fn(r.executable_code))
+    estimate = 1.0 - math.comb(n - passed, k) / math.comb(n, k)
     return {
-        "pass_at_k": passed / k,
+        "pass_at_k": estimate,
+        "n": n,
         "k": k,
         "passed": passed,
         "solutions": [r.executable_code for r in results],
@@ -229,33 +244,59 @@ async def pass_at_k(problem: str, k: int = 5, test_fn=None) -> dict:
     }
 ```
 
+> ⚠️ **Sandbox warning:** `test_fn` executes model-generated code. Run evaluations
+> inside a container/VM with no secrets, no network access, and CPU/memory/time
+> limits — never directly on a host you care about.
+
 ### 8. Entropy-Aware Position Analysis (Optional Diagnostic)
 
-Replicate the paper's "Thinking Position Analysis" to inspect where your model invokes thinking:
+Replicate the paper's "Thinking Position Analysis" to inspect where your model invokes thinking.
+Each block is attributed to a syntactic context by parsing the code prefix that precedes it
+in the **raw** output (the stripped code alone cannot reveal block positions):
 
 ```python
 import ast
+import re
 from collections import Counter
 
 def analyze_thinking_positions(result: ThinkAnywhereOutput) -> dict:
     """
-    Identify the syntactic context of each <thinkanywhere> block
-    by finding its surrounding AST node in the executable code.
+    Attribute each <thinkanywhere> block to the type of the statement whose
+    region the block was emitted after, by parsing the code prefix preceding
+    the block in the raw output. Best-effort: an unparseable prefix (e.g. a
+    block placed mid-statement) lands in the "unattributed" bucket.
     """
-    try:
-        tree = ast.parse(result.executable_code)
-    except SyntaxError:
-        return {"error": "unparseable code", "inline_block_count": len(result.inline_blocks)}
+    def context_of(prefix: str) -> str:
+        try:
+            tree = ast.parse(prefix.strip())
+        except SyntaxError:
+            return "unattributed"
+        node = tree.body[-1] if tree.body else None
+        # descend to the innermost last statement (block may target a nested line)
+        while node is not None:
+            for attr in ("body", "orelse", "finalbody"):
+                stmts = getattr(node, attr, None)
+                if isinstance(stmts, list) and stmts:
+                    node = stmts[-1]
+                    break
+            else:
+                return type(node).__name__
+        return "unattributed"
 
-    node_types = [type(node).__name__ for node in ast.walk(tree)]
-    syntax_counts = Counter(node_types)
+    # segments[i] = code emitted before block i (the last segment trails the final block)
+    segments = re.split(r"<thinkanywhere>.*?</thinkanywhere>", result.raw, flags=re.DOTALL)
+    kinds = [
+        context_of(re.sub(r"<think>.*?</think>", "", seg, flags=re.DOTALL))
+        for seg in segments[:-1]
+    ]
+    position_counts = Counter(kinds)
 
     return {
         "inline_block_count": len(result.inline_blocks),
+        "attributed_positions": dict(position_counts.most_common()),
         "upfront_thinking_tokens": len(result.upfront_thinking.split()),
         "inline_thinking_tokens": sum(len(b.split()) for b in result.inline_blocks),
         "executable_lines": len(result.executable_code.splitlines()),
-        "ast_node_distribution": dict(syntax_counts.most_common(10)),
     }
 ```
 

@@ -65,6 +65,8 @@
     "omt_think": "allow",
     "omt_think_list": "allow",
     "omt_think_remove": "allow",
-    "omt_think_verify": "allow"
+    "omt_think_verify": "allow",
+    "omt_think_suggest": "allow",
+    "omt_think_reindex": "allow"
   }
 }

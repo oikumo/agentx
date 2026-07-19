@@ -4,10 +4,11 @@
 // feature_022 Tier C extension: omt_think_verify joins the tool map, and a
 // "session-start" mode calls the factory's "session.start" hook so tests can
 // assert on the real digest (design_003 §3 — C1 stale-count surfacing).
+// Tier remainder (design_004): omt_think_suggest + omt_think_reindex join the map.
 //
 // Usage: node --experimental-strip-types _think_runner.mjs <tool> '<json-args>'
 //   <tool>  one of: omt_think | omt_think_list | omt_think_remove |
-//           omt_think_verify | session-start
+//           omt_think_verify | omt_think_suggest | omt_think_reindex | session-start
 // Prints the tool's JSON-encoded result (a plain string) to stdout.
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { dirname, resolve } from "node:path"
@@ -32,6 +33,8 @@ const tools = {
   omt_think_list: toolMap.omt_think_list,
   omt_think_remove: toolMap.omt_think_remove,
   omt_think_verify: toolMap.omt_think_verify,
+  omt_think_suggest: toolMap.omt_think_suggest,
+  omt_think_reindex: toolMap.omt_think_reindex,
 }
 
 const name = process.argv[2]

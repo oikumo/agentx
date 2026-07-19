@@ -3,7 +3,8 @@
 // map, string-context insertion guard, filter/dedup/EOL correctness; Tier B1:
 // after:/symbol: anchor-based insertion — drift-resistant, anchor in index;
 // Tier C: omt_think_verify placement-integrity lifecycle (verified/stale),
-// digest stale count, per-file consult records).
+// digest stale count, per-file consult records; Tier remainder: omt_think_suggest
+// AST-ranked site advisor (B2), omt_think_reindex index reconciliation (E1)).
 //
 // Adapts the Think-Anywhere paper's on-demand reasoning to the META HARNESS as a
 // PERSISTENT, grep-friendly annotation/memory layer. opencode drops compact
@@ -571,6 +572,194 @@ const omt_think_verify = tool({
   },
 })
 
+// --- omt_think_suggest: AST-ranked insertion-site advisor (feature_022 B2) ---
+// The paper's high-entropy position table as a MECHANICAL proxy (no model in
+// the loop): rank candidate TA: sites by node type Assign>Return>Expr>If>
+// AugAssign, tie-break source order. Real AST via `uv run python` (stdlib ast,
+// same execFileSync class as grepThoughts — H3 safe); AST-walk is inherently
+// string-safe (never yields lines inside string literals — composes with A3).
+// Read-only advisor: no target writes, no index writes, no ledger records.
+const SITE_RANK: Record<string, number> = { Assign: 1, Return: 2, Expr: 3, If: 4, AugAssign: 5 }
+// keep in sync with the RANK map inside SUGGEST_PY_SCRIPT below
+const SUGGEST_PY_SCRIPT =
+  "import ast, json, sys\n" +
+  'RANK = {"Assign": 1, "Return": 2, "Expr": 3, "If": 4, "AugAssign": 5}\n' +
+  'tree = ast.parse(open(sys.argv[1], encoding="utf-8").read())\n' +
+  'out = [{"line": n.lineno, "end": n.end_lineno, "kind": type(n).__name__}\n' +
+  "       for n in ast.walk(tree)\n" +
+  '       if type(n).__name__ in RANK and getattr(n, "lineno", None)]\n' +
+  "print(json.dumps(out))\n"
+
+const omt_think_suggest = tool({
+  description:
+    "Rank candidate TA: insertion sites in a .py file (feature_022 B2): AST-walk " +
+    "ordered by the Think-Anywhere paper's table (Assign > Return > Expr > If > " +
+    "AugAssign), source-order tie-break; sites already carrying a thought (±1 line) " +
+    "are excluded. Read-only — suggests line/anchor targets for omt_think.",
+  args: {
+    path: tool.schema.string().describe("repo-relative .py file to analyze"),
+    top: tool.schema.number().optional().describe("max sites returned (default 5, clamped 1..20)"),
+  },
+  async execute(args, context) {
+    const rawPath = args?.path ?? ""
+    if (!rawPath) return "❌ 'path' is required."
+    const rel = relOf(rawPath)
+    if (isProtectedPath(rel)) {
+      return `⛔ TA: refused — '${rel}' is protected (.env*, README.md, uv.lock, LICENSE).`
+    }
+    const abs = toAbs(rel)
+    if (!existsSync(abs)) {
+      return `⛔ TA: refused — '${rel}' does not exist.`
+    }
+    const ext = extname(rel).toLowerCase()
+    if (ext !== ".py") {
+      return `⛔ TA: suggest refused — ranking is Python-AST-based (paper's table); got '${ext || "(none)"}'.`
+    }
+    const top = Math.min(20, Math.max(1, Math.floor(args?.top ?? 5)))
+    const content = readFileSync(abs, "utf8")
+    const lines = content.split(/\r?\n/)
+    // AST extraction (fail-open refusal on any subprocess/parse failure).
+    let sites: { line: number; end: number; kind: string }[]
+    try {
+      const out = execFileSync("uv", ["run", "--no-sync", "python", "-c", SUGGEST_PY_SCRIPT, abs],
+        { encoding: "utf8", timeout: 60000, stdio: ["ignore", "pipe", "pipe"] })
+      sites = JSON.parse(out.trim() || "[]")
+    } catch (e: any) {
+      const err = String(e?.stderr || e?.message || e).split("\n")
+        .filter((l: string) => l.trim()).pop() || "unknown error"
+      return `⛔ TA: suggest refused — '${rel}' is not parseable Python (${err.trim().slice(0, 120)}).`
+    }
+    // Rank: paper-table priority, then source order.
+    const rankOf = (k: string) => SITE_RANK[k] ?? 99
+    sites.sort((a, b) => rankOf(a.kind) - rankOf(b.kind) || a.line - b.line)
+    // Coverage exclusion: a real thought line at site.line ± 1 covers the site.
+    const thoughtAt = new Set<number>()
+    const rx = new RegExp(THOUGHT_PATTERN)
+    for (let i = 0; i < lines.length; i++) if (rx.test(lines[i])) thoughtAt.add(i + 1)
+    const covered = sites.filter(s => thoughtAt.has(s.line - 1) || thoughtAt.has(s.line) || thoughtAt.has(s.line + 1))
+    const open = sites.filter(s => !(thoughtAt.has(s.line - 1) || thoughtAt.has(s.line) || thoughtAt.has(s.line + 1)))
+    const shown = open.slice(0, top)
+    const preview = (no: number) => {
+      const p = (lines[no - 1] || "").replace(/\s+/g, " ").trim()
+      return p.length > 60 ? p.slice(0, 60) + "…" : p
+    }
+    if (shown.length === 0) {
+      return `💡 TA: suggest — ${rel}: 0 candidate sites (${covered.length} covered). Nothing to suggest.`
+    }
+    const items = shown.map((s, i) =>
+      ` ${i + 1}. L${s.line} ${s.kind} → insert after L${s.end}: \`${preview(s.line)}\``)
+    return `💡 TA: suggest — ${rel}: ${shown.length} candidate site${shown.length === 1 ? "" : "s"}, ${covered.length} already covered.\n` +
+      items.join("\n") +
+      `\n→ omt_think{path:"${rel}", line:<end>, thought:"..."}  (or after:"<preview>" — unique-match caveat)`
+  },
+})
+
+// --- omt_think_reindex: JSONL index reconciliation (feature_022 E1) ---------
+// F8 strategy decision (analysis_004 §2.2): CONSUME the index via drift-repair
+// — grep stays the gate's source of truth; the index carries B1 anchors + C1
+// verify history that grep cannot reconstruct. Dispositions per add-record:
+// keep (live, same line+text) / repair (unique text match elsewhere in file,
+// gains repaired_from) / drop (file missing, text vanished, or AMBIGUOUS >1
+// match — never silently retarget, B1 philosophy). Verify records whose slot
+// loses its add-record are pruned (cheap to regenerate). Idempotent; rewrites
+// only the index; fail-open I/O like all index writers.
+const omt_think_reindex = tool({
+  description:
+    "Reconcile the TA: thoughts index against live files (feature_022 E1): keep " +
+    "live records, repair drifted line numbers (unique text match), drop dead/" +
+    "vanished/ambiguous records, prune zombie verify records. Idempotent; " +
+    "rewrites only .meta/.omt/thoughts.jsonl. Pass path to restrict scope.",
+  args: {
+    path: tool.schema.string().optional().describe(
+      "restrict reconciliation to one repo-relative file's records (default: all recorded paths)"),
+  },
+  async execute(args, context) {
+    const filter = args?.path ? relOf(args.path) : null
+    if (!existsSync(THOUGHTS_INDEX)) {
+      return "🧹 TA: reindex — no index records (nothing to do)."
+    }
+    const recs = readThoughtsIndex()
+    const adds = recs.filter(r => r && !r.kind && typeof r.path === "string")
+    const verifies = recs.filter(r => r && r.kind === "verify" && typeof r.path === "string")
+    const passthrough = recs.filter(r => !(r && typeof r.path === "string" && (!r.kind || r.kind === "verify")))
+    // In-scope adds; out-of-scope pass through verbatim (not counted, not deduped).
+    const inScope = adds.filter(r => !filter || r.path === filter)
+    const outScope = adds.filter(r => filter && r.path !== filter)
+    // Dedupe in-scope adds by path:line — latest record wins.
+    const bySlot = new Map<string, any>()
+    let dropped = 0
+    for (const r of inScope) {
+      const key = `${r.path}:${r.line}`
+      if (bySlot.has(key)) dropped++
+      bySlot.set(key, r)
+    }
+    // File cache: path → lines | "missing" | "error" (error → skip path, keep records).
+    const cache = new Map<string, string[] | "missing" | "error">()
+    for (const r of bySlot.values()) {
+      if (cache.has(r.path)) continue
+      const abs = toAbs(r.path)
+      if (!existsSync(abs)) { cache.set(r.path, "missing"); continue }
+      try { cache.set(r.path, readFileSync(abs, "utf8").split(/\r?\n/)) }
+      catch { cache.set(r.path, "error") }
+    }
+    let kept = 0, repaired = 0
+    const skippedPaths = new Set<string>()
+    const details: string[] = []
+    const survivingAdds: any[] = []
+    const rx = new RegExp(THOUGHT_PATTERN)
+    const preview = (s: string) => {
+      const p = String(s || "").replace(/\s+/g, " ").trim()
+      return p.length > 60 ? p.slice(0, 60) + "…" : p
+    }
+    for (const r of bySlot.values()) {
+      const f = cache.get(r.path)
+      if (f === "missing") { dropped++; continue }
+      if (f === "error" || f === undefined) {
+        skippedPaths.add(r.path); survivingAdds.push(r); continue
+      }
+      const lines = f
+      const cur = (typeof r.line === "number" && r.line >= 1 && r.line <= lines.length)
+        ? parseThoughtLine(lines[r.line - 1]) : null
+      const recCat = r.category || null
+      if (cur && cur.text === r.thought && (cur.cat || null) === recCat) {
+        kept++; survivingAdds.push(r); continue
+      }
+      const matches: number[] = []
+      for (let i = 0; i < lines.length; i++) {
+        if (!rx.test(lines[i])) continue
+        const p = parseThoughtLine(lines[i])
+        if (p && p.text === r.thought && (p.cat || null) === recCat) matches.push(i + 1)
+      }
+      if (matches.length === 1) {
+        repaired++
+        details.push(`${r.path}: ${r.line}→${matches[0]} (${preview(r.thought)})`)
+        survivingAdds.push({ ...r, line: matches[0], repaired_from: r.line })
+      } else {
+        dropped++ // 0 matches = vanished; >1 = ambiguous (no silent retarget)
+      }
+    }
+    // Prune verify records whose slot has no surviving add-record.
+    const slots = new Set([...survivingAdds, ...outScope].map(r => `${r.path}:${r.line}`))
+    let pruned = 0
+    const survivingVerifies: any[] = []
+    for (const v of verifies) {
+      if (slots.has(`${v.path}:${v.line}`)) survivingVerifies.push(v)
+      else pruned++
+    }
+    try {
+      const finalRecs = [...passthrough, ...outScope, ...survivingAdds, ...survivingVerifies]
+      writeFileSync(THOUGHTS_INDEX, finalRecs.map(r => JSON.stringify(r)).join("\n") + "\n")
+    } catch { /* best-effort */ }
+    let out = `🧹 TA: reindex — kept ${kept}, repaired ${repaired}, dropped ${dropped}, verify-pruned ${pruned}` +
+      (skippedPaths.size ? `; skipped ${skippedPaths.size} path(s)` : "") + "."
+    if (details.length) {
+      out += "\n" + details.slice(0, 10).join("\n")
+      if (details.length > 10) out += `\n… (+${details.length - 10} more repairs)`
+    }
+    return out
+  },
+})
+
 // --- session.start: mechanical per-session digest ---------------------------
 function thinkDigest(): string {
   const hits = grepThoughts(THOUGHT_PATTERN, ".")
@@ -601,7 +790,7 @@ function thinkDigest(): string {
 // NO named tool-object exports — opencode's loader requires every export to be a
 // function (DEFECT-A safe). Only the default factory is exported.
 export default async () => ({
-  tool: { omt_think, omt_think_list, omt_think_remove, omt_think_verify },
+  tool: { omt_think, omt_think_list, omt_think_remove, omt_think_verify, omt_think_suggest, omt_think_reindex },
   "session.start": async () => thinkDigest(),
 })
 // TA: xref: feature_022.meta_harness_think_anywhere_v2 FEATURE.md catalogs 13 flaws of this v1 (string-unaware insertion F1, unsafe # default F2, gate substring false-positives F3) + tiered fixes A-E — read before modifying
