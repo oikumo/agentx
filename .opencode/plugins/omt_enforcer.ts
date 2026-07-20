@@ -496,7 +496,7 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
   const isOmtHarness = (rel) =>
     rel === "AGENTS.md" || rel === "opencode.jsonc" ||
     rel === ".meta/software_development_process/omt_agent_guide.md" ||
-    rel.startsWith(".opencode/plugin/omt_") ||
+    rel.startsWith(".opencode/plugins/omt_") ||
     rel.startsWith("scripts/omt/") ||
     rel.startsWith(".meta/templates/") ||
     rel.startsWith(".meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/") ||
@@ -606,7 +606,7 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
     `uv run scripts/omt/new_feature.py "<name>" --type ${tt}.`
 
   // --- custom tools --------------------------------------------------------
-  // omt_status is registered by .opencode/plugin/omt_status.ts as its own
+  // omt_status is registered by .opencode/plugins/omt_status.ts as its own
   // standalone plugin. Keeping it out of this enforcer avoids dynamic-import
   // cache/loading failures and duplicate tool registration.
 
@@ -941,8 +941,11 @@ export const OmtEnforcer = async ({ client, $, directory }) => {
         }
         
         if (!EDIT_TOOLS.has(input?.tool)) return
-        // F14 fix: args live on input in tool.execute.before (SDK contract), not output
-        const raw = input?.args?.filePath ?? input?.args?.path ?? input?.args?.file
+        // SDK contract: in tool.execute.before args live on OUTPUT (input={tool,
+        // sessionID, callID} only). Reading input?.args here (a3ffb81's false
+        // "F14 fix") made raw always undefined → every edit guard dead. The
+        // AFTER hook is the one that reads input.args (genuine F14 fix).
+        const raw = output?.args?.filePath ?? output?.args?.path ?? output?.args?.file
         if (!raw) return
         const { abs, rel } = relOf(raw)
 

@@ -31,9 +31,9 @@ E2E_COMMAND = "uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q"
 RECEIPT_PATH = REPO_ROOT / ".meta" / ".omt" / "omt_harness_e2e_last_run.json"
 
 HARNESS_FILES = [
-    ".opencode/plugin/omt_enforcer.ts",
-    ".opencode/plugin/omt_status.ts",
-    ".opencode/plugin/omt_think.ts",
+    ".opencode/plugins/omt_enforcer.ts",
+    ".opencode/plugins/omt_status.ts",
+    ".opencode/plugins/omt_think.ts",
     "opencode.jsonc",
     "AGENTS.md",
     ".meta/software_development_process/omt_agent_guide.md",
@@ -83,8 +83,8 @@ def _write_receipt(checks: list[str]) -> None:
 
 
 def test_omt_meta_harness_end_to_end_contract() -> None:
-    enforcer = _read(".opencode/plugin/omt_enforcer.ts")
-    status = _read(".opencode/plugin/omt_status.ts")
+    enforcer = _read(".opencode/plugins/omt_enforcer.ts")
+    status = _read(".opencode/plugins/omt_status.ts")
     config = _read("opencode.jsonc")
     guide = _read(".meta/software_development_process/omt_agent_guide.md")
 
@@ -96,7 +96,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     assert "tool: { omt_status }" in status
     assert "p.split" not in status
     assert "dynamic" not in status.lower()
-    assert "omt_status is registered by .opencode/plugin/omt_status.ts" in enforcer
+    assert "omt_status is registered by .opencode/plugins/omt_status.ts" in enforcer
     checks.append("standalone omt_status plugin has no dynamic p.split path")
 
     # 2. Phase declarations and completions are real opencode tools, scoped to
@@ -185,7 +185,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     checks.append("tdd_check.py status subcommand returns valid JSON")
 
     # 9. feature_021 think-anywhere: standalone plugin + think-gate in enforcer.
-    think = _read(".opencode/plugin/omt_think.ts")
+    think = _read(".opencode/plugins/omt_think.ts")
     assert "export default async () => ({" in think
     assert "tool: { omt_think, omt_think_list, omt_think_remove, omt_think_verify, omt_think_suggest, omt_think_reindex }" in think
     assert "commentSyntaxFor" in think

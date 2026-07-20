@@ -873,7 +873,7 @@ def test_protected_file_guards():
     print("\n=== test_protected_file_guards ===")
 
     # Read the enforcer's isProtected function logic
-    enforcer = (REPO_ROOT / ".opencode" / "plugin" / "omt_enforcer.ts").read_text()
+    enforcer = (REPO_ROOT / ".opencode" / "plugins" / "omt_enforcer.ts").read_text()
 
     protected_patterns = [
         "README.md",
