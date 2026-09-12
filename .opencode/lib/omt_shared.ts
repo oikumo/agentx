@@ -590,3 +590,16 @@ export function thinkDigest(): string {
   out += ` · full texts: omt_think{op:list} (think-gate applies).`
   return out.length > DIGEST_CAP_BYTES ? out.slice(0, DIGEST_CAP_BYTES - 1) + "…" : out
 }
+
+// T1-5 (feature_069) nav-answer caps — parity with omt_kb_nav MAX_RECORDS=25.
+// Lives here (not in plugins/omt_nav.ts) because plugin files keep
+// function-only named exports + the default factory (DEFECT A loader
+// contract — see this file's header + omt_nav.ts header). Wide queries
+// truncate with an explicit marker + narrowing hint; under-cap answers are
+// byte-identical to pre-cap output.
+export const NAV_MAX_RECORDS = 25
+export function capNavLines(lines: string[], sep = "\n"): string {
+  if (lines.length <= NAV_MAX_RECORDS) return lines.join(sep)
+  const out = lines.slice(0, NAV_MAX_RECORDS).join(sep)
+  return out + `${sep}… truncated: ${NAV_MAX_RECORDS}/${lines.length} records — narrow with file:/tag_type:`
+}

@@ -16,7 +16,7 @@ import { execFileSync } from "node:child_process"
 // Single source (meta_harness_dsl R1): repo-root lives in the shared lib
 // (root injected at plugin-init, F2/F17 — fixes the subdir-launch divergence).
 // R8: IR tool descriptions + the compiled nav index come from there too.
-import { initOmtShared, repoRoot, irToolDescription, loadNavIndex } from "../lib/omt_shared"
+import { initOmtShared, repoRoot, irToolDescription, loadNavIndex, capNavLines } from "../lib/omt_shared"
 
 // Core documentation files in the META HARNESS ecosystem — the LEGACY corpus
 // searched by the grep fallback (the compiled index already covers these via
@@ -231,11 +231,11 @@ function createNavTools() {
           return `No results for "${query}". Try: SECTION:, CMD_, ERR_, QUICK_, XREF_`
         }
         if (include_context) {
-          return hits
-            .map(r => `${r.src}:${r.line}: ${r.text}` + (getContext(r.src, r.line) ? `\n${getContext(r.src, r.line)}` : ""))
-            .join("\n\n")
+          return capNavLines(hits
+            .map(r => `${r.src}:${r.line}: ${r.text}` + (getContext(r.src, r.line) ? `\n${getContext(r.src, r.line)}` : "")),
+            "\n\n")
         }
-        return hits.map(r => `${r.src}:${r.line}: ${r.text}`).join("\n")
+        return capNavLines(hits.map(r => `${r.src}:${r.line}: ${r.text}`))
       }
 
       // Legacy grep fallback (no compiled index on disk).
@@ -265,9 +265,9 @@ function createNavTools() {
 
       // With context, append the context block under each hit.
       if (include_context) {
-        return results.map(r => `${r.file}:${r.line}: ${r.content}` + (r.context ? `\n${r.context}` : "")).join("\n\n")
+        return capNavLines(results.map(r => `${r.file}:${r.line}: ${r.content}` + (r.context ? `\n${r.context}` : "")), "\n\n")
       }
-      return render(results)
+      return capNavLines(results.map(r => `${r.file}:${r.line}: ${r.content}`))
     },
   })
 
@@ -284,10 +284,9 @@ function createNavTools() {
       // R8: answer from the compiled index when present.
       const recs = navRecords(file)
       if (recs) {
-        return recs
+        return capNavLines(recs
           .filter(r => r.tags.includes("SECTION"))
-          .map(r => `${r.src}:${r.line}: ${r.text.replace(/^#+ SECTION:\s*/, "").trim()}`)
-          .join("\n")
+          .map(r => `${r.src}:${r.line}: ${r.text.replace(/^#+ SECTION:\s*/, "").trim()}`))
       }
 
       const filesToSearch = file ? [file] : metaFiles()
@@ -304,7 +303,7 @@ function createNavTools() {
         title: r.content.replace(/^#+ SECTION:\s*/, "").trim(),
       }))
 
-      return sections.map(s => `${s.file}:${s.line}: ${s.title}`).join("\n")
+      return capNavLines(sections.map(s => `${s.file}:${s.line}: ${s.title}`))
     },
   })
 
@@ -328,14 +327,14 @@ function createNavTools() {
         const bare = xref.startsWith("XREF_") ? null : new RegExp(`^XREF_.*${escapeRegExp(xref)}`)
         const hits = recs.filter(r => r.tags.some(t => t === xref || (bare ? bare.test(t) : false)))
         return hits.length
-          ? hits.map(r => `${r.src}:${r.line}: ${r.text}`).join("\n")
+          ? capNavLines(hits.map(r => `${r.src}:${r.line}: ${r.text}`))
           : `No references for "${xref}".`
       }
 
       const pattern = xref.startsWith("XREF_") ? xref : `XREF_.*${xref}`
       const results = runGrep(pattern, metaFiles())
       return results.length
-        ? render(results)
+        ? capNavLines(results.map(r => `${r.file}:${r.line}: ${r.content}`))
         : `No references for "${xref}".`
     },
   })
@@ -368,7 +367,7 @@ function createNavTools() {
           return `${name}: ${pattern}  (${r.src}:${r.line})`
         })
         return workflows.length
-          ? workflows.join("\n")
+          ? capNavLines(workflows)
           : `No workflows${workflow ? ` matching "${workflow}"` : ""}.`
       }
 
@@ -386,7 +385,7 @@ function createNavTools() {
       })
 
       return workflows.length
-        ? workflows.map(w => `${w.name}: ${w.pattern}  (${w.file}:${w.line})`).join("\n")
+        ? capNavLines(workflows.map(w => `${w.name}: ${w.pattern}  (${w.file}:${w.line})`))
         : `No workflows${workflow ? ` matching "${workflow}"` : ""}.`
     },
   })

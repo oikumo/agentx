@@ -37,6 +37,7 @@
     "bash": {
       "*": "ask",
       "uv *": "allow",
+      "bun *": "allow",
       "npx *": "allow",
       "npm *": "allow",
       "ls *": "allow",

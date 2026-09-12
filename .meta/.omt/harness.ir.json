@@ -514,7 +514,7 @@
     },
     "omt_q": {
       "args": "op,feature?,session?,path?,tool?,as_of?,verbose?",
-      "description": "TA: Interrogative layer \u2014 read-only. op=state(feature?,session?,as_of?,verbose?) | plan(path,tool?,session?,as_of?) | drift(as_of?). state default \u22642KB summary; verbose:true = full dump. Returns JSON envelope with as_of_commit=HEAD-sha.",
+      "description": "TA: Interrogative layer \u2014 read-only. op=state(feature?,session?,as_of?,verbose?) | plan(path,tool?,session?,as_of?) | drift(as_of?) | audit(as_of?). state default \u22642KB summary; verbose:true = full dump. Returns JSON envelope with as_of_commit=HEAD-sha.",
       "perm": "allow",
       "tags": "CMD_Q"
     },

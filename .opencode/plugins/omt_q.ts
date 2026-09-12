@@ -620,11 +620,49 @@ function createQTools() {
           session: args?.session,
         })
         const decisions = await runBeforeGatesDry(ctx)
+        // T3-1 escape-replay fold (feature_070): read-only last_escape attach.
+        // For each BLOCKED gate, find most-recent matching skip (scope allow-list
+        // per gate). Agent must still call omt_skip — this is advisory only.
+        let lastEscapeByGate: Record<string, any> = {}
+        try {
+          const recs = readLedgerAll()
+          const scopeAllow: Record<string, string[]> = {
+            "g.nav": ["nav", "all"],
+            "g.protect": ["all"],
+            "g.receipt": ["all"],
+            "g.tests": ["tests", "all"],
+            "g.net": ["all"],
+            "g.phase": ["src", "all"],
+          }
+          for (const d of decisions) {
+            if (!d.blocked) continue
+            const allow = scopeAllow[d.gate_id] || []
+            if (!allow.length) continue
+            let best: any = null
+            let bestTs = 0
+            for (const r of recs) {
+              if (r?.kind !== "skip") continue
+              const sc = String(r?.scope || "")
+              if (!allow.includes(sc)) continue
+              const t = tsOf(r)
+              if (t > bestTs) { bestTs = t; best = r }
+            }
+            if (best) {
+              lastEscapeByGate[d.gate_id] = {
+                scope: String(best.scope || ""),
+                reason: String(best.reason || ""),
+                ts: String(best.ts || ""),
+              }
+            }
+          }
+        } catch { /* fail-open: no last_escape */ }
         const predicted_chain = decisions.map((d) => ({
           gate_id: d.gate_id,
           blocked: d.blocked,
           msg: d.msg,
           skip_ok: d.skip_ok,
+          ...(d.blocked && lastEscapeByGate[d.gate_id]
+            ? { last_escape: lastEscapeByGate[d.gate_id] } : {}),
         }))
         const first_blocker = decisions.find((d) => d.blocked) || null
         // U11 receipt_detail
@@ -633,7 +671,7 @@ function createQTools() {
           receipt_detail = foldReceiptDetail(ctx.rel, ctx.abs)
         }
         return emitQEnvelope(
-          start, "plan", ["U2", "U11"], "U2,U11",
+          start, "plan", ["U2", "U11", "T3-1"], "U2,U11,T3-1",
           {
             as_of_commit, path,
             tool: args?.tool ?? "edit",

@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-09-12 (auto — feature_070.escape_replay_fold Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_070.escape_replay_fold/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-12 (auto — feature_069.nav_answer_caps Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_069.nav_answer_caps/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-12 (auto — feature_068.schema_audit_autolink Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_068.schema_audit_autolink/test_report.md
