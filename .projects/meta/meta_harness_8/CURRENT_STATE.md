@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-12 (auto — feature_067.tdd_same_node_lint Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_067.tdd_same_node_lint/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-12 (iter 3 — T5 expanded 3→8 per NEXT_STEP, user-directed)
 
 ### Done

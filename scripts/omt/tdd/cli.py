@@ -48,6 +48,7 @@ from .state import (
     _resolve_src_path,
     _resolve_test_path,
     get_current_test_node,
+    get_latest_red_node,
     get_session_records,
     get_tdd_cycles,
     get_tdd_mode,
@@ -98,6 +99,22 @@ def _parse_behaviors(raw: str | None) -> list[str]:
         if stripped:
             behaviors.append(stripped)
     return behaviors
+
+
+def _same_node_warning(test_node: str, session: str, feature: str, verb: str) -> str | None:
+    """T2-2 (feature_067): same-node lint — warn when green/refactor test_node
+    differs from the latest RED node (GOTCHA_TDD_NODE). Pre-toolchain: caller
+    computes this BEFORE run_test so the warning survives toolchain failure.
+    None when no prior RED or nodes match (silent)."""
+    latest = get_latest_red_node(session, feature) if (session or feature) else get_latest_red_node(session, feature)
+    # Fallback when both empty (hermetic direct calls use session="s"):
+    if latest is None and not session and not feature:
+        latest = None
+    if latest is None or latest == test_node:
+        return None
+    return (f"⚠️ TDD same-node lint: {verb} test_node '{test_node}' differs from "
+            f"latest RED '{latest}'. Declare red/green/refactor at the SAME test_node "
+            f"(GOTCHA_TDD_NODE).")
 
 
 def cmd_testlist(args) -> dict:
@@ -208,14 +225,18 @@ def cmd_start(args) -> dict:
 
 def cmd_green(args) -> dict:
     test_node = args.test_node
+    lint_warn = _same_node_warning(test_node, getattr(args, 'session', ''), getattr(args, 'feature', ''), 'green')
     exit_code, _stdout, stderr = run_test(test_node, timeout=30)
 
     if exit_code != 0:
         details = "\n".join(stderr.strip().split("\n")[-10:]) if stderr else ""
+        msg = (f"⛔ Test still fails (exit {exit_code}). "
+                 f"Write more production code (L3: min-to-pass).\n{details}")
+        if lint_warn:
+            msg = lint_warn + "\n" + msg
         return {
             "ok": False, "state": "green", "verified": False, "exit_code": exit_code,
-            "message": (f"⛔ Test still fails (exit {exit_code}). "
-                        f"Write more production code (L3: min-to-pass).\n{details}"),
+            "message": msg, "warning": lint_warn,
         }
 
     # Save source snapshot
@@ -234,24 +255,31 @@ def cmd_green(args) -> dict:
         "feature": args.feature,
     })
 
+    msg = (f"✅ GREEN — test '{test_node}' passes. Source snapshot saved.\n"
+             f"  src/ ALLOWED (code hat), tests/ BLOCKED.\n"
+             f"  Next: omt_tdd{{op: \"refactor\", ...}} or omt_tdd{{op: \"red\", ...}} for next behavior.")
+    if lint_warn:
+        msg = lint_warn + "\n" + msg
     return {
         "ok": True, "state": "green", "verified": True, "exit_code": exit_code,
-        "snapshots": snapshots,
-        "message": (f"✅ GREEN — test '{test_node}' passes. Source snapshot saved.\n"
-                    f"  src/ ALLOWED (code hat), tests/ BLOCKED.\n"
-                    f"  Next: omt_tdd{{op: \"refactor\", ...}} or omt_tdd{{op: \"red\", ...}} for next behavior."),
+        "snapshots": snapshots, "warning": lint_warn,
+        "message": msg,
     }
 
 
 def cmd_refactor(args) -> dict:
     test_node = args.test_node
+    lint_warn = _same_node_warning(test_node, getattr(args, 'session', ''), getattr(args, 'feature', ''), 'refactor')
     exit_code, _stdout, stderr = run_test(test_node, timeout=30)
 
     if exit_code != 0:
+        base = ("⛔ Tests are failing. Fix before refactoring "
+                "(spec: courage_enabled_by_safety_net).")
+        if lint_warn:
+            base = lint_warn + "\n" + base
         return {
             "ok": False, "state": "refactor", "verified": False, "exit_code": exit_code,
-            "message": "⛔ Tests are failing. Fix before refactoring "
-                       "(spec: courage_enabled_by_safety_net).",
+            "message": base, "warning": lint_warn,
         }
 
     write_ledger({
@@ -260,11 +288,14 @@ def cmd_refactor(args) -> dict:
         "feature": args.feature,
     })
 
+    msg = (f"✅ REFACTOR — tests green. src/ unlocked for refactoring.\n"
+             f"  Each src/ edit will be verified: tests must stay green or edit is reverted.\n"
+             f"  Call omt_tdd{{op: \"green\", ...}} when done, or omt_tdd{{op: \"red\", ...}} for next behavior.")
+    if lint_warn:
+        msg = lint_warn + "\n" + msg
     return {
         "ok": True, "state": "refactor", "verified": True, "exit_code": exit_code,
-        "message": (f"✅ REFACTOR — tests green. src/ unlocked for refactoring.\n"
-                    f"  Each src/ edit will be verified: tests must stay green or edit is reverted.\n"
-                    f"  Call omt_tdd{{op: \"green\", ...}} when done, or omt_tdd{{op: \"red\", ...}} for next behavior."),
+        "warning": lint_warn, "message": msg,
     }
 
 

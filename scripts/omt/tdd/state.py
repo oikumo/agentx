@@ -224,6 +224,24 @@ def get_tdd_cycles(feature: str) -> list[dict]:
     return [r for r in records if r.get("kind") == "tdd" and r.get("feature") == feature]
 
 
+def get_latest_red_node(session: str, feature: str = "") -> str | None:
+    """T2-2 (feature_067): latest RED test_node for same-node lint.
+
+    Feature-scoped when feature is given (get_tdd_cycles), else the
+    session/feature scope via _tdd_records(session) — mirrors the
+    feature-scoped cycle ownership (P1-1/R3). Latest-wins: the last RED
+    record decides. None when no RED yet (nothing to compare).
+    """
+    if feature:
+        reds = [r for r in get_tdd_cycles(feature) if r.get("state") == "red"]
+    else:
+        reds = [r for r in _tdd_records(session)
+                if r.get("kind") == "tdd" and r.get("state") == "red"]
+    if not reds:
+        return None
+    return reds[-1].get("test_node")
+
+
 # ---------------------------------------------------------------------------
 # Snapshot management
 # ---------------------------------------------------------------------------
