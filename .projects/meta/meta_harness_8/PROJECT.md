@@ -121,7 +121,8 @@
 - [x] mh7 Wave-0 + slice-1 + P1-1 absorbed DONE-zero-carry 2026-09-12: feature_060/061/062/063 (Wave-0) + feature_064 slice-1 + feature_066 think-batch-consult (== mh8 T2-3) all `complete` under closed mh7; no re-implementation in mh8 (D7).
 - [x] meta_harness_7 CLOSED 2026-09-12 (re-close after Wave-1 execution; 6/6 linked features complete, clean-close no --force) — mh8 sole home for remaining mh7 waves (D7).
 - [x] T5 expanded 3→8 (2026-09-12, user-approved): NEXT_STEP 2A–2D/3A–3C replace coarse slice-2/slice-3 rows; D8–D14 locked; strict slice order; 13-point demo is T5 Done-bar.
-- [ ] Next: T2-2 / T1-2 / T1-5 (cheapest, unblocked) in §Scope order unless reprioritized; T3-4 benchmark anytime (no policy change).
+- [x] T4-2 `receipt-batch-mode` DONE 2026-09-12 (feature_074.receipt_batch_mode, minor_feature) — `harnessc.py stage` + staged bypass + content-bound receipt (digests + policy_ver + toolchain); 5 goldens + boundary e2e green, `harnessc check` 0 errors, omt-suite 458 green (1 pre-existing budget-pin failure from uncommitted 071–073 WORK.md drift, untouched by T4-2).
+- [ ] Next: T4-3 / T1-6 (smallest unblocked) → T1-4 / T1-3 → T5-1 2A (`net transaction authority`, first within T5) in strict slice order; T3-4 benchmark anytime (no policy change).
 
 ---
 

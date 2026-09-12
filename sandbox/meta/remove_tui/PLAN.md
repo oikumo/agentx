@@ -140,10 +140,13 @@ TO    src/agentx/ui/screens/coding/coding_controller.py
 | `src/agentx/main.py` | Remove `--tui`/`--no-tui` handling, the TTY probe, and the `use_tui` branch + console fallback. Always `ui_provider = ProviderRegistry.get("console")`. Remove the `ProviderRegistry.get_default()` call. |
 | `src/agentx/ui/providers.py` | Delete the TUI import block (L245–250) + stale comment (L242). Optionally remove `ProviderRegistry.get_default()`/`list_providers` + `_default` field (now unused). |
 | `src/agentx/ui/screens/main/main_controller.py` | Fix `CodingController` import path (§3). Simplify `load_commands` rag routing: always `RagV2ShowCommand` (drop `isinstance(..., ConsoleProvider)` branch). Optionally drop `show_rag`/`get_rag_controller` + `_rag_controller`/`_rag_view` (+ `IRagView` fields) per §6. Fix `FastAgentTUIView`/`MainTUIScreen` docstring references (L215–216). |
-| `src/agentx/agent/adapter.py` | Remove `from agentx.agent.view.tui.agent_screen import AgentTUIScreen` (L17), the `TYPE_CHECKING` fast-agent import (L20), and methods `create`, `create_screen`, `create_fast` + helper `_wire_view` (L68–131). Drop now-unused `IAgentViewPartner`/`cast` imports. Reword module docstring (no more "AgentTUIScreen"). |
+| `src/agentx/agent/adapter.py` | Remove `from agentx.agent.view.tui.agent_screen import AgentTUIScreen` (L17), the `TYPE_CHECKING` fast-agent import (L20), and methods `create`, `create_screen`, `create_fast` + helper `_wire_view` (L68–131). Drop now-unused `IAgentViewPartner`/`cast` imports. Reword module docstring (no more "AgentTUIScreen"). **Precondition:** before deleting, grep-confirm zero console callers of `create`/`create_screen`/`create_fast` — specifically that `ConsoleProvider.create_fast_agent_view` (and `create_view`/`create_agent_view`) do NOT route through these methods (see §7 step 0). |
 | `src/agentx/ui/interfaces.py` | Cosmetic only, unless §6: reword docstrings that say "the TUI View calls" / "metaclass conflict with Textual" (L361, L411, etc.). **Keep** all ABCs used by console (`I*View`, `I*ViewPartner`, `IRagV2*`). |
 | `pyproject.toml` | Remove `"textual>=8.2.8"` from `dependencies`; drop "modern Textual TUI and" from `description`. |
 | `src/agentx/agent/__init__.py`, `agent/view/__init__.py`, `agent/demo/__init__.py`, `model/react/react_agent_service.py`, `model/coding/coding_agent_service.py`, `model/rag_v2/__init__.py`, `model/tools/registry.py` | Docstring-only cleanup where they say "TUI …". No logic change. |
+| `src/agentx/agent/controller/agent_controller.py` (L263) | Comment references TUI `demo_screen` — reword (the demo controller survives; only its TUI view is deleted). |
+| `src/agentx/agent/view/agent_view.py` (L3–4) | Docstring points at `view/tui/agent_screen.py` as the "rich Textual experience" — rewrite: this **is** the view now. |
+| `src/agentx/ui/screens/models/models_view.py` (L22) | Docstring mentions the TUI `models_screen` `q` binding — drop that clause. |
 
 ---
 
@@ -165,16 +168,27 @@ tests/features/feature_019.coding_agent_screen/test_coding_mvc.py               
 tests_automated/tui/                                          (whole dir incl. README)
 ```
 Note: feature_013's `test_mvc_model_selector.py` (console MVC) and feature_018 console coverage
-(`tests/views/test_react_view.py`) **survive**. feature_019's `test_coding_integration.py` exercises
-the shared `CodingController` — **split**: keep controller/service assertions, drop `CodingTUIScreen`
-assertions.
+(`tests/views/test_react_view.py`) **survive**. feature_019's `test_coding_integration.py` is
+**split (decided):** keep the controller/service assertions (with the §5b import fix), delete the
+`CodingTUIScreen` assertions. This is the single canonical instruction — §5b only carries the
+import line for the kept half. The split is a **modification** (not a deletion) and is executed
+as its own ordered step (§7 step 6b) with the `tests/` canary approval called out.
+
+Note re semantic drift: the dir named `feature_024.no_tui_full_features` will keep its name, but
+after removal its premise ("console works without TUI") becomes the only reality rather than a
+mode. No action beyond the §5b import fix — just confirm the suite still asserts something
+meaningful (it does: console provider + views work).
 
 ### 5b. Modify test files (import path update only)
 ```
 tests/features/feature_024.no_tui_full_features/test_console_provider_and_views.py:618
     from agentx.ui.tui.screens.coding.coding_controller import CodingController
     →  from agentx.ui.screens.coding.coding_controller import CodingController
-tests/features/feature_019.coding_agent_screen/test_coding_integration.py:25 (same move, if retained)
+    (The rest of feature_024 asserts console-only behavior — the suite survives unchanged;
+     only this one import line moves.)
+tests/features/feature_019.coding_agent_screen/test_coding_integration.py:25
+    Same import move — but see §5a: this file is SPLIT (controller/service assertions kept,
+    CodingTUIScreen assertions deleted); the kept half uses the new import path.
 ```
 
 ### 5c. Delete dev scripts (all import TUI/Textual)
@@ -229,13 +243,16 @@ Default plan: **do Phase 1 only** (targeted, low-risk), file Phase 2 as a follow
 7. Doc cleanup (README.md §5d).
 8. Verify:
    - `uv run python -c "import agentx; from agentx.main import main"` imports clean (no textual import anywhere).
-   - `grep -rEn "ui\.tui|view\.tui|textual|Textual|TUI" src/ tests/ scripts/` → only allowed
-     docstring/inert-string hits (§5d remainder).
+   - `grep -rEni "ui\.tui|view\.tui|textual|\btui\b" src/ tests/ scripts/` → only allowed
+     docstring/inert-string hits (§5d remainder). Note: bare `no_tui` (e.g. the
+     `feature_024.no_tui_full_features` dir name) is an **expected, allowed hit** — do not chase it.
    - `uv run pytest` — full suite green; expect the count to drop by the deleted TUI tests
      (~90–110 tests) with **zero** regressions in console tests.
 9. `omt_complete` and log the removal in `WORK.md` / rotate post-done notes.
 
 ### Risk / gotchas
+- **README.md is protected:** it sits on the NEVER-edit list — step 7 needs
+  `omt_skip{scope:"all", purpose:"override"}` before touching it, or the §5d step is blocked.
 - **Gate discipline:** `src/` edits need `omt_phase`; `tests/` edits need canary approval;
   `TA:`-tagged files (`main_controller.py`, `app.py`, `react_view.py`, …) need `omt_think{op:list}`
   consult first. The per-file second-edit guard applies to harness-surface — batch one edit per file

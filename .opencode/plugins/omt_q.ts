@@ -389,6 +389,88 @@ function foldReceiptDetail(rel: string, abs: string): {
   }
 }
 
+// T3-2 delegate-advisory fold (feature_071): advisory-only delegate_hint.
+// Research-heavy = session with >=1 complete (re-deriving KB/nav via paired
+// think_consult) OR fresh feature resume (feature with prior completes).
+// Research-shaped plan tools = grep|glob|rg|find|read|explore (read-only fanout).
+// Never enforced — agent free to ignore. Ledger-session scoping in prompt so
+// parallel probes don't shadow canary.
+const RESEARCH_TOOLS = new Set(["grep", "glob", "rg", "find", "read", "explore"]);
+
+function foldDelegateHint(
+  records: any[],
+  opts: { feature?: string; session?: string; tool?: string; path?: string },
+): { subagent_type: string; suggested_prompt: string } | null {
+  const { feature, session, tool: toolName, path } = opts;
+  const completes = records.filter((r) => r?.kind === "complete");
+  const sessionHasComplete = session
+    ? completes.some((r) => String(r?.session || "") === session)
+    : false;
+  const featureHasComplete = feature
+    ? completes.some((r) => String(r?.feature || "") === feature)
+    : false;
+  const isResearchTool = toolName ? RESEARCH_TOOLS.has(String(toolName)) : false;
+
+  // plan path: research-shaped tool -> explore (read-only fanout)
+  if (toolName && isResearchTool) {
+    const scope = session ? `session '${session}'` : "current session";
+    return {
+      subagent_type: "explore",
+      suggested_prompt:
+        `Delegate research for path '${path ?? ""}' (tool '${toolName}') to subagent_type 'explore' ` +
+        `in ${scope}: explore(read-only) → propose → approval → execute. ` +
+        `Scope ledger reads to ${scope} so parallel probes don't shadow canary. ` +
+        `Advisory only — safe to ignore.`,
+    };
+  }
+  // state resume: research-heavy session -> explore (orientation read);
+  // plan edit in research-heavy session -> general (broader delegation)
+  if (sessionHasComplete) {
+    if (toolName) {
+      return {
+        subagent_type: "general",
+        suggested_prompt:
+          `Delegate follow-up for path '${path ?? ""}' in research-heavy session '${session}' ` +
+          `to subagent_type 'general': explore(read-only) → propose → approval → execute. ` +
+          `Scope ledger reads to session '${session}' so parallel probes don't shadow canary. ` +
+          `Advisory only — safe to ignore.`,
+      };
+    }
+    const who = feature ? `feature '${feature}'` : "resume";
+    return {
+      subagent_type: "explore",
+      suggested_prompt:
+        `Delegate orientation read for ${who} in session '${session}' to subagent_type 'explore': ` +
+        `explore(read-only) → propose → approval → execute. ` +
+        `Scope ledger reads to session '${session}' so parallel probes don't shadow canary. ` +
+        `Advisory only — safe to ignore.`,
+    };
+  }
+  // fresh feature resume (no session, but feature has priors) -> explore
+  if (!session && feature && featureHasComplete) {
+    return {
+      subagent_type: "explore",
+      suggested_prompt:
+        `Delegate orientation read for fresh resume of feature '${feature}' to subagent_type 'explore': ` +
+        `explore(read-only) → propose → approval → execute. ` +
+        `Scope ledger reads to feature '${feature}' so parallel probes don't shadow canary. ` +
+        `Advisory only — safe to ignore.`,
+    };
+  }
+  // resume with feature history but fresh session -> explore (orientation read)
+  if (feature && featureHasComplete && session) {
+    return {
+      subagent_type: "explore",
+      suggested_prompt:
+        `Delegate orientation read for feature '${feature}' in session '${session}' to subagent_type 'explore': ` +
+        `explore(read-only) → propose → approval → execute. ` +
+        `Scope ledger reads to session '${session}' so parallel probes don't shadow canary. ` +
+        `Advisory only — safe to ignore.`,
+    };
+  }
+  return null;
+}
+
 // U3 drift: KB-vs-source classification + count_drift direction-b only.
 // KB>skeleton IS drift; KB<skeleton is NOT drift (per edge case #5 + the v1
 // "new = not-yet-tracked is NOT drift" rule).
@@ -569,10 +651,18 @@ function createQTools() {
           const thoughts = readThoughtsIndex()
           risky_thoughts.push(...thoughts)
         } catch { /* fail open */ }
+        // T3-2 delegate-advisory fold (feature_071): advisory hint on resume.
+        let delegateHint: { subagent_type: string; suggested_prompt: string } | null = null;
+        try {
+          const allRecs = readLedgerAll();
+          delegateHint = foldDelegateHint(allRecs.length ? allRecs : records, { feature, session });
+        } catch {
+          try { delegateHint = foldDelegateHint(records, { feature, session }); } catch { delegateHint = null; }
+        }
         return emitQEnvelope(
           start, "state",
-          ["U1", "U6", "U7", "U8", "U9", "U10", "U13"],
-          "U1,U6,U7,U8,U9,U10,U13",
+          ["U1", "U6", "U7", "U8", "U9", "U10", "U13", "T3-2"],
+          "U1,U6,U7,U8,U9,U10,U13,T3-2",
           {
             as_of_commit,
             feature, session, phase, tdd_position,
@@ -585,6 +675,7 @@ function createQTools() {
             consult_needed,
             last_activity_ts: tsMax > 0 ? new Date(tsMax).toISOString() : "",
             risky_thoughts: verbose ? risky_thoughts : summarizeThoughts(risky_thoughts),
+            ...(delegateHint ? { delegate_hint: delegateHint } : {}),
           },
           { feature, session },
         )
@@ -670,13 +761,24 @@ function createQTools() {
         if (ctx.rel && ctx.abs) {
           receipt_detail = foldReceiptDetail(ctx.rel, ctx.abs)
         }
+        // T3-2 delegate-advisory fold (feature_071): advisory hint on research-shaped plan.
+        let delegateHint: { subagent_type: string; suggested_prompt: string } | null = null;
+        try {
+          const allRecs = readLedgerAll();
+          delegateHint = foldDelegateHint(allRecs, {
+            session: args?.session,
+            tool: args?.tool ?? "edit",
+            path,
+          });
+        } catch { delegateHint = null; }
         return emitQEnvelope(
-          start, "plan", ["U2", "U11", "T3-1"], "U2,U11,T3-1",
+          start, "plan", ["U2", "U11", "T3-1", "T3-2"], "U2,U11,T3-1,T3-2",
           {
             as_of_commit, path,
             tool: args?.tool ?? "edit",
             session: args?.session,
             predicted_chain, first_blocker, receipt_detail,
+            ...(delegateHint ? { delegate_hint: delegateHint } : {}),
           },
           { path, tool: args?.tool, session: args?.session },
         )

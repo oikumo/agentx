@@ -50,6 +50,9 @@ export async function guardProtectedPath(
 
 // OMT-harness e2e receipt guard (second-edit guard; machinery lives in the
 // shared lib since R1 — this is the before-hook call site).
+// feature_074 T4-2 receipt batch mode (stage): staged files bypass the
+// per-file guard inside omtHarnessE2eStatus (single e2e at the batch boundary
+// validates the whole patch); non-staged harness files stay fail-closed.
 export async function guardHarnessReceipt(rel: string, abs: string): Promise<void> {
   const e2e = omtHarnessE2eStatus(rel, abs)
   if (!e2e.ok) throw new OmtBlock(e2e.message)

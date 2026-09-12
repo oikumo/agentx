@@ -14,6 +14,11 @@ Subcommands:
                               · budgets
   check --verify-projections  + committed projections == recompiled (drift test)
   build                       check, then write all projections + report
+  stage --feature <slug> <files...>
+                              snapshot mtimes+digests for a bounded harness
+                              batch (feature_074 T4-2; single e2e at the
+                              boundary validates the whole patch)
+  stage --status | --clear    inspect / drop the active stage
 
 Stdlib-only by design (no deps approval). Grammar: plan Appendix D1 —
 record := '@' kind SP id (SP attr)* (SP ' : ' payload)? ; attr := k=v | k="v v".
@@ -2096,17 +2101,136 @@ def run_all_checks(c: Corpus, agents_md: str, nav_text: str = "", ir_text: str =
     return sizes
 
 
+# --- receipt batch stage (feature_074 T4-2 + Improvement002 D-bar) ---------------
+# Bounded, authorized edit batch for harness-surface work. `stage` snapshots
+# mtimes + sha256 digests + policy version into ignored runtime state
+# (.meta/.omt/omt_harness_stage.json); the TS receipt guard
+# (isStagedHarnessFile) lets staged files bypass the per-file second-edit
+# guard until a single e2e at the boundary validates the whole patch.
+# Fail-closed outside the stage: non-staged harness files keep the per-file
+# guard. D-bar: the same final patch gets the same verification whether
+# entered in one edit or several; changed inputs (digests/policy_ver)
+# invalidate the receipt; stage/clear never touch tracked content (user edits
+# preserved); a failing boundary e2e still blocks (no auto-clear on failure).
+
+STAGE_PATH = REPO_ROOT / ".meta" / ".omt" / "omt_harness_stage.json"
+
+
+def _sha256_file(path: Path) -> str:
+    import hashlib
+
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def cmd_stage(args: list[str]) -> int:
+    feature = ""
+    files: list[str] = []
+    show_status = False
+    clear = False
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--feature" and i + 1 < len(args):
+            feature = args[i + 1]
+            i += 2
+        elif a == "--files" and i + 1 < len(args):
+            files.append(args[i + 1])
+            i += 2
+        elif a == "--status":
+            show_status = True
+            i += 1
+        elif a == "--clear":
+            clear = True
+            i += 1
+        elif a.startswith("-"):
+            print(f"harnessc stage: error: unknown flag {a}", file=sys.stderr)
+            return 2
+        else:
+            files.append(a)
+            i += 1
+
+    if clear:
+        if STAGE_PATH.exists():
+            STAGE_PATH.unlink()
+            print("harnessc stage: cleared")
+        else:
+            print("harnessc stage: no active stage")
+        return 0
+
+    if show_status or (not feature and not files):
+        if not STAGE_PATH.exists():
+            print("harnessc stage: no active stage")
+            return 0
+        try:
+            data = json.loads(STAGE_PATH.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            print(f"harnessc stage: error: unreadable stage file: {exc}", file=sys.stderr)
+            return 1
+        print(f"harnessc stage: feature {data.get('feature', '?')}: "
+              f"{len(data.get('files', []))} file(s) since {data.get('created_at', '?')}")
+        for f in data.get("files", []):
+            print(f"  {f}")
+        return 0
+
+    if not feature:
+        print("harnessc stage: error: --feature <slug> is required", file=sys.stderr)
+        return 2
+    if not files:
+        print("harnessc stage: error: at least one file is required", file=sys.stderr)
+        return 2
+
+    snapshots: dict[str, dict[str, object]] = {}
+    for f in files:
+        p = REPO_ROOT / f
+        if not p.exists():
+            print(f"harnessc stage: error: file not found: {f}", file=sys.stderr)
+            return 1
+        try:
+            snapshots[f] = {"mtimeMs": p.stat().st_mtime * 1000.0, "sha256": _sha256_file(p)}
+        except OSError as exc:
+            print(f"harnessc stage: error: cannot snapshot {f}: {exc}", file=sys.stderr)
+            return 1
+
+    try:
+        policy_ver = _sha256_file(OMT_PATH)
+    except OSError:
+        policy_ver = ""
+
+    STAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    STAGE_PATH.write_text(
+        json.dumps(
+            {
+                "feature": feature,
+                "files": files,
+                "snapshots": snapshots,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "policy_ver": policy_ver,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    print(f"harnessc stage: feature {feature}: staged {len(files)} file(s) "
+          f"(single e2e at the boundary validates the batch)")
+    return 0
+
+
 # --- main ----------------------------------------------------------------------
 
 def main(argv: list[str]) -> int:
     args = argv[1:]
     cmd = args[0] if args and not args[0].startswith("-") else "check"
-    if cmd not in ("check", "build", "init"):
+    if cmd not in ("check", "build", "init", "stage"):
         print(__doc__)
         return 2
     if not OMT_PATH.exists():
         print(f"harnessc: error: {OMT_REL} not found", file=sys.stderr)
         return 1
+
+    if cmd == "stage":
+        return cmd_stage(args[1:])
 
     if cmd == "init":
         return cmd_init(args[1:])

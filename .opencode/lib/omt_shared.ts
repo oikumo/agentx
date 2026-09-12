@@ -22,6 +22,7 @@
 import { appendFileSync, mkdirSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs"
 import { join, relative, isAbsolute, dirname } from "node:path"
 import { execFileSync } from "node:child_process"
+import { createHash } from "node:crypto"
 
 let REPO_ROOT = process.cwd()
 
@@ -246,6 +247,70 @@ export function e2eTestPath(): string {
   return typeof v === "string" && v ? v : OMT_HARNESS_E2E_TEST
 }
 
+// feature_074 T4-2 receipt batch mode (stage): a bounded, authorized edit
+// batch. `harnessc.py stage --feature <slug> <files...>` snapshots mtimes +
+// digests into .meta/.omt/omt_harness_stage.json (ignored runtime state, like
+// the e2e receipt). While a stage is active, staged files bypass the per-file
+// second-edit guard (temporary inconsistency inside the batch is OK — D-bar);
+// a single e2e at the batch boundary validates the whole patch. Fail-closed
+// outside the stage: every non-staged harness file keeps the per-file guard.
+// D-bar content binding: the e2e receipt carries content digests + policy_ver;
+// an input change invalidates the receipt even when the timestamp looks fresh.
+export const OMT_HARNESS_STAGE_FILE = join(".meta", ".omt", "omt_harness_stage.json")
+
+export interface OmtHarnessStage {
+  feature: string
+  files: string[]
+  snapshots: Record<string, { mtimeMs: number; sha256: string }>
+  created_at: string
+  policy_ver: string
+}
+
+export function readHarnessStage(): OmtHarnessStage | null {
+  try {
+    const p = join(REPO_ROOT, OMT_HARNESS_STAGE_FILE)
+    if (!existsSync(p)) return null
+    const data = JSON.parse(readFileSync(p, "utf8") || "{}")
+    if (!data || typeof data.feature !== "string" || !Array.isArray(data.files)) return null
+    return data as OmtHarnessStage
+  } catch { return null }
+}
+
+export function sha256OfRel(rel: string): string | null {
+  try {
+    const abs = join(REPO_ROOT, rel)
+    if (!existsSync(abs)) return null
+    return createHash("sha256").update(readFileSync(abs)).digest("hex")
+  } catch { return null }
+}
+
+export function isStagedHarnessFile(rel: string): boolean {
+  const stage = readHarnessStage()
+  if (!stage || !stage.files.includes(rel)) return false
+  // A policy change after staging invalidates the stage (input change
+  // invalidates — fail closed until re-staged).
+  try {
+    if (stage.policy_ver && sha256OfRel(".meta/META_HARNESS.omt") !== stage.policy_ver) return false
+  } catch { /* fall through to the per-file guard */ }
+  return true
+}
+
+function receiptDigestFor(rel: string): string | null {
+  try {
+    const data = JSON.parse(readFileSync(join(REPO_ROOT, e2eReceiptPath()), "utf8") || "{}")
+    const v = (data as any)?.sha256?.[rel]
+    return typeof v === "string" && v ? v : null
+  } catch { return null }
+}
+
+function receiptPolicyVer(): string | null {
+  try {
+    const data = JSON.parse(readFileSync(join(REPO_ROOT, e2eReceiptPath()), "utf8") || "{}")
+    const v = (data as any)?.policy_ver
+    return typeof v === "string" && v ? v : null
+  } catch { return null }
+}
+
 // --- compiler projections (meta_harness_dsl R8 / OMT-HDL-1) -----------------
 // harnessc.py compiles .meta/META_HARNESS.omt into two runtime-consumed
 // projections: harness.ir.json (tool descriptions, vars) and nav.index.jsonl
@@ -434,16 +499,35 @@ export function omtHarnessE2eStatus(rel: string, abs: string): { ok: boolean; me
     return { ok: true, message: "" }
   }
   if (!existsSync(abs)) return { ok: true, message: "" }
+  // feature_074 T4-2: staged batch files bypass the per-file second-edit
+  // guard for the batch duration (temporary inconsistency inside the batch is
+  // OK); the single e2e at the batch boundary validates the whole patch.
+  if (isStagedHarnessFile(rel)) return { ok: true, message: "" }
   if (!isGitDirty(rel)) return { ok: true, message: "" }
 
   const lastPassed = receiptTimestampMs()
   let targetMtime = 0
   try { targetMtime = statSync(abs).mtimeMs } catch { return { ok: true, message: "" } }
-  if (lastPassed >= targetMtime) return { ok: true, message: "" }
-
   // improvement007 R8/OPT-G: block text from the IR @msg receipt_stale
   // record ({@var.e2e_cmd}/{@var.receipt_path} baked at build; {rel} per call).
-  return { ok: false, message: `⛔ OMT++ gate: ${gateMsg("receipt_stale", { rel })}` }
+  const stale = () => ({ ok: false, message: `⛔ OMT++ gate: ${gateMsg("receipt_stale", { rel })}` })
+  if (lastPassed < targetMtime) return stale()
+
+  // feature_074 T4-2 D-bar (content-bound evidence): the receipt covers the
+  // content it tested, not just a timestamp. A digest mismatch (edit with a
+  // preserved mtime) or a policy change after the receipt invalidates it even
+  // when the timestamp looks fresh.
+  const want = receiptDigestFor(rel)
+  if (want) {
+    const got = sha256OfRel(rel)
+    if (got && got !== want) return stale()
+  }
+  const rpv = receiptPolicyVer()
+  if (rpv) {
+    const cur = sha256OfRel(".meta/META_HARNESS.omt")
+    if (cur && cur !== rpv) return stale()
+  }
+  return { ok: true, message: "" }
 }
 
 // --- think-anywhere shared machinery (meta_harness_dsl R2 S6) ---------------

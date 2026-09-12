@@ -5,6 +5,38 @@
 
 ---
 
+## 2026-09-12 (auto — feature_074.receipt_batch_mode Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_074.receipt_batch_mode/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-12 (auto — feature_073.task_prep_op_slice Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_073.task_prep_op_slice/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-12 (auto — feature_072.typed_policy_semantics Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_072.typed_policy_semantics/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-12 (auto — feature_071.delegate_advisory_fold Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_071.delegate_advisory_fold/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-12 (auto — feature_070.escape_replay_fold Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_070.escape_replay_fold/test_report.md

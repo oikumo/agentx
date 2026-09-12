@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -105,6 +106,11 @@ def _write_receipt(checks: list[str]) -> None:
                 "checks": checks,
                 "covered_files": HARNESS_FILES,
                 "sha256": {rel: _sha256(rel) for rel in HARNESS_FILES},
+                # feature_074 T4-2 D-bar: content-bound evidence — policy
+                # version + toolchain travel with the digests so changed inputs
+                # invalidate the receipt.
+                "policy_ver": _sha256(".meta/META_HARNESS.omt"),
+                "toolchain": {"python": sys.version.split()[0], "command": E2E_COMMAND},
             },
             indent=2,
             sort_keys=True,
@@ -159,6 +165,21 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     receipt_guard = _read(".opencode/lib/enforcer/receipt_guard.ts")
     assert "omtHarnessE2eStatus" in receipt_guard  # R2: before-hook call site
     checks.append("OMT harness edit guard requires this e2e receipt (shared lib + receipt_guard call site)")
+
+    # 3b. feature_074 T4-2 receipt batch mode: a staged multi-file batch gets a
+    # single e2e at the boundary (same patch, same treatment); digests +
+    # policy_ver make the receipt content-bound (input change invalidates);
+    # non-staged harness files stay fail-closed.
+    assert "isStagedHarnessFile" in shared
+    assert "OMT_HARNESS_STAGE_FILE" in shared
+    assert "receiptDigestFor" in shared and "receiptPolicyVer" in shared
+    assert "T4-2" in receipt_guard and "stage" in receipt_guard
+    harnessc = _read("scripts/omt/harnessc.py")
+    assert "def cmd_stage" in harnessc
+    assert "omt_harness_stage.json" in harnessc
+    stage_help = _run(["uv", "run", "scripts/omt/harnessc.py", "stage", "--status"])
+    assert stage_help.returncode == 0, stage_help.stdout + stage_help.stderr
+    checks.append("receipt batch stage wired (stage CLI + staged bypass + content-bound receipt)")
 
     # 4. Coarse permissions still force uv and deny the risky actions the meta
     # harness is meant to prevent.

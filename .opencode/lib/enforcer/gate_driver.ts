@@ -34,6 +34,7 @@ import {
 } from "./receipt_guard"
 import { guardSrcPath } from "./phase_gate"
 import { guardThoughts, fileThoughtsIn } from "./think_gate"
+import { evaluatePolicy } from "./policy_decision"
 import { mvcAfterEdit } from "./mvc_after"
 import { tddAfterEdit } from "./tdd_hats"
 
@@ -236,29 +237,39 @@ const IMPLS: Record<string, GateImpl> = {
     const isTests = rel.startsWith("tests/")
     const isHarness = rel.startsWith(".opencode/") || rel.startsWith("scripts/omt/")
     if (!isSrc && !isTests && !isHarness) return
-    // C1 solo fast-path (net_marking mirror).
-    const soloBypass = ((): boolean => {
+    // T4-1 (feature_072): activation + exception via ONE typed evaluator
+    // (policy_decision.evaluatePolicy) — shared with preflight/explain.
+    // Solo → skip to phase-gate only (C1); valid break-glass scope=all →
+    // allow pre-shell; concurrent otherwise → live shell-out decides.
+    // Unreadable bundle engages (fail-closed; solo must be proven).
+    const marking = ((): { work_active: number; activeHolders: string[] } | null => {
       try {
         const dir = (typeof process !== "undefined" && (process as any)?.env?.OMT_NET_DIR)
           || `${ctx.env.directory}/.meta/.omt`
         const sidecar = JSON.parse(readFileSync(`${dir}/net_state.sidecar.json`, "utf8"))
         const live: unknown = (sidecar as any)?.live_marking
-        if (!Array.isArray(live)) return false
+        if (!Array.isArray(live)) return null
         let order: string[] = []
         try {
           const netJson = JSON.parse(readFileSync(`${dir}/META_NET.petri.json`, "utf8"))
           order = Array.isArray((netJson as any)?.places)
             ? (netJson as any).places.map((p: any) => String(p?.name ?? ""))
             : []
-        } catch { return false }
-        const marking: Record<string, number> = {}
-        order.forEach((name, i) => { marking[name] = Number((live as any[])[i] ?? 0) })
-        if ((marking["work_active"] ?? 0) > 1) return false
-        const holders = Object.keys(marking).filter((k) => /^f\d+_active$/.test(k) && (marking[k] ?? 0) > 0)
-        return holders.length <= 1
-      } catch { return false }
+        } catch { return null }
+        const byName: Record<string, number> = {}
+        order.forEach((name, i) => { byName[name] = Number((live as any[])[i] ?? 0) })
+        return {
+          work_active: byName["work_active"] ?? 0,
+          activeHolders: Object.keys(byName).filter((k) => /^f\d+_active$/.test(k) && (byName[k] ?? 0) > 0),
+        }
+      } catch { return null }
     })()
-    if (soloBypass) return
+    const verdict = evaluatePolicy({
+      gate: "g.net", session: ctx.session, nowMs: Date.now(),
+      records: readLedger(), netMarking: marking,
+    })
+    if (verdict.via === "activation_solo_skip") return
+    if (verdict.via === "exception_break_glass") return
     // Dry-run / synthetic ctx (omt_q op:plan): no SDK shell on env.$ — the
     // gate still fires in the predicted chain, but its verdict needs the
     // live enforcer path (skip the shell-out instead of crashing the fold).
