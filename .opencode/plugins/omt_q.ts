@@ -6,6 +6,8 @@
 //   op:plan   — predict the real before-gate chain for {path, tool} via the
 //               additive runBeforeGatesDry sibling (U2 + U11 receipt fold).
 //   op:drift  — KB-vs-source classification + count_drift direction-b only.
+//   op:audit  — T1-2 design↔testing schema audit + project-autolink fix-it
+//               (joins 4.design/features vs 6.testing/features/test_report.md).
 //
 // Every response wraps in envelope: {as_of_commit:"<HEAD-sha>", op, ...} where
 // as_of_commit is parsed live via `git rev-parse HEAD` per call. Each call
@@ -688,11 +690,11 @@ function foldProjectDrift(): any[] {
   for (const [feature, link] of links) {
     const home = join(homesRoot, link.project)
     if (!existsSync(home) && derivedState(link.project) !== "archived") {
-      out.push({ class: "phantom-link", feature, project: link.project, detail: "project home missing" })
+      out.push({ class: "phantom-link", feature, project: link.project, detail: `project home missing — fix: uv run scripts/omt/project.py link ${feature} ${link.project} --origin inferred` })
     }
     if (/^feature_\d+\./.test(feature) && !existsSync(join(featsRoot, feature))) {
       out.push({ class: "phantom-link", feature, project: link.project,
-                 detail: "feature dir missing in 2.requirements/features/" })
+                 detail: `feature dir missing in 2.requirements/features/ — fix: uv run scripts/omt/project.py link ${feature} ${link.project} --origin inferred` })
     }
     // terminal ships only: a phase:"Analysis/Design/Programming" complete is
     // mid-flight, not a ship; legacy records without phase count as terminal.
@@ -712,7 +714,7 @@ function foldProjectDrift(): any[] {
     const m = String(r.design_doc).match(/^\.projects\/meta\/([^/]+)\//)
     if (m && links.get(r.feature)?.project !== m[1]) {
       out.push({ class: "unlinked-project-backed", feature: r.feature, project: m[1],
-                 detail: "design_doc under .projects/ without project_link — re-declare omt_phase (inference) or project.py link" })
+                 detail: `design_doc under .projects/ without project_link — fix: uv run scripts/omt/project.py link ${r.feature} ${m[1]} --origin inferred` })
     }
   }
   const now = Date.now()
@@ -751,6 +753,77 @@ function foldProjectDrift(): any[] {
   return out
 }
 
+// ---------------------------------------------------------------------------
+// T1-2 (feature_068, mh8): design↔testing schema audit (read-only). Joins
+// 4.design/features/<slug> vs 6.testing/features/<slug>/test_report.md.
+// design_only = in design but not testing (the 5 known live gaps: 004, 006,
+// 017_chat, 018.chat, 018.react). testing_only = in testing but not design.
+// Each record carries a runnable project.py link fix-it pointer per the
+// project-autolink half of T1-2 (mh7 P1-3). Hermetic: reads under repoRoot()
+// so tmp-root probes with seeded trees exercise generic join logic.
+// ---------------------------------------------------------------------------
+function foldSchemaAudit(): {
+  design_only: { slug: string; side: string; detail: string }[]
+  testing_only: { slug: string; side: string; detail: string }[]
+  fix_it: string
+} {
+  const root = repoRoot()
+  const designRoot = join(root, ".meta", "software_development_process", "4.design", "features")
+  const testingRoot = join(root, ".meta", "software_development_process", "6.testing", "features")
+  let designSlugs: string[] = []
+  let testingSlugs: string[] = []
+  try {
+    if (existsSync(designRoot)) designSlugs = readdirSync(designRoot).filter((n) => !n.startsWith("."))
+  } catch { /* fail open */ }
+  try {
+    if (existsSync(testingRoot)) testingSlugs = readdirSync(testingRoot).filter((n) => !n.startsWith("."))
+  } catch { /* fail open */ }
+  const designSet = new Set(designSlugs)
+  const testingSet = new Set(testingSlugs)
+  const design_only = designSlugs.filter((s) => !testingSet.has(s)).sort()
+    .map((slug) => ({
+      slug, side: "design_only",
+      detail: `in 4.design/features but missing in 6.testing/features — fix: uv run scripts/omt/project.py link ${slug} <project> --origin inferred`,
+    }))
+  const testing_only = testingSlugs.filter((s) => !designSet.has(s)).sort()
+    .map((slug) => {
+      const report = join(testingRoot, slug, "test_report.md")
+      const hasReport = existsSync(report)
+      return {
+        slug, side: "testing_only",
+        detail: `in 6.testing/features but missing in 4.design/features${hasReport ? " (has test_report.md)" : " (no test_report.md)"} — fix: uv run scripts/omt/project.py link ${slug} <project> --origin inferred`,
+      }
+    })
+  return {
+    design_only, testing_only,
+    fix_it: "uv run scripts/omt/project.py link <feature> <project> --origin inferred",
+  }
+}
+
+  const omt_audit = tool({
+    description: "op=audit impl (unregistered; dispatched via omt_q).",
+    args: { as_of: tool.schema.string().optional() },
+    async execute(args, context) {
+      const start = Date.now()
+      const as_of_commit = headSha()
+      try {
+        const { design_only, testing_only, fix_it } = foldSchemaAudit()
+        return emitQEnvelope(
+          start, "audit", ["T1-2"], "T1-2",
+          { as_of_commit, design_only, testing_only, fix_it, project_drift: foldProjectDrift() },
+        )
+      } catch {
+        const envelope = {
+          as_of_commit, op: "audit",
+          design_only: [], testing_only: [],
+          fix_it: "uv run scripts/omt/project.py link <feature> <project> --origin inferred",
+          project_drift: [],
+        }
+        return JSON.stringify(envelope)
+      }
+    },
+  })
+
   const omt_drift = tool({
     description: "op=drift impl (unregistered; dispatched via omt_q).",
     args: { as_of: tool.schema.string().optional() },
@@ -776,7 +849,7 @@ function foldProjectDrift(): any[] {
   const omt_q = tool({
     description: irToolDescription(
       "omt_q",
-      "TA: Interrogative layer — read-only. op=state(feature?,session?,as_of?,verbose?) | plan(path,tool?,session?,as_of?) | drift(as_of?). state default ≤2KB summary; verbose:true = full dump. Returns JSON envelope with as_of_commit=HEAD-sha.",
+      "TA: Interrogative layer — read-only. op=state(feature?,session?,as_of?,verbose?) | plan(path,tool?,session?,as_of?) | drift(as_of?) | audit(as_of?). state default ≤2KB summary; verbose:true = full dump. Returns JSON envelope with as_of_commit=HEAD-sha.",
     ),
     // NOTE: the literal "TA:" appears in the description above — that's
     // intentional: omt_q is in @var.harness_paths (so editing this file trips
@@ -784,7 +857,7 @@ function foldProjectDrift(): any[] {
     // very file is the v1.3 thesis demonstration (the interrogative tool
     // predicts the receipt+think gates on itself).
     args: {
-      op: tool.schema.string().describe("state|plan|drift"),
+      op: tool.schema.string().describe("state|plan|drift|audit"),
       feature: tool.schema.string().optional(),
       session: tool.schema.string().optional(),
       path: tool.schema.string().optional(),
@@ -798,8 +871,9 @@ function foldProjectDrift(): any[] {
         case "state": return omt_state.execute(args, context)
         case "plan": return omt_plan.execute(args, context)
         case "drift": return omt_drift.execute(args, context)
+        case "audit": return omt_audit.execute(args, context)
         default:
-          return "⛔ omt_q: unknown op — want state|plan|drift"
+          return "⛔ omt_q: unknown op — want state|plan|drift|audit"
       }
     },
   })

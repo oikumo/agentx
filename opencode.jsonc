@@ -66,6 +66,7 @@
       "mkdir *": "allow",
       "rmdir *": "allow",
       "date *": "allow",
+      "pwd *": "allow",
       // harnessc:begin bash
         "git commit *": "deny",
         "git push *": "deny",

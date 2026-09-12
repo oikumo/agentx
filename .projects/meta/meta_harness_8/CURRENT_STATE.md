@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-12 (auto — feature_068.schema_audit_autolink Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_068.schema_audit_autolink/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-12 (auto — feature_067.tdd_same_node_lint Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_067.tdd_same_node_lint/test_report.md
