@@ -6,9 +6,9 @@
 
 ## New Session Quick Start
 
-> One line: `meta_harness_7` is the **11-item work-performance program distilled from the 2026-09-06 performing-work analysis** (evidence: `omt_status` + `omt_q state/plan/drift` this session) — 3 waves: quick-wins → structural → productization; **EXECUTING: Wave 0 3/4 done** (P0-1 feature_062, P0-2 feature_060, P0-4 feature_061; see CURRENT_STATE.md iter 2–4; verdicts D1–D3 below).
+> One line: `meta_harness_7` is the **11-item work-performance program distilled from the 2026-09-06 performing-work analysis** (evidence: `omt_status` + `omt_q state/plan/drift` this session) — 3 waves: quick-wins → structural → productization; **EXECUTING: Wave 0 COMPLETE 4/4** (P0-1 feature_062, P0-2 feature_060, P0-4 feature_061, P0-3 feature_063; see CURRENT_STATE.md iter 2–5; verdicts D1–D3 below).
 
-**Next:** read §Decision gates → §Execution rules → §Baseline, then scaffold Wave 0 / P0-3 (`kb-sticky-per-feature`, minor_feature) per Execution rule 1.
+**Next:** read §Decision gates → §Execution rules → §Baseline, then scaffold Wave 1 / P1-1 (`think-batch-consult`, minor_feature) per Execution rule 1.
 
 ---
 
@@ -118,7 +118,7 @@
 
 ## Status
 
-- [ ] Wave 0 — P0-1 `preflight-on-declare` ✅ DONE (feature_062, 2026-09-06: declare embed via shared preflight.ts, suite 1992/0) · P0-2 `dangling-active-only` ✅ DONE (feature_060, 2026-09-06: active-only ≤10 + expired GC, suite 1981/0) · P0-3 `kb-sticky-per-feature` · P0-4 `nav-cache-hit` ✅ DONE (feature_061, 2026-09-06: denial appends top-3 nav index hits, message-only, suite 1986/0)
+- [x] Wave 0 — P0-1 `preflight-on-declare` ✅ DONE (feature_062, 2026-09-06: declare embed via shared preflight.ts, suite 1992/0) · P0-2 `dangling-active-only` ✅ DONE (feature_060, 2026-09-06: active-only ≤10 + expired GC, suite 1981/0) · P0-3 `kb-sticky-per-feature` ✅ DONE (feature_063, 2026-09-06: kb_consult ledger write + hasStickyKbConsult OR into g.kb, suite 1999/0) · P0-4 `nav-cache-hit` ✅ DONE (feature_061, 2026-09-06: denial appends top-3 nav index hits, message-only, suite 1986/0) — **Wave 0 COMPLETE**
 
 ---
 

@@ -189,6 +189,38 @@ export function hasFastPathUnlock(session: string | undefined): boolean {
   return FAST_PATH_TASK_TYPES.has(String(chosen?.task_type || ""))
 }
 
+// meta_harness_7 P0-3 kb_sticky_per_feature: the KB consult is "sticky" per
+// feature — a kb_consult ledger record (written by nav_gate.kbTrack) for the
+// ACTIVE feature satisfies g.kb across sessions/restarts instead of re-paying
+// the consult every session. Ledger-backed (auditable, window-visible), NOT an
+// in-memory flag (C2 round-3 guardrail: sticky in-memory flags would outlive a
+// later major_feature scope change). Mirrors hasFastPathUnlock's selection
+// shape (latest-phase-wins via getActiveUnlock). MUST NOT touch think/protect.
+export function hasStickyKbConsult(session: string | undefined): boolean {
+  const rec = getActiveUnlock(session)?.record
+  const feature = rec?.feature
+  if (!feature) return false
+  const taskType = String(rec?.task_type || "")
+  const scope = String(rec?.scope || "")
+  const consults = readLedger().filter(
+    (r) => r.kind === "kb_consult" && r.feature === feature,
+  )
+  const now = Date.now()
+  const alive = consults.filter((r) => {
+    const t = Date.parse(r.ts || "")
+    return !Number.isNaN(t) && now - t < UNLOCK_WINDOW_MS
+  })
+  if (!alive.length) return false
+  // majors/new_screen re-consult on scope change: only a consult whose scope
+  // matches the CURRENT scope satisfies (string identity — a rephrased scope
+  // IS a scope change by design). Minors/bug_fix/refactor/test/docs: any
+  // same-feature consult within the window satisfies.
+  if (taskType === "major_feature" || taskType === "new_screen") {
+    return alive.some((r) => (r.scope || "") === scope)
+  }
+  return true
+}
+
 // Latest phase record for a specific feature. Exact session match is preferred,
 // then we fall back to the recent single-user window. Unlike getActiveUnlock(),
 // this ignores skip records and unrelated features so omt_complete cannot be

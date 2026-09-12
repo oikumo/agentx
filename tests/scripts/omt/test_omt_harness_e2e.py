@@ -520,5 +520,30 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
         "the preflight core stays read-only (A4 posture)")
     checks.append("feature_062 P0-1: preflight_on_declare wired (declare embed via shared preflight.ts; read-only + fail-open)")
 
+    # 22. feature_063 P0-3 kb_sticky_per_feature: the KB consult is persisted
+    # to the ledger scoped by (feature, scope, task_type) and OR-into the g.kb
+    # kb_consulted predicate — a same-feature/same-scope src/ edit in a later
+    # session no longer re-pays the consult; major/new_screen re-consult on
+    # scope change; g.think/g.protect untouched.
+    session_state = _read(".opencode/lib/enforcer/session_state.ts")
+    assert "export function hasStickyKbConsult" in session_state, (
+        "P0-3 requires the sticky consult helper in session_state.ts")
+    assert 'r.kind === "kb_consult"' in session_state, (
+        "P0-3 requires the kb_consult ledger filter in session_state.ts")
+    gate_driver = _read(".opencode/lib/enforcer/gate_driver.ts")
+    assert "hasStickyKbConsult(ctx.session)" in gate_driver, (
+        "P0-3 requires the sticky consult OR in the g.kb kb_consulted predicate")
+    nav_gate = _read(".opencode/lib/enforcer/nav_gate.ts")
+    assert "recordKbStickyConsult" in nav_gate, (
+        "P0-3 requires the consult writer in nav_gate.ts")
+    assert 'kind: "kb_consult"' in nav_gate, (
+        "P0-3 requires the kb_consult kind on the persisted record")
+    assert "getActiveUnlock(session)?.record" in nav_gate, (
+        "P0-3 scopes the consult to the active feature (latest phase unlock)")
+    # Guardrail: think/protect untouched by this feature.
+    assert "guardThoughts" not in nav_gate and "guardProtectedPath" not in nav_gate, (
+        "P0-3 must not touch think/protect (kbTrack only feeds g.kb)")
+    checks.append("feature_063 P0-3: kb_sticky_per_feature wired (kb_consult ledger write + hasStickyKbConsult OR into g.kb; think/protect untouched)")
+
     _write_receipt(checks)
     assert RECEIPT_PATH.exists()

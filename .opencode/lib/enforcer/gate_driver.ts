@@ -25,7 +25,8 @@ import {
   omtHarnessE2eStatus, UNLOCK_WINDOW_MS, protectList, matchesProtect, gateMsg,
 } from "../omt_shared"
 import {
-  OmtBlock, getActiveUnlock, hasNavUnlock, hasFastPathUnlock, type EnforcerEnv,
+  OmtBlock, getActiveUnlock, hasNavUnlock, hasFastPathUnlock,
+  hasStickyKbConsult, type EnforcerEnv,
 } from "./session_state"
 import { getSearchPath, navCacheHint, navGateDecision } from "./nav_gate"
 import {
@@ -84,7 +85,11 @@ const SESSION_FLAGS: Record<string, (ctx: GateCtx) => boolean> = {
   // kbTrack on any omt_kb_nav op call (nav_gate.ts); guards src/ edit-tools.
   kb_consulted: (ctx) => {
     const s = ctx.session ? ctx.env.state.kb.get(ctx.session) : undefined
-    return !!s?.consulted || hasFastPathUnlock(ctx.session)
+    return !!s?.consulted ||
+      hasFastPathUnlock(ctx.session) ||
+      // meta_harness_7 P0-3 kb_sticky_per_feature: a kb_consult record for the
+      // active feature (majors: same scope) satisfies g.kb across sessions.
+      hasStickyKbConsult(ctx.session)
   },
 }
 

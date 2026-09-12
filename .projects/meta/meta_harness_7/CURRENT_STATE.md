@@ -5,6 +5,33 @@
 
 ---
 
+## 2026-09-06 (iter 5 — P0-3 kb-sticky-per-feature DONE, Wave 0 COMPLETE)
+
+### Done
+
+- **feature_063.kb_sticky_per_feature DONE (minor_feature, Programming→Testing→Done):** the KB consult now PERSISTS to the ledger (`kind:"kb_consult"`) scoped to the ACTIVE feature (feature + scope + task_type, resolved via `getActiveUnlock` at consult time); `SESSION_FLAGS.kb_consulted` ORs in `hasStickyKbConsult` so a same-feature/same-scope `src/` edit in a LATER session/restart no longer re-pays the consult. `major_feature`/`new_screen` re-consult when the current scope STRING differs from the consult scope (string identity — a rephrased scope IS a scope change); minors/bug_fix/refactor/test/docs ignore scope (any same-feature consult within the window).
+- **Mechanism:** `nav_gate.kbTrack` → `recordKbStickyConsult` (writes kb_consult, fail-open when no active feature); `session_state.hasStickyKbConsult` (reads, window-filtered `UNLOCK_WINDOW_MS`, major scope-match); `gate_driver` kb_consulted predicate ORs it. Ledger-backed (auditable + window-visible) — NOT an in-memory flag (honors C2 round-3 "sticky in-memory flags would outlive a later scope change").
+- **Guardrails held:** think/protect untouched (kbTrack feeds g.kb only); no `.omt` edit → nav_index/ir_json/tool_args/schemas budgets untouched (nav_index 63923/64000 preserved for P1-4).
+- **Overlap check (Exec rule 5):** meta_harness_5 "g.kb session-once flag — shipped"; meta_harness_6 C2 (feature_054) built `hasFastPathUnlock` (bug_fix/test only). P0-3 is a NEW increment (sticky per-feature, cross-session), no re-implementation.
+- **Evidence:** new `tests/features/feature_063.kb_sticky_per_feature/test_kb_sticky_per_feature.py` (7 tests: 4 static pins + 3 bun probes on the REAL TS modules — `hasStickyKbConsult` 12-case matrix, `kbTrack` write probe, full before-chain g.kb) + e2e check #22; e2e 1/1; `harnessc check` 0 errors + `build` OK (budgets green, 263 records); full suite **1999/0** (+7).
+
+### In progress / Blocked
+
+- _(nothing — P0-3 shipped; Wave 0 COMPLETE 4/4)_
+
+### Next
+
+1. **Wave 1** (structural) in listed order: P1-1 `think-batch-consult` → P1-2 `tdd-same-node-lint` → P1-3 `project-autolink` → P1-4 `budget-diet-bot` (all `minor_feature`).
+2. Before each scaffold: overlap check vs meta_harness_5/6 backlogs (Exec rule 5).
+
+### Notes / context
+
+- FIRST full-suite run hit 2 live-opencode flakes (`test_omt_live_opencode_guards.py`, exit-1/empty-stderr under load) — both pass in isolation AND together; re-ran clean **1999/0**. Environmental LLM round-trip flake, not a code regression (bun build 83 modules clean; all 3 hermetic bun probes green).
+- Receipt round-robin held: 3 harness TS files edited ONCE each (session_state via `edit`; nav_gate + gate_driver via `uv run python` multi-site scripts), one e2e refresh; canary ordering held (phase before skip, skip immediately before tests/ writes).
+
+---
+
+
 ## 2026-09-06 (iter 4 — P0-1 preflight-on-declare DONE, Wave 0 3/4)
 
 ### Done

@@ -11,7 +11,7 @@
 //                       independent, single Set in session_state).
 
 import { loadIr, loadNavIndex, relOf, thinkDigest, gateMsg } from "../omt_shared"
-import { type EnforcerEnv } from "./session_state"
+import { type EnforcerEnv, getActiveUnlock, writeLedger } from "./session_state"
 import { execFileSync } from "node:child_process"
 
 const NAV_TOOLS = new Set(["omt_nav"])  // improvement006/OPT-H: consolidated
@@ -272,6 +272,24 @@ export async function navTrack(
   // (zero readers); searchTools() above stays — IR-accessor pin target.
 }
 
+// meta_harness_7 P0-3 kb_sticky_per_feature: write a kb_consult ledger record
+// scoped to the ACTIVE feature (feature + scope + task_type from the latest
+// phase unlock). The consult is thereby "sticky" per feature — readable by
+// SESSION_FLAGS.kb_consulted via hasStickyKbConsult (session_state.ts).
+function recordKbStickyConsult(env: EnforcerEnv, session: string | undefined): void {
+  try {
+    const rec = getActiveUnlock(session)?.record
+    if (!rec?.feature) return
+    writeLedger({
+      kind: "kb_consult",
+      session,
+      feature: rec.feature,
+      scope: rec.scope || "",
+      task_type: rec.task_type || "",
+    })
+  } catch { /* fail-open — the consult has already cleared this session */ }
+}
+
 // feature_kb_akb: track KB consult (before-hook instrumentation). The block
 // decision is in the data-driven gate chain — IMPLS["g.kb"] resolves via the
 // generic impl evaluating `requires: "session_flag(kb_consulted)"`.
@@ -289,6 +307,10 @@ export async function kbTrack(
   if (KB_TOOLS.has(toolName)) {
     state.consulted = true
     env.safeLog("info", `Session ${session}: KB consult tool ${toolName} used`)
+    // P0-3: persist the consult scoped to the ACTIVE feature — a same-feature/
+    // same-scope src/ edit in a LATER session doesn't re-pay the consult.
+    // Fail-open on any error (the in-memory flag still covers this session).
+    recordKbStickyConsult(env, session)
   }
 }
 
