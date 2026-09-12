@@ -457,6 +457,11 @@ export function createPhaseTools(env: EnforcerEnv) {
           let msg = `⛔ TDD phase exit blocked:\n`
           if (tddData.dangling_reds?.length)
             msg += `  Dangling RED cycles: ${tddData.dangling_reds.join(", ")}\n`
+          // feature_075 T4-3 completion hardening: a failing feature test
+          // (representative broken behavior) blocks completion even with
+          // clean dangling/coverage dimensions.
+          if (tddData.failing_tests?.length)
+            msg += `  Failing feature tests:\n${tddData.failing_tests.map((f: string) => `    ${f}`).join("\n")}\n`
           if (tddData.coverage_gaps?.length) {
             msg += `  Coverage gaps:\n`
             for (const g of tddData.coverage_gaps) {

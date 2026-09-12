@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-12 (auto — feature_075.completion_hardening_content_bound_evidence Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_075.completion_hardening_content_bound_evidence/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-12 (auto — feature_074.receipt_batch_mode Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_074.receipt_batch_mode/test_report.md

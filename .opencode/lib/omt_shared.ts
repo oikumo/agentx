@@ -311,6 +311,19 @@ function receiptPolicyVer(): string | null {
   } catch { return null }
 }
 
+// feature_075 T4-3 completion hardening: the receipt must be evidence of a
+// PASSING run, not merely of a run — a receipt written with results.status
+// !== "passed" (or a bogus results block when the writer records one) is
+// treated as stale. Absent results (older receipts) keep prior semantics.
+export function receiptResultsPassed(): boolean {
+  try {
+    const data = JSON.parse(readFileSync(join(REPO_ROOT, e2eReceiptPath()), "utf8") || "{}")
+    const r = (data as any)?.results
+    if (r == null) return true
+    return typeof r === "object" && r.status === "passed"
+  } catch { return false }
+}
+
 // --- compiler projections (meta_harness_dsl R8 / OMT-HDL-1) -----------------
 // harnessc.py compiles .meta/META_HARNESS.omt into two runtime-consumed
 // projections: harness.ir.json (tool descriptions, vars) and nav.index.jsonl
@@ -527,6 +540,8 @@ export function omtHarnessE2eStatus(rel: string, abs: string): { ok: boolean; me
     const cur = sha256OfRel(".meta/META_HARNESS.omt")
     if (cur && cur !== rpv) return stale()
   }
+  // feature_075 T4-3: the receipt must record a passing result set.
+  if (!receiptResultsPassed()) return stale()
   return { ok: true, message: "" }
 }
 

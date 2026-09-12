@@ -122,7 +122,8 @@
 - [x] meta_harness_7 CLOSED 2026-09-12 (re-close after Wave-1 execution; 6/6 linked features complete, clean-close no --force) — mh8 sole home for remaining mh7 waves (D7).
 - [x] T5 expanded 3→8 (2026-09-12, user-approved): NEXT_STEP 2A–2D/3A–3C replace coarse slice-2/slice-3 rows; D8–D14 locked; strict slice order; 13-point demo is T5 Done-bar.
 - [x] T4-2 `receipt-batch-mode` DONE 2026-09-12 (feature_074.receipt_batch_mode, minor_feature) — `harnessc.py stage` + staged bypass + content-bound receipt (digests + policy_ver + toolchain); 5 goldens + boundary e2e green, `harnessc check` 0 errors, omt-suite 458 green (1 pre-existing budget-pin failure from uncommitted 071–073 WORK.md drift, untouched by T4-2).
-- [ ] Next: T4-3 / T1-6 (smallest unblocked) → T1-4 / T1-3 → T5-1 2A (`net transaction authority`, first within T5) in strict slice order; T3-4 benchmark anytime (no policy change).
+- [x] T4-3 `completion-hardening` DONE 2026-09-12 (feature_075.completion_hardening_content_bound_evidence, minor_feature) — validate-exit runs the feature's own tests (seeded broken behavior fails completion; golden in `tests/scripts/omt/test_completion_hardening.py`); receipt gains `results` (guard: `receiptResultsPassed`); 5 goldens + boundary e2e green, `harnessc check` 0 errors, suite 2063/2064 (pre-existing budget-pin failure unrelated).
+- [ ] Next: T1-6 (workflow index, smallest unblocked) → T1-4 / T1-3 → T5-1 2A (`net transaction authority`, first within T5) in strict slice order; T3-4 benchmark anytime (no policy change).
 
 ---
 

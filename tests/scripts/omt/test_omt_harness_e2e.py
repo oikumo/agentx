@@ -111,6 +111,10 @@ def _write_receipt(checks: list[str]) -> None:
                 # invalidate the receipt.
                 "policy_ver": _sha256(".meta/META_HARNESS.omt"),
                 "toolchain": {"python": sys.version.split()[0], "command": E2E_COMMAND},
+                # feature_075 T4-3: results travel with the receipt too — a
+                # receipt whose recorded outcome is not a full pass is not
+                # evidence of anything (guard: receiptResultsPassed).
+                "results": {"status": "passed", "checks": len(checks)},
             },
             indent=2,
             sort_keys=True,
@@ -180,6 +184,17 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     stage_help = _run(["uv", "run", "scripts/omt/harnessc.py", "stage", "--status"])
     assert stage_help.returncode == 0, stage_help.stdout + stage_help.stderr
     checks.append("receipt batch stage wired (stage CLI + staged bypass + content-bound receipt)")
+
+    # 3c. feature_075 T4-3 completion hardening: validate-exit runs the
+    # feature's own tests (seeded broken behavior fails completion), the
+    # enforcer surfaces failing_tests, and the receipt carries results.
+    tdd_gates = _read("scripts/omt/tdd/gates.py")
+    assert "_run_feature_tests" in tdd_gates and "failing_tests" in tdd_gates
+    assert "behavioral" in tdd_gates
+    assert "tddData.failing_tests" in _read(".opencode/lib/enforcer/phase_gate.ts")
+    assert "receiptResultsPassed" in shared
+    assert '"results"' in _read("tests/scripts/omt/test_omt_harness_e2e.py")
+    checks.append("T4-3 completion hardening wired (behavioral validate-exit + results-bound receipt)")
 
     # 4. Coarse permissions still force uv and deny the risky actions the meta
     # harness is meant to prevent.

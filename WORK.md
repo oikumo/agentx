@@ -40,7 +40,7 @@ Pool: pending=0 active=0 done=7 (places 12/15)
 | meta_harness_5 | complete | feature_038.tdd_toolchain_aware |
 | meta_harness_6 | complete | feature_051.ledger_test_isolation, feature_052.opencode_version_canary, feature_053.net_gate_concurrency_predicate, feature_054.small_task_fast_path, feature_055.gate_preflight, feature_056.skip_taxonomy_phase_hygiene, feature_057.gate_budget_ceremony_meter, feature_058.thought_review_gotcha_root_cause, feature_059.harness_tiered_template |
 | meta_harness_7 | complete | feature_060.dangling_active_only, feature_061.nav_cache_hit, feature_062.preflight_on_declare, feature_063.kb_sticky_per_feature, feature_064.named_work_truthful_observation, feature_066.think_batch_consult |
-| meta_harness_8 | active | feature_065.tdd_sync_stranded_red_closer, feature_067.tdd_same_node_lint, feature_068.schema_audit_autolink, feature_069.nav_answer_caps, feature_070.escape_replay_fold, feature_071.delegate_advisory_fold, feature_072.typed_policy_semantics, feature_073.task_prep_op_slice, feature_074.receipt_batch_mode |
+| meta_harness_8 | active | feature_065.tdd_sync_stranded_red_closer, feature_067.tdd_same_node_lint, feature_068.schema_audit_autolink, feature_069.nav_answer_caps, feature_070.escape_replay_fold, feature_071.delegate_advisory_fold, feature_072.typed_policy_semantics, feature_073.task_prep_op_slice, feature_074.receipt_batch_mode, feature_075.completion_hardening_content_bound_evidence, feature_076.workflow_index_and_repair_quickfix |
 | meta_harness_concurrent | complete | feature_039.adaptive_net_engine, feature_040.net_composition_supervisor, feature_041.resource_places_concurrency, feature_042.goal_net_synthesis, feature_043.meta_net_dashboard, feature_044.mined_behavioral_net, feature_045.work_md_net_driven, feature_046.omt_net_session_arg_whitelist, feature_047.wip_limited_pool, feature_048.wip_limited_pool, feature_049.session_start_menu |
 | net_enforced_harness | complete | feature_050.net_as_gate |
 | petri_net_library | active | feature_031.petri_net_library |
@@ -54,6 +54,7 @@ Pool: pending=0 active=0 done=7 (places 12/15)
 
 ## Paused (resumable)
 
+- [~] **meta_harness_8 execution — T1-6 (feature_076.workflow_index_and_repair_quickfix)** — scaffolded, Analysis dangling; T4-3 (feature_075) SHIPPED this session. Resume: read `sandbox/pause_2026-09-12.md` first (fix evolution.md canonical-target → harnessc workflows CLI + check rules). Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.
 - [x] **meta_harness_6 program execution** — PROGRAM COMPLETE + CLOSED 2026-09-06 (feature_051..059, all 13 items; suite 1979/0, KNOWN=0 held; delta report @ `.projects/meta/meta_harness_6/CURRENT_STATE.md` iter 10; verdicts D4–D6 @ PROJECT.md Decisions log). ⚠ Working tree uncommitted — user commit pending.
 
 ## Agent Scratchpad (auto-managed, do not edit manually)

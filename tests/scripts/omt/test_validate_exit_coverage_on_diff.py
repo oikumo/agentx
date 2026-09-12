@@ -51,9 +51,21 @@ def hermetic(tmp_path, monkeypatch):
     monkeypatch.setattr(gates, "REPO_ROOT", tmp_path)
     src = tmp_path / "src" / "agentx" / "synth.py"
     src.parent.mkdir(parents=True)
+    # feature_075 T4-3: a regular package (with __init__) in the tmp src —
+    # the real repo's installed `agentx` is itself a regular package and
+    # would otherwise WIN over the tmp namespace portion during the
+    # behavioral test run.
+    (src.parent / "__init__.py").write_text("", encoding="utf-8")
     src.write_text(PRE_SRC, encoding="utf-8")
     test_dir = tmp_path / "tests" / "features" / FEATURE
     test_dir.mkdir(parents=True)
+    # feature_075 T4-3: validate-exit now RUNS the feature's tests — the
+    # hermetic feature dir needs a conftest putting the tmp src/ on sys.path
+    # so `import agentx.synth` resolves under the synthetic repo root.
+    (test_dir / "conftest.py").write_text(
+        "import sys\nfrom pathlib import Path\n"
+        "sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'src'))\n",
+        encoding="utf-8")
     (test_dir / "test_synth.py").write_text(
         "import agentx.synth\n", encoding="utf-8")
     return tmp_path

@@ -4,11 +4,14 @@ Extracted from the former monolithic scripts/omt/tdd_check.py:
   - HAT_RULES:     the two-hats edit matrix (spec: two_hats_never_same_time)
   - gate:          is this edit allowed in the current TDD state?
   - after-edit:    post-edit advisory / refactor revert check
-  - validate-exit: phase-exit validation (dangling reds, coverage gaps)
+  - validate-exit: phase-exit validation (dangling reds, coverage gaps,
+                   feature_075 T4-3 behavioral completion hardening)
 """
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import time
 
 from .ast_checks import (
@@ -182,6 +185,36 @@ def get_dangling_reds(feature: str) -> list[str]:
     return dangling
 
 
+def _run_feature_tests(feature: str, timeout: int = 120) -> tuple[int, str, str]:
+    """feature_075 T4-3: run a feature's own test dir once (content-bound
+    behavioral evidence for completion, beyond public-method call-coverage).
+    Returns (exit_code, stdout, stderr); -1 + message on timeout."""
+    test_dir = REPO_ROOT / "tests" / "features" / feature
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pytest", str(test_dir), "-q",
+             "--no-header", "--tb=line", "-rf"],
+            capture_output=True, text=True, timeout=timeout, cwd=str(REPO_ROOT),
+        )
+        return result.returncode, result.stdout, result.stderr
+    except subprocess.TimeoutExpired:
+        return -1, "", f"pytest timed out after {timeout}s"
+    except Exception as e:
+        return -1, "", str(e)
+
+
+def _parse_failed_nodes(stdout: str, stderr: str, exit_code: int) -> list[str]:
+    """`-rf` emits `FAILED <node> ...` lines; fall back to the last output
+    line when the runner failed before itemization (collection error)."""
+    failed = [ln[len("FAILED "):] for ln in stdout.splitlines()
+              if ln.startswith("FAILED ")]
+    if not failed:
+        tail = (stderr or stdout).strip()
+        last = tail.splitlines()[-1] if tail else "no output"
+        failed = [f"pytest exit {exit_code}: {last}"]
+    return failed
+
+
 def cmd_validate_exit(args) -> dict:
     feature = args.feature
 
@@ -228,16 +261,34 @@ def cmd_validate_exit(args) -> dict:
                     coverage_gaps.append({"file": target, "untested": scoped})
 
     all_ok = len(dangling) == 0 and len(coverage_gaps) == 0
+
+    # feature_075 T4-3 completion hardening: call-coverage alone does not
+    # establish that the tests detect incorrect behavior (Improvement002 D) —
+    # a feature whose OWN tests fail cannot complete, whatever the coverage
+    # diff says. Representative-fault golden: seeding a broken behavior in a
+    # feature's src flips a green test red and this check fails completion.
+    failing_tests: list[str] = []
+    behavioral_ran = False
+    if test_files:
+        behavioral_ran = True
+        code, out, err = _run_feature_tests(feature)
+        if code != 0:
+            failing_tests = _parse_failed_nodes(out, err, code)
+        all_ok = all_ok and not failing_tests
+
     summary = {
         "test_files": len(test_files), "src_files": len(all_targets),
         "untested_methods": sum(len(g["untested"]) for g in coverage_gaps),
+        "behavioral": {"ran": behavioral_ran, "failures": len(failing_tests)},
     }
     if skip_override and not all_ok:
         return {
             "ok": True, "dangling_reds": [], "coverage_gaps": [],
+            "failing_tests": [],
             "summary": {**summary, "skip_override": True},
         }
     return {
         "ok": all_ok, "dangling_reds": dangling, "coverage_gaps": coverage_gaps,
+        "failing_tests": failing_tests,
         "summary": summary,
     }

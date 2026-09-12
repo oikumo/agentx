@@ -209,6 +209,8 @@ scripts/test_tui_simple.py
   "Modern TUI (Textual Interface)" section, TUI navigation, ReactTUIScreen/CodingTUIScreen view
   notes, the `ui/tui/screens/` + `agent/view/` tree snippet, provider-pattern "TUI vs Console"
   text, TUI test/pilot mentions, feature_004/012/014 bullets, the Textual attribution footnote).
+  **Preferred:** drop the duplicated source-tree snippet from README entirely rather than updating
+  it — one less drift source for `harnessc check` to flag.
 - `GETTING_STARTED.md` — no TUI references found; verify `README.md` on-disk tree/quick-start text.
 - `shared/META.md`, `.meta/doc/omt++/*.md|*.omt`, `.meta/META_HARNESS.omt` — grep for
   `tui`/`textual` and reconcile only the **architecture/code-kb** docs (these are harness-internal;
