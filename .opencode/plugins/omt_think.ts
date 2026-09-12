@@ -320,16 +320,18 @@ function createThinkTools() {
   })
 
   // --- omt_think_list: retrieve thoughts (grep-backed, authoritative inline) -
+  // P1-1 (feature_066): batch consult — path accepts string | string[] (one op
+  // clears gate for all matched files; risk: stays per-file in think_gate).
   const omt_think_list = tool({
     description: "op=list impl (unregistered; dispatched via omt_think). Records the consult clearing the think-gate.",
     args: {
-      path: tool.schema.string().optional().describe("restrict to a file/dir (default: whole repo)"),
+      path: tool.schema.string().optional().describe("restrict to file(s)/dir(s); array for batch (default: whole repo)"),
       category: tool.schema.string().optional().describe("filter `TA: <category>:`"),
       query: tool.schema.string().optional().describe("extra substring filter"),
     },
     async execute(args, context) {
       const session = context?.sessionID
-      const pathArg = args?.path
+      const pathArg: unknown = (args as any)?.path
       const category = args?.category
       const query = args?.query
       // A1: anchored base pattern (F3 prose false-positives). A4: category
@@ -338,8 +340,22 @@ function createThinkTools() {
       const cat = category ? category.trim().toLowerCase() : ""
       if (cat) pattern += "\\s*" + escapeRegex(cat) + ":"
       if (query) pattern += ".*" + escapeRegex(query)
-      const target = pathArg || "."
-      const hits = grepThoughts(pattern, target)
+      // P1-1 batch: SDK coerces JSON-array-looking strings to real arrays
+      // (see omt_net.ts Array guard, feature_027 fix) — accept both.
+      const targets: string[] = Array.isArray(pathArg)
+        ? (pathArg as unknown[]).filter((t): t is string => typeof t === "string" && t.length > 0)
+        : [typeof pathArg === "string" && pathArg ? pathArg : "."]
+      const seen = new Set<string>()
+      const hits: { file: string; line: number; content: string }[] = []
+      for (const target of (targets.length ? targets : ["."])) {
+        for (const h of grepThoughts(pattern, target)) {
+          const key = `${h.file}:${h.line}`
+          if (!seen.has(key)) {
+            seen.add(key)
+            hits.push(h)
+          }
+        }
+      }
       // Always record consult (clears the think-gate) — even on empty results.
       // C2: the record carries the consulted file set (what the agent was shown).
       const consultedFiles = [...new Set(hits.map(h => h.file))]

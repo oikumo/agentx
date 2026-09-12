@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-09-12 (auto — feature_066.think_batch_consult Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_066.think_batch_consult/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+## 2026-09-12 (iter 9 — P1-1 think-batch-consult DONE, Wave 1 started)
+
+### Done
+
+- **feature_066.think_batch_consult DONE (minor_feature, Analysis→Programming→Testing→Done):** `omt_think_list` path accepts `string|string[]` (SDK array-coercion guard); loops `grepThoughts` per target, dedups by file:line, writes ONE `think_consult` with union `files[]` — one op clears g.think for all matched files. Query/category filters narrow the set (empty covers nothing); `think_gate.hasConsultedThoughts` risk-window-drop untouched (risk stays per-file, same-session batch still clears).
+- **Overlap check (Exec rule 5):** mh5 shipped/reject, mh6 closed (nearest feature_058 review-is-consult, different); concurrent D1 + feature_053 solo stand.
+- **Discipline held:** think-gate consults (3 files) + KB TIER_CODE consult (sticky); receipt round-robin (ONE harness edit + ONE e2e refresh); canary ordering (phase→skip→tests writes ×2).
+- **Evidence:** 4 new tests (3 static pins + bun hasConsultedThoughts matrix 8-case) + e2e 1/1; `harnessc check` 0 errors + `build` OK (263 records, budgets green, tool_args 2278/2304); full suite **2020/0** (2016 + 4).
+- **Project reopened:** meta_harness_7 complete→active (Wave 1 execution).
+
+### In progress / Blocked
+
+- _(nothing — P1-1 shipped)_
+
+### Next
+
+1. **Wave 1** in listed order: P1-2 `tdd-same-node-lint` next (`new_feature.py "tdd same node lint" --type minor_feature --project meta_harness_7`), overlap check first.
+2. Then P1-3 → P1-4; slices 2–3 / generic A–F per later selection.
+
+---
+
+
 ## 2026-09-12 (auto — feature_064.named_work_truthful_observation Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_064.named_work_truthful_observation/test_report.md

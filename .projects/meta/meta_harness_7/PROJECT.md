@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_7 — Meta Harness 7 — Work-Performance Improvement Program
 
-> Status: **complete** · **v0.2 (2026-09-06)** — created by `project.py new`, program definition filled same session (work-friction deep analysis). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_7`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **active** · **v0.2 (2026-09-06)** — created by `project.py new`, program definition filled same session (work-friction deep analysis). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_7`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
@@ -119,7 +119,8 @@
 ## Status
 
 - [x] Wave 0 — P0-1 `preflight-on-declare` ✅ DONE (feature_062, 2026-09-06: declare embed via shared preflight.ts, suite 1992/0) · P0-2 `dangling-active-only` ✅ DONE (feature_060, 2026-09-06: active-only ≤10 + expired GC, suite 1981/0) · P0-3 `kb-sticky-per-feature` ✅ DONE (feature_063, 2026-09-06: kb_consult ledger write + hasStickyKbConsult OR into g.kb, suite 1999/0) · P0-4 `nav-cache-hit` ✅ DONE (feature_061, 2026-09-06: denial appends top-3 nav index hits, message-only, suite 1986/0) — **Wave 0 COMPLETE**
-- [ ] Focus track — slice 1 `named-work-truthful-observation` ✅ DONE (feature_064, 2026-09-12: sidecar bindings + validator + probe observation/menu, suite 2015+17/0-flake-cleared, e2e #23) — Wave 1 NEXT
+- [ ] Focus track — slice 1 `named-work-truthful-observation` ✅ DONE (feature_064, 2026-09-12: sidecar bindings + validator + probe observation/menu, suite 2015+17/0-flake-cleared, e2e #23) — Wave 1 IN PROGRESS
+- [ ] Wave 1 — P1-1 `think-batch-consult` ✅ DONE (feature_066, 2026-09-12: path:string|string[] batch, single think_consult union files[], risk window still dropped, suite 2020/0) — NEXT P1-2 `tdd-same-node-lint`
 
 ---
 
