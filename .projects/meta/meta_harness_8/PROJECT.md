@@ -82,19 +82,26 @@
 | T4-2 | Receipt batch mode + D-bar (same patch same treatment) | mh7 P2-3 + Improvement002 D + mh3 P3-12 | `harnessc.py stage --feature N` snapshots mtimes, allows N files, single `e2e` at end if `check` green; fail-closed outside stage; adopt D acceptance as done-criteria (same patch same treatment any edit count; input change invalidates receipt w/ digests+policy-ver+tests+deps; broken behavior fails; user edits preserved) + auto-refresh variant | Golden: 2-file logical fix stages once, e2e once; input change invalidates; failing refresh still blocks |
 | T4-3 | Completion hardening (content-bound evidence) | Improvement002 D-part | Strengthen completion beyond call-coverage with representative faults (receipt carries digests + policy ver + toolchain + results) | Golden: seeded broken behavior fails completion; temp inconsistency inside batch OK, boundary validation required |
 
-### T5 — Concurrency-next + discovery loop (new scope; bindings-first)
+### T5 — Concurrency-next + discovery loop (expanded 2026-09-12 per `.sandbox/meta/META_HARNESS_CONCURRENT_NEXT_STEP.md`; bindings-first, correctness-before-throughput)
 
 | # | Condensed item | Source | Mechanism sketch | Acceptance |
 |---|---|---|---|---|
-| T5-1 | Atomic claims (slice 2) | mh7 intake slice 2 (AGENTX_CONCURRENT_WORK) | Atomic claim: rev + readiness + owner + capacity + scope-conflict check; one local transaction authority; stale-owner blocked; ≤15 places; bindings==tokens | Demo: 2 tasks together, 3rd waits with reason; stale owner blocked |
-| T5-2 | Integration + recovery (slice 3) | mh7 intake slice 3 | Isolated workspaces + coordinator-owned serialized integration + objective-level acceptance; checkpoints/transfer/recovery; combined-failure blocks goal; fresh agent recovers from shared state alone | Demo: interrupt/resume lossless; fresh-agent recovery from shared state |
-| T5-3 | Fresh-review loop (recurring discovery) | mh5 D4 mechanism | Produce `_idea.md` at current HEAD when backlog empties (audit @-records/nav-index/gotchas/budgets/records); top genuine DX win → new feature in THIS project | Acceptance: review doc + 0/1 new wins declared; never re-runs shipped/rejected 10 without new evidence |
+| T5-1 | 2A `net_transaction_authority` (FIRST within T5) | NEXT_STEP §5 + §33 (amends mh7 slice-2) | `CoordinationLock` (flock + abstraction); revision check inside lock on EVERY mutation path (fire/splice/sync/migrations/binding edits/recovery/integration); `command_id` idempotency; stable codes (`stale_revision`, `command_id_conflict`, …) | 2 procs from rev N → exactly 1 commit + 1 `stale_revision`; same-ID retry = same result, no double-fire |
+| T5-2 | 2B `task_claim_generation` | NEXT_STEP §6 (claim+generation, rev≠gen) | Task-aware `work_start`/claim txn (rev + readiness + owner + capacity + scope); owner/session/generation capability; release/transfer; no unbound managed start | Same-task race = 1 winner; unrelated rev bump doesn't revoke gen; stale gen cannot checkpoint/submit |
+| T5-3 | 2C `worktree_execution_isolation` | NEXT_STEP §7–§9 | Shared `OMT_COORDINATION_ROOT`; 1 branch/worktree per generation (`omt/T17/g3`, `.worktrees/T17-g3/`, base/head/patch_digest); managed gate (owner/gen/workspace/scope); stale cannot publish | Two dirty worktrees, one coordination state; claim can't edit integration tree |
+| T5-4 | 2D `two_worker_capacity_scope_arbitration` | NEXT_STEP §10–§11 | `worker_slots=2` migration (splice, ≤15 places); component-aware scope conflicts (ancestor/descendant, not prefix); probe menu parallel choices | A+T1, B+T2 concurrent; T3 refused with `worker_capacity_exhausted` or `scope_conflict(blocking_task)` |
+| T5-5 | 3A `verification_integration_lane` | NEXT_STEP §13 | `verifying → integration_ready → integrating` + `test_slots=1, integration_slot=1`; immutable result refs; coordinator-only integrate; combined acceptance | Locally-green pair fails combined → objective stays unsatisfied with evidence |
+| T5-6 | 3B `recovery_and_transaction_journal` | NEXT_STEP §14–§15 | Heartbeat/liveness → recovery-candidate; gen-incrementing transfer; preserved checkpoint; `net_txn.pending.json` + startup reconcile | Kill worker mid-work → lossless handoff; stale submit = `stale_generation` |
+| T5-7 | 3C `evidence_dependency_completion` | NEXT_STEP §12 | Result/evidence digests; deps on accepted artifact versions; staleness detection (`dependency_stale`); objective acceptance on integrated state only | Downstream verified vs old upstream → `dependency_stale`; no self-report Done |
+| T5-8 | Fresh-review loop (recurring discovery) | mh5 D4 mechanism | Produce `_idea.md` at current HEAD when backlog empties (audit @-records/nav-index/gotchas/budgets/records); top genuine DX win → new feature in THIS project | Acceptance: review doc + 0/1 new wins declared; never re-runs shipped/rejected 10 without new evidence |
+
+> T5 order is strict in slice order (2A→2B→2C→2D→3A→3B/3C); T5 as a whole stays after T2/T1 per §Scope wave order unless reprioritized. Program-level Done = NEXT_STEP §32 13-point end-to-end demo. Each slice ships as its own `minor_feature` (2A + 3B get a short design note for lock/journal).
 
 ---
 
 ## Scope & success criteria
 
-**Scope:** T1–T5 above (≈26 actionable items). Each ships as its own feature (default `minor_feature`, decl-only; T1-6 P2-1 part + T3-3 digest get a short design note, not a §12 major gate). Wave/order proposal: T2-1/T1-2/T1-5 (cheapest, unblocked) → T2-2/T2-3 → T3-1/T3-2 → T4-1/T3-5 slice → T4-2 → T1-4/T1-3 → T5 slices → T3-4 benchmark anytime (no policy change).
+**Scope:** T1–T5 above (≈31 actionable items after 2026-09-12 T5 expansion 3→8). Each ships as its own feature (default `minor_feature`, decl-only; T1-6 P2-1 part + T3-3 digest + T5-1 lock + T5-6 journal get a short design note, not a §12 major gate). Wave/order proposal: T2-1/T1-2/T1-5 (cheapest, unblocked) → T2-2/T2-3 → T3-1/T3-2 → T4-1/T3-5 slice → T4-2 → T1-4/T1-3 → T5 slices in strict 2A→2B→2C→2D→3A→3B/3C order → T3-4 benchmark anytime (no policy change).
 
 **Success (project-level):**
 1. Every item shipped OR closed-with-verdict in Decisions log (no silent drops).
@@ -103,7 +110,7 @@
 4. No new gate without retirement (10/12 net-zero holds); think/protect untouched; no auto-`omt_skip`; Tier-3 still excludes net.
 5. End-of-program re-evaluation vs baselines shows consults/session + denials/session down; `task(/subagent_type` non-zero; `as_of != HEAD` asked (else U18/HQL stay parked).
 
-**Out of scope / guardrails:** D3 dropped trio (U15, modified-hash, multi_session_concurrency); no gate removals; no `src/agentx/` work (agentx features 001/002 stay unscoped elsewhere); no free-form goal synthesis; no distributed execution (`agent_attention`=1 mental model for harness concurrency); receipt round-robin until T4-2 ships (ONE edit/file/round + e2e refresh; e2e file receipt-EXEMPT).
+**Out of scope / guardrails:** D3 dropped trio (U15, modified-hash, multi_session_concurrency — the last PARTIALLY re-admitted as managed-local 1+2 by D8 with new evidence); no gate removals; no `src/agentx/` work (agentx features 001/002 stay unscoped elsewhere); no free-form goal synthesis; no distributed execution (legacy solo keeps `agent_attention`=1; managed T5-4 migrates to `worker_slots=2` one-machine only); receipt round-robin until T4-2 ships (ONE edit/file/round + e2e refresh; e2e file receipt-EXEMPT).
 
 ---
 
@@ -113,6 +120,7 @@
 - [x] T2-1 `op:sync` DONE 2026-09-12 (feature_065.tdd_sync_stranded_red_closer, minor_feature) — first linked feature, header draft→active.
 - [x] mh7 Wave-0 + slice-1 + P1-1 absorbed DONE-zero-carry 2026-09-12: feature_060/061/062/063 (Wave-0) + feature_064 slice-1 + feature_066 think-batch-consult (== mh8 T2-3) all `complete` under closed mh7; no re-implementation in mh8 (D7).
 - [x] meta_harness_7 CLOSED 2026-09-12 (re-close after Wave-1 execution; 6/6 linked features complete, clean-close no --force) — mh8 sole home for remaining mh7 waves (D7).
+- [x] T5 expanded 3→8 (2026-09-12, user-approved): NEXT_STEP 2A–2D/3A–3C replace coarse slice-2/slice-3 rows; D8–D14 locked; strict slice order; 13-point demo is T5 Done-bar.
 - [ ] Next: T2-2 / T1-2 / T1-5 (cheapest, unblocked) in §Scope order unless reprioritized; T3-4 benchmark anytime (no policy change).
 
 ---
@@ -126,6 +134,13 @@
 - **D5 — inherited locks stand:** mh6 D1–D6/DG1–DG3 (net solo-only, Tier-3 excludes net, KNOWN empty, gates net-zero) + mh7 DG1–DG3/D1–D4 + mh3 D1–D9 + mh2 v1 lock (read-only above mechanics) + mh5 D1–D4 (shipped/reject verdicts). Overlap-check before every scaffold (no re-implementation).
 - **D6 — execution discipline:** receipt round-robin + canary ordering (phase→skip→tests) + `harnessc check && build` + e2e receipt per harness-surface round; `uv` only; `src/` edits need `omt_phase` first (this doc is `.projects/`, non-gated).
 - **D7 — mh7 closed, residual absorbed (2026-09-12, user-directed):** `meta_harness_7` → complete (clean-close, 060/061/062/063/064/066 all `complete`, no --force). Pending→mh8 mapping verified, zero new rows needed: P1-2→T2-2, P1-3→T1-2, P1-4→T3-7, P2-1+F→T1-6, P2-2→T3-2, P2-3+D→T4-2, A→T3-4, B→T3-5, C→T4-1, E→T3-6, slices 2–3→T5-1/T5-2. T2-3 DONE-zero-carry via mh7 feature_066; slice-1 DONE-zero-carry via mh7 feature_064; Wave-0 DONE-zero-carry via 060–063. Shipped verdicts stand (D5).
+- **D8 — managed local concurrency re-admitted (2026-09-12, amends D3 + `agent_attention=1` guardrail):** new evidence = 064 slice-1 DONE + TOCTOU race analysis + 1-coordinator/≤2-workers/one-machine scope in NEXT_STEP. Solo behavior frozen; managed mode is explicit enrollment only. `agentx_concurrent_development` draft stays untouched — mh8 is the sole home, no program split.
+- **D9 — claim + generation, revision ≠ generation (NEXT_STEP D4/D5):** ownership is a durable claim with monotonic generation (no auto-expiring lease); heartbeat is observation only. Global revision = short CAS token; task generation = long ownership fence.
+- **D10 — transaction authority first:** every authoritative mutation (fire/splice/sync/migrations/binding edits/recovery/integration) under one local `CoordinationLock`; revision check inside the lock. T5-1 gates all later T5 slices.
+- **D11 — one coordination root + per-generation worktree/branch:** `OMT_COORDINATION_ROOT` shared by all workers; `omt/T17/g3` + `.worktrees/T17-g3/` + base/head/patch_digest in binding; stale workspace survives but cannot publish.
+- **D12 — managed gates task/owner/gen/workspace/scope-aware:** from the first worker (not `active>1`); no ambient recent-start receipt in managed mode; break-glass explicit + audited; legacy solo verdicts untouched.
+- **D13 — topology migration last within T5; ≤15 cap holds:** 6 lifecycle + 3 resources + optional goals (9–11 places); blocked stays binding metadata; task identity never becomes one-place-per-task.
+- **D14 — `command_id` idempotency on all mutations:** same ID + same payload = same result; same ID + different payload = `command_id_conflict`; stable refusal codes throughout.
 
 ---
 
@@ -133,5 +148,6 @@
 
 - Closed homes (read-only): `.projects/meta/meta_harness_2/PROJECT.md` (U-set U1–U18, token-lever map, Phase-B/C table) + `CURRENT_STATE.md` · `meta_harness_3/PROJECT.md` (P1/P2/P3+T1–T3, R1–R11, D1–D9) · `meta_harness_5/PROJECT.md` (10-item backlog verdicts + 038) · `meta_harness_7/PROJECT.md` (11-item program Waves 0–2 + Improvement002 A–F intake + concurrent slice-1 + baselines) · `meta_harness_concurrent/PROJECT.md` (D1–D20, core 039–041/045 + 046/048/049 + 042–044) · `net_enforced_harness/PROJECT.md` (050 Alt-A + deferred Phase-B note).
 - Evidence: `sandbox/meta/improvement002/IMPROVEMENT_OPTIONS.md` (A–F) + `AGENTX_CONCURRENT_WORK.md` (slices, bindings, demo) · `.sandbox/session_2026-08-15_feature_027_completion.md` (mh3 evidence) · `.sandbox/meta_harness_5_idea.md` (038 origin) · opencode.db token analysis (mh3 §Token evidence: 1009 sessions, 68.8MB tool bytes).
+- T5 design basis: `.sandbox/meta/META_HARNESS_CONCURRENT_NEXT_STEP.md` (2026-09-12, 2150 lines — claim+generation, transaction authority, worktrees, managed gates, 2A–2D/3A–3C slices, 13-point demo; §23 home recommendation SUPERSEDED by D8 — mh8 is the home).
 - SSOT: `.meta/META_HARNESS.omt` (gates/budgets/tools) · live net rev 57 · WORK.md Tasks (net render).
 - Approvals this session: close-6-only + 5-tracks + drop-deferred (question-gate 2026-09-12).

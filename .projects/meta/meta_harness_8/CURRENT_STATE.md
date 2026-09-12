@@ -5,6 +5,25 @@
 
 ---
 
+## 2026-09-12 (iter 3 — T5 expanded 3→8 per NEXT_STEP, user-directed)
+
+### Done
+
+- **Reviewed `.sandbox/meta/META_HARNESS_CONCURRENT_NEXT_STEP.md` (2150 lines):** endorsed transaction-authority-first, claim+generation (no lease), revision≠generation, solo-preserved/managed-opt-in, ≤15-place discipline, idempotency, multiprocess + model-based tests; flagged stale §23 home + D3/`agent_attention=1` conflicts + lock-coverage/CLI-enum/worktree-lifecycle/journal-testability gaps.
+- **Patched `PROJECT.md`:** T5 table 3→8 rows (T5-1 2A … T5-7 3C + T5-8 loop) with strict slice order + per-slice acceptance; §Scope ≈31 items + design-note list (T5-1/T5-6 added); §Status T5-expanded line; D8–D14 locked (D8 re-admits managed concurrency amending D3; D9 claim/gen; D10 lock-first; D11 coord-root/worktree; D12 managed gates; D13 topology-last; D14 command_id); References link NEXT_STEP with §23 superseded by D8.
+- **Docs-only session:** no src/tests/net edits; `.projects/` non-gated (preflight clear, 0 thoughts).
+
+### In progress / Blocked
+
+- _(nothing — backlog redefined, nothing newly scaffolded)_
+
+### Next
+
+1. T2-2 / T1-2 / T1-5 (cheapest unblocked) in §Scope order unless reprioritized; T3-4 benchmark anytime. Within T5, T5-1 2A (`net transaction authority`) is first.
+2. Resume entry point: `PROJECT.md` §New Session Quick Start → §The 5 tracks (T5) → this entry → §Next.
+
+---
+
 ## 2026-09-12 (iter 2 — mh7 closed, residual absorbed, user-directed)
 
 ### Done
