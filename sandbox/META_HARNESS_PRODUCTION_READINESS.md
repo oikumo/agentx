@@ -4,7 +4,9 @@
 
 **Scope:** the meta harness in this working tree, including its compiler, OpenCode plugins, state, verification, knowledge mechanisms, and consolidated roadmap.
 
-**Reference commit:** `d08a0041ab01b5901efb062a87bd35f8f38acfd5`, plus existing uncommitted work.
+**Original assessment reference:** `d08a0041ab01b5901efb062a87bd35f8f38acfd5`, plus the uncommitted work described in §2.
+
+**Document expansion reference:** `4a95c911e6113f056b00b53b9b546f7fd0697d51`; working tree clean before this update. Original probes and suite results remain historical evidence, not newly reproduced results at this revision. See §10.1 for this update's validation.
 
 **Status:** assessment and proposed improvements; no harness implementation changes made by this review.
 
@@ -33,6 +35,22 @@ The recommended release scope is initially **one trusted operator, one supported
 4. Turn staging and completion into enforced, content-bound lifecycles.
 5. Measure outcomes and total task cost before adding more process machinery.
 
+### The next level: a task contract with verifiable acceptance
+
+Make the unit of value **a user-requested change accepted against explicit behavior**, rather than a completed phase or a satisfied gate. At preparation, bind the request to a small task contract: intended outcome, scope, observable acceptance cases, required verification, and supported execution profile. At acceptance, report which cases passed against which candidate, what remains unknown, and any waiver. For a routine bug fix this can be one compact record; it need not introduce a design document or another tool call.
+
+The compiler, gates, ledger and knowledge mechanisms should cooperate around this contract. A phase remains useful progress metadata; it does not become the acceptance oracle. Changes in scope must refresh affected obligations and verification targets. Externally consequential actions such as publication retain their own authority even when implementation is accepted.
+
+This creates three distinct product capabilities, each requiring its own evidence:
+
+| Capability | Minimum defensible claim | Qualification boundary |
+|---|---|---|
+| Development assistance | Prepares relevant context, explains obligations, preserves progress. | May operate on an unintegrated host, but cannot claim its actions were mediated. |
+| Verified solo execution | Supported mutations are mediated and accepted output has current verification evidence. | One qualified adapter, workspace, active writer and runtime combination. |
+| Managed concurrent execution | Ownership, persistence and integration remain correct under competing workers and failures. | Adds transaction, generation, isolation and combined-candidate qualification. |
+
+Installation tiers describe enabled features; these capability profiles describe demonstrated guarantees. Installing Tier 3 must not automatically confer the managed-concurrency claim. The near-term objective is verified solo execution. The architecture below makes that useful without requiring the entire concurrent platform first.
+
 ## 2. Evidence and limits
 
 This assessment combines source inspection, the current canonical policy and project documents, compiler/projection verification, an existing full-suite run, and isolated behavioral probes of the actual TypeScript modules. External references support specific design recommendations; they are not evidence that this repository conforms to a standard.
@@ -41,9 +59,9 @@ The current host does not expose the `omt_*` tools. Navigation was performed by 
 
 The isolated probes used temporary roots and synthetic ledgers under `/tmp`; they called the real hook/evaluator implementations but used synthetic tool arguments and a stubbed subprocess interface. They **did not execute unauthorized edits, modify real authorization records, or prove an exploit through a live agent runtime**. The distinction matters: these probes demonstrate implementation decisions, while live adapter coverage still requires qualification.
 
-The working tree was already dirty. Workflow/compiler work for feature 076 was present at review start, and further project/testing artifacts appeared during the review. This is a working-tree assessment, not an immutable release audit. Existing work was preserved. Historical counts in project logs are treated as historical claims, not new measurements.
+During the original assessment, the working tree was already dirty. Workflow/compiler work for feature 076 was present at review start, and further project/testing artifacts appeared during that review. Those observations are a working-tree assessment, not an immutable release audit. The subsequent document expansion started from the clean revision named above. Historical counts in project logs are treated as historical claims, not new measurements.
 
-### Verification record
+### Original verification record
 
 | Check | Result and interpretation |
 |---|---|
@@ -55,6 +73,8 @@ The working tree was already dirty. Workflow/compiler work for feature 076 was p
 | Multi-process race/crash tests | Not run in this review. Transaction and rollback risks are source-based findings. |
 
 Compiler warning: `.workflows/meta_harness/meta_harness_development_self_evaluation.md` is not listed in its subject manifest. The current workflow changes therefore improve checking without fully closing catalog drift.
+
+**Evidence discipline for follow-up work:** retain stable F01–F12 finding IDs. Each closure should attach the affected revision/content identity, reproducible fixture or command, expected and actual outcome, evidence scope, and remaining limitations. Use explicit states: `reported`, `reproduced`, `fixed`, and `qualified`. A code change can establish `fixed` only with a passing regression case; `qualified` additionally requires the claimed runtime boundary. New design proposals in §§6–8 are recommendations, not additional reproduced defects. The temporary probes described in Appendix A have no retained fixture path in this document, so preserving executable reproductions is itself an outstanding deliverable.
 
 ## 3. How effectively the harness serves its goals
 
@@ -299,6 +319,8 @@ Sources: [receipt-producing test](../tests/scripts/omt/test_omt_harness_e2e.py),
 
 ## 6. Production architecture: evolve the existing components
 
+### 6.1 Authority boundaries
+
 Keep the compiler, gate modules, knowledge tools, and net. Give each a clear authority boundary:
 
 | Layer | Responsibility | Must not claim |
@@ -317,6 +339,88 @@ Avoid distributing another independently maintained policy copy across Python, T
 
 The initial threat model should be explicit. Cooperative agents making mistakes are a reasonable first target. A malicious process with the same write access to policy, code, state and receipts is outside a file-based hook's reliable enforcement boundary. Stronger adversarial guarantees need a separately protected execution/verifier boundary, not more self-authored approval records.
 
+### 6.2 Make the guarantees executable invariants
+
+The findings share a structural cause: several local indicators are treated as stronger evidence than they provide. A successful gate terminates other checks; process output substitutes for process success; a receipt's presence substitutes for current verification; a revision comparison substitutes for a transaction. Fix each defect, then preserve the intended guarantee at the composed boundary.
+
+Use this invariant register to connect design, regression cases and release decisions. It can initially live alongside the proposed F07 verification manifest; a new registry service is unnecessary.
+
+| ID | Required invariant | Decisive negative case and positive control | Related findings |
+|---|---|---|---|
+| I01 — Complete mediation | Every supported mutation is normalized and every affected path evaluated before execution. | A multi-file patch with one forbidden target is refused in full; the same patch restricted to permitted paths succeeds. | F01 |
+| I02 — Independent obligations | Permission requires every applicable critical obligation to be satisfied or specifically waived where policy permits. | Test approval plus missing net authority is refused; granting the net authority still leaves any thought obligation intact. | F02–F03 |
+| I03 — Scoped authority | Grants cannot grow through actor fallback, expiry, unrelated progress or replay. | A grant for A does not authorize B; A succeeds inside its scope and lifetime. | F04 |
+| I04 — Truthful verification | Verified acceptance requires successful declared checks against the exact candidate and relevant inputs. | A nonzero exit with empty or even positive-looking output refuses acceptance; a valid passing response with matching identity succeeds. | F05–F07 |
+| I05 — Durable acknowledgment | Acknowledged authoritative commands survive the claimed crash model without partial state. | Interrupt each persistence step and retry the command; after successful retry, exactly one complete effect is visible. Include a successful uncontended command. | F08–F09 |
+| I06 — Safe invalidation | A relevant change invalidates dependent evidence; an unrelated change does not. | Change a required test/config input and refuse stale evidence; change an unrelated document and retain valid reuse. | F06–F07, F11 |
+| I07 — Truthful prediction | The same action and snapshot have the same evaluated obligations; unavailable evidence stays unknown. | Remove the live net observation and require `unknown`, not “all clear”; a complete snapshot agrees with enforcement. | F10 |
+| I08 — Preserved work | Recovery never overwrites a newer user/worker version without explicit authority. | Insert an intervening edit before rollback and retain it; restore an exclusively owned unchanged candidate normally. | F08–F09 |
+
+I01–I04 and I06–I07 apply to the claimed solo boundary. I05's durability and I08's user-edit preservation matter even for a single agent; competing-owner cases additionally qualify managed mode. These are outcome properties, not a proposal for eight new gates.
+
+### 6.3 Close the gap between checking and executing
+
+A correct decision is insufficient if the state changes before the effect. Define a bounded action lifecycle:
+
+```text
+normalize action → read snapshot → evaluate obligations
+                 → conditionally execute → acknowledge effect
+freeze candidate → verify declared inputs → conditionally accept
+```
+
+Preflight is a prediction and grants no authority. An execution decision binds the action payload, all target paths and expected base digests, workspace, policy digest, state revision, applicable grants and their validity. Immediately before mutation, the executing adapter checks those preconditions and any revocation/expiry; a mismatch requires a fresh decision. An `action_id` provides retry correlation, not permission. The authority must store idempotency decisions; replaying the same ID with a different payload is an error.
+
+For multi-file actions, prevent partial application or use a recoverable staged publication with explicit incomplete status. Do not hold a global state lock while tests run: freeze an isolated candidate, verify outside the lock, then accept through a short conditional transaction that rechecks candidate, ownership and evidence. If the host cannot mediate the check-to-write boundary, document that limitation and restrict the claim; an after-write hash can detect drift but cannot retroactively prevent the write.
+
+This applies to self-modification too. A proposed policy must not authorize its own activation. The currently trusted policy controls editing and qualification; a verified successor is activated at a defined boundary. In-flight work either finishes under its explicitly pinned policy where permitted or is re-evaluated. No operation may silently combine obligations from two versions.
+
+### 6.4 Specify evidence before building another abstraction
+
+Extend existing records with a small, versioned contract. Names below are proposed fields, not an already supported API.
+
+| Record | Required information | Validation rule |
+|---|---|---|
+| Task contract | Task ID, requested outcome, scope, acceptance-case IDs, verification targets, capability profile, contract revision. | Scope/acceptance changes create a new revision and invalidate affected decisions. |
+| Decision | Action/payload identity, task-contract revision, workspace, policy and state identities, per-obligation outcomes and evidence references. | Only satisfied applicable obligations permit execution; any explicit waiver names the exact waivable obligation and authority. |
+| Verification | Candidate digest, input manifest, command/node selection, runtime/config identities, timestamps, timeout/exit/collection data, result and log digest, issuer. | Mandatory fields and input coverage validated before reuse; a log digest alone cannot establish a pass. |
+| Acceptance | Task-contract revision, candidate and integration-base identities, verification references, outcome, unresolved items and waivers. | Distinguish `verified`, `failed`, `waived`, and `unverified`; only eligible current evidence supports `verified`. |
+
+Keep execution status separate from verification status: `finished` means the process stopped, not that verification passed. A docs-only case can satisfy its explicitly declared document checks without inventing a behavioral test pass. A skipped required check remains unverified. Cancellation, timeout, infrastructure failure and zero collection should remain distinguishable for diagnosis, even though none supplies positive behavioral evidence.
+
+Candidate identity must cover relevant uncommitted and untracked inputs, not just `HEAD` or the edited target. Include file mode, symlink target and deletion semantics where relevant. Start with a conservative declared input manifest; if dependency coverage is unknown, broaden verification or refuse reuse. Optimize toward dependency-aware invalidation only after tests show the narrower closure is sound. Preserve raw verifier evidence outside the candidate's self-authored acceptance record to the extent required by the threat model.
+
+Separate verification inputs from generated outputs: logs, receipts and runtime ledger updates must not recursively change the candidate identity they describe. Declare those exclusions narrowly. If a verifier unexpectedly modifies a source, test or configuration input, invalidate the run rather than issuing evidence for the pre-run digest.
+
+### 6.5 Degraded operation and recovery are product behavior
+
+Failing closed should prevent unsupported authority without turning optional knowledge failures into a dead end. Define the behavior by failed component rather than using one global bypass:
+
+| Failure | Continued capability | Required restriction / recovery |
+|---|---|---|
+| Missing/corrupt policy or authoritative state | Protected, sanitized diagnostics and read-only inspection within host permissions. | Refuse affected writes and acceptance; validate and restore a compatible policy/state pair. |
+| Optional navigation/KB index unavailable | Source-based inspection and a clearly labeled degraded preparation response. | Do not invent a consult receipt. If policy mandates a consult, satisfy it through a defined equivalent path or leave that obligation unresolved. |
+| Verifier timeout/unavailable runtime | Preserve the candidate and diagnostic output; allow a bounded retry. | No verified acceptance; report the failed execution separately from a tested behavioral failure. |
+| Receipt stale after an edit | Continue authorized development with stale status visible. | Reverify affected inputs before acceptance; do not discard good work merely because evidence expired. |
+| Failed state acknowledgment | Read-only diagnosis and command-status lookup. | Do not blindly retry a non-idempotent action or report success. Reconcile the original command ID first. |
+
+Recovery starts by identifying the workspace, last valid state/policy generation, unfinished commands and current user changes. Export diagnostics, reconcile or restore into a disposable location, validate it, then activate the repaired state conditionally. A repair path must not grant itself unlimited authority. Keep a last-known-good implementation and compatible state backup; a compiler check is necessary but cannot establish safe rollback across an incompatible state migration.
+
+### 6.6 Evolve policy with a decision-difference report
+
+For each typed-policy migration, replay a fixed labeled action corpus against old and proposed evaluators. Classify differences as stricter, more permissive, unknown/error, or explanation-only. The old evaluator is a comparison baseline, not the correctness oracle: reviewed expected outcomes decide which behavior is right.
+
+Promotion requires every newly permitted operation to have an explicit rationale and acceptance case, every newly refused valid operation to have a resolution, and every required fault case to pass. Shadow evaluation observes; it never authorizes. Keep policy, compiler, adapter and state-schema compatibility identities in the activation record. Demonstrate both forward migration and recovery before promoting a version that changes persisted authority semantics.
+
+For bounded policy/net models, add generated event sequences and property checks for expiry, revocation, duplicate delivery and independent-gate order. The existing net analysis can check modeled invariants, but adapter mediation and storage atomicity still require execution tests. A Petri-net proof cannot establish that an implementation's three-file save is atomic.
+
+### 6.7 Learn from failures without automatically expanding policy
+
+Turn repeated repair into reusable evidence. When a gate or verifier blocks work, produce a bounded diagnostic record through the existing status/preflight surface: stable reason, affected task/action, observed versus required state, missing evidence, and the smallest valid recovery action. Distinguish a missing authorization from a stale index or unavailable verifier; suggesting a broad override for all three obscures the cause and increases intervention cost.
+
+Link a resolved incident to its counterexample, repair and verified outcome. Promote it through three explicit stages: observation, validated lesson, and candidate regression check or policy change. Promotion is reviewed; a retrieved lesson or agent-authored failure report cannot grant authority or rewrite the active policy. Deliver a lesson only when its affected surface and source version are relevant, and measure whether it reduces recurrence and recovery effort.
+
+Use an unchanged failure signature to detect unproductive loops. After a small configurable retry budget, preserve the candidate and return the unresolved cause and next required input instead of repeating the same expensive checks. Retry when relevant state changes or an explicitly transient failure warrants it. This makes knowledge retention improve completed work and provides evidence for retiring redundant instructions, rather than accumulating more mandatory consultation.
+
 ## 7. Measurement program and proposed service objectives
 
 ### 7.1 Establish a baseline before broadening policy
@@ -326,6 +430,8 @@ Use the existing T3-4 six-task plan: local bug fix, change across layers, major 
 For an initial feasibility sample, run at least five independent attempts per task and condition. Compare current policy with an appropriate existing tier and one proposed improvement. Randomize order and separate warm/cold runs. Do not copy observations from one attempt into the next agent's context. Report distributions and confidence limits where meaningful; thirty attempts is a pilot, not proof of universal reliability. Use larger samples for close comparisons or rare failures.
 
 Seed forbidden operations and representative broken implementations in disposable fixtures. Evaluate both valid work wrongly refused and invalid work wrongly permitted. Run targeted removal/simplification experiments before retiring a gate; never automatically weaken a protection based on cost alone. Keep evaluator acceptance checks independent of the agent-authored implementation tests.
+
+Predeclare the primary comparison, acceptable correctness margin and stopping rule. “No observed loss” in a small pilot is not evidence of equivalence. Report per-task and per-profile results so a cheap routine edit cannot hide failed complex work. Count infrastructure failures in the operational result and also report them separately for diagnosis; replacing only failed runs would bias the comparison. Keep acceptance checks stable across conditions, with access separated from the implementing agent where practical.
 
 ### 7.2 Metrics that should guide decisions
 
@@ -341,6 +447,8 @@ Seed forbidden operations and representative broken implementations in disposabl
 | Knowledge usefulness | Relevant results retrieved, stale results delivered, repeated mistakes and rediscovery. |
 | State reliability | Acknowledged events lost, conflicting claims, stale publications, incomplete recoveries. |
 | Harness maintenance burden | Time spent repairing harness mechanics per time spent delivering accepted application work. |
+| Evidence invalidation quality | Stale results wrongly reused and valid results unnecessarily rerun, measured with labeled dependency changes. |
+| User-intervention burden | Number and minutes of required clarifications, approvals and manual recoveries per accepted task. |
 
 Capture tool start/end, decision reason, state/policy identity, cache hit, subprocess time, output bytes, and observed usage. Keep content and secrets out of routine telemetry. Read metrics across the retention window rather than only the current hot ledger. Do not interpret fewer refusals as safer behavior without labeled cases.
 
@@ -374,6 +482,32 @@ Feature 076's current compiler/workflow changes should be assessed as existing w
 
 Replace activity-based success criteria such as “delegation calls become nonzero” or “historical queries are used” with outcome measures. A feature should earn its place by improving work, not by inducing calls to itself. Similarly, reserve new gates for a demonstrated invariant; first fix or combine the current obligations where their semantics are wrong.
 
+### 8.1 First implementation slice: make completion truthful
+
+Start with F05 rather than a wholesale architecture rewrite. It has a narrow implementation boundary and a decisive observed failure: a failed verifier can record success. Deliver the following as one reviewable slice:
+
+1. Preserve a runnable temporary-root reproduction of nonzero exit plus empty stdout at `omt_complete`, asserting that no `complete` or Done event is written. Add a valid passing positive control through the same interface.
+2. Define a versioned verifier response and explicit outcomes. Check process status, parsing, required fields and selected verification identity. Cover nonzero exit with `ok:true`, empty/malformed output, timeout and missing required checks.
+3. Preserve docs-only handling and waivers as explicit outcomes. Keep the original failure details when authority permits a waiver; do not relabel it verified.
+4. Require an acknowledged completion write. If persistence fails, return an error and a recoverable command identity; never a successful completion message. This requires a narrow authoritative-write path from F09 before claiming end-to-end completion reliability.
+5. Qualify through the supported runtime adapter. Record test node IDs, candidate identity and actual results in the F05 closure. Run affected compiler/projection and behavioral checks, then the required release lane.
+
+**Exit:** the original false-success case is impossible in the enumerated subprocess/persistence failures and the positive case still works. **Limit:** this closes truthful completion signaling; content/input binding in F07 and the wider adapter coverage in F01 remain separate release blockers. The first slice must not be marketed as full verified execution.
+
+Follow with F02/F03 gate failure/composition and F01 matcher/adapter coverage. Instrument these repaired boundaries while establishing the baseline. Then implement the shared snapshot and evidence contract incrementally, using the invariant register to decide when the solo profile is qualified.
+
+### 8.2 Alternatives and decision checkpoints
+
+| Decision | Recommended first choice | Escalate when evidence justifies it |
+|---|---|---|
+| Policy representation | Extend the existing typed IR and primitive registry, one obligation at a time. | Introduce a richer policy language only if concrete rules cannot be expressed clearly and safely. |
+| State persistence | First require durable acknowledgments and an explicit transaction contract; compare the existing file/journal plan with local SQLite in disposable fixtures. | Select the storage design using crash/race results, migration effort and operational assumptions; do not maintain two authoritative stores. |
+| Verification reuse | Conservative declared inputs and exact candidate identity. | Add finer dependency indexing when unnecessary reruns are a measured material cost. |
+| Context preparation | One bounded response on existing tool surfaces, with current obligations and targeted knowledge. | Add graph/retrieval machinery only after labeled task queries expose a repeatable deficiency. |
+| Concurrent workers | Isolated workspaces plus a single acceptance authority after the solo boundary is qualified. | Expand worker capacity only when integrated accepted throughput improves and recovery cases stay green. |
+
+At each checkpoint, attach the smallest evidence bundle that decides the next investment. If the six-task pilot shows no useful end-to-end gain, simplify or retire redundant preparation and consultation work before adding more. Critical protections are retained unless an equally effective replacement is demonstrated. No new gate, service or document is justified solely by satisfying this assessment's terminology.
+
 ## 9. Release acceptance checklist
 
 ### Restricted production solo release
@@ -387,6 +521,10 @@ Replace activity-based success criteria such as “delegation calls become nonze
 - [ ] Upgrade, recovery and user-edit preservation demonstrated in disposable repositories.
 - [ ] Baseline task-outcome and cost report published, with limitations and failed attempts included.
 - [ ] No concurrency, tamper resistance, or unsupported-host guarantee implied by the release description.
+- [ ] I01–I08 have applicable executable cases with positive controls, candidate identities and retained results; unsupported cases limit the release claim explicitly.
+- [ ] Task scope and acceptance contract are current; preflight does not confer edit or publication authority.
+- [ ] Check-to-execution preconditions, self-policy activation and degraded recovery behavior demonstrated for the supported adapter.
+- [ ] Compatibility profile and installation tier distinguished; historical results cannot satisfy current release checks.
 
 ### Managed concurrent release, additional requirements
 
@@ -398,7 +536,7 @@ Replace activity-based success criteria such as “delegation calls become nonze
 - [ ] Changed upstream artifacts invalidate dependent acceptance evidence.
 - [ ] Existing T5 demo and the new independent-gate cases pass with two workers.
 
-## 10. Validation outcome for this review
+## 10. Original review validation outcome
 
 The compiler and projection checks passed with one catalog warning. The existing full suite collected **2,082 tests** and completed with **2,080 passed, 2 failed, 6 warnings in 552.04 seconds (9 minutes 12 seconds)**.
 
@@ -410,6 +548,16 @@ The compiler and projection checks passed with one catalog warning. The existing
 The six warnings concern application/dependency behavior and are not used as evidence for the harness-specific findings. No blanket rerun or source repair was performed: this task is an assessment, and the failed checks are reported rather than silently changing the evaluated system. The production assessment depends on the reproduced implementation behaviors, not on an assumption that a green existing suite would prove their absence.
 
 No source, policy, test, workflow or project implementation changes were made by this review. The delivered change is this assessment. Existing tests may refresh their normal ignored runtime artifacts; existing and concurrently appearing working-tree changes were preserved.
+
+### 10.1 Document expansion validation — 2026-09-12
+
+This update expands the same assessment with capability profiles, a task/acceptance contract, an invariant register, execution preconditions, evidence schemas, degraded operation, policy migration controls, evidence-driven learning, and a concrete first implementation slice. It does not implement these proposals or close F01–F12.
+
+The starting checkout was clean at `4a95c911e6113f056b00b53b9b546f7fd0697d51`. The completion, typed-policy and preflight sources were inspected to ground the proposed boundaries. Appendix A's probes were not rerun. A fresh `uv run scripts/omt/harnessc.py check --verify-projections` passed: 263 records, zero errors, with the same catalog warning. Current `WORK.md` is 5,850 bytes; §4.1 retains the original assessment's size snapshot.
+
+Document checks passed: all 64 local Markdown links resolve, code fences are balanced, no duplicate headings were found, and `git diff --check` reported no whitespace errors. This update edits only this assessment. Other work appeared in `WORK.md`, the project manifest and feature 077 requirements during finalization and was left untouched.
+
+**Tests:** the user confirmed that the tests pass. This is user-reported validation; no command output or candidate identity was supplied for that passing run. The assistant-started `uv run pytest` collected 2,082 tests and showed the previously documented budget-pin failure before reaching the live OpenCode checks. Observation of that run was interrupted, and the user requested that further testing be skipped. No final result from that run is claimed here, and no additional tests are required for this document update. The original results in §10 remain historical records; the user confirmation does not by itself close the implementation findings or qualify a production release.
 
 ## Appendix A. Reproduced behavior matrix
 
