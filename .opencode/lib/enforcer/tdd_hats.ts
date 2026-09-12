@@ -17,24 +17,24 @@ import { irToolDescription, gateMsg } from "../omt_shared"
 // improvement006/OPT-H: one registered tool; op dispatches to the subcommands
 // (red → the engine's "start" subcommand — the tdd/ package is unchanged).
 const TDD_SUBCMD: Record<string, string> = {
-  testlist: "testlist", red: "start", green: "green", refactor: "refactor", done: "done",
+  testlist: "testlist", red: "start", green: "green", refactor: "refactor", sync: "sync", done: "done",
 }
 
 export function createTddTools(env: EnforcerEnv) {
   const omt_tdd = tool({
-    description: irToolDescription("omt_tdd", "TDD cycle driver. op=testlist(behaviors,feature; JSON array or prose) | red(test_node,target_src,feature) | green(test_node,feature) | refactor(test_node,feature) | done(feature). Toolchain-aware: .py→pytest, .ts/.tsx→vitest (GOTCHA_TDD_TOOLCHAIN)."),
+    description: irToolDescription("omt_tdd", "TDD cycle driver. op=testlist(behaviors,feature; JSON array or prose) | red(test_node,target_src,feature) | green(test_node,feature) | refactor(test_node,feature) | sync(feature) | done(feature). Toolchain-aware: .py→pytest, .ts/.tsx→vitest (GOTCHA_TDD_TOOLCHAIN)."),
     args: {
-      op: tool.schema.string().describe("testlist|red|green|refactor|done"),
+      op: tool.schema.string().describe("testlist|red|green|refactor|sync|done"),
       behaviors: tool.schema.string().optional().describe("testlist: JSON array of behaviors"),
       feature: tool.schema.string().optional().describe("feature slug"),
-      test_node: tool.schema.string().optional().describe("red/green/refactor: pytest node id"),
+      test_node: tool.schema.string().optional().describe("red/green/refactor: test node"),
       target_src: tool.schema.string().optional().describe("red: src file under test"),
     },
     async execute(args, context) {
       const subcmd = TDD_SUBCMD[args?.op ?? ""]
       if (!subcmd) {
-        return `⛔ omt_tdd: unknown op '${args?.op}' — want testlist|red|green|refactor|done ` +
-          "(testlist(behaviors,feature) red(test_node,target_src,feature) green(test_node,feature) refactor(test_node,feature) done(feature))."
+        return `⛔ omt_tdd: unknown op '${args?.op}' — want testlist|red|green|refactor|sync|done ` +
+          "(testlist(behaviors,feature) red(test_node,target_src,feature) green(test_node,feature) refactor(test_node,feature) sync(feature) done(feature))."
       }
       const session = context?.sessionID || ""
       const flags = [subcmd]

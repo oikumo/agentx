@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-09-12 (iter 10 — project CLOSED, residual absorbed into meta_harness_8)
+
+### Done
+
+- **CLOSED** (`project.py close meta_harness_7`, clean — 060/061/062/063/064/066 all `complete`, no --force) per user direction "mh7 must be closed, pending → mh8".
+- **Shipped under mh7 (verdicts stand):** Wave-0 060/061/062/063 + slice-1 064 + P1-1 066. Remaining waves absorbed zero-new-rows into mh8 (mh8 D7: P1-2→T2-2, P1-3→T1-2, P1-4→T3-7, P2-1+F→T1-6, P2-2→T3-2, P2-3+D→T4-2, A→T3-4, B→T3-5, C→T4-1, E→T3-6, slices 2–3→T5-1/T5-2).
+- **Home now read-only:** no new `new_feature.py --project meta_harness_7` scaffolds; future work lands in `meta_harness_8`.
+
+### In progress / Blocked
+
+- _(none — closed)_
+
+### Next
+
+- _(none for this project — resume in `meta_harness_8` CURRENT_STATE.md iter 2 → PROJECT.md §New Session Quick Start)_
+
+---
+
 ## 2026-09-12 (auto — feature_066.think_batch_consult Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_066.think_batch_consult/test_report.md

@@ -5,6 +5,34 @@
 
 ---
 
+## 2026-09-12 (iter 2 — mh7 closed, residual absorbed, user-directed)
+
+### Done
+
+- **meta_harness_7 CLOSED** (`project.py close meta_harness_7`, clean — 060/061/062/063/064/066 all `complete`, no --force); header auto-flipped active→complete, manifest + WORK.md re-synced.
+- **Residual mapping verified, zero new rows:** P1-2→T2-2, P1-3→T1-2, P1-4→T3-7, P2-1+F→T1-6, P2-2→T3-2, P2-3+D→T4-2, A→T3-4, B→T3-5, C→T4-1, E→T3-6, slices 2–3→T5-1/T5-2 (D7).
+- **DONE-zero-carry recorded:** T2-1 via feature_065 (mh8-linked); T2-3 via mh7 feature_066; slice-1 via mh7 feature_064; Wave-0 via 060–063. PROJECT.md §Status + §Quick Start Next + D7 updated.
+- **Docs-only session:** no src/tests/net edits; `.projects/` non-gated (no `omt_phase`).
+
+### In progress / Blocked
+
+- _(nothing — backlog defined, nothing newly scaffolded)_
+
+### Next
+
+1. T2-2 / T1-2 / T1-5 (cheapest unblocked) in §Scope order unless reprioritized; T3-4 benchmark anytime.
+2. Resume entry point: `PROJECT.md` §New Session Quick Start → §The 5 tracks → this entry → §Next.
+
+---
+
+## 2026-09-12 (auto — feature_065.tdd_sync_stranded_red_closer Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_065.tdd_sync_stranded_red_closer/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-12 (iter 1 — consolidation COMPLETE, 6 closed → mh8 v1.0)
 
 ### Done

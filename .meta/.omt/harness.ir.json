@@ -502,7 +502,7 @@
     },
     "omt_net": {
       "args": "op,transition?,reasoning?,session?,max_states?,mode?,mutation?,subnet?,feature?,direction?,dry_run?,work_md?,path?,expected_revision?",
-      "description": "Meta-harness concurrency net \u2014 single-net SSOT (IDEA-002 v4 \u00a75.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net\u2194ledger drift) | synthesize(template\u2192splice proposal, D4) | mine(ledger\u2192net draft, D4) | gate(path,session?).",
+      "description": "Concurrency net \u2014 SSOT (IDEA-002 v4 \u00a75.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net\u2194ledger drift) | synthesize(template\u2192splice proposal, D4) | mine(ledger\u2192net draft, D4) | gate(path,session?).",
       "perm": "allow",
       "tags": "CMD_NET"
     },
@@ -532,7 +532,7 @@
     },
     "omt_tdd": {
       "args": "op,behaviors?,feature?,test_node?,target_src?",
-      "description": "TDD cycle driver. op=testlist(behaviors,feature; JSON array or prose) | red(test_node,target_src,feature) | green(test_node,feature) | refactor(test_node,feature) | done(feature). Toolchain-aware: .py\u2192pytest, .ts/.tsx\u2192vitest (GOTCHA_TDD_TOOLCHAIN).",
+      "description": "TDD cycle driver. op=testlist(behaviors,feature; JSON array or prose) | red(test_node,target_src,feature) | green(test_node,feature) | refactor(test_node,feature) | sync(feature) | done(feature). Toolchain-aware: .py\u2192pytest, .ts/.tsx\u2192vitest (GOTCHA_TDD_TOOLCHAIN).",
       "perm": "allow",
       "tags": "CMD_TDD"
     },

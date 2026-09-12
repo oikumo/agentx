@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_7 — Meta Harness 7 — Work-Performance Improvement Program
 
-> Status: **active** · **v0.2 (2026-09-06)** — created by `project.py new`, program definition filled same session (work-friction deep analysis). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_7`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v0.2 (2026-09-06)** — created by `project.py new`, program definition filled same session (work-friction deep analysis). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_7`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 

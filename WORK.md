@@ -39,7 +39,7 @@ Pool: pending=0 active=0 done=7 (places 12/15)
 | meta_harness_4 | complete | feature_037.tdd_testlist_prose_fallback |
 | meta_harness_5 | complete | feature_038.tdd_toolchain_aware |
 | meta_harness_6 | complete | feature_051.ledger_test_isolation, feature_052.opencode_version_canary, feature_053.net_gate_concurrency_predicate, feature_054.small_task_fast_path, feature_055.gate_preflight, feature_056.skip_taxonomy_phase_hygiene, feature_057.gate_budget_ceremony_meter, feature_058.thought_review_gotcha_root_cause, feature_059.harness_tiered_template |
-| meta_harness_7 | active | feature_060.dangling_active_only, feature_061.nav_cache_hit, feature_062.preflight_on_declare, feature_063.kb_sticky_per_feature, feature_064.named_work_truthful_observation, feature_066.think_batch_consult |
+| meta_harness_7 | complete | feature_060.dangling_active_only, feature_061.nav_cache_hit, feature_062.preflight_on_declare, feature_063.kb_sticky_per_feature, feature_064.named_work_truthful_observation, feature_066.think_batch_consult |
 | meta_harness_8 | active | feature_065.tdd_sync_stranded_red_closer |
 | meta_harness_concurrent | complete | feature_039.adaptive_net_engine, feature_040.net_composition_supervisor, feature_041.resource_places_concurrency, feature_042.goal_net_synthesis, feature_043.meta_net_dashboard, feature_044.mined_behavioral_net, feature_045.work_md_net_driven, feature_046.omt_net_session_arg_whitelist, feature_047.wip_limited_pool, feature_048.wip_limited_pool, feature_049.session_start_menu |
 | net_enforced_harness | complete | feature_050.net_as_gate |

@@ -30,7 +30,7 @@ const OP_ARGS: Record<string, readonly string[]> = {
 
 function createNetTool() {
   return tool({
-    description: irToolDescription("omt_net", "Meta-harness concurrency net — single-net SSOT (IDEA-002 v4 §5.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net↔ledger drift) | synthesize(template→splice proposal, D4) | mine(ledger→net draft, D4) | gate(path,session?)."),
+    description: irToolDescription("omt_net", "Concurrency net — SSOT (IDEA-002 v4 §5.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net↔ledger drift) | synthesize(template→splice proposal, D4) | mine(ledger→net draft, D4) | gate(path,session?)."),
 // TA: gotcha: gotcha (feature_050 wrap-up): TS fallback seed must BYTE-match the .omt @tool omt_net payload — currently 1B off: seed says gate(path,session). but .omt payload says gate(path,session?). → harnessc "TS fallback seed drifted" error (358 vs 359 B); add the ? to the seed string
     args: {
       op: tool.schema.string().describe("probe|fire|splice|sync|invariant|synthesize|mine|gate"),

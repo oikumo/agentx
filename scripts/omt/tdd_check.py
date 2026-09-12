@@ -37,6 +37,7 @@ from tdd.gates import (  # noqa: F401
     cmd_after_edit,
     cmd_gate,
     cmd_validate_exit,
+    get_dangling_reds,
 )
 from tdd.state import (  # noqa: F401
     LEDGER_PATH,
@@ -62,6 +63,7 @@ from tdd.cli import (  # noqa: F401
     cmd_refactor,
     cmd_start,
     cmd_status,
+    cmd_sync,
     cmd_testlist,
     main,
 )

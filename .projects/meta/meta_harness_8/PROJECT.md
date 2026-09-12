@@ -8,7 +8,7 @@
 
 > One line: `meta_harness_8` is the **single actionable backlog** for all pending meta-harness work — 5 tracks (T1–T5), ~30 items condensed from 6 closed projects; nothing scheduled, each item ships as its own feature in track order unless reprioritized.
 
-**Next:** pick the next track/item with the user (default: T2 P2-4 `op:sync` or T1 U4/U14 audit — cheapest unblocked), scaffold via `new_feature.py "<name>" --type minor_feature --project meta_harness_8`, overlap-check §Decisions D5 first.
+**Next:** T2-2 `tdd-same-node-lint` / T1-2 schema-autolink / T1-5 nav-caps (cheapest unblocked; T2-1 `op:sync` DONE via feature_065, T2-3 batch-consult DONE-zero-carry via mh7 feature_066) — scaffold via `new_feature.py "<name>" --type minor_feature --project meta_harness_8`, overlap-check §Decisions D5 first.
 
 ---
 
@@ -110,7 +110,10 @@
 ## Status
 
 - [x] Consolidation DONE 2026-09-12: 6 projects closed (mh2 --force for 020/022/023 short-slug completes + concurrent --force for 047 tombstone; mh3/mh5/mh7/net clean-close); mh8 home created; this PROJECT.md v1.0 written (5 tracks, deferred trio dropped per approval).
-- [ ] First linked feature (header flips draft → active mechanically) — pick from §Next.
+- [x] T2-1 `op:sync` DONE 2026-09-12 (feature_065.tdd_sync_stranded_red_closer, minor_feature) — first linked feature, header draft→active.
+- [x] mh7 Wave-0 + slice-1 + P1-1 absorbed DONE-zero-carry 2026-09-12: feature_060/061/062/063 (Wave-0) + feature_064 slice-1 + feature_066 think-batch-consult (== mh8 T2-3) all `complete` under closed mh7; no re-implementation in mh8 (D7).
+- [x] meta_harness_7 CLOSED 2026-09-12 (re-close after Wave-1 execution; 6/6 linked features complete, clean-close no --force) — mh8 sole home for remaining mh7 waves (D7).
+- [ ] Next: T2-2 / T1-2 / T1-5 (cheapest, unblocked) in §Scope order unless reprioritized; T3-4 benchmark anytime (no policy change).
 
 ---
 
@@ -122,6 +125,7 @@
 - **D4 — concurrent core recorded DONE, zero carry:** 039/040/041/045/046/048/049 + 042/043/044 optionals all have `complete` records; pool net rev 57 (12/15 places) + Tasks-menu render stand as built. T5 slices build ON them, not re-litigate D1/D16–D20.
 - **D5 — inherited locks stand:** mh6 D1–D6/DG1–DG3 (net solo-only, Tier-3 excludes net, KNOWN empty, gates net-zero) + mh7 DG1–DG3/D1–D4 + mh3 D1–D9 + mh2 v1 lock (read-only above mechanics) + mh5 D1–D4 (shipped/reject verdicts). Overlap-check before every scaffold (no re-implementation).
 - **D6 — execution discipline:** receipt round-robin + canary ordering (phase→skip→tests) + `harnessc check && build` + e2e receipt per harness-surface round; `uv` only; `src/` edits need `omt_phase` first (this doc is `.projects/`, non-gated).
+- **D7 — mh7 closed, residual absorbed (2026-09-12, user-directed):** `meta_harness_7` → complete (clean-close, 060/061/062/063/064/066 all `complete`, no --force). Pending→mh8 mapping verified, zero new rows needed: P1-2→T2-2, P1-3→T1-2, P1-4→T3-7, P2-1+F→T1-6, P2-2→T3-2, P2-3+D→T4-2, A→T3-4, B→T3-5, C→T4-1, E→T3-6, slices 2–3→T5-1/T5-2. T2-3 DONE-zero-carry via mh7 feature_066; slice-1 DONE-zero-carry via mh7 feature_064; Wave-0 DONE-zero-carry via 060–063. Shipped verdicts stand (D5).
 
 ---
 

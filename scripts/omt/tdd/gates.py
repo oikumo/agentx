@@ -164,6 +164,24 @@ def cmd_after_edit(args) -> dict:
     return {"action": "ok"}
 
 
+def get_dangling_reds(feature: str) -> list[str]:
+    """T2-1 (feature_065): stranded-RED derivation shared by validate-exit
+    and the sync-closer — a RED (verified) with NO later GREEN at the SAME
+    test_node is dangling (same-node granularity, GOTCHA_TDD_NODE)."""
+    cycles = get_tdd_cycles(feature)
+    dangling: list[str] = []
+    for i, c in enumerate(cycles):
+        if c.get("state") == "red" and c.get("verified"):
+            found_green = any(
+                c2.get("state") == "green"
+                and c2.get("test_node") == c.get("test_node")
+                for c2 in cycles[i + 1:]
+            )
+            if not found_green:
+                dangling.append(c.get("test_node", "?"))
+    return dangling
+
+
 def cmd_validate_exit(args) -> dict:
     feature = args.feature
 
@@ -181,17 +199,7 @@ def cmd_validate_exit(args) -> dict:
         for r in read_ledger()
     )
 
-    cycles = get_tdd_cycles(feature)
-    dangling: list[str] = []
-    for i, c in enumerate(cycles):
-        if c.get("state") == "red" and c.get("verified"):
-            found_green = any(
-                c2.get("state") == "green"
-                and c2.get("test_node") == c.get("test_node")
-                for c2 in cycles[i + 1:]
-            )
-            if not found_green:
-                dangling.append(c.get("test_node", "?"))
+    dangling = get_dangling_reds(feature)
 
     test_dir = REPO_ROOT / "tests" / "features" / feature
     test_files = list(test_dir.rglob("test_*.py")) if test_dir.exists() else []

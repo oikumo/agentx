@@ -12,6 +12,7 @@ Subcommands:
     start           TDD Red: verify test fails
     green           TDD Green: verify test passes
     refactor        TDD Refactor: verify tests stay green
+    sync            T2-1 (feature_065): close stranded REDs that now pass
     done            TDD Done: full checklist verification
     baseline        R4 (feature_028): failing node IDs of the current suite
                     (phase_gate.ts stores them on the Programming phase record)
@@ -39,7 +40,7 @@ from .ast_checks import (
     infer_target_src,
     verify_true_red,
 )
-from .gates import cmd_after_edit, cmd_gate, cmd_validate_exit
+from .gates import cmd_after_edit, cmd_gate, cmd_validate_exit, get_dangling_reds
 from .state import (
     KNOWN_SUITE_FAILURES,
     REPO_ROOT,
@@ -296,6 +297,44 @@ def _feature_baseline_failures(feature: str) -> list[str] | None:
     return None
 
 
+def cmd_sync(args) -> dict:
+    """T2-1 (feature_065): stranded-red closer — for each dangling RED of
+    this feature (get_dangling_reds: verified RED with NO later GREEN at the
+    SAME node), re-run the test now; a now-passing node gets a GREEN ledger
+    write (closing the cycle), a still-failing node writes NOTHING and lands
+    in still_failing with ok:false. Toolchain-aware via run_test (.py→pytest,
+    .ts/.tsx→vitest). Golden: 3 stranded REDs now-passing close in 1 call;
+    still-failing writes nothing."""
+    feature = args.feature
+    dangling = get_dangling_reds(feature)
+    if not dangling:
+        return {"ok": True, "closed": [], "still_failing": [],
+                "message": f"✅ SYNC — no stranded REDs for '{feature}'."}
+    closed: list[str] = []
+    still_failing: list[str] = []
+    for node in dangling:
+        exit_code, _stdout, _stderr = run_test(node, timeout=30)
+        if exit_code == 0:
+            write_ledger({
+                "kind": "tdd", "session": args.session, "state": "green",
+                "test_node": node, "verified": True, "exit_code": exit_code,
+                "feature": feature, "via": "sync",
+            })
+            closed.append(node)
+        else:
+            still_failing.append(node)
+    if still_failing:
+        return {
+            "ok": False, "closed": closed, "still_failing": still_failing,
+            "message": (f"⛔ SYNC — {len(closed)} closed, {len(still_failing)} still failing. "
+                        f"No write for failing nodes. Failing: {', '.join(still_failing[:5])}"),
+        }
+    return {
+        "ok": True, "closed": closed, "still_failing": [],
+        "message": f"✅ SYNC — closed {len(closed)} stranded RED(s): {', '.join(closed[:5])}",
+    }
+
+
 def cmd_baseline(args) -> dict:
     """R4 (feature_028): the failing node IDs of the current full suite —
     phase_gate.ts calls this at omt_phase{phase:Programming} entry and stores
@@ -485,6 +524,10 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("status")
     p.add_argument("--session", default="")
 
+    p = sub.add_parser("sync")
+    p.add_argument("--feature", required=True)
+    p.add_argument("--session", default="")
+
     p = sub.add_parser("validate-exit")
     p.add_argument("--feature", required=True)
 
@@ -492,7 +535,7 @@ def main(argv: list[str] | None = None) -> int:
 
     commands = {
         "testlist": cmd_testlist, "start": cmd_start, "green": cmd_green,
-        "refactor": cmd_refactor, "done": cmd_done, "gate": cmd_gate,
+        "refactor": cmd_refactor, "sync": cmd_sync, "done": cmd_done, "gate": cmd_gate,
         "after-edit": cmd_after_edit, "status": cmd_status,
         "validate-exit": cmd_validate_exit, "baseline": cmd_baseline,
     }
