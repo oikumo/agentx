@@ -545,5 +545,30 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
         "P0-3 must not touch think/protect (kbTrack only feeds g.kb)")
     checks.append("feature_063 P0-3: kb_sticky_per_feature wired (kb_consult ledger write + hasStickyKbConsult OR into g.kb; think/protect untouched)")
 
+    # 23. feature_064 slice 1 named_work_truthful_observation: sidecar
+    # task_bindings registry + validate_task_bindings (bindings ⊆ live pool
+    # tokens, anonymous remainder reported, no backfill) + probe additive
+    # tasks/bindings_valid/coverage/observation/menu keys with explicit
+    # idle/executing/ready/awaiting_capacity/drained_complete/inconsistent
+    # meanings and a labeled analysis basis — no new omt_net op (closed enum),
+    # no overlay change (P10 derived), no WORK.md renderer change.
+    net_state = _read("scripts/omt/net/state.py")
+    assert "def validate_task_bindings" in net_state, (
+        "slice 1 requires the bindings validator in net/state.py")
+    assert '"task_bindings"' in net_state, (
+        "slice 1 requires sidecar persistence of task_bindings in net/state.py")
+    assert "task_bindings: list[dict[str, Any]]" in net_state, (
+        "slice 1 requires the NetState registry field")
+    net_cli = _read("scripts/omt/net/cli.py")
+    assert "def _task_observation" in net_cli, (
+        "slice 1 requires the probe observation helper in net/cli.py")
+    assert "def _task_menu" in net_cli, (
+        "slice 1 requires the probe menu helper in net/cli.py")
+    assert '"basis"' in net_cli and "initial-marking analysis" in net_cli, (
+        "slice 1 requires the labeled analysis basis in the probe advice")
+    assert "drained_complete" in net_cli and "awaiting_capacity" in net_cli, (
+        "slice 1 requires the explicit empty/blocked meanings")
+    checks.append("feature_064 slice 1: named_work_truthful_observation wired (sidecar bindings + validator + probe observation/menu + labeled basis; no new op, overlay/renderer untouched)")
+
     _write_receipt(checks)
     assert RECEIPT_PATH.exists()

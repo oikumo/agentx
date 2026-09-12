@@ -5,6 +5,85 @@
 
 ---
 
+## 2026-09-12 (auto — feature_064.named_work_truthful_observation Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_064.named_work_truthful_observation/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-12 (iter 8 — slice 1 DONE, feature_064 shipped)
+
+### Done
+
+- **feature_064.named_work_truthful_observation DONE (minor_feature, Programming→Testing→Done):** sidecar `task_bindings` registry (revision-coupled, atomic; legacy bundles load []) + `validate_task_bindings` (unique ids, pool places, bindings⊆tokens, anonymous remainder reported, no backfill) + probe additive `tasks/bindings_valid/binding_errors/coverage/observation/menu` + `advice.basis` label. Observation states inconsistent>executing>ready>awaiting_capacity>drained_complete>idle_empty with reasons; menu in NEXT/Other/Blocked/Resources order with `implement/verify/review <id>` actions + transition fallback. No new op (closed enum), no overlay change (P10), no renderer change.
+- **Overlap check (Exec rule 5 + D4):** mh5 backlog all-shipped/reject (nothing open); mh6 closed (C1 predicate/A4/C2 untouched, 051 still deferred — explicit scope update, no reinterpretation); concurrent D1 + feature_053 solo stand; 045 renderer reused-not-forked. Atomic claims + integration explicitly deferred (slices 2–3).
+- **Discipline held:** receipt round-robin (state.py + cli.py one write each via script, parallel-OK different files, ONE e2e refresh); canary ordering (phase→skip→tests writes); think-gate consults (cli.py/state.py lists); KB consult (TIER_CODE net) sticky for feature.
+- **Evidence:** 17 new tests + e2e check #23; e2e 1/1; `harnessc check` 0 errors + `build` OK (263 records, budgets green); net suite 417/417; full suite **2015 passed + 1 known live-flake cleared in isolation** (total 2016 = 1999 + 17).
+
+### In progress / Blocked
+
+- _(nothing — slice 1 shipped)_
+
+### Next
+
+1. **Wave 1** in listed order: P1-1 `think-batch-consult` first (`new_feature.py "think batch consult" --type minor_feature --project meta_harness_7`), overlap check first.
+2. Slices 2–3 (claims/integration) per later selection; generic A–F stays inbox.
+
+### Notes / context
+
+- Test-report + design-note pointers: `6.testing/.../feature_064.../test_report.md`, `4.design/.../feature_064.../design_001_bindings_observation.md`.
+- Live bundle untouched (rev 57, all-anonymous dones validate clean).
+
+---
+
+## 2026-09-12 (iter 7 — D4 prioritize focused slice 1, Wave 1 queued)
+
+### Done
+
+- **D4 recorded in PROJECT.md (§Quick Start Next + §Status + §Decisions log + intake items 1/7):** focused concurrent slice 1 (`named-work-truthful-observation`) is NEXT, Wave 1 P1-1 queued after; 11-item program retained, generic A–F stays inbox. Scope update made explicit (no silent reinterpretation of `meta_harness_concurrent` D1 / feature_053 solo / Tier-3-excludes-net). Execution model: 1 coordinator + ≤2 workers, one machine, one bundle ≤15 places — pending user preference. Companion draft `agentx_concurrent_development` (empty v0.1) noted, home TBD at scaffold.
+
+### In progress / Blocked
+
+- _(nothing scaffolded — awaiting scaffold approval for slice 1)_
+
+### Next
+
+1. **Scaffold slice 1 (needs approval):** `uv run scripts/omt/new_feature.py "named work truthful observation" --type minor_feature --project meta_harness_7` (+ short design note for binding semantics: task binding fields, marking==bindings, revisioned menu, idle/blocked/done meanings, live-vs-initial labels). Overlap check first: `meta_harness_concurrent` + feature_048/053 + feature_045 sync + `agentx_concurrent_development` draft.
+2. Then Wave 1 P1-1 → P1-2 → P1-3 → P1-4 in order; then intake items 2–6 / slices 2–3 per later selection.
+
+### Notes / context
+
+- Source slice definition: `AGENTX_CONCURRENT_WORK.md` §First slice step 1 + §Agent-facing contract + §One bundle + acceptance demo (2 tasks together, 3rd waits with reason, interrupt/resume, stale-owner block, combined-failure blocks goal, fresh-agent recovery).
+- Docs-only reprioritization — no src/tests/net edits this session.
+
+---
+
+## 2026-09-12 (iter 6 — improvement002 intake, conceptual + actionable, no scope change)
+
+### Done
+
+- **Intake recorded in PROJECT.md (§Improvement002 intake + refs):** generic A–F concepts + mapping to P0/P1/P2 + 7-item actionable intake backlog (select scope, F-quickfix, A-baseline, B-slice note, D-bar for P2-3, E-pilot, concurrent slice 1). Marked **proposal-only / inbox** — committed 11-item program + DG1–DG3 + guardrails unchanged; generic rollout NOT selected; focused concurrent direction noted as governing for next discussion per source docs.
+- **Sources:** `sandbox/meta/improvement002/IMPROVEMENT_OPTIONS.md` (121 lines, F+A → C+B → D → E) + `AGENTX_CONCURRENT_WORK.md` (133 lines, 1-coordinator/≤2-worker bundle ≤15 places, bindings, atomic claims, recovery, demo).
+
+### In progress / Blocked
+
+- **Awaiting user selection:** generic vs focused vs both-with-order (PROJECT.md intake backlog item 1). No feature scaffolded for intake.
+
+### Next
+
+1. **Default (no reprioritization):** Wave 1 in listed order — P1-1 `think-batch-consult` first (`new_feature.py "think batch consult" --type minor_feature --project meta_harness_7`), with Exec-rule-5 overlap check.
+2. **If focused selected:** concurrent slice 1 (named work + truthful observation) as separate scope note — record scope update + execution model explicitly, do not reinterpret meta_harness_concurrent / feature_053 solo verdicts silently.
+3. Intake backlog items 2–7 stay pending until item 1 is decided.
+
+### Notes / context
+
+- Tree was clean at intake (`git status` clean; prior `[WIP] Project META HARNESS 7` commits landed). No src/tests/net/workflow edits made in this session — docs-only intake.
+- Overlap anchors for later scaffolds: A↔§Baseline, B↔P0-1, C↔P2-1, D↔P2-3, E↔P0-3/P1-1, F↔P2-1/P2-2, concurrent↔meta_harness_concurrent/feature_053.
+
+---
+
 ## 2026-09-06 (iter 5 — P0-3 kb-sticky-per-feature DONE, Wave 0 COMPLETE)
 
 ### Done

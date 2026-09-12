@@ -57,6 +57,136 @@ def _error(code_str: str, op: str, message: str = "") -> tuple[dict[str, Any], i
     return envelope, 1
 
 
+# feature_064.named_work_truthful_observation (slice 1): task-bound
+# observation over the pool engine. Additive envelope keys only — existing
+# keys stay byte-identical (test_net_cli.py key-access pins).
+_TASK_ACTION = {
+    "work_pending": "implement",
+    "work_active": "verify",
+    "work_done": "review",
+}
+_TASK_PLACE_ORDER = ("work_pending", "work_active", "work_done")
+
+
+def _named_task_actions(bindings: list[dict[str, Any]]) -> list[str]:
+    by_place: dict[str, list[str]] = {}
+    for b in bindings:
+        if isinstance(b, dict) and isinstance(b.get("id"), str):
+            by_place.setdefault(str(b.get("place")), []).append(b["id"])
+    actions: list[str] = []
+    for place in _TASK_PLACE_ORDER:
+        for bid in sorted(by_place.get(place, [])):
+            actions.append(f"{_TASK_ACTION[place]} {bid}")
+    return actions
+
+
+def _start_blockers(st: Any) -> list[str]:
+    """Unmarked input places of work_start (pool nets); [] when n/a."""
+    try:
+        inputs = st.net.inputs.get("work_start", [])
+    except AttributeError:
+        return []
+    return [p for p in inputs if st.live_marking.get(p, 0) == 0]
+
+
+def _task_observation(
+    st: Any, validation: dict[str, Any], enabled: list[str]
+) -> dict[str, Any]:
+    counts = state.pool_counts(st.live_marking)
+    errors = list(validation.get("errors", []))
+    rev = st.revision
+    if errors:
+        return {
+            "state": "inconsistent",
+            "reason": "; ".join(errors),
+            "revision": rev,
+            "basis": f"live_marking rev {rev}",
+        }
+    pending, active, done = (
+        counts.get("work_pending", 0),
+        counts.get("work_active", 0),
+        counts.get("work_done", 0),
+    )
+    if active > 0:
+        return {
+            "state": "executing",
+            "reason": f"work_active={active} (agent attention committed)",
+            "revision": rev,
+            "basis": f"live_marking rev {rev}",
+        }
+    if pending > 0:
+        if "work_start" in enabled:
+            return {
+                "state": "ready",
+                "reason": f"work_pending={pending}, work_start enabled",
+                "revision": rev,
+                "basis": f"live_marking rev {rev}",
+            }
+        blockers = _start_blockers(st)
+        detail = f" blocked by {','.join(blockers)}" if blockers else ""
+        return {
+            "state": "awaiting_capacity",
+            "reason": f"work_pending={pending}, work_start not enabled{detail}",
+            "revision": rev,
+            "basis": f"live_marking rev {rev}",
+        }
+    if done > 0:
+        return {
+            "state": "drained_complete",
+            "reason": f"done={done} (no pending/active work)",
+            "revision": rev,
+            "basis": f"live_marking rev {rev}",
+        }
+    return {
+        "state": "idle_empty",
+        "reason": "no pending/active/done work",
+        "revision": rev,
+        "basis": f"live_marking rev {rev}",
+    }
+
+
+def _task_menu(
+    st: Any, bindings: list[dict[str, Any]], enabled: list[str]
+) -> dict[str, Any]:
+    actions = _named_task_actions(bindings)
+    ordered_enabled = sorted(enabled)
+    if actions:
+        nxt = actions[0]
+        other = actions[1:] + ordered_enabled
+    else:
+        nxt = ordered_enabled[0] if ordered_enabled else "none"
+        other = ordered_enabled[1:]
+    blocked: list[dict[str, Any]] = []
+    if "work_start" not in enabled and any(
+        isinstance(b, dict) and b.get("place") == "work_pending" for b in bindings
+    ):
+        blockers = _start_blockers(st)
+        for b in bindings:
+            if isinstance(b, dict) and b.get("place") == "work_pending":
+                blocked.append(
+                    {"action": f"implement {b.get('id')}", "blocked_by": blockers}
+                )
+    for b in bindings:
+        if isinstance(b, dict) and b.get("block_reason"):
+            blocked.append(
+                {"action": f"{b.get('id')}", "blocked_by": [b.get("block_reason")]}
+            )
+    try:
+        rep = state.resource_report(st)
+        resources = {
+            "free": sum(1 for r in rep.get("resources", []) if r.get("capacity_ok")),
+            "total": len(rep.get("resources", [])),
+        }
+    except Exception:
+        resources = {"free": 0, "total": 0}
+    return {
+        "next": nxt,
+        "other_enabled": other,
+        "blocked": blocked,
+        "resources": resources,
+    }
+
+
 def _probe(base: Path, max_states: int) -> tuple[dict[str, Any], int]:
     st = state.load(base)
     analyzer = PetriNetAnalyzer(st.net)
@@ -79,8 +209,24 @@ def _probe(base: Path, max_states: int) -> tuple[dict[str, Any], int]:
                 list(v) for v in analyzer.transition_invariants()
             ],
             "max_states": max_states,
+            "basis": (
+                f"initial-marking analysis (≤{max_states} states), not a "
+                "claim about the live marking"
+            ),
         },
     }
+    bindings = list(getattr(st, "task_bindings", []) or [])
+    validation = state.validate_task_bindings(bindings, st.live_marking)
+    enabled_list = list(envelope["enabled"])
+    envelope["tasks"] = bindings
+    envelope["bindings_valid"] = validation["ok"]
+    envelope["binding_errors"] = list(validation["errors"])
+    envelope["coverage"] = {
+        place: dict(numbers)
+        for place, numbers in validation["per_place"].items()
+    }
+    envelope["observation"] = _task_observation(st, validation, enabled_list)
+    envelope["menu"] = _task_menu(st, bindings, enabled_list)
     return envelope, 0
 
 

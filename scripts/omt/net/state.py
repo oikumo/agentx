@@ -31,7 +31,7 @@ import copy
 import json
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -75,6 +75,84 @@ RESOURCE_PLACES = (
 POOL_PLACES = ("work_pending", "work_active", "work_done")
 POOL_TRANSITIONS = ("work_start", "work_complete")
 MAX_PLACES = 15
+
+# feature_064.named_work_truthful_observation (slice 1: observation only) —
+# named task bindings over the pool engine. Bindings ride the sidecar
+# (revision-coupled, atomic with the bundle) because the overlay is
+# RE-DERIVED at every save (P10). Atomic claims + integration are slice 2–3;
+# `generation` is recorded here, not enforced.
+TASK_BINDING_PLACES = ("work_pending", "work_active", "work_done")
+_TASK_BINDING_OPTIONAL_TYPES = {
+    "objective": str,
+    "acceptance_refs": list,
+    "deps": list,
+    "owner": str,
+    "generation": int,
+    "checkpoint": str,
+    "scope": list,
+    "resources": list,
+    "results": list,
+    "block_reason": str,
+}
+
+
+def validate_task_bindings(
+    bindings: object, live_marking: dict[str, int]
+) -> dict[str, object]:
+    """Validate a bindings list against live pool tokens.
+
+    Bindings are a NAMED SUBSET of live tokens: per-place
+    anonymous = tokens - bindings must stay >= 0 (legacy/aggregate tokens
+    without bindings are reported, never backfilled). Returns
+    {"ok", "errors", "per_place", "consistent"}; never raises on shape.
+    """
+    errors: list[str] = []
+    seen: set[str] = set()
+    counts = {pl: 0 for pl in TASK_BINDING_PLACES}
+    items = bindings if isinstance(bindings, list) else None
+    if items is None:
+        errors.append("task_bindings must be a list")
+        items = []
+    for i, b in enumerate(items):
+        where = f"task_bindings[{i}]"
+        if not isinstance(b, dict):
+            errors.append(f"{where} must be an object")
+            continue
+        bid = b.get("id")
+        if not isinstance(bid, str) or not bid:
+            errors.append(f"{where}.id must be a non-empty string")
+            continue
+        if bid in seen:
+            errors.append(f"duplicate task id {bid!r}")
+        seen.add(bid)
+        place = b.get("place")
+        if place not in TASK_BINDING_PLACES:
+            errors.append(
+                f"{where}.place {place!r} must be one of "
+                f"{list(TASK_BINDING_PLACES)}"
+            )
+            continue
+        for key, typ in _TASK_BINDING_OPTIONAL_TYPES.items():
+            if key in b and not isinstance(b[key], typ):
+                errors.append(f"{where}.{key} must be {typ.__name__}")
+        counts[place] += 1
+    per_place: dict[str, dict[str, int]] = {}
+    for pl in TASK_BINDING_PLACES:
+        tokens = int(live_marking.get(pl, 0))
+        n = counts[pl]
+        anonymous = tokens - n
+        if anonymous < 0:
+            errors.append(
+                f"{pl} has {n} bindings but only {tokens} tokens"
+            )
+            anonymous = 0
+        per_place[pl] = {"bindings": n, "tokens": tokens, "anonymous": anonymous}
+    return {
+        "ok": not errors,
+        "errors": errors,
+        "per_place": per_place,
+        "consistent": not errors,
+    }
 
 
 def is_pool_net(net: Any) -> bool:
@@ -168,6 +246,7 @@ class NetState:
     revision: int
     overlay: dict[str, Any]
     updated_at: str = ""
+    task_bindings: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _utc_now() -> str:
@@ -263,6 +342,11 @@ def load(base: Path) -> NetState:
         revision=sidecar["revision"],
         overlay=overlay,
         updated_at=sidecar.get("updated_at", ""),
+        task_bindings=(
+            sidecar.get("task_bindings", [])
+            if isinstance(sidecar.get("task_bindings", []), list)
+            else []
+        ),
     )
 
 
@@ -278,6 +362,7 @@ def save(base: Path, st: NetState) -> None:
         "live_marking": [st.live_marking[p] for p in st.net.place_order],
         "revision": st.revision,
         "updated_at": st.updated_at or _utc_now(),
+        "task_bindings": [dict(b) for b in (st.task_bindings or [])],
     }
     overlay = dict(st.overlay, revision=st.revision, net_file=NET_FILENAME)
     payloads = {

@@ -8,7 +8,7 @@
 
 > One line: `meta_harness_7` is the **11-item work-performance program distilled from the 2026-09-06 performing-work analysis** (evidence: `omt_status` + `omt_q state/plan/drift` this session) — 3 waves: quick-wins → structural → productization; **EXECUTING: Wave 0 COMPLETE 4/4** (P0-1 feature_062, P0-2 feature_060, P0-4 feature_061, P0-3 feature_063; see CURRENT_STATE.md iter 2–5; verdicts D1–D3 below).
 
-**Next:** read §Decision gates → §Execution rules → §Baseline, then scaffold Wave 1 / P1-1 (`think-batch-consult`, minor_feature) per Execution rule 1.
+**Next:** Wave 1 / P1-1 (`think-batch-consult`, minor_feature) per Execution rule 1 — slice 1 DONE (feature_064). Read §Decisions log D4 → §Improvement002 intake → §Execution rules → §Baseline before scaffolding.
 
 ---
 
@@ -119,6 +119,7 @@
 ## Status
 
 - [x] Wave 0 — P0-1 `preflight-on-declare` ✅ DONE (feature_062, 2026-09-06: declare embed via shared preflight.ts, suite 1992/0) · P0-2 `dangling-active-only` ✅ DONE (feature_060, 2026-09-06: active-only ≤10 + expired GC, suite 1981/0) · P0-3 `kb-sticky-per-feature` ✅ DONE (feature_063, 2026-09-06: kb_consult ledger write + hasStickyKbConsult OR into g.kb, suite 1999/0) · P0-4 `nav-cache-hit` ✅ DONE (feature_061, 2026-09-06: denial appends top-3 nav index hits, message-only, suite 1986/0) — **Wave 0 COMPLETE**
+- [ ] Focus track — slice 1 `named-work-truthful-observation` ✅ DONE (feature_064, 2026-09-12: sidecar bindings + validator + probe observation/menu, suite 2015+17/0-flake-cleared, e2e #23) — Wave 1 NEXT
 
 ---
 
@@ -127,12 +128,50 @@
 - **D1 — include all 11 items:** user decision 2026-09-06 ("include all the improvements") — every performing-work option is in scope; none dropped at definition time.
 - **D2 — execution deferred to next sessions:** this session defines the program only; zero features scaffolded/executed.
 - **D3 — DG1/DG2/DG3 + meta_harness_6 locks stand:** net solo-only with Tier-3 excluding net; KNOWN empty; gates net-zero; think/protect not weakened; tests canary narrowed-only.
+- **D4 — prioritize focused concurrent slice 1 (2026-09-12):** user decision ("prioritize the focused one") — `sandbox/meta/improvement002/AGENTX_CONCURRENT_WORK.md` §First slice step 1 (named work + truthful observation) is NEXT, ahead of Wave 1. 11-item program NOT dropped (Wave 1 queued immediately after). Execution-model assumption: 1 coordinator + ≤2 workers, one machine, one bundle ≤15 places, shared coordination root — pending user's optional preference. Scope update recorded explicitly here: `meta_harness_concurrent` D1 (harness-only, `agent_attention`=1, solo) + feature_053 solo + Tier-3-excludes-net stand for their scope; the focused track is a NEW AgentX-dev coordination scope, not a reinterpretation. Companion draft `agentx_concurrent_development` exists (empty v0.1) — home TBD at scaffold time (link to meta_harness_7 vs that project).
 
 ---
+
+## Improvement002 intake (2026-09-12) — conceptual, proposal only
+
+> Source: `sandbox/meta/improvement002/IMPROVEMENT_OPTIONS.md` (generic A–F, proposal only; compiler check 263 records / 0 errors noted as projection-consistency only) + `sandbox/meta/improvement002/AGENTX_CONCURRENT_WORK.md` (focused proposal — per both docs, the focused concurrent direction **supersedes the generic rollout for the next discussion**; generic rollout NOT selected). No worktree/runtime change applied by the evaluation. This section is **inbox**: the committed 11-item program + DG1–DG3 + guardrails above are unchanged until the user selects.
+
+### Concepts — what improvement002 adds beyond Waves 0–2
+
+- **A. Measure cost per correctly completed task** (first measurement): byte budgets (nav_index 63923/64000, tool_args/schemas tight) are maintenance checks, not task-cost proof. Proposes pinned-rev benchmark (bugfix, cross-layer, major, harness repair, resume, concurrent conflict) + seeded harmful actions; record behavioral success, regressions, interventions, blocks, recovery, verify/wall time, real I/O tokens; removal experiments per gate. Target (not prediction): −50% harness calls / −20% tokens on small-task sample, same success, all seeded violations caught.
+- **B. Prepare task obligations in one op** (largest UX win after A): extend preflight into one bounded task-prep response (identity, relevant knowledge, restrictions, required evidence, next valid action); auto-do authorized registration/retrieval, never fabricate approval/understanding. Risk-model by change characteristics (contracts, data, reversibility, arch boundaries, shared resources, uncertainty), not labels alone. P0-1 preflight-on-declare is the foundation, not the full prep op.
+- **C. Unambiguous policy/state semantics** (foundation for B): DSL leaves logic in TS; prose-only exceptions (ex: `g.net` `skip_ok=false` vs expiring scope-all override + impl-owned concurrency activation) + empty IR `requires` show fields alone don't encode the decision. Proposes typed policy data over small primitives, one evaluator for preflight/enforcement/explain; separate durable progress vs temp grants vs consultation evidence (8h expiry vs scope-shadowing gotcha — verify before treating as defect). Reuse ledger + net rev.
+- **D. Coherent-change validation + content-bound evidence** (high for harness/refactor): per-file 2nd-edit guard + timestamp-vs-mtime freshness drives round-robin editing (P2-3's problem statement). Proposes bounded authorized batch → validate result; receipt with digests + policy ver + tests + dep/config inputs + toolchain + results; temp inconsistency inside batch OK, validation at boundary required; input change invalidates receipt; preserve unrelated edits + reviewable recovery. Strengthen completion beyond call-coverage with representative faults. P2-3 receipt-batch-mode is the in-program hook.
+- **E. Selective verifiable knowledge** (medium): gates prove consultation happened, not relevance/correctness. Proposes metadata (symbol/contract, test ref, content ver, expiry condition), change-surface retrieval (+dependents), prep-response delivery + version-triggered refresh, promote hot testable lessons to checks then retire prose, documented retirements. No silent auto-grant. Touches P0-3 sticky + P1-1 batch-consult.
+- **F. Repair evolution procedure** (immediate, small–M): workflow says update only `./meta/META_HARNESS.md` vs canonical `.meta/META_HARNESS.omt` + rebuild; compiler doesn't catch; fresh-start/no-source-search constraints block reuse/verification. Proposes validated workflow header (authority/targets/caps/output/approval), compile-time ref/generated-file checks, artifact-only mode with claim limits, targeted prior-outcome reads, per-change problem/benefit/safety/eval/rollback.
+- **Focused concurrent direction (governing for next discussion):** Petri net as shared work state for AgentX dev — 1 coordinator + ≤2 workers, one authoritative bundle ≤15 places (8 lifecycle + 3 resources), task bindings (ID, objective/acceptance refs, deps on verified versions, place/owner/generation/checkpoint, scope/resources/workspace, results/evidence/integration/block-reason), marking == binding counts, atomic claim (rev + readiness + owner + capacity + scope conflicts), one local transaction authority, isolated workspaces + coordinator-owned integration, checkpoints/transfer/recovery, serialized integration + objective-level acceptance. Acceptance demo: 2 tasks together, 3rd waits with reason, interrupt/resume lossless, stale owner blocked, combined-failure blocks goal, fresh agent recovers from shared state alone. Report coordination overhead on this scenario, not a separate generic benchmark yet.
+
+### Mapping to existing program (overlap guard per Exec rule 5)
+
+| Improvement002 | Nearest in-program item | Relation |
+|---|---|---|
+| A benchmark | §Baseline + success crit 3/6 | Extends: baseline is ledger/suite snapshot; A adds pinned task trials + token/time + seeded violations |
+| B prep op | P0-1 preflight-on-declare (DONE) | Builds on: P0-1 embeds preflight; B is full obligation assembly + risk model |
+| C typed policy | P2-1 `omt-workflow-index` gates design | Adjacent: both need single decision semantics; do not fork a second evaluator |
+| D batch + digests | P2-3 receipt-batch-mode | Same problem: D is the acceptance bar P2-3 must meet (invalidation, ownership, preservation) |
+| E selective KB | P0-3 sticky (DONE) + P1-1 batch-consult | Builds on: sticky/batch solve when to consult; E solves what/refresh/retire |
+| F workflow repair | P2-1 workflow index + P2-2 recipe | Precondition: fix canonical-target contradiction before indexing workflows |
+| Concurrent bindings | meta_harness_concurrent + feature_053 solo + net_enforced_harness | Extends: pool is solo-by-construction; new scope needs bindings/claims/integration — record scope update explicitly, do not reinterpret old verdicts |
+
+### Actionable intake backlog (NOT scheduled — needs user selection)
+
+1. **Select scope:** ✅ DECIDED D4 2026-09-12 — focused concurrent slice first, Wave 1 queued after; generic A–F stays inbox.
+2. **F-quickfix:** point evolution workflow at `.meta/META_HARNESS.omt` + rebuild, add header/authority check proposal. Small–M. Acceptance: compiler rejects generated-projection edit instruction / bad ref / authority contradiction.
+3. **A-baseline:** define 6-task sample + seeded violations + token/time harness; run against current tree to set the real baseline. Medium. Acceptance: repeatable script + first numbers, no policy change.
+4. **B-slice design note:** vertical C+B slice for ordinary bugfixes (shared semantics + one prep call) with measure-before-broaden rule. Needs design note. Acceptance: one prep call covers routine task; block == preflight decision.
+5. **D-bar for P2-3:** adopt D acceptance (same patch same treatment any edit count; input change invalidates; broken behavior fails; user edits preserved) as P2-3's done-criteria. Acceptance: written into P2-3 scaffold scope when Wave 2 opens.
+6. **E-pilot:** attach metadata to top repeated-discovery lessons only; retrieval-quality check on representative tasks. Acceptance: relevant change refreshes, unrelated edits don't re-consult.
+7. **Concurrent slice 1 — ⏭️ NEXT (D4):** named work + truthful observation (bindings, revisioned task menu, idle/blocked/done meanings, live-vs-initial analysis labels) within 15-place limit; reuse engine/CLI/rev/WORK.md projection. Acceptance: demo step 1 + invariant tests (bindings==tokens, ≤1 owner, conserved caps, idempotent retries, current-evidence deps, no self-report Done). Scaffold: `uv run scripts/omt/new_feature.py "named work truthful observation" --type minor_feature --project meta_harness_7` (+ short design note for binding semantics; home TBD vs `agentx_concurrent_development`).
 
 ## References
 
 - Evidence base this session: `omt_status` (Skips 82, Dangling 101, Ceremony 0s, Gates 10/12) + `omt_q state/plan/drift` + `omt_think{op:list, query:risk}` + `.workflows/META.md` + `.workflows/meta_harness/META.md` + `loops/meta_harness_project.md`.
 - Lineage: `.projects/meta/meta_harness_6/PROJECT.md` (prior program, closed 2026-09-06, suite 1979/0) + `.sandbox/meta_harness_6_evaluation.md` (architecture scorecard + economic model) + `.projects/meta/meta_harness_5/PROJECT.md` (overlap check per Execution rule 5).
 - Harness SSOT: `.meta/META_HARNESS.omt` (gates @GATE, budgets @BUDGET, tools @TOOL, vars @VAR).
+- Intake 2026-09-12 (proposal only): `sandbox/meta/improvement002/IMPROVEMENT_OPTIONS.md` (A–F + sequence) + `sandbox/meta/improvement002/AGENTX_CONCURRENT_WORK.md` (focused concurrent direction, supersedes generic for next discussion).
 - WORK.md Projects table row (synced by `uv run scripts/omt/project.py sync`).
