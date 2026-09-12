@@ -1,3 +1,4 @@
+<!-- authority: follow -->
 The application knowledge base (AKB) must stay populated comprehensively and reflect the live source code: every public class as a concept record, every curated overlay text meaningful, every drift caught. The agent should be able to drive a smart population/update pass — rebuild the skeleton, detect coverage gaps and drift, propose curation/fix alternatives — without hand-holding through the build steps.
 
 This loop is the procedure for that pass. It is large-effort because the AKB is unbounded (ALL public classes, ~270+ records today plus deps plus curated docs), drift accrues continuously as `src/` moves, and "smart" means: AST skeleton + curated overlay + drift/coverage diagnostics + targeted curation proposals — not blind rebuild.

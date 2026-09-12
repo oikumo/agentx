@@ -1,3 +1,4 @@
+<!-- authority: override -->
 The META HARNESS must help to the human user to mechanize to the coding agent opencode software development  
 following a clear path, guided by rules and constraint that allow to improve the process performance during the development 
 tasks execution. Must evolve, gathering knowledge and improving the META HARNESS and the source code itself.
@@ -20,4 +21,4 @@ to develop software, but always can be improved, so the improvements must be fou
 3. Create a list of all the possible improvement in a file ./sandbox/meta/improvement<ID>/IMPROVEMENT_OPTIONS.md 
 4. Ask the user to select one of the options 
 5. Execute the improvement options selected by the user and follow the execution path mandated for him 
-6. Update only the ./meta/META_HARNESS.md file with the META HARNESS new state
+6. Update only the canonical source `.meta/META_HARNESS.omt` with the META HARNESS new state, then run `uv run scripts/omt/harnessc.py build` to regenerate the META_HARNESS.md / AGENTS.md projections (never edit the projections directly)

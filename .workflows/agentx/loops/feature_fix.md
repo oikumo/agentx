@@ -1,3 +1,4 @@
+<!-- authority: follow -->
 An agentx feature does not work as expected (the **fix** branch) OR was implemented and the implementation must be reviewed completely before any fix is applied (the **review** branch). In both cases the loop stops at the approval gate and applies a fix only after the user explicitly picks one alternative. The trigger picks the branch:
 
 - Trigger says the feature is *broken / wrong / doesn't work* → **fix branch** (steps 1–2 then 3fix).

@@ -54,7 +54,7 @@ Pool: pending=0 active=0 done=7 (places 12/15)
 
 ## Paused (resumable)
 
-- [~] **meta_harness_8 execution — T1-6 (feature_076.workflow_index_and_repair_quickfix)** — scaffolded, Analysis dangling; T4-3 (feature_075) SHIPPED this session. Resume: read `sandbox/pause_2026-09-12.md` first (fix evolution.md canonical-target → harnessc workflows CLI + check rules). Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.
+- [x] **meta_harness_8 execution — T1-6 (feature_076.workflow_index_and_repair_quickfix)** — SHIPPED 2026-09-12 (canonical-target fix, authority markers on 6 workflows, `harnessc check_workflows` + `workflows [--subject|--plan]` subcommand; 16 goldens + boundary e2e green; suite 2079/2080, pre-existing 059 pin only). T4-3 (feature_075) shipped earlier. Next per §Scope: T1-4 / T1-3 → T5-1 2A; open repair flag: `meta_harness_development_self_evaluation.md` unindexed (drift warning). Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.
 - [x] **meta_harness_6 program execution** — PROGRAM COMPLETE + CLOSED 2026-09-06 (feature_051..059, all 13 items; suite 1979/0, KNOWN=0 held; delta report @ `.projects/meta/meta_harness_6/CURRENT_STATE.md` iter 10; verdicts D4–D6 @ PROJECT.md Decisions log). ⚠ Working tree uncommitted — user commit pending.
 
 ## Agent Scratchpad (auto-managed, do not edit manually)

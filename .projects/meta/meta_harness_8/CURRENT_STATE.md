@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-12 (auto — feature_076.workflow_index_and_repair_quickfix Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_076.workflow_index_and_repair_quickfix/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-12 (auto — feature_075.completion_hardening_content_bound_evidence Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_075.completion_hardening_content_bound_evidence/test_report.md

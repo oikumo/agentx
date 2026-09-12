@@ -2083,6 +2083,7 @@ def run_all_checks(c: Corpus, agents_md: str, nav_text: str = "", ir_text: str =
     check_root_hygiene(c)
     check_work_done_max(c)
     check_work_tasks_canonical(c)
+    check_workflows(c)
     check_projects_structure(c)
     check_projects_links(c)
     check_projects_resume(c)
@@ -2099,6 +2100,148 @@ def run_all_checks(c: Corpus, agents_md: str, nav_text: str = "", ir_text: str =
             unit = "gates" if rid == "gates" else "B"
             c.errors.append(f"budget {rid}: {size} {unit} > {cap} {unit} (grow the budget deliberately in the same .omt edit)")
     return sizes
+
+
+# --- workflow catalog (feature_076 T1-6) --------------------------------------
+# The .workflows/ catalog is agent-read markdown; this is its machine contract.
+# Each subject META.md lists workflow files in a table (backticked path cell);
+# each listed workflow file carries `<!-- authority: follow|override -->` on
+# line 1 (machine view of the `# Rules` line-1 stance). Checks: (a) manifest-
+# listed files exist and carry a valid marker; (b) no workflow instructs
+# editing generated projections (META_HARNESS.md / AGENTS.md) instead of the
+# canonical .omt source; (c) on-disk .md absent from its subject manifest is
+# drift (warning). The `workflows` subcommand lists the catalog and prints a
+# workflow's strategy steps (--plan).
+
+WORKFLOWS_REL = ".workflows"
+WORKFLOW_AUTH_RE = re.compile(r"<!--\s*authority\s*:\s*(follow|override)\s*-->")
+_WORKFLOW_MANIFEST_ROW_RE = re.compile(r"^\|[^|\n]*?`([^`]*?\.md)`\s*\|([^|\n]*)", re.M)
+_PROJ_TARGET_RE = re.compile(r"\b(?:META_HARNESS\.md|AGENTS\.md)\b")
+_PROJ_EDIT_VERB_RE = re.compile(r"\b(?:update|edit|modify|write)s?\b", re.I)
+_PROJ_SAFEGUARD_RE = re.compile(r"never|do\s+not|don't|regenerat|\.omt|harnessc", re.I)
+_BAD_PROJ_PATH_RE = re.compile(r"(?<!\.)meta/META_HARNESS\.md")
+
+
+def discover_workflows() -> list[dict]:
+    """All workflow files under .workflows/<subject>/, manifest index-flagged."""
+    out: list[dict] = []
+    root = REPO_ROOT / WORKFLOWS_REL
+    if not root.is_dir():
+        return out
+    for sub in sorted(d for d in root.iterdir() if (d / "META.md").is_file()):
+        manifest = (sub / "META.md").read_text(encoding="utf-8")
+        listed = {m.group(1): m.group(2).strip()
+                  for m in _WORKFLOW_MANIFEST_ROW_RE.finditer(manifest)}
+        for p in sorted(sub.rglob("*.md")):
+            if p.name == "META.md":
+                continue
+            rel = p.relative_to(sub).as_posix()
+            text = p.read_text(encoding="utf-8")
+            head = "\n".join(text.splitlines()[:10])
+            m = WORKFLOW_AUTH_RE.search(head)
+            out.append({
+                "subject": sub.name, "rel": rel, "path": p, "text": text,
+                "name": p.stem, "listed": rel in listed,
+                "purpose": listed.get(rel, ""),
+                "authority": m.group(1) if m else "",
+            })
+    return out
+
+
+def check_workflows(c: Corpus) -> None:
+    """Authority markers manifest-consistent; no projection-edit instructions."""
+    root = REPO_ROOT / WORKFLOWS_REL
+    if not root.is_dir():
+        return
+    entries = discover_workflows()
+    listed_rels = {e["rel"] for e in entries if e["listed"]}
+    for e in entries:
+        tag = f"{WORKFLOWS_REL}/{e['subject']}/{e['rel']}"
+        if not e["listed"]:
+            c.warnings.append(f"{tag} not listed in {e['subject']}/META.md "
+                              "(catalog drift — index it or remove it)")
+        elif not e["authority"]:
+            c.errors.append(f"{tag} lacks a machine authority marker — add "
+                            "`<!-- authority: follow|override -->` on line 1 "
+                            "(mirrors # Rules line 1)")
+        for i, line in enumerate(e["text"].splitlines(), 1):
+            if _BAD_PROJ_PATH_RE.search(line):
+                c.errors.append(f"{tag}:{i} references meta/META_HARNESS.md (wrong path) — "
+                                "canonical source is .meta/META_HARNESS.omt (edit it, then "
+                                "uv run scripts/omt/harnessc.py build)")
+                continue
+            if (_PROJ_EDIT_VERB_RE.search(line) and _PROJ_TARGET_RE.search(line)
+                    and not _PROJ_SAFEGUARD_RE.search(line)):
+                c.errors.append(f"{tag}:{i} instructs editing the generated projection "
+                                "(META_HARNESS.md / AGENTS.md) — canonical source is "
+                                ".meta/META_HARNESS.omt (edit it, then harnessc.py build)")
+    # manifest rows pointing at a file that no longer exists
+    for sub in sorted(d for d in root.iterdir() if (d / "META.md").is_file()):
+        manifest = (sub / "META.md").read_text(encoding="utf-8")
+        for m in _WORKFLOW_MANIFEST_ROW_RE.finditer(manifest):
+            if m.group(1) not in listed_rels and not (sub / m.group(1)).exists():
+                c.errors.append(f"{WORKFLOWS_REL}/{sub.name}/META.md lists {m.group(1)} "
+                                "but the file does not exist")
+
+
+def workflow_plan_steps(text: str) -> str:
+    """Extract the strategy section (the LAST '# ' heading that is not
+    '# Rules' — workflows may shape `# <X> rules` before the real strategy;
+    '# Result' bodies after it are excluded)."""
+    lines = text.splitlines()
+    start: int | None = None
+    head = ""
+    for i, line in enumerate(lines):
+        if re.match(r"^# (?!Rules\b)(?!Result\b)(?!\S*\s*rules\b)", line, re.I):
+            start = i + 1
+            head = line[2:].strip()
+    if start is None:
+        return ""
+    body: list[str] = [f"# {head}"]
+    for line in lines[start:]:
+        if line.startswith("# "):
+            break
+        body.append(line)
+    return "\n".join(body).strip()
+
+
+def cmd_workflows(argv: list[str]) -> int:
+    subject: str | None = None
+    plan: str | None = None
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if a == "--subject" and i + 1 < len(argv):
+            subject = argv[i + 1]
+            i += 2
+        elif a == "--plan" and i + 1 < len(argv):
+            plan = argv[i + 1]
+            i += 2
+        else:
+            print(f"harnessc workflows: error: unknown argument {a}", file=sys.stderr)
+            return 2
+    entries = discover_workflows()
+    if subject is not None:
+        entries = [e for e in entries if e["subject"] == subject]
+    if plan is not None:
+        matches = [e for e in entries
+                   if e["name"] == plan or f"{e['subject']}/{e['name']}" == plan
+                   or e["rel"] == plan or Path(e["rel"]).stem == plan]
+        if not matches:
+            print(f"harnessc workflows: error: no workflow named {plan!r}", file=sys.stderr)
+            return 1
+        e = matches[0]
+        rel = e["path"].relative_to(REPO_ROOT).as_posix()
+        print(f"{e['subject']}/{e['name']}  authority={e['authority'] or 'NONE'}  {rel}")
+        steps = workflow_plan_steps(e["text"])
+        print(steps if steps else "(no strategy section found)")
+        return 0
+    for e in sorted(entries, key=lambda x: (x["subject"], x["rel"])):
+        if not e["listed"]:
+            continue
+        rel = e["path"].relative_to(REPO_ROOT).as_posix()
+        print(f"{e['subject']}/{e['name']}  authority={e['authority'] or 'NONE'}  {rel}")
+    return 0
 
 
 # --- receipt batch stage (feature_074 T4-2 + Improvement002 D-bar) ---------------
@@ -2222,9 +2365,11 @@ def cmd_stage(args: list[str]) -> int:
 def main(argv: list[str]) -> int:
     args = argv[1:]
     cmd = args[0] if args and not args[0].startswith("-") else "check"
-    if cmd not in ("check", "build", "init", "stage"):
+    if cmd not in ("check", "build", "init", "stage", "workflows"):
         print(__doc__)
         return 2
+    if cmd == "workflows":
+        return cmd_workflows(args[1:])
     if not OMT_PATH.exists():
         print(f"harnessc: error: {OMT_REL} not found", file=sys.stderr)
         return 1

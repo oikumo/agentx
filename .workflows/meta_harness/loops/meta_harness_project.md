@@ -1,3 +1,4 @@
+<!-- authority: override -->
 The META HARNESS must help to the human user to mechanize to the coding agent opencode software development  
 following a clear path, guided by rules and constraint that allow to improve the process performance during the development 
 tasks execution. Must evolve, gathering knowledge and improving the META HARNESS and the source code itself.
