@@ -1,6 +1,6 @@
 # PROJECT: net_enforced_harness — Net_Enforced_Harness
 
-> Status: **active** · **v0.1 (2026-09-05)** — created by `project.py new`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project net_enforced_harness`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v0.1 (2026-09-05)** — created by `project.py new`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project net_enforced_harness`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 

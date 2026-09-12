@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_5 — Meta Harness requirements backlog (from `.sandbox/meta_harness_3_idea.md`)
 
-> Status: **active** · **v0.1 (2026-08-29)** — created by `project.py new`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_5`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v0.1 (2026-08-29)** — created by `project.py new`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_5`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
