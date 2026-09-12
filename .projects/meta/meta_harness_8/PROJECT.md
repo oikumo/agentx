@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_8 — Consolidated Meta-Harness Backlog (supersedes mh2/mh3/mh5/mh7/concurrent/net_enforced)
 
-> Status: **draft** · **v1.0 (2026-09-12)** — created by `project.py new --slug meta_harness_8`. Consolidation session: closed 6 active meta-harness projects (mh2 --force, mh3, mh5, mh7, concurrent --force for 047 tombstone, net_enforced) per user approval; mh4/mh6 already complete (untouched). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_8`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **active** · **v1.0 (2026-09-12)** — created by `project.py new --slug meta_harness_8`. Consolidation session: closed 6 active meta-harness projects (mh2 --force, mh3, mh5, mh7, concurrent --force for 047 tombstone, net_enforced) per user approval; mh4/mh6 already complete (untouched). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_8`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
