@@ -245,6 +245,8 @@ _TASK_BINDING_OPTIONAL_TYPES = {
     "block_reason": str,
     "submission": dict,
     "liveness": dict,
+    "accepted_deps": list,
+    "accepted_evidence": dict,
 }
 
 
@@ -1305,6 +1307,8 @@ def verify_result(
                 f"(rev {st.revision}) — nothing to verify",
             )
         live_gen = _require_lane_generation(b, generation, task_id, st.revision)
+        if verdict == "pass":
+            _check_deps_satisfied(st, b)
         if "test_slots" in st.live_marking:
             st.live_marking["test_slots"] = st.live_marking.get("test_slots", 0) + 1
         updated = dict(b)
@@ -1450,6 +1454,8 @@ def integrate_finish(
                 f"(rev {st.revision})",
             )
         live_gen = _require_lane_generation(b, generation, task_id, st.revision)
+        if verdict == "pass":
+            _check_deps_satisfied(st, b)
         if "integration_slot" in st.live_marking:
             st.live_marking["integration_slot"] = st.live_marking.get("integration_slot", 0) + 1
         updated = dict(b)
@@ -1461,6 +1467,11 @@ def integrate_finish(
             sub = dict(updated.get("submission") or {})
             sub["integrated_at_rev"] = st.revision + 1
             updated["submission"] = sub
+            updated["accepted_deps"] = [dict(d) for d in (updated.get("deps") or []) if isinstance(d, dict)]
+            updated["accepted_evidence"] = {
+                "head_commit": sub.get("head_commit"),
+                "evidence_digest": sub.get("evidence_digest"),
+            }
             kind = "net_integrate_pass"
         else:
             _move_pool_token(st, "work_integrating", "work_pending")
@@ -3230,3 +3241,224 @@ def reconcile_transactions(base: Path, *, session: str = "") -> dict[str, Any]:
             "pending": pending,
             "revision": live_revision,
         }
+
+
+# ---------------------------------------------------------------------------
+# Evidence + dependency completion (feature_085 T5-7 3C — NEXT_STEP §12, mh8
+# strict slice order after 079/080/081/082/083/084). Dependency satisfied =
+# an accepted artifact version: the downstream pins {need, task_id,
+# head_commit, evidence_digest} and the upstream must be work_done with a
+# matching submission (head + evidence_digest from the 083 lane). Staleness
+# (§12.2): upstream re-integrates after downstream verified → the next
+# verify/integrate pass refuses `dependency_stale`; upstream not yet done
+# (or unknown) → `dependency_unsatisfied`. Fail verdicts bypass both gates
+# (failure evidence is always recordable). Objective acceptance is
+# observation only: `objective_status` reports accepted iff every listed
+# task is work_done with satisfied deps — no worker self-report can mint
+# Done (the only Done path stays the dep-gated integrate_finish pass).
+# ---------------------------------------------------------------------------
+
+
+def _validate_deps_entry(dep: object) -> str | None:
+    """One deps entry → error string or None (valid)."""
+    if not isinstance(dep, dict):
+        return "deps entry must be an object"
+    tid = dep.get("task_id")
+    if not isinstance(tid, str) or not tid:
+        return "deps entry needs a non-empty string task_id"
+    for key in ("need", "head_commit", "evidence_digest"):
+        if key in dep and not isinstance(dep[key], str):
+            return f"deps entry {key!r} must be a string"
+    return None
+
+
+def _dep_current(st: NetState, dep: dict) -> dict[str, object]:
+    """Current upstream truth for one pinned dep (read-only snapshot)."""
+    tid = str(dep.get("task_id", ""))
+    up = next((x for x in (st.task_bindings or []) if isinstance(x, dict) and x.get("id") == tid), None)
+    if up is None:
+        return {"place": None, "head_commit": None, "evidence_digest": None, "found": False}
+    sub = up.get("submission") if isinstance(up.get("submission"), dict) else {}
+    return {
+        "place": up.get("place"),
+        "head_commit": sub.get("head_commit"),
+        "evidence_digest": sub.get("evidence_digest"),
+        "found": True,
+    }
+
+
+def _dep_status(st: NetState, dep: dict) -> dict[str, object]:
+    """Per-dep status: satisfied | stale | unsatisfied (read-only)."""
+    cur = _dep_current(st, dep)
+    base: dict[str, object] = {
+        "need": dep.get("need", ""),
+        "task_id": dep.get("task_id", ""),
+        "pinned_head": dep.get("head_commit"),
+        "pinned_evidence": dep.get("evidence_digest"),
+        "current_place": cur.get("place"),
+        "current_head": cur.get("head_commit"),
+        "current_evidence": cur.get("evidence_digest"),
+    }
+    if not cur.get("found") or cur.get("place") != "work_done":
+        base["status"] = "unsatisfied"
+        return base
+    if dep.get("head_commit") is not None and dep.get("head_commit") != cur.get("head_commit"):
+        base["status"] = "stale"
+        return base
+    if dep.get("evidence_digest") is not None and dep.get("evidence_digest") != cur.get("evidence_digest"):
+        base["status"] = "stale"
+        return base
+    base["status"] = "satisfied"
+    return base
+
+
+def _check_deps_satisfied(st: NetState, downstream: dict) -> None:
+    """Refuse verify/integrate pass when pinned deps are not satisfied."""
+    deps = downstream.get("deps") or []
+    if not deps:
+        return
+    task_id = downstream.get("id", "?")
+    for dep in deps:
+        if not isinstance(dep, dict):
+            raise SpliceError(
+                "invalid_deps",
+                f"task {task_id!r} has a malformed deps entry (rev {st.revision})",
+            )
+        rep = _dep_status(st, dep)
+        status = rep.get("status")
+        if status == "satisfied":
+            continue
+        need = dep.get("need", "")
+        tid = dep.get("task_id", "?")
+        if status == "unsatisfied":
+            raise SpliceError(
+                "dependency_unsatisfied",
+                f"task {task_id!r} needs {need!r} from {tid!r} "
+                f"(now {rep.get('current_place')!r}, rev {st.revision}) — "
+                "upstream must integrate first",
+            )
+        raise SpliceError(
+            "dependency_stale",
+            f"task {task_id!r} needs {need!r} from {tid!r}: pinned "
+            f"head={dep.get('head_commit')!r} evidence={dep.get('evidence_digest')!r} "
+            f"vs current head={rep.get('current_head')!r} "
+            f"evidence={rep.get('current_evidence')!r} (rev {st.revision}) — "
+            "re-pin and re-verify",
+        )
+
+
+def declare_dependencies(
+    base: Path,
+    task_id: str,
+    *,
+    generation: int,
+    deps: list[dict[str, object]] | None,
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Pin upstream versions on an active (or verifying) binding.
+
+    The binding keeps `deps` through the lane (submit/verify/integrate copy
+    the binding dict), so the verify + integrate_finish pass gates see the
+    same pins. Generation-fenced (stale refuses `stale_generation`, D9);
+    malformed entries refuse `invalid_deps`. No token moves.
+    """
+    items = list(deps) if isinstance(deps, list) else None
+    payload = {"task_id": task_id, "generation": generation, "deps": items, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, object]]:
+        st = load(base)
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        if b.get("place") not in ("work_active", "work_verifying"):
+            raise SpliceError(
+                "task_not_active",
+                f"task {task_id!r} is in {b.get('place')!r}, not work_active "
+                f"(rev {st.revision}) — declare deps before submitting",
+            )
+        live_gen = _require_lane_generation(b, generation, task_id, st.revision)
+        if not isinstance(items, list):
+            raise SpliceError(
+                "invalid_deps",
+                f"task {task_id!r} deps must be a list (rev {st.revision})",
+            )
+        for dep in items:
+            err = _validate_deps_entry(dep)
+            if err is not None:
+                raise SpliceError(
+                    "invalid_deps",
+                    f"task {task_id!r} bad deps entry: {err} (rev {st.revision})",
+                )
+        updated = dict(b)
+        updated["deps"] = [dict(d) for d in items if isinstance(d, dict)]
+        st.task_bindings[idx] = updated
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_declare_deps",
+            "session": session,
+            "task_id": task_id,
+            "generation": live_gen,
+            "deps": updated["deps"],
+            "revision": st.revision,
+        })
+        return st, {"task_id": task_id, "generation": live_gen}
+
+    st, _ = _transact(
+        base, op="declare_deps", payload=payload,
+        expected_revision=expected_revision, command_id=command_id, apply=_apply,
+    )
+    return st
+
+
+def dependency_status(base: Path, task_id: str) -> dict[str, object]:
+    """Read-only dep report for one task (no lock, no write)."""
+    st = load(base)
+    idx = _binding_index(st, task_id)
+    b = st.task_bindings[idx]
+    deps = b.get("deps") or []
+    rows = [_dep_status(st, d) for d in deps if isinstance(d, dict)]
+    satisfied = all(r.get("status") == "satisfied" for r in rows)
+    return {
+        "task_id": task_id,
+        "place": b.get("place"),
+        "generation": int(b.get("generation", 0) or 0),
+        "deps": rows,
+        "satisfied": satisfied,
+        "revision": st.revision,
+    }
+
+
+def objective_status(base: Path, task_ids: list[str]) -> dict[str, object]:
+    """Read-only objective acceptance: all listed tasks work_done + deps satisfied.
+
+    Acceptance is observation — the only mutation that mints work_done stays
+    the dep-gated integrate_finish pass, so a worker self-report can never
+    satisfy the objective (§12.3).
+    """
+    st = load(base)
+    tasks: dict[str, object] = {}
+    accepted = True
+    for tid in task_ids:
+        b = next((x for x in (st.task_bindings or []) if isinstance(x, dict) and x.get("id") == tid), None)
+        if b is None:
+            tasks[tid] = {"place": None, "evidence_digest": None, "deps_satisfied": False, "found": False}
+            accepted = False
+            continue
+        sub = b.get("submission") if isinstance(b.get("submission"), dict) else {}
+        deps = b.get("deps") or []
+        rows = [_dep_status(st, d) for d in deps if isinstance(d, dict)]
+        deps_ok = all(r.get("status") == "satisfied" for r in rows)
+        place = b.get("place")
+        ok = place == "work_done" and deps_ok
+        if not ok:
+            accepted = False
+        tasks[tid] = {
+            "place": place,
+            "evidence_digest": sub.get("evidence_digest"),
+            "deps_satisfied": deps_ok,
+            "found": True,
+        }
+    return {"tasks": tasks, "accepted": accepted, "revision": st.revision}

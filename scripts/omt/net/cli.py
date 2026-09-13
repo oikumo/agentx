@@ -435,6 +435,51 @@ def _reconcile(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], in
     return {"ok": False, "op": "reconcile", "error": str(outcome.get("code", "txn_diverged")), "message": str(outcome.get("message", "")), "status": status}, 1
 
 
+# feature_085.evidence_dependency_completion (T5-7 3C): thin envelopes over
+# declare_dependencies + dependency_status/objective_status in state.py.
+# CLI-only in this slice (no omt_net plugin exposure — tool budgets ~99%
+# full, the T1-6/083 precedent); `mutation` carries the JSON deps list;
+# `command_id` stays on the mutating op (D14).
+
+
+def _declare_deps(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    raw: Any = []
+    if getattr(args, "mutation", ""):
+        try:
+            raw = json.loads(args.mutation)
+        except json.JSONDecodeError as exc:
+            return _emit(*_error(
+                "invalid_mutation", "declare-deps", f"--mutation is not valid JSON: {exc}"
+            ))
+    deps: Any = raw
+    if isinstance(raw, dict) and isinstance(raw.get("deps"), list):
+        deps = raw["deps"]
+    if not isinstance(deps, list):
+        return _emit(*_error("invalid_mutation", "declare-deps", "--mutation must be a JSON list"))
+    st = state.declare_dependencies(
+        base,
+        args.task_id,
+        generation=args.generation,
+        deps=deps,
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("declare-deps", st, args.task_id), 0
+
+
+def _deps(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    objective = (getattr(args, "objective", "") or "").strip()
+    if objective:
+        tids = [t.strip() for t in objective.split(",") if t.strip()]
+        rep = state.objective_status(base, tids)
+        return {"ok": True, "op": "deps", "objective": tids, **rep}, 0
+    if not getattr(args, "task_id", ""):
+        return _emit(*_error("invalid_mutation", "deps", "pass --task-id or --objective"))
+    rep = state.dependency_status(base, args.task_id)
+    return {"ok": True, "op": "deps", **rep}, 0
+
+
 # feature_083.verification_integration_lane (T5-5 3A): thin envelopes over the
 # submit/verify/integrate_start/integrate_finish transactions in state.py.
 # CLI-only in this slice (no omt_net plugin exposure — tool budgets ~99%
@@ -750,6 +795,20 @@ def _build_parser() -> argparse.ArgumentParser:
     p_ifinish.add_argument("--session", default="")
     p_ifinish.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
     p_ifinish.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079).")
+    p_decl = sub.add_parser("declare-deps", help="Pin upstream versions on an active binding (T5-7 3C).")
+    p_decl.add_argument("--task-id", "--task_id", required=True)
+    p_decl.add_argument("--generation", type=int, required=True, help="Held generation (stale refuses).")
+    p_decl.add_argument("--mutation", default="", help="JSON deps list ([{need, task_id, head_commit?, evidence_digest?}]).")
+    p_decl.add_argument("--reasoning", required=True)
+    p_decl.add_argument("--session", default="")
+    p_decl.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_decl.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079).")
+    p_deps = sub.add_parser("deps", help="Dependency / objective status (read-only, T5-7 3C).")
+    p_deps.add_argument("--task-id", "--task_id", default="", help="Single task id (omit with --objective).")
+    p_deps.add_argument("--objective", default="", help="Comma-separated task ids for objective acceptance.")
+    p_deps.add_argument("--reasoning", required=True)
+    p_deps.add_argument("--session", default="")
+    p_deps.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
 
     p_splice = sub.add_parser(
         "splice", help="Atomic structural transaction (conformance-gated, §3)."
@@ -878,6 +937,10 @@ def main(argv: list[str] | None = None) -> int:
             return _emit(*_integrate_start(base, args))
         if op == "integrate_finish":
             return _emit(*_integrate_finish(base, args))
+        if op == "declare-deps":
+            return _emit(*_declare_deps(base, args))
+        if op == "deps":
+            return _emit(*_deps(base, args))
         if op == "splice":
             mutation = None
             if args.mutation:
