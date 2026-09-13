@@ -84,6 +84,118 @@ POOL_PLACES = ("work_pending", "work_active", "work_done")
 POOL_TRANSITIONS = ("work_start", "work_complete")
 MAX_PLACES = 15
 
+# feature_082.two_worker_capacity_scope_arbitration (T5-4 2D — NEXT_STEP
+# §10–§11, mh8 D8/D13 one-machine worker_slots=2). Code-enforced capacity +
+# component-aware scope arbitration inside the T5-1 _transact authority, so
+# the checks commit atomically with the binding+marking update. A
+# `worker_slots` place (when present via splice migration) is consumed/
+# restored alongside the pool token; the active-binding count is the
+# authoritative fence so legacy bundles without the place still arbitrate.
+WORKER_SLOTS_CAPACITY = 2
+
+
+def _normalize_scope_entry(entry: object) -> tuple[str, ...]:
+    """One scope entry → canonical component tuple (NEXT_STEP §11.1).
+
+    Splits on "/" and drops empties/".", so "src/foo" vs "src/foobar" share
+    a string prefix but no component prefix (no conflict), while "src/foo"
+    vs "src/foo/bar" share the full ancestor prefix (conflict). Non-string
+    entries normalize to ().
+    """
+    if not isinstance(entry, str):
+        return ()
+    parts = tuple(p for p in (s.strip() for s in entry.split("/")) if p and p != ".")
+    return parts
+
+
+def _normalize_scope_list(scope: object) -> list[tuple[str, ...]]:
+    if isinstance(scope, str):
+        scope = [scope]
+    if not isinstance(scope, list):
+        return []
+    out: list[tuple[str, ...]] = []
+    for entry in scope:
+        norm = _normalize_scope_entry(entry)
+        if norm:
+            out.append(norm)
+    return out
+
+
+def scopes_overlap(a: object, b: object) -> bool:
+    """True iff any entry of scope A is an ancestor-or-self of any of B."""
+    la, lb = _normalize_scope_list(a), _normalize_scope_list(b)
+    if not la or not lb:
+        return False
+    for x in la:
+        for y in lb:
+            n = min(len(x), len(y))
+            if x[:n] == y[:n]:
+                return True
+    return False
+
+
+def _scope_conflict_with_active(
+    active_bindings: list[dict], new_scope: object
+) -> str | None:
+    """Blocking active task id whose scope overlaps the newcomer, else None."""
+    for b in active_bindings:
+        if not isinstance(b, dict):
+            continue
+        if scopes_overlap(new_scope, b.get("scope", [])):
+            bid = b.get("id")
+            return str(bid) if bid else "<unknown>"
+    return None
+
+
+def _active_task_count(st: NetState) -> int:
+    return sum(
+        1
+        for b in (st.task_bindings or [])
+        if isinstance(b, dict) and b.get("place") == "work_active"
+    )
+
+
+def eligible_parallel_tasks(st: NetState, limit: int = 2) -> list[str]:
+    """Pending task ids disjoint from active + each other, up to `limit`.
+
+    Sorted for determinism; the probe menu surfaces these as the actionable
+    parallel offer (Slice 2D acceptance: A+T1, B+T2 concurrent). Capacity-
+    aware: only free worker slots are offered (full → [] with the reason in
+    the menu blocked list, not here).
+    """
+    try:
+        free = max(0, WORKER_SLOTS_CAPACITY - _active_task_count(st))
+    except Exception:
+        free = limit
+    limit = min(limit, free)
+    if limit <= 0:
+        return []
+    active = [
+        b
+        for b in (st.task_bindings or [])
+        if isinstance(b, dict) and b.get("place") == "work_active"
+    ]
+    chosen: list[str] = []
+    chosen_scopes: list[object] = []
+    for b in sorted(
+        (
+            x
+            for x in (st.task_bindings or [])
+            if isinstance(x, dict) and x.get("place") == "work_pending"
+        ),
+        key=lambda x: str(x.get("id", "")),
+    ):
+        scope = b.get("scope", [])
+        if _scope_conflict_with_active(active, scope) is not None:
+            continue
+        if any(scopes_overlap(scope, s) for s in chosen_scopes):
+            continue
+        chosen.append(str(b.get("id")))
+        chosen_scopes.append(scope)
+        if len(chosen) >= limit:
+            break
+    return chosen
+
 # feature_064.named_work_truthful_observation (slice 1: observation only) —
 # named task bindings over the pool engine. Bindings ride the sidecar
 # (revision-coupled, atomic with the bundle) because the overlay is
@@ -662,6 +774,36 @@ def claim_task(
                 f"(rev {st.revision}) — already claimed or finished",
             )
         generation = int(b.get("generation", 0) or 0) + 1
+        _active_now = _active_task_count(st)
+        if _active_now >= WORKER_SLOTS_CAPACITY:
+            raise SpliceError(
+                "worker_capacity_exhausted",
+                f"worker_slots={WORKER_SLOTS_CAPACITY} full "
+                f"({_active_now} active) — task {task_id!r} waits "
+                f"(rev {st.revision})",
+            )
+        if "worker_slots" in st.live_marking and st.live_marking.get("worker_slots", 0) < 1:
+            raise SpliceError(
+                "worker_capacity_exhausted",
+                f"no worker_slots token for task {task_id!r} "
+                f"(rev {st.revision}) — workers busy",
+            )
+        _blocker = _scope_conflict_with_active(
+            [
+                x
+                for x in (st.task_bindings or [])
+                if isinstance(x, dict) and x.get("place") == "work_active"
+            ],
+            b.get("scope", []),
+        )
+        if _blocker is not None:
+            raise SpliceError(
+                "scope_conflict",
+                f"task {task_id!r} scope overlaps active task "
+                f"{_blocker!r} (rev {st.revision}) — pick a disjoint scope",
+            )
+        if "worker_slots" in st.live_marking:
+            st.live_marking["worker_slots"] -= 1
         _move_pool_token(st, "work_pending", "work_active")
         claimed = dict(b)
         claimed["place"] = "work_active"
@@ -732,6 +874,8 @@ def release_task(
                 f"{owner!r} (rev {st.revision})",
             )
         _move_pool_token(st, "work_active", "work_pending")
+        if "worker_slots" in st.live_marking:
+            st.live_marking["worker_slots"] = st.live_marking.get("worker_slots", 0) + 1
         released = dict(b)
         released["place"] = "work_pending"
         released.pop("owner", None)

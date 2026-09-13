@@ -182,11 +182,64 @@ def _task_menu(
         }
     except Exception:
         resources = {"free": 0, "total": 0}
+    # feature_082 (T5-4 2D): additive parallel offer + worker capacity view
+    # (existing keys untouched — test_net_cli exact-shape risk). Pending
+    # tasks refused by capacity/scope surface here with stable reason codes.
+    try:
+        _cap_total = int(getattr(state, "WORKER_SLOTS_CAPACITY", 2) or 2)
+    except Exception:
+        _cap_total = 2
+    try:
+        _active_bs = [
+            b
+            for b in bindings
+            if isinstance(b, dict) and b.get("place") == "work_active"
+        ]
+        _used = len(_active_bs)
+    except Exception:
+        _used = 0
+        _active_bs = []
+    try:
+        _parallel = list(state.eligible_parallel_tasks(st, limit=2))
+    except Exception:
+        _parallel = []
+    try:
+        for b in bindings:
+            if not isinstance(b, dict) or b.get("place") != "work_pending":
+                continue
+            _bid = b.get("id")
+            if _used >= _cap_total:
+                blocked.append(
+                    {
+                        "action": f"implement {_bid}",
+                        "blocked_by": ["worker_capacity_exhausted"],
+                    }
+                )
+                continue
+            try:
+                _blk = state._scope_conflict_with_active(_active_bs, b.get("scope", []))
+            except Exception:
+                _blk = None
+            if _blk is not None:
+                blocked.append(
+                    {
+                        "action": f"implement {_bid}",
+                        "blocked_by": [f"scope_conflict:{_blk}"],
+                    }
+                )
+    except Exception:
+        pass
     return {
         "next": nxt,
         "other_enabled": other,
         "blocked": blocked,
         "resources": resources,
+        "parallel": _parallel,
+        "capacity": {
+            "workers_used": _used,
+            "workers_total": _cap_total,
+            "free": max(0, _cap_total - _used),
+        },
     }
 
 
