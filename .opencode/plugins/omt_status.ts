@@ -6,7 +6,7 @@
 // module-level tool() would read the IR under the pre-init cwd — F2/F17).
 
 import { tool } from "@opencode-ai/plugin"
-import { existsSync, readFileSync, readdirSync, mkdirSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync, mkdirSync, statSync } from "node:fs"
 import { join, relative, dirname } from "node:path"
 import { execSync } from "node:child_process"
 // Single source (meta_harness_dsl R1): state paths, JSONL IO, UNLOCK_WINDOW_MS
@@ -381,6 +381,142 @@ export function ceremonyMeter(): { lines: string[]; summary: Record<string, any>
 // R8: build the tool AFTER initOmtShared so irToolDescription reads the IR
 // under the injected repo root (never the pre-init cwd).
 
+// ---------------------------------------------------------------------------
+// feature_092 (mh8 T3-3, source mh3 P3·T3) resume digest — the
+// post-compaction single read. mh3 measured reads = 66% of all tool bytes
+// (worst: same file re-read 29×/session; mh2/PROJECT.md 26× ≈ 520KB); root
+// cause is context-compaction eviction, so harness leverage is INDIRECT: ONE
+// ≤2KB digest that re-orients (identity + next + trail + doc anchors)
+// instead of re-reading WORK.md/PROJECT.md/CURRENT_STATE.md (~58KB) whole.
+// Cap discipline mirrors feature_069 nav caps: under-cap output is
+// byte-identical full content (no marker); over-cap drops optional lines
+// from the end (artifacts → docs → trail) then hard-cuts with a detail
+// hint. READ-ONLY (the A4 ledger-clean pin holds) and FAST — no lint
+// subprocess on this path (resume is process-state, not code-state).
+// Design: .meta/software_development_process/4.design/features/
+// feature_092.resume_digest/design_001_resume_digest.md
+// ---------------------------------------------------------------------------
+const RESUME_DIGEST_CAP = 2048
+const RESUME_TRAIL_CAP = 12
+const RESUME_NEXT_LINE_CAP = 200
+const RESUME_LABEL_CAP = 80
+
+function byteLen(s: string): number {
+  return Buffer.byteLength(s, "utf8")
+}
+
+function clipText(s: string, cap: number): string {
+  return s.length <= cap ? s : s.slice(0, cap - 1) + "…"
+}
+
+// First `## ` heading of a markdown log (the newest CURRENT_STATE entry).
+function firstHeadingLine(path: string): { title: string; atLine: number } | null {
+  try {
+    const lines = readFileSync(path, "utf8").split("\n")
+    const i = lines.findIndex(l => /^##\s/.test(l))
+    if (i < 0) return null
+    return { title: lines[i].replace(/^##\s*/, "").trim(), atLine: i + 1 }
+  } catch { return null }
+}
+
+// The `**Next:**` line inside the project home's "## New Session Quick Start"
+// section — the distilled "what's next" a resume would re-read 34KB for.
+function quickStartNext(path: string): { line: string; atLine: number } | null {
+  try {
+    const lines = readFileSync(path, "utf8").split("\n")
+    let inQuick = false
+    for (let i = 0; i < lines.length; i++) {
+      if (/^##\s/.test(lines[i])) inQuick = /^##\sNew Session Quick Start/.test(lines[i])
+      if (inQuick && /^\*\*Next:\*\*/.test(lines[i])) {
+        return {
+          line: clipText(lines[i].replace(/^\*\*Next:\*\*\s*/, "").trim(), RESUME_NEXT_LINE_CAP),
+          atLine: i + 1,
+        }
+      }
+    }
+  } catch { /* fail-open: no Quick Start line */ }
+  return null
+}
+
+function fileSizeB(rel: string): number | null {
+  try { return statSync(join(repoRoot(), rel)).size } catch { return null }
+}
+
+// Compact one-ledger-record label for the session trail (what THIS session
+// already did — the anti-duplicate-read signal).
+function trailLabel(r: any): string {
+  const k = String(r?.kind ?? "?")
+  let suffix = ""
+  if (k === "phase") suffix = `${r.phase || ""}${r.feature ? ` ${r.feature}` : ""}`
+  else if (k === "skip") suffix = `${r.scope || ""}${r.purpose ? ` ${r.purpose}` : ""}`
+  else if (k === "tdd") suffix = `${r.state || ""}${r.test_node ? ` ${r.test_node}` : ""}`
+  else if (k === "q") suffix = String(r.op || "")
+  else if (k === "complete") suffix = `${r.phase || ""}${r.feature ? ` ${r.feature}` : ""}`
+  return clipText(`${k}${suffix ? ` ${suffix}` : ""}`.replace(/\s+/g, " ").trim(), RESUME_LABEL_CAP)
+}
+
+function resumeTrail(sessionId?: string): { line: string | null; total: number } {
+  if (!sessionId) return { line: null, total: 0 }
+  const recs = (sharedReadLedgerAll() as any[])
+    .filter(r => r?.session === sessionId && r?.kind
+      && r.kind !== "project" && r.kind !== "project_link")
+    .sort((a, b) => String(a.ts || "").localeCompare(String(b.ts || "")))
+  if (!recs.length) return { line: null, total: 0 }
+  const shown = recs.slice(-RESUME_TRAIL_CAP).map(trailLabel)
+  const more = recs.length - shown.length
+  return {
+    line: `Trail (this session, ${recs.length}): ${shown.join(" · ")}${more > 0 ? ` · … +${more} more` : ""}`,
+    total: recs.length,
+  }
+}
+
+// Which phase-artifact dirs exist for the feature (fail-open when absent).
+function featureArtifactLine(feature: string): string | null {
+  if (!feature) return null
+  try {
+    const base = join(repoRoot(), ".meta", "software_development_process")
+    if (!existsSync(base)) return null
+    const featureNum = feature.match(/feature_(\d+)/)?.[0] || feature
+    const hits: string[] = []
+    for (const d of readdirSync(base)) {
+      if (!/^\d\./.test(d)) continue
+      const dir = resolveFeatureDir(join(base, d, "features"), feature, featureNum)
+      if (dir) hits.push(d.split(".")[1])
+    }
+    if (!hits.length) return null
+    return `Artifacts: ${hits.join(", ")} @ .meta/software_development_process/*/features/${feature}`
+  } catch { return null }
+}
+
+// Cap the assembled digest: byte-precise (UTF-8), mandatory lines first,
+// optional lines dropped from the end while over cap, hard-cut + marker as
+// the last resort. Returns the final text + honest truncated flag.
+function buildResumeDigest(mandatory: string[], optional: string[]): {
+  output: string
+  truncated: boolean
+} {
+  const marker = `… digest capped at ${RESUME_DIGEST_CAP}B — detail: omt_q{op:state} · WORK.md`
+  let lines = [...mandatory, ...optional]
+  let truncated = false
+  while (lines.length > mandatory.length && byteLen(lines.join("\n")) > RESUME_DIGEST_CAP) {
+    lines.pop()
+    truncated = true
+  }
+  let text = lines.join("\n")
+  if (byteLen(text) <= RESUME_DIGEST_CAP) {
+    return { output: truncated ? `${text}\n${marker}` : text, truncated }
+  }
+  // hard-cut: reserve room for the marker, then byte-fit the prefix
+  const budget = RESUME_DIGEST_CAP - byteLen(`\n${marker}`)
+  let lo = 0, hi = text.length
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1
+    if (byteLen(text.slice(0, mid)) <= budget) lo = mid
+    else hi = mid - 1
+  }
+  return { output: `${text.slice(0, lo)}\n${marker}`, truncated: true }
+}
+
 // feature_030: active project = project linked to the active feature (derived
 // per call, never stored — D1). Full fold: project links span months.
 function deriveActiveProject(feature: string): { project: string; state: string; last_log: string } | null {
@@ -409,12 +545,12 @@ function deriveActiveProject(feature: string): { project: string; state: string;
 
 function createStatusTool() {
   return tool({
-    description: irToolDescription("omt_status", "Process context: phase, unlock, artifacts, lint, valid next phases, WORK.md next task; op=preflight(tool,path) → ordered gates that will fire + clearing action each (default: full status)."),
+    description: irToolDescription("omt_status", "Process context: phase, unlock, artifacts, lint, valid next phases, WORK.md next task; op=preflight(tool,path) → ordered gates + clearing action each | resume → ≤2KB post-compaction digest (default: full status)."),
     args: {
-      op: tool.schema.string().optional().describe("status (default) | preflight"),
+      op: tool.schema.string().optional().describe("status (default) | preflight | resume"),
       tool: tool.schema.string().optional().describe("target tool (default edit)"),
       path: tool.schema.string().optional().describe("target path"),
-      include_ledger: tool.schema.boolean().optional().describe("include last 5 ledger entries"),
+      include_ledger: tool.schema.boolean().optional().describe("last 5 ledger entries"),
     },
     async execute(args, context) {
       const sessionId = context?.sessionID
@@ -439,10 +575,88 @@ function createStatusTool() {
           metadata: proj,
         }
       }
+      // feature_092 (mh8 T3-3): resume digest — the post-compaction single
+      // read. Runs BEFORE the default path (no lint subprocess, no ledger
+      // writes) and re-orients from one ≤2KB answer: identity, project
+      // Quick-Start Next, WORK.md next task, session trail, doc anchors.
+      if (args?.op === "resume") {
+        const unlock = getActiveUnlock(sessionId)
+        const all = sharedReadLedgerAll() as any[]
+        // cross-session fallback: last phase/complete carrying a feature
+        // (stale unlocks expire, but the feature/project still orients)
+        let lastAct: any = null
+        for (const r of all) {
+          if ((r?.kind === "phase" || r?.kind === "complete") && r?.feature) lastAct = r
+        }
+        const feature = unlock?.feature || lastAct?.feature || ""
+        const taskType = unlock?.task_type || lastAct?.task_type || ""
+        const projectInfo = deriveActiveProject(feature)
+
+        const mandatory: string[] = []
+        if (unlock) {
+          const started = Date.parse(unlock.ts || "")
+          const remaining = Math.max(0, UNLOCK_WINDOW_MS - (Date.now() - (Number.isNaN(started) ? Date.now() : started)))
+          mandatory.push(
+            `\u{1F9ED} RESUME DIGEST — ${taskType || "unknown"} ${unlock.phase || "?"}${unlock.scope ? ` (${unlock.scope})` : ""} · ${feature || "no feature"} · expires ${remaining > 0 ? formatDuration(remaining) : "expired"}`,
+          )
+        } else {
+          mandatory.push("\u{1F9ED} RESUME DIGEST — no unlock (src/ blocked; omt_phase to declare)")
+          if (lastAct) {
+            mandatory.push(`Last: ${lastAct.kind} ${lastAct.phase || ""} ${lastAct.feature || ""} @${String(lastAct.ts || "").slice(0, 10)}`)
+          }
+        }
+        if (projectInfo) {
+          const qs = quickStartNext(join(repoRoot(), ".projects", "meta", projectInfo.project, "PROJECT.md"))
+          mandatory.push(`Project: ${projectInfo.project} (${projectInfo.state}) · last log ${projectInfo.last_log || "—"}${qs ? ` · Next: ${qs.line}` : ""}`)
+        }
+        const nextTask = getWorkMdNextTask()
+        const nextPhases = unlock?.phase
+          ? phaseTransitions()[unlock.phase] ?? ["Analysis", "Design", "Programming", "Testing"]
+          : ["Analysis", "Design", "Programming", "Testing"]
+        mandatory.push(`Next: ${nextTask || "none pending"} · valid phases: ${nextPhases.join(", ")}`)
+
+        // optional lines — droppable from the end when over cap
+        const optional: string[] = []
+        const tdd = runTddStatus(sessionId)
+        if (tdd && tdd.tdd_mode) {
+          optional.push(`TDD Mode: ACTIVE (${tdd.state.toUpperCase()})${tdd.test_node ? ` — ${tdd.test_node}` : ""} — cycles: ${tdd.cycles_count}`)
+        }
+        const trail = resumeTrail(sessionId)
+        if (trail.line) optional.push(trail.line)
+        const docs: string[] = []
+        const workB = fileSizeB("WORK.md")
+        if (workB !== null) docs.push(`WORK.md ${workB}B`)
+        if (projectInfo) {
+          const projRel = `.projects/meta/${projectInfo.project}/PROJECT.md`
+          const projB = fileSizeB(projRel)
+          const qs2 = quickStartNext(join(repoRoot(), projRel))
+          if (projB !== null) docs.push(`${projRel} ${projB}B${qs2 ? ` QuickStart@L${qs2.atLine}` : ""}`)
+          const csRel = `.projects/meta/${projectInfo.project}/CURRENT_STATE.md`
+          const csB = fileSizeB(csRel)
+          const newest = firstHeadingLine(join(repoRoot(), csRel))
+          if (csB !== null) docs.push(`${csRel} ${csB}B${newest ? ` newest@L${newest.atLine}` : ""}`)
+        }
+        if (docs.length) optional.push(`Docs: ${docs.join(" · ")}`)
+        const artifacts = featureArtifactLine(feature)
+        if (artifacts) optional.push(artifacts)
+
+        const { output, truncated } = buildResumeDigest(mandatory, optional)
+        return {
+          title: "OMT++ Resume Digest",
+          output,
+          metadata: {
+            op: "resume",
+            digest_bytes: byteLen(output),
+            cap: RESUME_DIGEST_CAP,
+            truncated,
+            session_records: trail.total,
+          },
+        }
+      }
       if (args?.op && args?.op !== "status") {
         return {
           title: "OMT++ Status",
-          output: `⛔ omt_status: unknown op '${args.op}' — want status (default) | preflight`,
+          output: `⛔ omt_status: unknown op '${args.op}' — want status (default) | preflight | resume`,
           metadata: { op: args.op, error: "unknown op" },
         }
       }

@@ -120,7 +120,10 @@ class TestStaticPins:
             if ln.startswith("@tool omt_status"))
         assert 'args="op?,tool?,path?,include_ledger?"' in line
         assert "op=preflight(tool,path)" in line
-        assert "ordered gates that will fire + clearing action" in line
+        # re-pin 2026-09-13 (feature_092 resume-digest describe diet): the
+        # @tool omt_status describe dropped "that will fire " (-15B, design
+        # §5) — assertion tracks the new wording.
+        assert "ordered gates + clearing action each" in line
 
     def test_clearing_actions_cover_every_gate(self) -> None:
         """Completeness: every @gate id in the SSOT has a clearing action —

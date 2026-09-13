@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-09-13 (auto — feature_092.resume_digest Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_092.resume_digest/test_report.md
+- **T3-3 resume digest SHIPPED** (mh3 T3) — `omt_status{op:"resume"}` ≤2KB digest (banner/project+Quick-Start Next/WORK.md next/trail ≤12/doc pointers+anchors/artifacts; 2048B byte-precise cap; lint fast path; read-only). Budgets: tool_args 2455/2464, tool_schemas 1840/1856, nav_index 64990/65536 — all green.
+- Same-day pause→resume (entry `.sandbox/pause_2026-09-13b.md`): ONE-line probe fix (`console.log(JSON.stringify(result))` — GOTCHA_PROBE_SERIALIZATION TA'd at `_probe`; root cause of the paused session's 7 golden failures: omt_status returns a plain object, omt_q a JSON string) → 7/7 goldens → boundary e2e → `stage --clear` (T4-2 4-file batch, no re-stage) → check/build 0 errors → suite **2214/2214** (2207+7).
+- 3 follow-on stale pins re-pinned same batch (feature_059 pin discipline, dated comments): 055 static .omt text pin (`ordered gates + clearing action each` — the −15B describe diet); budget_diet live pin (tool_args 2455/9B, tool_schemas 1840/16B); 059 NAV_INDEX_CEIL 64956→64990 — design §5 wrongly predicted "nav_index unchanged": nav records carry @tool description text (+34B, kinds unchanged).
+- Dogfood: op:resume oriented its own resume session (432B digest vs ~58KB re-read set; doc-anchor line makes follow-ups bounded partial reads).
+- Remaining per §Status: T3-4 / T3-6 (2); T5-8 loop when backlog empties. Repair flag (self_evaluation.md unindexed) still open.
+
+---
+
+
 ## 2026-09-13 (auto — feature_091.budget_diet_bot Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_091.budget_diet_bot/test_report.md

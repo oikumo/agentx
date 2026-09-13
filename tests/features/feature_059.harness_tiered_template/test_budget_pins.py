@@ -26,9 +26,21 @@ import harnessc
 # @doc gotcha records (GOTCHA_STRUCTURAL_PIN/GOTCHA_DATE_LITERAL) are the
 # feature's deliverable (nav-queryable conventions); kinds unchanged, @budget
 # nav_index deliberately grown 64000→65536 in the same .omt edit.
-NAV_INDEX_CEIL = 64956
-TOOL_ARGS_CEIL = 2454    # re-pin 2026-09-13 (feature_080): deliberate omt_net claim ops (task_id/owner/generation describes + op enum) +32B nav drift; harness budgets still OK (tool_args 2454/2464, tool_schemas 1812/1856)
-TOOL_SCHEMAS_CEIL = 1812  # re-pin 2026-09-13 (feature_080): claim hint in omt_net description, same class
+# Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): NAV_INDEX_CEIL
+# 64956 → 64990 — the @tool omt_status description growth (+28B) lands in the
+# tool's nav record too; design §5 "nav_index unchanged" missed that nav
+# records carry @tool description text (+34B measured via _sizes(); kinds
+# unchanged). Deliberate, budgets still OK (nav_index 64990/65536).
+NAV_INDEX_CEIL = 64990
+# Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): op describe gains
+# "| resume" (+9B) paid by an include_ledger describe diet (-8B) — net +1B
+# deliberate (tool_args 2455/2464); design note @ 4.design/features/
+# feature_092.resume_digest/design_001_resume_digest.md §5.
+TOOL_ARGS_CEIL = 2455    # re-pin 2026-09-13 (feature_080): deliberate omt_net claim ops (task_id/owner/generation describes + op enum) +32B nav drift; harness budgets still OK (tool_args 2454/2464, tool_schemas 1812/1856)
+# Re-pin 2026-09-13 (feature_092, mh8 T3-3): @tool omt_status description
+# drops "that will fire " (-15B), adds "| resume → ≤2KB post-compaction
+# digest" (+43B UTF-8) — net +28B (tool_schemas 1840/1856).
+TOOL_SCHEMAS_CEIL = 1840
 
 
 def _sizes():

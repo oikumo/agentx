@@ -526,7 +526,7 @@
     },
     "omt_status": {
       "args": "op?,tool?,path?,include_ledger?",
-      "description": "Process context: phase, unlock, artifacts, lint, valid next phases, WORK.md next task; op=preflight(tool,path) \u2192 ordered gates that will fire + clearing action each (default: full status).",
+      "description": "Process context: phase, unlock, artifacts, lint, valid next phases, WORK.md next task; op=preflight(tool,path) \u2192 ordered gates + clearing action each | resume \u2192 \u22642KB post-compaction digest (default: full status).",
       "perm": "allow",
       "tags": "CMD_STATUS"
     },
