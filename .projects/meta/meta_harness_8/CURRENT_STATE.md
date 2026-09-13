@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-13 (auto — feature_083.verification_integration_lane Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_083.verification_integration_lane/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-13 (auto — feature_082.two_worker_capacity_scope_arbitration Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_082.two_worker_capacity_scope_arbitration/test_report.md

@@ -92,6 +92,8 @@ MAX_PLACES = 15
 # restored alongside the pool token; the active-binding count is the
 # authoritative fence so legacy bundles without the place still arbitrate.
 WORKER_SLOTS_CAPACITY = 2
+TEST_SLOTS_CAPACITY = 1
+INTEGRATION_SLOT_CAPACITY = 1
 
 
 def _normalize_scope_entry(entry: object) -> tuple[str, ...]:
@@ -155,6 +157,14 @@ def _active_task_count(st: NetState) -> int:
     )
 
 
+def _lane_task_count(st: NetState, place: str) -> int:
+    return sum(
+        1
+        for b in (st.task_bindings or [])
+        if isinstance(b, dict) and b.get("place") == place
+    )
+
+
 def eligible_parallel_tasks(st: NetState, limit: int = 2) -> list[str]:
     """Pending task ids disjoint from active + each other, up to `limit`.
 
@@ -201,7 +211,23 @@ def eligible_parallel_tasks(st: NetState, limit: int = 2) -> list[str]:
 # (revision-coupled, atomic with the bundle) because the overlay is
 # RE-DERIVED at every save (P10). Atomic claims + integration are slice 2–3;
 # `generation` is recorded here, not enforced.
-TASK_BINDING_PLACES = ("work_pending", "work_active", "work_done")
+TASK_BINDING_PLACES = (
+    "work_pending",
+    "work_active",
+    "work_verifying",
+    "work_integration_ready",
+    "work_integrating",
+    "work_done",
+)
+# feature_083.verification_integration_lane (T5-5 3A — NEXT_STEP §10.3/§13):
+# the 3 lane places extend the binding vocabulary. Bundles without matching
+# live-marking tokens stay valid: validate_task_bindings treats an absent
+# lane place as code-enforced (bindings == tokens, anonymous 0), so legacy
+# hermetic pool bundles (pending/active/done only) keep validating while
+# migrated bundles with lane places + tokens get token fidelity (the 082
+# worker_slots pattern: active-binding/lane counts are the fence, place
+# tokens are honored when present via splice migration; net stays ≤15).
+LANE_PLACES = ("work_verifying", "work_integration_ready", "work_integrating")
 _TASK_BINDING_OPTIONAL_TYPES = {
     "objective": str,
     "acceptance_refs": list,
@@ -213,6 +239,7 @@ _TASK_BINDING_OPTIONAL_TYPES = {
     "resources": list,
     "results": list,
     "block_reason": str,
+    "submission": dict,
 }
 
 
@@ -258,8 +285,13 @@ def validate_task_bindings(
         counts[place] += 1
     per_place: dict[str, dict[str, int]] = {}
     for pl in TASK_BINDING_PLACES:
-        tokens = int(live_marking.get(pl, 0))
         n = counts[pl]
+        if pl in LANE_PLACES and pl not in live_marking:
+            # feature_083: code-enforced lane (no lane places migrated yet) —
+            # the binding count IS the occupancy, never an error.
+            per_place[pl] = {"bindings": n, "tokens": n, "anonymous": 0}
+            continue
+        tokens = int(live_marking.get(pl, 0))
         anonymous = tokens - n
         if anonymous < 0:
             errors.append(
@@ -1036,6 +1068,364 @@ def checkpoint_task(
         expected_revision=expected_revision,
         command_id=command_id,
         apply=_apply,
+    )
+    return st
+
+
+# ---------------------------------------------------------------------------
+# Verification + integration lane (feature_083 T5-5 3A — NEXT_STEP §13, mh8
+# strict slice order after 079/080/081/082). Four _transact ops:
+# submit_result (worker) → verify_result (coordinator) → integrate_start
+# (coordinator) → integrate_finish (coordinator). Code-enforced
+# test_slots=1 + integration_slot=1 (lane counts are the fence; place tokens
+# honored when present via splice migration — the 082 pattern). Worker slot
+# is freed at submit and NOT re-acquired on verify_fail/integrate_fail (the
+# task returns to pending for re-claim, NEXT_STEP §10.5). Coordinator-only
+# verify/integrate refuse workers with `not_coordinator` (NEXT_STEP §19.8).
+# Stale generations refuse every publish path with `stale_generation`
+# (§19.5). Combined-acceptance failure is integrate_finish verdict=fail:
+# the task returns to pending with block_reason evidence and work_done
+# stays put — no automatic Done (§19.9).
+# ---------------------------------------------------------------------------
+
+
+def _require_lane_generation(b: dict[str, Any], generation: int, task_id: str, rev: int) -> int:
+    live_gen = int(b.get("generation", 0) or 0)
+    if live_gen != int(generation):
+        raise SpliceError(
+            "stale_generation",
+            f"task {task_id!r} is gen {live_gen}, "
+            f"caller holds gen {generation} (rev {rev}) — "
+            "re-claim before publishing",
+        )
+    return live_gen
+
+
+def _lane_result_digest(result: dict[str, Any]) -> str:
+    return canonical_hash("lane_result", {
+        "head_commit": result.get("head_commit"),
+        "patch_digest": result.get("patch_digest"),
+        "base_commit": result.get("base_commit"),
+    })
+
+
+def submit_result(
+    base: Path,
+    task_id: str,
+    *,
+    generation: int,
+    owner: str | None = None,
+    result: dict[str, Any] | None = None,
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Worker publishes a result: work_active → work_verifying (NEXT_STEP §17.4).
+
+    Atomically releases the worker slot and occupies the test lane. The
+    submission (head_commit + patch_digest + base_commit + local_checks +
+    evidence_digest) is immutable from here: checkpoint requires work_active
+    so it refuses once submitted, and every later lane op carries the same
+    generation fence.
+    """
+    res = dict(result) if isinstance(result, dict) else {}
+    payload = {"task_id": task_id, "generation": generation, "owner": owner, "result": res, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        if b.get("place") != "work_active":
+            raise SpliceError(
+                "task_not_active",
+                f"task {task_id!r} is in {b.get('place')!r}, not work_active "
+                f"(rev {st.revision}) — nothing to submit",
+            )
+        live_gen = _require_lane_generation(b, generation, task_id, st.revision)
+        if owner is not None and b.get("owner") != owner:
+            raise SpliceError(
+                "not_owner",
+                f"task {task_id!r} is owned by {b.get('owner')!r}, not "
+                f"{owner!r} (rev {st.revision})",
+            )
+        head, patch = res.get("head_commit"), res.get("patch_digest")
+        if not head or not patch:
+            raise SpliceError(
+                "missing_result",
+                f"task {task_id!r} submission needs head_commit + patch_digest "
+                f"(rev {st.revision}) — immutable result ref (§13.2)",
+            )
+        if _lane_task_count(st, "work_verifying") >= TEST_SLOTS_CAPACITY:
+            raise SpliceError(
+                "verification_busy",
+                f"test_slots={TEST_SLOTS_CAPACITY} occupied — task {task_id!r} "
+                f"queues for verification (rev {st.revision})",
+            )
+        if "test_slots" in st.live_marking and st.live_marking.get("test_slots", 0) < 1:
+            raise SpliceError(
+                "verification_busy",
+                f"no test_slots token for task {task_id!r} "
+                f"(rev {st.revision}) — verification lane busy",
+            )
+        if "test_slots" in st.live_marking:
+            st.live_marking["test_slots"] -= 1
+        if "worker_slots" in st.live_marking:
+            st.live_marking["worker_slots"] = st.live_marking.get("worker_slots", 0) + 1
+        _move_pool_token(st, "work_active", "work_verifying")
+        ws = dict(b.get("workspace") or {})
+        submitted = dict(b)
+        submitted["place"] = "work_verifying"
+        submitted["submission"] = {
+            "head_commit": head,
+            "patch_digest": patch,
+            "base_commit": res.get("base_commit", ws.get("base_commit", "unknown")),
+            "local_checks": res.get("local_checks", []),
+            "notes": res.get("notes", ""),
+            "evidence_digest": _lane_result_digest(res),
+            "submitted_by": owner or b.get("owner"),
+        }
+        submitted.pop("block_reason", None)
+        st.task_bindings[idx] = submitted
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_submit",
+            "session": session,
+            "task_id": task_id,
+            "generation": live_gen,
+            "evidence_digest": submitted["submission"]["evidence_digest"],
+            "revision": st.revision,
+        })
+        return st, {"task_id": task_id, "generation": live_gen}
+
+    st, _ = _transact(
+        base, op="submit", payload=payload,
+        expected_revision=expected_revision, command_id=command_id, apply=_apply,
+    )
+    return st
+
+
+def verify_result(
+    base: Path,
+    task_id: str,
+    *,
+    generation: int,
+    verdict: str,
+    coordinator: bool = False,
+    detail: str = "",
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Coordinator verifies: work_verifying → work_integration_ready | work_pending.
+
+    verdict=pass keeps the submission for integration; verdict=fail returns
+    the task to pending with block_reason evidence (NEXT_STEP §13.3 shape as
+    a string to satisfy the binding validator). Either way the test slot is
+    freed.
+    """
+    payload = {"task_id": task_id, "generation": generation, "verdict": verdict, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        if not coordinator:
+            raise SpliceError(
+                "not_coordinator",
+                f"task {task_id!r} verify requires the coordinator "
+                f"(rev {st.revision}) — workers submit, coordinators verify",
+            )
+        if verdict not in ("pass", "fail"):
+            raise SpliceError(
+                "invalid_verdict",
+                f"verify verdict must be pass|fail, got {verdict!r} "
+                f"(rev {st.revision})",
+            )
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        if b.get("place") != "work_verifying":
+            raise SpliceError(
+                "task_not_verifying",
+                f"task {task_id!r} is in {b.get('place')!r}, not work_verifying "
+                f"(rev {st.revision}) — nothing to verify",
+            )
+        live_gen = _require_lane_generation(b, generation, task_id, st.revision)
+        if "test_slots" in st.live_marking:
+            st.live_marking["test_slots"] = st.live_marking.get("test_slots", 0) + 1
+        updated = dict(b)
+        if verdict == "pass":
+            _move_pool_token(st, "work_verifying", "work_integration_ready")
+            updated["place"] = "work_integration_ready"
+            updated.pop("block_reason", None)
+            kind = "net_verify_pass"
+        else:
+            _move_pool_token(st, "work_verifying", "work_pending")
+            updated["place"] = "work_pending"
+            updated.pop("owner", None)
+            updated["block_reason"] = f"verify_fail: {detail or 'local checks failed'}"
+            kind = "net_verify_fail"
+        st.task_bindings[idx] = updated
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": kind, "session": session, "task_id": task_id,
+            "generation": live_gen, "revision": st.revision,
+        })
+        return st, {"task_id": task_id, "generation": live_gen, "verdict": verdict}
+
+    st, _ = _transact(
+        base, op="verify", payload=payload,
+        expected_revision=expected_revision, command_id=command_id, apply=_apply,
+    )
+    return st
+
+
+def integrate_start(
+    base: Path,
+    task_id: str,
+    *,
+    generation: int,
+    coordinator: bool = False,
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Coordinator opens the serialized lane: work_integration_ready → work_integrating.
+
+    Integration occupancy never exceeds one (NEXT_STEP §18 inv 8): a second
+    start while one task integrates refuses `integration_busy`.
+    """
+    payload = {"task_id": task_id, "generation": generation, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        if not coordinator:
+            raise SpliceError(
+                "not_coordinator",
+                f"task {task_id!r} integrate requires the coordinator "
+                f"(rev {st.revision}) — worker result accepted, lane is coordinator-owned",
+            )
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        if b.get("place") != "work_integration_ready":
+            raise SpliceError(
+                "task_not_integration_ready",
+                f"task {task_id!r} is in {b.get('place')!r}, not "
+                f"work_integration_ready (rev {st.revision})",
+            )
+        live_gen = _require_lane_generation(b, generation, task_id, st.revision)
+        if _lane_task_count(st, "work_integrating") >= INTEGRATION_SLOT_CAPACITY:
+            raise SpliceError(
+                "integration_busy",
+                f"integration_slot={INTEGRATION_SLOT_CAPACITY} occupied — task "
+                f"{task_id!r} waits (rev {st.revision})",
+            )
+        if "integration_slot" in st.live_marking and st.live_marking.get("integration_slot", 0) < 1:
+            raise SpliceError(
+                "integration_busy",
+                f"no integration_slot token for task {task_id!r} "
+                f"(rev {st.revision}) — lane busy",
+            )
+        if "integration_slot" in st.live_marking:
+            st.live_marking["integration_slot"] -= 1
+        _move_pool_token(st, "work_integration_ready", "work_integrating")
+        updated = dict(b)
+        updated["place"] = "work_integrating"
+        st.task_bindings[idx] = updated
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_integrate_start", "session": session, "task_id": task_id,
+            "generation": live_gen, "revision": st.revision,
+        })
+        return st, {"task_id": task_id, "generation": live_gen}
+
+    st, _ = _transact(
+        base, op="integrate_start", payload=payload,
+        expected_revision=expected_revision, command_id=command_id, apply=_apply,
+    )
+    return st
+
+
+def integrate_finish(
+    base: Path,
+    task_id: str,
+    *,
+    generation: int,
+    verdict: str,
+    coordinator: bool = False,
+    detail: str = "",
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Coordinator closes the lane: work_integrating → work_done | work_pending.
+
+    verdict=pass records integrated evidence (the exact submission digest that
+    was integrated); verdict=fail (e.g. combined acceptance fails after two
+    locally-green tasks integrate) returns the task to pending with
+    block_reason evidence and work_done untouched — the objective stays
+    unsatisfied, never an automatic Done (NEXT_STEP §19.9). Completed tasks
+    hold no worker/test/integration capacity (§18 inv 7).
+    """
+    payload = {"task_id": task_id, "generation": generation, "verdict": verdict, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        if not coordinator:
+            raise SpliceError(
+                "not_coordinator",
+                f"task {task_id!r} integrate_finish requires the coordinator "
+                f"(rev {st.revision})",
+            )
+        if verdict not in ("pass", "fail"):
+            raise SpliceError(
+                "invalid_verdict",
+                f"integrate verdict must be pass|fail, got {verdict!r} "
+                f"(rev {st.revision})",
+            )
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        if b.get("place") != "work_integrating":
+            raise SpliceError(
+                "task_not_integrating",
+                f"task {task_id!r} is in {b.get('place')!r}, not work_integrating "
+                f"(rev {st.revision})",
+            )
+        live_gen = _require_lane_generation(b, generation, task_id, st.revision)
+        if "integration_slot" in st.live_marking:
+            st.live_marking["integration_slot"] = st.live_marking.get("integration_slot", 0) + 1
+        updated = dict(b)
+        if verdict == "pass":
+            _move_pool_token(st, "work_integrating", "work_done")
+            updated["place"] = "work_done"
+            updated.pop("owner", None)
+            updated.pop("block_reason", None)
+            sub = dict(updated.get("submission") or {})
+            sub["integrated_at_rev"] = st.revision + 1
+            updated["submission"] = sub
+            kind = "net_integrate_pass"
+        else:
+            _move_pool_token(st, "work_integrating", "work_pending")
+            updated["place"] = "work_pending"
+            updated.pop("owner", None)
+            updated["block_reason"] = f"integration_conflict: {detail or 'combined acceptance failed'}"
+            kind = "net_integrate_fail"
+        st.task_bindings[idx] = updated
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": kind, "session": session, "task_id": task_id,
+            "generation": live_gen, "revision": st.revision,
+        })
+        return st, {"task_id": task_id, "generation": live_gen, "verdict": verdict}
+
+    st, _ = _transact(
+        base, op="integrate_finish", payload=payload,
+        expected_revision=expected_revision, command_id=command_id, apply=_apply,
     )
     return st
 

@@ -229,6 +229,13 @@ def _task_menu(
                 )
     except Exception:
         pass
+    # feature_083 (T5-5 3A): additive lane occupancy (existing keys untouched).
+    try:
+        _verifying = sum(1 for b in bindings if isinstance(b, dict) and b.get("place") == "work_verifying")
+        _ready = sum(1 for b in bindings if isinstance(b, dict) and b.get("place") == "work_integration_ready")
+        _integrating = sum(1 for b in bindings if isinstance(b, dict) and b.get("place") == "work_integrating")
+    except Exception:
+        _verifying, _ready, _integrating = 0, 0, 0
     return {
         "next": nxt,
         "other_enabled": other,
@@ -240,6 +247,8 @@ def _task_menu(
             "workers_total": _cap_total,
             "free": max(0, _cap_total - _used),
         },
+        "verification": {"used": _verifying, "total": 1, "free": max(0, 1 - _verifying)},
+        "integration": {"used": _integrating, "ready": _ready, "total": 1, "free": max(0, 1 - _integrating)},
     }
 
 
@@ -386,6 +395,79 @@ def _checkpoint(
         command_id=command_id,
     )
     return _task_envelope("checkpoint", st, task_id), 0
+
+
+# feature_083.verification_integration_lane (T5-5 3A): thin envelopes over the
+# submit/verify/integrate_start/integrate_finish transactions in state.py.
+# CLI-only in this slice (no omt_net plugin exposure — tool budgets ~99%
+# full, the T1-6 precedent: harnessc CLI subcommand over a new tool).
+# `mutation` carries the result/evidence JSON (checkpoint precedent);
+# verify/integrate are coordinator-only (--coordinator).
+def _submit(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    payload: dict[str, Any] = {}
+    if getattr(args, "mutation", ""):
+        try:
+            payload = json.loads(args.mutation)
+        except json.JSONDecodeError as exc:
+            return _emit(*_error(
+                "invalid_mutation", "submit", f"--mutation is not valid JSON: {exc}"
+            ))
+    if not isinstance(payload, dict):
+        return _emit(*_error("invalid_mutation", "submit", "--mutation must be a JSON object"))
+    st = state.submit_result(
+        base,
+        args.task_id,
+        generation=args.generation,
+        owner=getattr(args, "owner", "") or None,
+        result=payload,
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("submit", st, args.task_id), 0
+
+
+def _verify(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    st = state.verify_result(
+        base,
+        args.task_id,
+        generation=args.generation,
+        verdict=args.verdict,
+        coordinator=bool(getattr(args, "coordinator", False)),
+        detail=getattr(args, "detail", "") or "",
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("verify", st, args.task_id), 0
+
+
+def _integrate_start(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    st = state.integrate_start(
+        base,
+        args.task_id,
+        generation=args.generation,
+        coordinator=bool(getattr(args, "coordinator", False)),
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("integrate_start", st, args.task_id), 0
+
+
+def _integrate_finish(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    st = state.integrate_finish(
+        base,
+        args.task_id,
+        generation=args.generation,
+        verdict=args.verdict,
+        coordinator=bool(getattr(args, "coordinator", False)),
+        detail=getattr(args, "detail", "") or "",
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("integrate_finish", st, args.task_id), 0
 
 
 def _splice(base: Path, args: argparse.Namespace, mutation: Any) -> tuple[dict[str, Any], int]:
@@ -576,6 +658,43 @@ def _build_parser() -> argparse.ArgumentParser:
     p_checkpoint.add_argument("--session", default="")
     p_checkpoint.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
     p_checkpoint.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_080).")
+    p_submit = sub.add_parser("submit", help="Worker publishes a result: active→verifying (T5-5 3A).")
+    p_submit.add_argument("--task-id", "--task_id", required=True)
+    p_submit.add_argument("--generation", type=int, required=True, help="Held generation (stale refuses).")
+    p_submit.add_argument("--owner", default="", help="Owner check (optional; mismatch refuses).")
+    p_submit.add_argument("--mutation", default="", help="JSON result object ({head_commit, patch_digest, base_commit?, local_checks?}).")
+    p_submit.add_argument("--reasoning", required=True)
+    p_submit.add_argument("--session", default="")
+    p_submit.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_submit.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079).")
+    p_verify = sub.add_parser("verify", help="Coordinator verifies: verifying→ready|pending (T5-5 3A).")
+    p_verify.add_argument("--task-id", "--task_id", required=True)
+    p_verify.add_argument("--generation", type=int, required=True, help="Submission generation (stale refuses).")
+    p_verify.add_argument("--verdict", required=True, choices=["pass", "fail"])
+    p_verify.add_argument("--coordinator", action="store_true", help="Coordinator role (required; workers refused).")
+    p_verify.add_argument("--detail", default="", help="Failure evidence (fail verdict).")
+    p_verify.add_argument("--reasoning", required=True)
+    p_verify.add_argument("--session", default="")
+    p_verify.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_verify.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079).")
+    p_istart = sub.add_parser("integrate_start", help="Coordinator opens the lane: ready→integrating (T5-5 3A).")
+    p_istart.add_argument("--task-id", "--task_id", required=True)
+    p_istart.add_argument("--generation", type=int, required=True, help="Submission generation (stale refuses).")
+    p_istart.add_argument("--coordinator", action="store_true", help="Coordinator role (required).")
+    p_istart.add_argument("--reasoning", required=True)
+    p_istart.add_argument("--session", default="")
+    p_istart.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_istart.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079).")
+    p_ifinish = sub.add_parser("integrate_finish", help="Coordinator closes the lane: integrating→done|pending (T5-5 3A).")
+    p_ifinish.add_argument("--task-id", "--task_id", required=True)
+    p_ifinish.add_argument("--generation", type=int, required=True, help="Submission generation (stale refuses).")
+    p_ifinish.add_argument("--verdict", required=True, choices=["pass", "fail"])
+    p_ifinish.add_argument("--coordinator", action="store_true", help="Coordinator role (required).")
+    p_ifinish.add_argument("--detail", default="", help="Failure evidence (fail verdict, e.g. combined e2e).")
+    p_ifinish.add_argument("--reasoning", required=True)
+    p_ifinish.add_argument("--session", default="")
+    p_ifinish.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_ifinish.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079).")
 
     p_splice = sub.add_parser(
         "splice", help="Atomic structural transaction (conformance-gated, §3)."
@@ -690,6 +809,14 @@ def main(argv: list[str] | None = None) -> int:
                 payload.get("head_commit"), payload.get("patch_digest"),
                 args.session, getattr(args, "expected_revision", None),
                 getattr(args, "command_id", None) or None))
+        if op == "submit":
+            return _emit(*_submit(base, args))
+        if op == "verify":
+            return _emit(*_verify(base, args))
+        if op == "integrate_start":
+            return _emit(*_integrate_start(base, args))
+        if op == "integrate_finish":
+            return _emit(*_integrate_finish(base, args))
         if op == "splice":
             mutation = None
             if args.mutation:
