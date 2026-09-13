@@ -469,7 +469,7 @@ export function createPhaseTools(env: EnforcerEnv) {
               msg += `    ${g.file}: ${names}\n`
             }
           }
-          return msg + `Write tests or call omt_skip{reason:"..."} to override.`
+          return msg + `Write tests or call omt_skip{reason:"...", scope:"all"} to override (scope:"tests" also satisfies coverage).`
         }
       } catch (e: any) {
         safeLog("warn", `TDD validate-exit failed: ${e?.message || e}`)

@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-13 (auto — feature_087.skip_scope_alignment Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_087.skip_scope_alignment/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-13 (auto — feature_086.ordered_skip_audit_plus_bootstrap_fingerprint Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_086.ordered_skip_audit_plus_bootstrap_fingerprint/test_report.md

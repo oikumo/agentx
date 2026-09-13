@@ -224,10 +224,14 @@ def cmd_validate_exit(args) -> dict:
     # side is shelled out to LIVE on every omt_complete, so the override
     # takes effect in-session. Window-fallback semantics (no --session is
     # threaded through validate-exit; mirrors TS hasNavUnlock).
+    # feature_087 T2-4 skip-scope alignment: the natural tests scope also
+    # satisfies the coverage override (scope:tests is the designed canary
+    # toll for tests/ work; requiring break-glass scope:all for a coverage
+    # gap was scope-misaligned). Unrelated scopes (nav/src) still block.
     now_ms = time.time() * 1000
     skip_override = any(
         r.get("kind") == "skip"
-        and r.get("scope") == "all"
+        and r.get("scope") in ("all", "tests")
         and _within_window(r, now_ms)
         for r in read_ledger()
     )
