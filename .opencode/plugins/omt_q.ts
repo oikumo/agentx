@@ -7,7 +7,10 @@
 //               additive runBeforeGatesDry sibling (U2 + U11 receipt fold).
 //   op:drift  — KB-vs-source classification + count_drift direction-b only.
 //   op:audit  — T1-2 design↔testing schema audit + project-autolink fix-it
-//               (joins 4.design/features vs 6.testing/features/test_report.md).
+//               (joins 4.design/features vs 6.testing/features/test_report.md)
+//               + T1-1 ordered skip audit w/ scope tallies + per-feature
+//               TDD-bootstrap template list (last-3 reasons matching
+//               /bootstrap/i; feature-scoped by reason-substring match).
 //   op:graph  — T1-3 transitive risk over kb.ir.json refs[] + thoughts join
 //               (BFS depth 1..3 from symbol; HQL grammar explicitly NOT built
 //               until graph proves novel asks).
@@ -1069,17 +1072,63 @@ function foldSchemaAudit(): {
   }
 }
 
+// ---------------------------------------------------------------------------
+// T1-1 (feature_086, mh8): ordered skip audit + bootstrap fingerprint
+// (read-only). Folds ALL ledger archives + hot in FILE ORDER (chronological;
+// never re-sorts — the golden asserts envelope order matches ledger order).
+// scope_tally counts per scope. bootstrap_templates = last-3 skip reasons
+// matching /bootstrap/i (TDD_BOOTSTRAP / TDD bootstrap / bootstrap); when
+// `feature` is given, only reasons whose text contains the feature substring
+// qualify (skip records carry no feature field — the slug is matched in
+// reason text). Hermetic: caller passes readLedgerAll[At] records so
+// tmp-root probes with a seeded ledger.jsonl exercise the fold generically.
+// ---------------------------------------------------------------------------
+function foldSkipAudit(records: any[], feature?: string): {
+  skip_audit: { ts: string; scope: string; reason: string; session: string }[]
+  scope_tally: Record<string, number>
+  bootstrap_templates: string[]
+} {
+  const skips = records.filter((r) => r?.kind === "skip")
+  const skip_audit = skips.map((r) => ({
+    ts: String(r.ts || ""),
+    scope: String(r.scope || ""),
+    reason: String(r.reason || ""),
+    session: String(r.session || ""),
+  }))
+  const scope_tally: Record<string, number> = {}
+  for (const s of skip_audit) scope_tally[s.scope] = (scope_tally[s.scope] ?? 0) + 1
+  const boots = skips.filter((r) => /bootstrap/i.test(String(r.reason || "")))
+  const scoped = feature
+    ? boots.filter((r) => String(r.reason || "").includes(feature))
+    : boots
+  const bootstrap_templates = scoped.slice(-3).map((r) => String(r.reason || ""))
+  return { skip_audit, scope_tally, bootstrap_templates }
+}
+
   const omt_audit = tool({
     description: "op=audit impl (unregistered; dispatched via omt_q).",
     args: { as_of: tool.schema.string().optional() },
     async execute(args, context) {
       const start = Date.now()
-      const as_of_commit = headSha()
+      // T1-1 (feature_086): as_of replays the full ledger at the commit;
+      // the live path folds ALL archives + hot in file order. `feature`
+      // arrives via the omt_q dispatch args (schema unchanged — budget).
+      const asOfSha = args?.as_of ? (resolveGitRef(args.as_of) ?? args.as_of) : null
+      const as_of_commit = asOfSha ?? headSha()
       try {
         const { design_only, testing_only, fix_it } = foldSchemaAudit()
+        const allRecs = asOfSha ? readLedgerAllAt(asOfSha) : readLedgerAll()
+        const feature = typeof args?.feature === "string" && args.feature ? args.feature : undefined
+        const { skip_audit, scope_tally, bootstrap_templates } = foldSkipAudit(allRecs, feature)
         return emitQEnvelope(
-          start, "audit", ["T1-2"], "T1-2",
-          { as_of_commit, design_only, testing_only, fix_it, project_drift: foldProjectDrift() },
+          start, "audit", ["T1-2", "T1-1"], "T1-2,T1-1",
+          {
+            as_of_commit, design_only, testing_only, fix_it, project_drift: foldProjectDrift(),
+            skip_audit, scope_tally, bootstrap_templates,
+            ...(asOfSha ? { as_of_scope: "replayed:ledger-all; live:schema-join+project_drift" } : {}),
+            ...(feature ? { feature } : {}),
+          },
+          asOfSha ? { as_of: as_of_commit } : {},
         )
       } catch {
         const envelope = {
@@ -1087,6 +1136,7 @@ function foldSchemaAudit(): {
           design_only: [], testing_only: [],
           fix_it: "uv run scripts/omt/project.py link <feature> <project> --origin inferred",
           project_drift: [],
+          skip_audit: [], scope_tally: {}, bootstrap_templates: [],
         }
         return JSON.stringify(envelope)
       }
