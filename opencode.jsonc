@@ -70,6 +70,7 @@
       "pwd *": "allow",
       "which *": "allow",
       "jq *": "allow",
+      "sqlite3 *": "allow",
       // harnessc:begin bash
         "git commit *": "deny",
         "git push *": "deny",

@@ -45,6 +45,8 @@ HARNESS_FILES = [
     ".opencode/lib/enforcer/tdd_hats.ts",
     ".opencode/lib/enforcer/think_gate.ts",
     ".opencode/lib/enforcer/mvc_after.ts",
+    # feature_090 (mh8 T2-7): known-LSP-error allowlist filter module.
+    ".opencode/lib/enforcer/lsp_filter.ts",
     ".opencode/lib/enforcer/gate_driver.ts",
     ".opencode/lib/enforcer/preflight.ts",
     "opencode.jsonc",

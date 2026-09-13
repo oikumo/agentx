@@ -1,0 +1,9 @@
+{
+  "src/agentx/ui/screens/main/main_controller.py": [
+    "reportArgumentType",
+    "reportAttributeAccessIssue"
+  ],
+  "src/agentx/ui/tui/provider.py": [
+    "reportMissingImports"
+  ]
+}

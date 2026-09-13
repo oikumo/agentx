@@ -5,6 +5,30 @@
 
 ---
 
+## 2026-09-13 (auto — feature_090.scaffolds_and_lsp_allowlist Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_090.scaffolds_and_lsp_allowlist/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-13 (iter — feature_090 T2-7 scaffolds + LSP allowlist, pause→resume)
+
+- **T2-7 SHIPPED** (feature_090.scaffolds_and_lsp_allowlist, minor_feature, mh3 P3-10/P3-11):
+  - P3-10 (pre-pause session): `new_feature.py testing/implementation` subcommands — argv exact-match pre-scan, legacy positional path byte-identical, unknown-slug/refuse-overwrite rc=2, `PROCESS_ROOT` monkeypatchable. Verified with 23/23 lifecycle tests + fresh e2e receipt at pause.
+  - P3-11 (this resume): `.opencode/lib/enforcer/lsp_filter.ts` (parse/load/apply pure core + `lspAfterEdit` thin entry; fail-open on ANY surprise) + `.meta/lsp_allowlist.json` seeded with the 9 live pyright entries + enforcer after-hook registration (ONE receipt round) + `HARNESS_FILES` coverage.
+  - Render contract re-pinned LIVE from opencode.db (pyright 1.1.408): per-file blocks with own headers joined by blank lines, only non-empty arrays render, multi-line messages continue on `\u00a0`-indented raw lines, text ends without trailing newline. Fixtures A (this-file 4 errors) + B (provider 5 + main 4 + rag control 1) embedded in the goldens.
+  - Goldens: `tests/scripts/omt/test_scaffolds_lsp_allowlist.py` — 25 tests: 8 hermetic scaffolder + 13 bun probes (A all-suppressed → base-only text; planted `reportGeneralTypeIssues` surfaces + trailing-newline byte-preservation; B 9-dropped with control survivor; partial-allowlist byte-preservation; no-op; severity-2 never suppressed; desync/WARNING/missing-header/missing-separator fail-opens) + 4 allowlist-IO probes + 4 source pins. **25/25 green on first run.**
+  - Verification: `harnessc check` 265 records 0 errors · `build` OK (nav_index 64956/65536 unchanged) · e2e receipt refreshed post-registration · full suite **2198 passed / 0 failed** (2173 baseline + 25).
+  - Incidental stray repair: feature_089's repo-root `6.testing/.../test_report.md` (the §3.11 mis-creation class this feature eliminates) `git mv`'d to the canonical `.meta/software_development_process/6.testing/features/` path — cleared the `harnessc check` root_allowlist hygiene error AND feature_089's dangling report pointer.
+  - Dogfood: feature_090's own impl_notes/test_report scaffolded by the new subcommands.
+  - Discipline notes: tests canary re-recorded per D6 in the resume session (phase re-declared first); receipt round-robin held (registration batch inside one round); `opencode.jsonc` picked up an unrelated runtime `"sqlite3 *": "allow"` from the evidence queries (flagged for the user's commit decision, not feature surface).
+  - Remaining per §Status: T3-3 / T3-4 / T3-6 / T3-7 (4); T5-8 loop when backlog empties.
+
+---
+
+
 ## 2026-09-13 (auto — feature_089.conventions_and_lints_structural_pin_date_literal Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_089.conventions_and_lints_structural_pin_date_literal/test_report.md

@@ -21,6 +21,8 @@
 //   ../lib/enforcer/gate_driver.ts    — HDL-2 data-driven before/after gate
 //                                       chains (IR @gate records)
 //   ../lib/enforcer/mvc_after.ts      — MVC++ lint delta gate + idle sweep
+//   ../lib/enforcer/lsp_filter.ts     — feature_090 known-LSP-error allowlist
+//                                       (post-edit Pyright noise filter)
 //
 // Mechanics:
 //   • omt_phase  custom tool → agent declares task_type/phase/scope; recorded in the ledger.
@@ -45,6 +47,7 @@ import { createPhaseTools } from "../lib/enforcer/phase_gate"
 import { createTddTools } from "../lib/enforcer/tdd_hats"
 import { injectThoughtsOnRead } from "../lib/enforcer/think_gate"
 import { sessionIdleSweep } from "../lib/enforcer/mvc_after"
+import { lspAfterEdit } from "../lib/enforcer/lsp_filter"
 
 
 // omt_status is registered by .opencode/plugins/omt_status.ts as its own
@@ -110,6 +113,12 @@ export default async ({ client, $, directory: cwd, worktree }) => {
       // feature_022 D1: read-time thought injection (first read per file per
       // session). Fail-open.
       await injectThoughtsOnRead(env, input, output)
+
+      // feature_090 (mh8 T2-7): known-LSP-error allowlist — purge allowlisted
+      // (file, code) pairs from edit/write/patch results (output text +
+      // metadata), fail-open. Runs BEFORE the raw early-return below: it keys
+      // off output.metadata.diagnostics, not the edited path.
+      await lspAfterEdit(env, input, output)
 
       // HDL-2 (improvement007 R7/OPT-F): the after-chain is data-driven too —
       // the driver iterates IR after-gates in order=; the edit-tools filter
