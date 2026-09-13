@@ -1272,6 +1272,89 @@ def measure_budgets(c: Corpus, agents_md: str, nav_text: str = "", ir_text: str 
     return sizes
 
 
+# --- feature_091 T3-7 budget-diet-bot -------------------------------------------
+# mh8 T3-7 / mh7 P1-4: byte budgets creep toward their caps one deliberate
+# grow at a time (tool_args history: 1536→1792→2048→2304→2367→2456), and the
+# past-cap error only fires AFTER a projection already exceeds. This check
+# warns (never errors) while headroom is thin, naming the longest single
+# contributor per composable budget (arg describes for tool_args, payload for
+# tool_schemas, longest record for nav_index) plus the bytes-to-free that
+# clear the zone, so the next grow-vs-trim decision has a concrete diet
+# target. Over-cap stays the generic loop's error (no double-report); gates
+# (count) and TS-pinned report-only sizes are out of scope.
+BUDGET_DIET_PROXIMITY = 64  # bytes of headroom at/below which the diet fires
+
+
+def per_tool_arg_bytes(c: Corpus) -> dict[str, int]:
+    """Per-tool live TS arg-describe() byte sums (the tool_args composition;
+    mirrors measure_budgets' scan — separate so the pinned measure path stays
+    untouched)."""
+    ts_srcs = [p.read_text(encoding="utf-8")
+               for d in TOOL_SEED_DIRS for p in sorted((REPO_ROOT / d).glob("*.ts"))]
+    out: dict[str, int] = {}
+    for r in c.of("tool"):
+        for text in ts_srcs:
+            ds = _ts_arg_describes(text, r.rid)
+            if ds:
+                out[r.rid] = sum(len(x.encode("utf-8")) for x in ds)
+                break
+    return out
+
+
+def diet_longest_contributors(c: Corpus, nav_text: str) -> dict[str, tuple[str, int]]:
+    """Longest single contributor per byte budget: (label, bytes) for the
+    composable trio tool_args / tool_schemas / nav_index (the historically
+    tight ones); other byte budgets carry no contributor decomposition and
+    get the generic hint. Ties break lexicographically (max over sorted)."""
+    longest: dict[str, tuple[str, int]] = {}
+    arg = per_tool_arg_bytes(c)
+    if arg:
+        top = max(sorted(arg), key=lambda k: arg[k])
+        longest["tool_args"] = (f"@tool {top} arg describes", arg[top])
+    pay = {r.rid: len(r.payload.encode("utf-8")) for r in c.of("tool")}
+    if pay:
+        top = max(sorted(pay), key=lambda k: pay[k])
+        longest["tool_schemas"] = (f"@tool {top} payload", pay[top])
+    if nav_text:
+        lines = nav_text.splitlines()
+        i = max(range(len(lines)), key=lambda j: len(lines[j].encode("utf-8")))
+        longest["nav_index"] = (f"nav record #{i + 1}",
+                                len(lines[i].encode("utf-8")))
+    return longest
+
+
+def budget_diet_warnings(sizes: dict[str, tuple[int, int | None]],
+                         longest: dict[str, tuple[str, int]]) -> list[str]:
+    """Pure diet advice (feature_091 T3-7): warn — never error — while a byte
+    budget's headroom is <= BUDGET_DIET_PROXIMITY. `longest` maps budget rid
+    to its longest-contributor (label, bytes); missing entries get the generic
+    trim-or-grow hint."""
+    warns: list[str] = []
+    for rid, (size, cap) in sorted(sizes.items()):
+        if rid == "gates" or cap is None or size < 0:
+            continue  # count budget / unbudgeted / TS-pinned report-only
+        headroom = cap - size
+        if headroom < 0 or headroom > BUDGET_DIET_PROXIMITY:
+            continue  # over-cap: the generic error loop owns it; far: silent
+        need = BUDGET_DIET_PROXIMITY + 1 - headroom
+        if rid in longest:
+            label, nbytes = longest[rid]
+            hint = (f" — diet: longest {label} {nbytes}B; free ≥{need}B "
+                    f"(or grow the cap deliberately in the same .omt edit)")
+        else:
+            hint = " — trim, or grow the cap deliberately in the same .omt edit"
+        warns.append(f"budget-diet: {rid} {size}/{cap}B — {headroom}B headroom "
+                     f"(≤{BUDGET_DIET_PROXIMITY}B){hint}")
+    return warns
+
+
+def check_budget_diet(c: Corpus, sizes: dict[str, tuple[int, int | None]],
+                      nav_text: str) -> None:
+    """Wiring: pure diet advice onto c.warnings (check + build both print)."""
+    for w in budget_diet_warnings(sizes, diet_longest_contributors(c, nav_text)):
+        c.warnings.append(w)
+
+
 def check_harness_paths(c: Corpus) -> None:
     """Every @var harness_paths entry must match >=1 real repo path — the
     compile-time BUG-B pin: a renamed dir leaves a stale prefix that silently
@@ -2103,6 +2186,7 @@ def run_all_checks(c: Corpus, agents_md: str, nav_text: str = "", ir_text: str =
         if size >= 0 and cap is not None and size > cap:
             unit = "gates" if rid == "gates" else "B"
             c.errors.append(f"budget {rid}: {size} {unit} > {cap} {unit} (grow the budget deliberately in the same .omt edit)")
+    check_budget_diet(c, sizes, nav_text)
     return sizes
 
 

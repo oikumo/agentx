@@ -5,10 +5,25 @@
 
 ---
 
-## 2026-09-13 (auto — feature_090.scaffolds_and_lsp_allowlist Done)
+## 2026-09-13 (auto — feature_091.budget_diet_bot Done)
 
-- shipped: minor_feature · test report @ 6.testing/features/feature_090.scaffolds_and_lsp_allowlist/test_report.md
+- shipped: minor_feature · test report @ 6.testing/features/feature_091.budget_diet_bot/test_report.md
 - logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-13 (iter — feature_091 T3-7 budget-diet-bot, user-picked resume)
+
+- **T3-7 SHIPPED** (feature_091.budget_diet_bot, minor_feature, mh7 P1-4 → mh8 T3-7):
+  - Mechanism: `scripts/omt/harnessc.py` new section after `measure_budgets` — `BUDGET_DIET_PROXIMITY=64`, `per_tool_arg_bytes` (mirror TS scan, pinned measure path untouched), `diet_longest_contributors` (arg describes / payload / longest nav line; lexicographic tie-break), pure `budget_diet_warnings` (warn—never error—headroom ∈ [0,64]; `free ≥65−headroom B` + contributor or generic trim-or-grow hint; over-cap owned by the existing error loop; gates/cap-None/size<0 excluded), `check_budget_diet` wiring into `run_all_checks` → both check+build print.
+  - Goldens: `tests/scripts/omt/test_budget_diet.py` — 9 tests (near-cap full suggestion, 64-fires/65-silent boundary, at-cap fires, over-cap silent, scope exclusions, labels+generic hint, sorted multi-budget, hermetic wiring via synthetic @tool corpus + monkeypatched arg scan, tie-break, live pin). **9/9 green on first run.**
+  - Live-fire proof (the feature working on the real repo): `budget-diet: tool_args 2454/2464B — 10B headroom (≤64B) — diet: longest @tool omt_net arg describes 657B; free ≥55B…` + agents_md 26B + tool_schemas 44B warn; nav_index 580B / ir_json 401B silent.
+  - Verification: staged receipt batch (stage → 2 harnessc.py edits → boundary e2e `test_omt_harness_e2e.py` 1 passed → `stage --clear`); `harnessc check` 0 errors (265 records) + `--verify-projections` green (no .omt edit, projections byte-identical); full suite **2207 passed / 0 failed** (2198 baseline + 9).
+  - Dogfood: 091's test_report + impl_notes scaffolded by feature_090's `new_feature.py testing/implementation` subcommands.
+  - Deliberate non-change: 6 pre-existing harnessc.py pyright diagnostics (verified at HEAD via `bun x pyright` on `git show HEAD:…`) NOT added to `.meta/lsp_allowlist.json` — suppressing reportCallIssue/reportArgumentType/reportOptionalMemberAccess/reportReturnType file-wide on the most-edited harness file would hide genuine new type errors; documented in test_report as candidate follow-up.
+  - Discipline: tests canary per D6 (phase re-declared first) · KB consult attempted (no records for scripts surface) · think-gate consult done (stage-order gotcha followed) · uv-only.
+- Remaining per §Status: T3-3 / T3-4 / T3-6 (3); T5-8 loop when backlog empties. Repair flag (self_evaluation.md unindexed) still open.
 
 ---
 
