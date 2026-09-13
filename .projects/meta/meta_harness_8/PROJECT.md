@@ -135,7 +135,8 @@
 - [x] T5-7 3C `evidence dependency completion` DONE 2026-09-13 (feature_085.evidence_dependency_completion, minor_feature) — ship logged in CURRENT_STATE.md; test report @ 6.testing/features/feature_085.evidence_dependency_completion/test_report.md.
 - [x] T1-1 `op:audit` ordered skip audit + bootstrap fingerprint DONE 2026-09-13 (feature_086.ordered_skip_audit_plus_bootstrap_fingerprint, minor_feature) — T1 track COMPLETE; test report @ 6.testing/features/feature_086.ordered_skip_audit_plus_bootstrap_fingerprint/test_report.md.
 - [x] T2-4 `skip-scope alignment` DONE 2026-09-13 (feature_087.skip_scope_alignment, minor_feature) — validate-exit honors `scope:tests` + `scope:all`; TS block message names exact `omt_skip{scope:"all"}` call; 5 goldens + boundary e2e green; `harnessc check` 0 errors, `build` OK.
-- [ ] Next: T2-5 / T2-6 / T2-7 / T3-3 / T3-4 / T3-6 / T3-7 (8 remaining); T5-8 loop when backlog empties. Open repair flag: `meta_harness_development_self_evaluation.md` unindexed (warning) — index into meta_harness META.md or remove, when convenient.
+- [x] T2-5 `g.kb per-file Read-recency` DONE 2026-09-13 (feature_088.g_kb_per_file_read_recency, minor_feature) — new per-file reads substrate (session_state `reads` + `recordRead`/`hasRecentRead`, NOT a recent_consults mirror) + `trackRead` after-hook + g.kb predicate per-file consult (session flag → fast-path → sticky → recent-read); read-then-edit same file passes, never-read blocks; 7 goldens green; `harnessc check` 0 errors, `build` OK; suite 2167 pass (1 pre-existing environmental live-opencode failure).
+- [ ] Next: T2-6 / T2-7 / T3-3 / T3-4 / T3-6 / T3-7 (6 remaining); T5-8 loop when backlog empties. Open repair flag: `meta_harness_development_self_evaluation.md` unindexed (warning) — index into meta_harness META.md or remove, when convenient.
 
 ---
 

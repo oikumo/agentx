@@ -26,7 +26,7 @@ import {
 } from "../omt_shared"
 import {
   OmtBlock, getActiveUnlock, hasNavUnlock, hasFastPathUnlock,
-  hasStickyKbConsult, type EnforcerEnv,
+  hasStickyKbConsult, hasRecentRead, type EnforcerEnv,
 } from "./session_state"
 import { getSearchPath, navCacheHint, navGateDecision } from "./nav_gate"
 import {
@@ -84,13 +84,18 @@ const SESSION_FLAGS: Record<string, (ctx: GateCtx) => boolean> = {
   },
   // feature_kb_akb: g.kb gate's `session_flag(kb_consulted)` predicate. Set by
   // kbTrack on any omt_kb_nav op call (nav_gate.ts); guards src/ edit-tools.
+  // feature_088 T2-5: per-file Read-recency exemption — a recent Read of the
+  // SAME rel satisfies g.kb for THAT file only (NOT a session-wide unlock).
+  // Order: session flag → fast-path → sticky → recent-read (cheapest first;
+  // recent-read is a Map lookup, no ledger I/O). Never-read files still block.
   kb_consulted: (ctx) => {
     const s = ctx.session ? ctx.env.state.kb.get(ctx.session) : undefined
     return !!s?.consulted ||
       hasFastPathUnlock(ctx.session) ||
       // meta_harness_7 P0-3 kb_sticky_per_feature: a kb_consult record for the
       // active feature (majors: same scope) satisfies g.kb across sessions.
-      hasStickyKbConsult(ctx.session)
+      hasStickyKbConsult(ctx.session) ||
+      hasRecentRead(ctx.env.state.reads, ctx.session, ctx.rel)
   },
 }
 

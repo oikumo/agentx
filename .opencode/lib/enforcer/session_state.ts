@@ -33,6 +33,15 @@ export function createSessionState() {
     // omt_kb_nav op call in the session. Read by the g.kb gate predicate
     // `session_flag(kb_consulted)` (gate_driver.ts SESSION_FLAGS).
     kb: new Map<string, { consulted: boolean }>(),
+    // feature_088 T2-5 g.kb per-file Read-recency: sessionID -> rel -> read
+    // timestamp ms. Written by the enforcer after-hook on Read tools
+    // (nav_gate.trackRead); read by hasRecentRead below. NEW substrate —
+    // NOT a mirror of think-consult recent_consults (mh3 R2 correction:
+    // recent_consults folds think_consult records, not Read events).
+    // In-memory only (no ledger write — Reads are high-frequency; ledger
+    // rotation cap makes per-Read appends a flood risk). Windowed by
+    // UNLOCK_WINDOW_MS like every other gate reader.
+    reads: new Map<string, Map<string, number>>(),
     // feature_022 D1: sessionID -> absPaths already thought-injected (sessionless → "" bucket)
     injected: new Map<string, Set<string>>(),
     // R6 S6: sessions that already received the bootstrap injection (nav tip + TA digest)
@@ -219,6 +228,51 @@ export function hasStickyKbConsult(session: string | undefined): boolean {
     return alive.some((r) => (r.scope || "") === scope)
   }
   return true
+}
+
+// feature_088 T2-5 g.kb per-file Read-recency: record + predicate over the
+// in-memory reads substrate (session -> rel -> ms). Session-matched reads
+// win; a window-recent read from ANY session also satisfies (single-user
+// sessionID-drift fallback, mirrors getActiveUnlock's shape). Pure over the
+// passed state map so bun probes can drive it without a full EnforcerEnv.
+// MUST NOT touch think/protect; fast-path/sticky stay authoritative.
+export function recordRead(
+  reads: Map<string, Map<string, number>>,
+  session: string | undefined,
+  rel: string,
+  nowMs?: number,
+): void {
+  if (!rel || typeof rel !== "string") return
+  const key = typeof session === "string" && session ? session : ""
+  let inner = reads.get(key)
+  if (!inner) {
+    inner = new Map<string, number>()
+    reads.set(key, inner)
+  }
+  inner.set(rel, typeof nowMs === "number" && !Number.isNaN(nowMs) ? nowMs : Date.now())
+}
+
+export function hasRecentRead(
+  reads: Map<string, Map<string, number>>,
+  session: string | undefined,
+  rel: string | null,
+  nowMs?: number,
+  windowMs?: number,
+): boolean {
+  if (!rel || typeof rel !== "string") return false
+  const now = typeof nowMs === "number" && !Number.isNaN(nowMs) ? nowMs : Date.now()
+  const win = typeof windowMs === "number" && !Number.isNaN(windowMs) ? windowMs : UNLOCK_WINDOW_MS
+  const mine = typeof session === "string" && session ? reads.get(session) : undefined
+  const ts = mine?.get(rel)
+  if (typeof ts === "number" && now - ts < win) return true
+  // Drift fallback: any session's recent Read for this rel satisfies (the
+  // gate must not re-fire just because the sessionID rotated mid-task).
+  for (const inner of reads.values()) {
+    if (inner === mine) continue
+    const t = inner.get(rel)
+    if (typeof t === "number" && now - t < win) return true
+  }
+  return false
 }
 
 // Latest phase record for a specific feature. Exact session match is preferred,

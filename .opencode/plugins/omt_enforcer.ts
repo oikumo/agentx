@@ -39,7 +39,7 @@ import { initOmtShared } from "../lib/omt_shared"
 import {
   OmtBlock, createSessionState, makeSafeLog, makeNotify, type EnforcerEnv,
 } from "../lib/enforcer/session_state"
-import { navTrack, sessionBootstrap, kbTrack } from "../lib/enforcer/nav_gate"
+import { navTrack, sessionBootstrap, kbTrack, trackRead } from "../lib/enforcer/nav_gate"
 import { runAfterGates, runBeforeGates } from "../lib/enforcer/gate_driver"
 import { createPhaseTools } from "../lib/enforcer/phase_gate"
 import { createTddTools } from "../lib/enforcer/tdd_hats"
@@ -104,6 +104,9 @@ export default async ({ client, $, directory: cwd, worktree }) => {
       // R6 S6: session bootstrap — nav reminder + TA digest, once per session
       // on the FIRST tool result (any tool). Fail-open.
       await sessionBootstrap(env, input, output)
+      // feature_088 T2-5: per-file Read-recency — record completed Reads so a
+      // read-then-edit of the same file passes g.kb for that file.
+      await trackRead(env, input?.sessionID || undefined, input)
       // feature_022 D1: read-time thought injection (first read per file per
       // session). Fail-open.
       await injectThoughtsOnRead(env, input, output)

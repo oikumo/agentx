@@ -314,6 +314,40 @@ export async function kbTrack(
   }
 }
 
+// feature_088 T2-5 g.kb per-file Read-recency: after-hook instrumentation.
+// On every completed Read tool, record {rel -> nowMs} into the in-memory
+// reads substrate (session_state.reads). The g.kb predicate (gate_driver
+// SESSION_FLAGS.kb_consulted via hasRecentRead) consults it per-file — a
+// read-then-edit of the SAME file in the same turn passes without a fresh
+// omt_kb_nav; a blind edit to a never-read file still blocks. Fail-open
+// throughout (a Read must never break because tracking did). Sessionless
+// reads land in the "" bucket so the drift fallback still sees them.
+export async function trackRead(
+  env: EnforcerEnv,
+  session: string | undefined,
+  input: any,
+): Promise<void> {
+  try {
+    if (input?.tool !== "read") return
+    const raw = input?.args?.filePath ?? input?.args?.path ?? input?.args?.file
+    const rawStr = Array.isArray(raw)
+      ? (raw.find((v: any) => typeof v === "string" && v) ?? null)
+      : (typeof raw === "string" && raw ? raw : null)
+    if (!rawStr) return
+    const { rel } = relOf(rawStr)
+    if (!rel) return
+    const key = typeof session === "string" && session ? session : ""
+    let inner = env.state.reads.get(key)
+    if (!inner) {
+      inner = new Map<string, number>()
+      env.state.reads.set(key, inner)
+    }
+    inner.set(rel, Date.now())
+  } catch (e: any) {
+    try { env.safeLog("warn", "read-recency track failed open: " + (e?.message || e)) } catch { /* ignore */ }
+  }
+}
+
 // After-hook branch (R6 S6): the session bootstrap — compact TA digest
 // appended ONCE per session to the FIRST tool result (any tool; the
 // guaranteed agent-visible channel, headless or not — the F14c Tier-1c path,
