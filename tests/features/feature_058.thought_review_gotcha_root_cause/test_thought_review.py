@@ -9,6 +9,9 @@ Contract (GREEN pins the implementation):
 - CLUSTERS (E1): 18 gotcha ids partitioned into SDK/ISOLATION/RECEIPT/
   TOOLCHAIN/MISC exactly once each (analysis_001); cluster knowledge as .omt
   # comments (0 nav cost); no renames, no retags, no demotions this wave.
+  (Re-pin 2026-09-13 feature_089: +gotcha.structural_pin/gotcha.date_literal →
+  toolchain cluster; partition 18 → 20. New gotcha ids arriving is the
+  PARTITION's expected growth path — extend the set, keep the once-each rule.)
 
 Bun probes exercise the REAL think plugin (feature_055 idiom): hermetic tmp
 root + OMT_LEDGER_PATH pinned explicitly (feature_051 gotcha).
@@ -97,7 +100,7 @@ def test_cluster_comments_present_zero_nav_cost() -> None:
         "E1 cluster map must live in .omt # comments (parser-ignored, 0 nav cost)")
 
 
-def test_cluster_partition_covers_18_exactly_once() -> None:
+def test_cluster_partition_covers_all_exactly_once() -> None:
     expected = {
         # SDK-contract (4)
         "gotcha.loader_exports", "gotcha.sdk_contract",
@@ -107,8 +110,9 @@ def test_cluster_partition_covers_18_exactly_once() -> None:
         # receipt (4)
         "gotcha.receipt_second_edit", "gotcha.receipt_round_robin",
         "gotcha.bugb_recipe", "gotcha.write_large",
-        # toolchain (3)
+        # toolchain (5; +2 feature_089 re-pin: structural_pin, date_literal)
         "gotcha.testlist_json", "gotcha.tdd_toolchain", "gotcha.plugin_probe",
+        "gotcha.structural_pin", "gotcha.date_literal",
         # misc (4)
         "gotcha.done_reachable", "gotcha.think_gated",
         "gotcha.tests_canary_shadow", "gotcha.plugin_ctx",
@@ -116,7 +120,7 @@ def test_cluster_partition_covers_18_exactly_once() -> None:
     omt = OMT.read_text(encoding="utf-8")
     found = set(re.findall(r"@doc (gotcha\.\w+|tdd\.env_flaky_fixed)\b", omt))
     assert found == expected, (
-        f"cluster partition must cover exactly the 18 ids once each: "
+        f"cluster partition must cover every id exactly once: "
         f"missing={sorted(expected - found)} extra={sorted(found - expected)}")
 
 

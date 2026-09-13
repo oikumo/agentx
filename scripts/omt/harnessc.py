@@ -19,6 +19,10 @@ Subcommands:
                               batch (feature_074 T4-2; single e2e at the
                               boundary validates the whole patch)
   stage --status | --clear    inspect / drop the active stage
+  lint [path...]              absolute-date literal lint (GOTCHA_DATE_LITERAL;
+                              flags `= "20DD-DD-DDT…"` ISO datetime literals in
+                              test files — use `now - timedelta` instead;
+                              default: tests/)
 
 Stdlib-only by design (no deps approval). Grammar: plan Appendix D1 —
 record := '@' kind SP id (SP attr)* (SP ' : ' payload)? ; attr := k=v | k="v v".
@@ -2360,11 +2364,67 @@ def cmd_stage(args: list[str]) -> int:
     return 0
 
 
+_ABS_DATE_LIT = re.compile(r"=\s*[\"']20\d\d-\d\d-\d\dT\d\d:\d\d")
+
+
+def cmd_lint(argv: list[str]) -> int:
+    """Absolute-date literal lint (feature_089 / mh8 T2-6; GOTCHA_DATE_LITERAL).
+
+    Scans .py test files for hardcoded ISO datetimes (`= "2030-01-01T00:00"`)
+    — date-drift candidates in temporal-window tests; use `now - timedelta`
+    relative fixtures instead. Advisory: standalone subcommand, NOT part of
+    `check` (pre-existing literals are fixed opportunistically, mh3 scope).
+    """
+    roots: list[Path] = []
+    for a in argv:
+        if a.startswith("-"):
+            print(f"harnessc lint: error: unknown flag {a}", file=sys.stderr)
+            return 2
+        p = Path(a)
+        if not p.is_absolute():
+            p = REPO_ROOT / p
+        if not p.exists():
+            print(f"harnessc lint: error: path not found: {a}", file=sys.stderr)
+            return 1
+        roots.append(p)
+    if not roots:
+        roots = [REPO_ROOT / "tests"]
+
+    files: list[Path] = []
+    for root in roots:
+        if root.is_dir():
+            files.extend(sorted(root.rglob("*.py")))
+        elif root.suffix == ".py":
+            files.append(root)
+
+    hits: list[str] = []
+    for f in files:
+        try:
+            lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError as exc:
+            print(f"harnessc lint: warning: unreadable {f}: {exc}", file=sys.stderr)
+            continue
+        for n, line in enumerate(lines, 1):
+            if _ABS_DATE_LIT.search(line):
+                hits.append(f"{f}:{n}: {line.strip()}")
+
+    if hits:
+        print(f"harnessc lint: {len(hits)} absolute-date literal(s) "
+              f"(GOTCHA_DATE_LITERAL — prefer `now - timedelta` relative fixtures):")
+        for h in hits:
+            print(f"  {h}")
+        return 1
+    print(f"harnessc lint: clean — no absolute-date literals in {len(files)} file(s)")
+    return 0
+
+
 # --- main ----------------------------------------------------------------------
 
 def main(argv: list[str]) -> int:
     args = argv[1:]
     cmd = args[0] if args and not args[0].startswith("-") else "check"
+    if cmd == "lint":
+        return cmd_lint(args[1:])
     if cmd not in ("check", "build", "init", "stage", "workflows"):
         print(__doc__)
         return 2
@@ -2439,3 +2499,4 @@ def main(argv: list[str]) -> int:
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
+# TA: gotcha: harnessc stage policy_ver = sha256(.meta/META_HARNESS.omt) at STAGE time — editing the .omt AFTER staging invalidates the batch (receipt guard falls back to per-file second-edit block mid-batch). Order: stage → edit harnessc.py freely → edit .omt LAST → re-stage → single e2e (feature_089 hit this T4-2 boundary case).

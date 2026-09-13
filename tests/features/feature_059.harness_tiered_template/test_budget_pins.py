@@ -22,7 +22,11 @@ import harnessc
 # failure seen pre-074..076 was line-number drift of later .omt appends, NOT
 # new record kinds (nav_index kinds remain doc/flow/xref/tool/msg; the
 # feature_059 contract holds). Re-measured via _sizes() at HEAD.
-NAV_INDEX_CEIL = 63963
+# Re-pin 2026-09-13 (feature_089): NAV_INDEX_CEIL 63963 → 64956 — two new
+# @doc gotcha records (GOTCHA_STRUCTURAL_PIN/GOTCHA_DATE_LITERAL) are the
+# feature's deliverable (nav-queryable conventions); kinds unchanged, @budget
+# nav_index deliberately grown 64000→65536 in the same .omt edit.
+NAV_INDEX_CEIL = 64956
 TOOL_ARGS_CEIL = 2454    # re-pin 2026-09-13 (feature_080): deliberate omt_net claim ops (task_id/owner/generation describes + op enum) +32B nav drift; harness budgets still OK (tool_args 2454/2464, tool_schemas 1812/1856)
 TOOL_SCHEMAS_CEIL = 1812  # re-pin 2026-09-13 (feature_080): claim hint in omt_net description, same class
 
