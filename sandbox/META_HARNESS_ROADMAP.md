@@ -480,7 +480,7 @@ Include coordinator/helper-agent requests, summary/compaction calls where observ
 | **Waste indicators** | Duplicate delivered content, unnecessary round trips, verification reruns without relevant change, unchanged-failure retries and resume rereads. |
 | **Cache and spend** | Cached/uncached input, cache-invalidation events per session, cache behavior and actual billed cost using the run's recorded prices; distinguish savings from token-volume reduction. |
 | **Maintenance cost** | Tokens spent implementing, testing and maintaining the optimization; human effort separately. |
-| **State/runtime overhead** | Local decision latency, subprocess time, bytes parsed and snapshot/index behavior; not a substitute for model-token accounting. |
+| **State/runtime overhead** | Local decision and frontier-query latency, per-revision certification cost (compile-time analysis, exploration-capped, UNKNOWN counted), subprocess time, bytes parsed and snapshot/index behavior; not a substitute for model-token accounting. |
 
 **Staged activation.** Measures activate per milestone; the full table above is the target state, not the M0 build list. **M0 minimum set:** tokens per accepted task with the attempts decomposition, acceptance-oracle results, waste indicators, interaction ceremony counts, human burden. **M1 adds:** request fidelity, guidance sufficiency, one-shot rate, completion review cost. **M2 adds:** context precision/recall, cached-input share and cache-invalidation events, startup payload per tier, tokens to first action. **M3 adds:** reasoning share, guidance decay, advisory precision, instruction-surface version. A dormant measure recorded "not yet instrumented" is expected; instrumenting beyond the active set before its milestone is itself a fixed-cost addition and needs §7.4 justification.
 
@@ -578,6 +578,7 @@ Keep [meta_harness_8](../.projects/meta/meta_harness_8/PROJECT.md) as the existi
 - Keep task prep's existing vertical slice; finish truthful snapshot semantics before broad tool exposure.
 - Repair the unindexed workflow warning and stale Quick Start/resume pointers as small, separate changes.
 - Use the bounded experiment loop in §7; avoid repeated broad reviews that produce no implemented, measured productivity gain.
+- **V1↔V2 authority.** The [V2 roadmap](META_HARNESS_ROADMAP_V2.md) is explicitly post-V1: its release claims start from a frozen, qualified V1 profile (its §1 entry gate). Division of authority: this document owns V1 product economy, qualification and the §5.1 queue; V2 owns the Work-IR semantic contract, adapters and managed/distributed execution. §6.6 is the shared anchor — changes to the S-tuple, frontier contract, certification or invariants must land in both documents in the same revision. V2 may be designed now, but no V2-coded feature enters the execution queue while §5.1 items 1–3 are open, and the §7.4 revision-execution coupling rule applies to V2 documents identically: successor design layers do not substitute for closed queue items.
 
 Defer broad release packaging until the smallest workflow demonstrates value; a minimal pilot artifact belongs at M1. Defer additional adapters, expanded managed concurrency, distributed execution, an unrestricted policy/query language, mandatory new consultation gates, automatic policy self-modification, a hosted control plane and speculative commercial features. Reconsider each only when observed customer need and expected accepted-task savings or throughput justify its overhead and the relevant capability can be qualified.
 
@@ -603,6 +604,7 @@ Defer broad release packaging until the smallest workflow demonstrates value; a 
 | Static-versus-runtime split | Decide from the A+ ablation (§5.1 item 12): compiler output plus evidence layer only, or the full runtime surface. | Measured A+ versus B gap on core classes; per-mechanism attribution under §7.2 conditions. |
 | Self-improvement loop scope | Advisory, context and guidance surfaces first; policy self-modification stays deferred (§9). | Net realized loop savings per milestone; pre-registration adherence; no policy or safety regression. |
 | Net-fronted guidance | Joint frontier query (Petri-enabled ∧ guard-ALLOW, scope-filtered, revision-stamped) at task boundaries plus net-generated refusal text (§5.1 item 15, §6.6); first experiment read-only — guidance surface only, enforcement unchanged; the net's guidance use is measured like any other mechanism, not grandfathered in. | Attempts-per-task, repeat-refusal and tokens-to-first-valid-action reductions on measured classes; frontier latency inside the state/runtime overhead row; binding↔marking projection invariant holding in the verified profile; mined-net evidence that the workflow model matches observed behavior; no obligation or refusal-matrix regression. |
+| Solo vs managed control semantics | Same §6.6 semantics in both profiles; solo compiles coordination away (capacity one, in-process frontier evaluation, no net shell-out) rather than switching to different semantics, so the M1–M3 resume/frontier surfaces survive the managed profile instead of being rebuilt (V2 §2.6). | Frontier latency per profile; marking/binding projection and refusal matrix identical across profiles for the same actions. |
 | Model/effort routing | A named experiment after M2 class cost envelopes exist; routing is per task class, never per instance. | Per-class acceptance held at cheaper routing with all retry costs counted. |
 | Cost governor and retry cap | Advisory-only cost-envelope signal plus the enforced identical-signature retry cap (§5.1 item 10). | Attempt reduction on affected classes without suppressed necessary retries; transient-failure policy measured separately. |
 | Product pivot boundary | Pre-declared falsification criteria (§7.3): reduce to resume + verification + request-fidelity layer if the full harness does not beat native on the core classes (per the §7.2 like-for-like pairing) after M3. | The M2–M4 comparison record itself; user-visible value surviving on the reduced surface. |
@@ -645,21 +647,9 @@ The suite ran in the shared working tree while unrelated project/scaffold edits 
 
 Document validation: local Markdown links resolve, fenced code blocks are balanced, headings are unique, and whitespace checks pass. The sole authored workspace deliverable is this roadmap; both source assessments and unrelated changes are preserved.
 
-### Productivity-priority and product-refinement revisions — 2026-09-13 (compressed pair)
+### Early 2026-09-13 revisions — productivity, guidance, state-of-the-art, meta-thesis (compressed ×4)
 
-Reordered the plan around tokens-per-accepted-task, job-to-be-done milestones, proxy ladder and controlled experiments; added §2.1 self-critique, eight harness comparisons, narrow first workflow, M1 adoption pilot; fresh compiler pass at 265 records and F02/F03/F05/F09 probes reproduced (§3.5); compressed per §7.4, detail in git history.
-
-### Guidance-economy + productivity-economy revisions — 2026-09-13 (compressed)
-
-Added the §4.6 request-fidelity contract, output contracts, attempt decomposition, dogfood lane, advisory-precision and review-cost measures, §7.4 ratchets; markdown-only, document checks green; compressed per §7.4.
-
-### State-of-the-art economy refinement — 2026-09-13 (compressed)
-
-Added §2.1 falsification critique, four more prior-art rows, assembly-order contract, Tier-0-first sequencing, guidance fixture battery, telemetry-first demotion, kill criteria, items 10–14 groundwork; fixed stray `6.testing/` recording; compressed per §7.4.
-
-### Meta-thesis and git-allowance refinement — 2026-09-13 (compressed)
-
-Added the compiled-verified-work thesis (§1.1) and its delta claim; the reversible-vs-irreversible git allowance boundary and two-stage rollout (§6.5, item 13); deictic snapshots and bilateral acceptance confirmation (§4.6); the completion cost card; condition A+; guidance-decay measures; the meta cohort and loop rules; surface economy with this document's budget; markdown-only, checks green. Compressed per §7.4.
+Reordered around tokens-per-accepted-task with milestones, proxy ladder, §2.1 self-critique and eight harness comparisons; §4.6 request-fidelity contract, output contracts, attempt decomposition, dogfood lane, §7.4 ratchets; prior-art rows, assembly-order contract, Tier-0-first sequencing, fixture battery, kill criteria, items 10–14 groundwork; §1.1 compiled-verified-work thesis, §6.5 git-allowance boundary, condition A+, completion cost card, meta cohort. Fresh compiler pass (265 records) and F02/F03/F05/F09 probes reproduced (§3.5). Detail in git history per §7.4.
 
 ### Critical-economy refinement — 2026-09-13 (compressed)
 
@@ -682,6 +672,10 @@ User-directed deep evaluation of intent, targets and feasibility against harness
 ### Petri work-IR precision revision — 2026-09-13 (unearned)
 
 User-directed deep re-evaluation of intent, targets and feasibility against [META_HARNESS_ROADMAP_PETRI_IMPROVEMENTS_V1](META_HARNESS_ROADMAP_PETRI_IMPROVEMENTS_V1.md), with state of the art as the bar. Critical finding: the plan's own distinctive thesis carried an F05-class overclaim (firing trace as acceptance evidence) and two implementation-mismatched claims ("the net is the IR", "marking is task state"); and the T3-3/resume backlog statement was stale (feature 092 shipped 2026-09-13, suite 2214/2214). Adopted from the proposal: Work-IR state tuple and authority split, conjunctive legality, joint scope-filtered frontier, three net roles with mined-is-descriptive, binding↔marking projection invariant, evidence-guarded verification, start/finish resource holds, receipted external effects, immutable revision generations as the C1/C2 target, per-net certification with honest UNKNOWN, semantics pinning, I-PN-01…10 register (§6.6) — applied to §1.1, §2.1, §3.5, §5.1 items 4/15, §6, §9, §10. Rejected: elevating Petri guidance to P0 (its measured-economy discipline stands; made the first experiment read-only instead), and colored/timed nets (deferred to measured failure of aggregate+binding). Logged **unearned** (§7.4; unearned count: 3; execution since the previous revision: feature 092 shipped, feature 093 recon complete). Markdown-only; document checks re-run; budget ≤700 held by compressing two earlier revisions into one pair.
+
+### V2-fusion and certification-economy revision — 2026-09-13 (unearned)
+
+User-directed deep re-evaluation of intent, targets and feasibility against the [V2 roadmap](META_HARNESS_ROADMAP_V2.md) and the [Petri improvement proposal](META_HARNESS_ROADMAP_PETRI_IMPROVEMENTS_V1.md), with harness productivity, agent token economy, request-fidelity guidance and the state of the art as the bar. Findings: (i) this roadmap and V2 coexisted with no stated relationship while both write Work-IR semantics — dual authority, and the §7.4 coupling rule did not extend to successor design documents; (ii) the net's strongest economy — proving a workflow impossible before any attempt is attempted — appeared only as a correctness property, and the frontier entry contract existed only in V2 while item 15 bears its measurement; (iii) the solo frontier had no cost model (a shell-per-query design replicates g.net's subprocess overhead). Adopted: V1↔V2 authority split and design-coupling rule (§9); certification economy plus versioned frontier contract and solo in-process evaluation (§6.6); solo-equals-managed semantics decision row (§10); certification cost in §7.1 overhead. Rejected: pulling V2 milestones into the V1 queue (both documents' entry gates forbid it); colored/timed nets (both documents' demand gates still default to weighted P/T). Logged **unearned** (§7.4; unearned count: 4 — no queue item closed since the previous revision). Markdown-only; document checks re-run; budget ≤700 held by compressing the four earliest 2026-09-13 entries into one.
 
 ## 12. Source and test map
 
