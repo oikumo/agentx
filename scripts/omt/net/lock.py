@@ -47,6 +47,14 @@ MAX_COMMANDS = 500
 LOCK_TIMEOUT_S = 30.0
 LOCK_POLL_S = 0.01
 
+# feature_084.recovery_and_transaction_journal (T5-6 3B — NEXT_STEP §15.1):
+# tiny WAL marker in the coordination root. It exists ONLY while a
+# transaction is incomplete (recovery mechanism, NOT operational state —
+# §15.2). Crash between save and ledger/clear leaves it behind; startup
+# `reconcile` compares its from/to revision against the live bundle and
+# either clears it (aborted/committed) or fails closed with a diagnosis.
+TXN_PENDING_FILENAME = "net_txn.pending.json"
+
 
 class LockError(PetriNetError):
     """Coordination-lock failure carrying a stable envelope error code."""
@@ -72,6 +80,76 @@ def canonical_hash(op: str, payload: dict[str, Any]) -> str:
 
 def _commands_path(root: Path) -> Path:
     return root / COMMANDS_FILENAME
+
+
+def txn_pending_path(root: Path) -> Path:
+    """Pending-transaction journal path (feature_084, NEXT_STEP §15.1)."""
+    return root / TXN_PENDING_FILENAME
+
+
+def read_pending_txn(root: Path) -> dict[str, Any] | None:
+    """Pending journal record, or None when no transaction is in flight.
+
+    Malformed JSON fails CLOSED (LockError `lock_unavailable`) — never
+    silently unprotected (§15: deterministic recovery or fail-closed
+    diagnosis).
+    """
+    path = txn_pending_path(root)
+    if not path.exists():
+        return None
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        raise LockError(
+            "lock_unavailable",
+            f"transaction journal unreadable at {path} ({exc}) — fail-closed; "
+            "inspect the file to recover (do not delete blindly)",
+        )
+    if not isinstance(doc, dict):
+        raise LockError(
+            "lock_unavailable",
+            f"transaction journal malformed at {path} — fail-closed; "
+            "inspect the file to recover (do not delete blindly)",
+        )
+    return doc
+
+
+def write_pending_txn(root: Path, record: dict[str, Any]) -> None:
+    """Durably stage a pending-transaction marker (tmp + fsync + replace).
+
+    Call only with the coordination lock held (state._transact does)."""
+    # TA: why: why (feature_084): tmp+os.replace under the held lock keeps a
+    # crashed writer from leaving partial JSON; fsync makes the marker
+    # survive the very crash it exists to detect (WAL durability, §15.1).
+    path = txn_pending_path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+        fh.flush()
+        try:
+            os.fsync(fh.fileno())
+        except OSError:
+            pass
+    os.replace(tmp, path)
+    try:
+        dir_fd = os.open(str(root), os.O_DIRECTORY)
+    except OSError:
+        return
+    try:
+        os.fsync(dir_fd)
+    except OSError:
+        pass
+    finally:
+        os.close(dir_fd)
+
+
+def clear_pending_txn(root: Path) -> None:
+    """Remove the pending marker (commit/abort complete). Idempotent."""
+    try:
+        txn_pending_path(root).unlink(missing_ok=True)
+    except OSError:
+        pass
 
 
 def _read_index(root: Path) -> dict[str, Any]:

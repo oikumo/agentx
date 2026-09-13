@@ -397,6 +397,44 @@ def _checkpoint(
     return _task_envelope("checkpoint", st, task_id), 0
 
 
+# feature_084.recovery_and_transaction_journal (T5-6 3B): thin envelopes over
+# heartbeat_task / recover_task / reconcile_transactions in state.py.
+# CLI-only in this slice (no omt_net plugin exposure — tool budgets ~99%
+# full, the T1-6/083 precedent: harnessc CLI subcommand over a new tool).
+def _heartbeat(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    st = state.heartbeat_task(
+        base,
+        args.task_id,
+        generation=args.generation,
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("heartbeat", st, args.task_id), 0
+
+
+def _recover(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    st = state.recover_task(
+        base,
+        args.task_id,
+        owner=args.owner or args.session or "context",
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("recover", st, args.task_id), 0
+
+
+def _reconcile(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    outcome = state.reconcile_transactions(base, session=args.session)
+    status = str(outcome.get("status", "diagnosis"))
+    if status == "clean":
+        return {"ok": True, "op": "reconcile", "status": status}, 0
+    if status in ("recovered_aborted", "recovered_committed"):
+        return {"ok": True, "op": "reconcile", **outcome}, 0
+    return {"ok": False, "op": "reconcile", "error": str(outcome.get("code", "txn_diverged")), "message": str(outcome.get("message", "")), "status": status}, 1
+
+
 # feature_083.verification_integration_lane (T5-5 3A): thin envelopes over the
 # submit/verify/integrate_start/integrate_finish transactions in state.py.
 # CLI-only in this slice (no omt_net plugin exposure — tool budgets ~99%
@@ -658,6 +696,23 @@ def _build_parser() -> argparse.ArgumentParser:
     p_checkpoint.add_argument("--session", default="")
     p_checkpoint.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
     p_checkpoint.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_080).")
+    p_heartbeat = sub.add_parser("heartbeat", help="Record liveness evidence for a held generation (T5-6 3B).")
+    p_heartbeat.add_argument("--task-id", "--task_id", required=True)
+    p_heartbeat.add_argument("--generation", type=int, required=True, help="Held generation (stale refuses).")
+    p_heartbeat.add_argument("--reasoning", required=True)
+    p_heartbeat.add_argument("--session", default="")
+    p_heartbeat.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_heartbeat.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079).")
+    p_recover = sub.add_parser("recover", help="Recover an active claim to a new owner, preserving checkpoint (T5-6 3B).")
+    p_recover.add_argument("--task-id", "--task_id", required=True)
+    p_recover.add_argument("--owner", default="", help="New owner (default: --session).")
+    p_recover.add_argument("--reasoning", required=True)
+    p_recover.add_argument("--session", default="")
+    p_recover.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_recover.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079).")
+    p_reconcile = sub.add_parser("reconcile", help="Startup reconcile for the transaction journal (T5-6 3B).")
+    p_reconcile.add_argument("--reasoning", required=True)
+    p_reconcile.add_argument("--session", default="")
     p_submit = sub.add_parser("submit", help="Worker publishes a result: active→verifying (T5-5 3A).")
     p_submit.add_argument("--task-id", "--task_id", required=True)
     p_submit.add_argument("--generation", type=int, required=True, help="Held generation (stale refuses).")
@@ -809,6 +864,12 @@ def main(argv: list[str] | None = None) -> int:
                 payload.get("head_commit"), payload.get("patch_digest"),
                 args.session, getattr(args, "expected_revision", None),
                 getattr(args, "command_id", None) or None))
+        if op == "heartbeat":
+            return _emit(*_heartbeat(base, args))
+        if op == "recover":
+            return _emit(*_recover(base, args))
+        if op == "reconcile":
+            return _emit(*_reconcile(base, args))
         if op == "submit":
             return _emit(*_submit(base, args))
         if op == "verify":

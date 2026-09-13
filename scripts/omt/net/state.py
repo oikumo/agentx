@@ -31,6 +31,7 @@ import copy
 import json
 import os
 import re
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,9 +42,12 @@ from .io import document_from_json, net_to_json
 from .lock import (
     CoordinationLock,
     canonical_hash,
+    clear_pending_txn,
     coordination_root,
     lookup_command,
+    read_pending_txn,
     record_command,
+    write_pending_txn,
 )
 from .model import PetriNet
 from . import workspace as _workspace
@@ -240,6 +244,7 @@ _TASK_BINDING_OPTIONAL_TYPES = {
     "results": list,
     "block_reason": str,
     "submission": dict,
+    "liveness": dict,
 }
 
 
@@ -649,11 +654,23 @@ def _transact(
     double-fire); the same ID with a different payload raises
     `command_id_conflict`. Callers without `command_id` take the lock but
     skip the index (solo behavior frozen, D8).
+
+    feature_084 (T5-6 3B — NEXT_STEP §15.1): a tiny WAL marker
+    (`net_txn.pending.json` in the coordination root) brackets `apply()`.
+    A crash between save and ledger/clear leaves the marker behind and
+    `reconcile_transactions()` resolves it deterministically (live rev ==
+    from → aborted; live rev == from+1 → committed; else fail-closed
+    diagnosis). Clean refusals clear the marker before re-raising — the
+    marker exists only while a transaction is incomplete (§15.2).
     """
     # TA: why: why (feature_079): the lock must span load-through-commit —
     # the pre-lock fast check in cli.py stays a courtesy rejection only; the
     # load inside apply() re-reads under the lock so the revision comparison
     # cannot interleave with another committer (the TOCTOU this slice closes).
+    # TA: why: why (feature_084): the pending marker is written INSIDE the
+    # held lock after the idempotency/revision gates, so a queued committer
+    # never mistakes a live transaction for a crashed one; the from-revision
+    # is read under the same lock (no TOCTOU between marker and commit).
     root = coordination_root(base)
     canonical = canonical_hash(op, payload)
     with CoordinationLock(root).exclusive():
@@ -674,7 +691,45 @@ def _transact(
                 }
         if expected_revision is not None:
             _require_revision(load(base), expected_revision)
-        st, info = apply()
+        try:
+            from_revision: int | None = load(base).revision
+        except (NetNotBootstrappedError, RevisionMismatchError):
+            from_revision = None
+        pending: dict[str, Any] | None = None
+        if from_revision is not None:
+            task_id = payload.get("task_id")
+            pending = {
+                "txid": uuid.uuid4().hex,
+                "ts": _utc_now(),
+                "op": op,
+                "command_id": command_id,
+                "from_revision": from_revision,
+                "to_revision": from_revision + 1,
+                "task_id": task_id if isinstance(task_id, str) else None,
+                "canonical": canonical,
+            }
+            write_pending_txn(root, pending)
+        try:
+            st, info = apply()
+        except BaseException:
+            if pending is not None:
+                try:
+                    live_revision: int | None = load(base).revision
+                except Exception:
+                    live_revision = None
+                if live_revision is None or live_revision == from_revision:
+                    try:
+                        clear_pending_txn(root)
+                    except Exception:
+                        pass
+                # else: the bundle advanced despite the error (save landed,
+                # a later step failed) — LEAVE the marker for reconcile.
+            raise
+        if pending is not None:
+            try:
+                clear_pending_txn(root)
+            except Exception:
+                pass
         if command_id:
             record_command(
                 root,
@@ -2865,3 +2920,313 @@ def mine(
         "manifest": manifest,
     }
     return st, info
+
+
+# ---------------------------------------------------------------------------
+# Recovery + transaction journal (feature_084 T5-6 3B — NEXT_STEP §14–§15,
+# mh8 strict slice order after 079/080/081/082/083). Three pieces:
+# heartbeat_task (liveness evidence, never authority — §14.1),
+# recovery_candidates + recover_task (freeze → preserve checkpoint →
+# gen-incrementing transfer with old/new linkage — §14.2/§14.3), and
+# reconcile_transactions over the _transact WAL marker
+# (`net_txn.pending.json` — §15.1, recovery mechanism not SSOT §15.2).
+# Stale generations refuse every publish path with the inherited
+# `stale_generation` fence (D9); a recovered task keeps its checkpoint so a
+# fresh worker resumes without the previous chat history (§14.3).
+# ---------------------------------------------------------------------------
+
+
+def _parse_liveness_ts(raw: object) -> datetime | None:
+    """Parse a stored `last_seen` ISO timestamp; None when absent/broken."""
+    if not isinstance(raw, str) or not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def heartbeat_task(
+    base: Path,
+    task_id: str,
+    *,
+    generation: int,
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Record liveness evidence for a held generation (NEXT_STEP §14.1).
+
+    Heartbeat is evidence, NOT authority: it stamps
+    `binding.liveness = {last_seen, session, owner}` under the transaction
+    lock but never revokes or transfers ownership. The binding must be
+    active AND its generation must equal the caller's — anything else
+    refuses with `stale_generation`, so a superseded worker cannot fake
+    freshness for a generation it no longer holds."""
+    payload = {"task_id": task_id, "generation": generation, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        live_gen = int(b.get("generation", 0) or 0)
+        if b.get("place") != "work_active" or live_gen != int(generation):
+            raise SpliceError(
+                "stale_generation",
+                f"task {task_id!r} is {b.get('place')!r} gen {live_gen}, "
+                f"caller holds gen {generation} (rev {st.revision}) — "
+                "re-claim before heartbeating",
+            )
+        updated = dict(b)
+        updated["liveness"] = {
+            "last_seen": _utc_now(),
+            "session": session,
+            "owner": b.get("owner"),
+        }
+        st.task_bindings[idx] = updated
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_heartbeat",
+            "session": session,
+            "task_id": task_id,
+            "generation": live_gen,
+            "revision": st.revision,
+        })
+        return st, {"task_id": task_id, "generation": live_gen}
+
+    st, _ = _transact(
+        base,
+        op="heartbeat",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
+    return st
+
+
+def recovery_candidates(
+    base: Path,
+    *,
+    stale_after_s: float = 300.0,
+    now: datetime | None = None,
+) -> list[dict[str, Any]]:
+    """Active tasks that are recovery candidates (read-only, §14.1/§14.2).
+
+    A task is a candidate when it never heartbeated (`no_heartbeat`) or its
+    last `last_seen` is older than `stale_after_s` (`stale_heartbeat`) or
+    unparsable (`unparsable_heartbeat`). Missing heartbeats NEVER auto-revoke
+    — the coordinator still runs `recover_task` explicitly (step 5) after
+    confirming the old execution is stopped or isolated (steps 2–4)."""
+    st = load(base)
+    moment = now
+    if moment is None:
+        moment = datetime.now(timezone.utc)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    out: list[dict[str, Any]] = []
+    for b in st.task_bindings or []:
+        if not isinstance(b, dict) or b.get("place") != "work_active":
+            continue
+        liv = b.get("liveness")
+        if not isinstance(liv, dict):
+            out.append({
+                "id": b.get("id"),
+                "owner": b.get("owner"),
+                "generation": int(b.get("generation", 0) or 0),
+                "last_seen": None,
+                "reason": "no_heartbeat",
+            })
+            continue
+        seen = _parse_liveness_ts(liv.get("last_seen"))
+        if seen is None:
+            out.append({
+                "id": b.get("id"),
+                "owner": b.get("owner"),
+                "generation": int(b.get("generation", 0) or 0),
+                "last_seen": liv.get("last_seen"),
+                "reason": "unparsable_heartbeat",
+            })
+            continue
+        if (moment - seen).total_seconds() > stale_after_s:
+            out.append({
+                "id": b.get("id"),
+                "owner": b.get("owner"),
+                "generation": int(b.get("generation", 0) or 0),
+                "last_seen": liv.get("last_seen"),
+                "reason": "stale_heartbeat",
+            })
+    return sorted(out, key=lambda c: str(c.get("id", "")))
+
+
+def recover_task(
+    base: Path,
+    task_id: str,
+    *,
+    owner: str,
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Recover an active claim to a new owner (NEXT_STEP §14.2 workflow).
+
+    Under one transaction: preserve the old generation's checkpoint/results
+    evidence (lossless handoff — §14.3, the fresh worker resumes from
+    authoritative state + Git artifacts + ledger), increment the generation
+    (the old owner's fence is revoked, D9), stamp a fresh per-generation
+    workspace (081), clear liveness (the new owner heartbeats itself), and
+    append a `net_recover` audit event linking old → new generations (step
+    8). No token moves — the task stays active. Any later submission from
+    the old generation refuses with `stale_generation`."""
+    payload = {"task_id": task_id, "owner": owner, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        if b.get("place") != "work_active":
+            raise SpliceError(
+                "task_not_active",
+                f"task {task_id!r} is in {b.get('place')!r}, not work_active "
+                f"(rev {st.revision}) — nothing to recover",
+            )
+        old_owner = b.get("owner")
+        old_generation = int(b.get("generation", 0) or 0)
+        new_generation = old_generation + 1
+        preserved_checkpoint = b.get("checkpoint")
+        moved = dict(b)
+        moved["owner"] = owner
+        moved["generation"] = new_generation
+        moved["workspace"] = _workspace.build_workspace(base, task_id, new_generation)
+        moved.pop("liveness", None)
+        st.task_bindings[idx] = moved
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        try:
+            _workspace.ensure_workspace(
+                moved["workspace"], _workspace.repo_root_for(base)
+            )
+        except Exception:
+            pass
+        append_ledger({
+            "kind": "net_recover",
+            "session": session,
+            "task_id": task_id,
+            "old_owner": old_owner,
+            "owner": owner,
+            "old_generation": old_generation,
+            "generation": new_generation,
+            "preserved_checkpoint": preserved_checkpoint,
+            "workspace": moved["workspace"]["id"],
+            "revision": st.revision,
+        })
+        return st, {
+            "task_id": task_id,
+            "owner": owner,
+            "old_generation": old_generation,
+            "generation": new_generation,
+            "preserved_checkpoint": preserved_checkpoint,
+            "workspace": moved["workspace"],
+        }
+
+    st, _ = _transact(
+        base,
+        op="recover",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
+    return st
+
+
+def reconcile_transactions(base: Path, *, session: str = "") -> dict[str, Any]:
+    """Startup reconcile for the WAL marker (NEXT_STEP §15.1, §15.2).
+
+    Deterministic and idempotent, under the coordination lock: no marker →
+    `clean`; marker with live rev == from → the committer died before save
+    (`recovered_aborted`); live rev == to → the committer died after save
+    (`recovered_committed`); anything else (or an unbootstrapped bundle with
+    a marker) → fail-closed `diagnosis` that LEAVES the marker for a human.
+    Both recovery outcomes clear the marker and append a `net_reconcile`
+    audit event."""
+    from .lock import CoordinationLock as _Lock
+
+    root = coordination_root(base)
+    with _Lock(root).exclusive():
+        try:
+            pending = read_pending_txn(root)
+        except Exception as exc:
+            code = getattr(exc, "code", "lock_unavailable")
+            return {
+                "status": "diagnosis",
+                "code": code,
+                "message": str(exc),
+                "pending": None,
+            }
+        if pending is None:
+            return {"status": "clean"}
+        from_revision = pending.get("from_revision")
+        to_revision = pending.get("to_revision")
+        try:
+            live_revision = load(base).revision
+        except Exception as exc:
+            return {
+                "status": "diagnosis",
+                "code": "net_not_bootstrapped",
+                "message": f"pending {pending.get('txid')!r} with no readable bundle: {exc}",
+                "pending": pending,
+            }
+        if live_revision == from_revision:
+            clear_pending_txn(root)
+            append_ledger({
+                "kind": "net_reconcile",
+                "session": session,
+                "outcome": "recovered_aborted",
+                "txid": pending.get("txid"),
+                "op": pending.get("op"),
+                "task_id": pending.get("task_id"),
+                "revision": live_revision,
+            })
+            return {
+                "status": "recovered_aborted",
+                "txid": pending.get("txid"),
+                "op": pending.get("op"),
+                "task_id": pending.get("task_id"),
+                "revision": live_revision,
+            }
+        if live_revision == to_revision:
+            clear_pending_txn(root)
+            append_ledger({
+                "kind": "net_reconcile",
+                "session": session,
+                "outcome": "recovered_committed",
+                "txid": pending.get("txid"),
+                "op": pending.get("op"),
+                "task_id": pending.get("task_id"),
+                "revision": live_revision,
+            })
+            return {
+                "status": "recovered_committed",
+                "txid": pending.get("txid"),
+                "op": pending.get("op"),
+                "task_id": pending.get("task_id"),
+                "revision": live_revision,
+            }
+        return {
+            "status": "diagnosis",
+            "code": "txn_diverged",
+            "message": (
+                f"pending {pending.get('txid')!r} op {pending.get('op')!r} "
+                f"from {from_revision}→{to_revision} vs live {live_revision} — "
+                "fail-closed; inspect the bundle and journal before clearing"
+            ),
+            "pending": pending,
+            "revision": live_revision,
+        }
