@@ -18,9 +18,13 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "omt"))
 import harnessc
 
 # Ceilings: post-R1 measured sizes (the 2 @var cost ir_json only).
-NAV_INDEX_CEIL = 63923
-TOOL_ARGS_CEIL = 2278
-TOOL_SCHEMAS_CEIL = 1770
+# Re-pin 2026-09-12 (feature_077): NAV_INDEX_CEIL 63923 → 63929 — the pinned
+# failure seen pre-074..076 was line-number drift of later .omt appends, NOT
+# new record kinds (nav_index kinds remain doc/flow/xref/tool/msg; the
+# feature_059 contract holds). Re-measured via _sizes() at HEAD.
+NAV_INDEX_CEIL = 63929
+TOOL_ARGS_CEIL = 2284    # re-pin 2026-09-12 (feature_077): +6B from 073–076 additions (measured, harness budget still 2284/2304 OK)
+TOOL_SCHEMAS_CEIL = 1778  # re-pin 2026-09-12 (feature_077): +8B, same class
 
 
 def _sizes():

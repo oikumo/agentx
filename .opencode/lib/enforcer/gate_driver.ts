@@ -366,8 +366,11 @@ export type GateDecision = {
   stop?: boolean
 }
 
-export async function runBeforeGatesDry(ctx: GateCtx): Promise<GateDecision[]> {
-  const ir = loadIr()
+// feature_077 (T1-4): optional irOverride lets omt_q{op:plan, as_of:<commit>}
+// replay the gate set as of a past commit (loadIrAt); live callers pass
+// nothing and behavior is byte-identical.
+export async function runBeforeGatesDry(ctx: GateCtx, irOverride?: any): Promise<GateDecision[]> {
+  const ir = irOverride ?? loadIr()
   const gates = (Array.isArray(ir?.gates) && ir.gates.length ? ir.gates : FALLBACK_GATES)
     .filter((g: any) => g.on === "before")
     .sort((a: any, b: any) => a.order - b.order)

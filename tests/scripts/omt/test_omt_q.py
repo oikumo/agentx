@@ -626,6 +626,122 @@ class TestEnvelopeAsOfCommit:
 
 
 # ---------------------------------------------------------------------------
+# feature_077 (T1-4 / mh2 U18): as_of historical-temporal replay
+# ---------------------------------------------------------------------------
+
+def _git(tmp: Path, *args: str) -> str:
+    out = subprocess.run(
+        ["git", "-C", str(tmp), *args], capture_output=True, text=True)
+    assert out.returncode == 0, f"git {' '.join(args)} failed: {out.stderr}"
+    return out.stdout.strip()
+
+
+def _git_commit_all(tmp: Path, msg: str) -> str:
+    _git(tmp, "add", "-A")
+    _git(tmp, "-c", "user.name=probe", "-c", "user.email=probe@example.invalid",
+         "commit", "-qm", msg)
+    return _git(tmp, "rev-parse", "HEAD")
+
+
+class TestAsOfReplay:
+    """feature_077 (T1-4, mh2 U18): as_of:"<commit>" replays the omt_q
+    substrate at that commit (IR + ledger + thoughts + kb.ir + state.py via
+    `git show <commit>:<path>`). Golden: state-at-C differs from
+    state-at-HEAD on seeded drift."""
+
+    def _seed_repo(self, tmp_path: Path):
+        """Two-commit repo: C has phase=Analysis + a TA marker at x.py:1;
+        HEAD advances to phase=Programming and deletes the marker (drift)."""
+        feat = "feature_077.as_of_historical_temporal_replay"
+        base = datetime.now(timezone.utc) - timedelta(hours=1)
+        ts = lambda m: (base + timedelta(minutes=m)).isoformat()
+        (tmp_path / "src").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "src" / "x.py").write_text(
+            "# TA: seeded marker\nprint(1)\n", encoding="utf-8")
+        _write_ledger(tmp_path, [
+            {"ts": ts(0), "kind": "phase", "phase": "Analysis",
+             "feature": feat, "session": "ses_077"},
+        ])
+        kb = tmp_path / ".meta" / ".omt" / "kb.ir.json"
+        kb.write_text(json.dumps(
+            {"records": [{"src": "src/x.py", "line": 1,
+                          "text": "seeded marker"}]}), encoding="utf-8")
+        _git(tmp_path, "init", "-q")
+        sha_c = _git_commit_all(tmp_path, "commit C")
+        # HEAD: phase advances; the TA marker is deleted (seeded drift).
+        _write_ledger(tmp_path, [
+            {"ts": ts(0), "kind": "phase", "phase": "Analysis",
+             "feature": feat, "session": "ses_077"},
+            {"ts": ts(5), "kind": "phase", "phase": "Programming",
+             "feature": feat, "session": "ses_077"},
+        ])
+        (tmp_path / "src" / "x.py").write_text(
+            "print(2)\nprint(1)\n", encoding="utf-8")
+        sha_head = _git_commit_all(tmp_path, "HEAD drift")
+        return feat, sha_c, sha_head
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_state_at_commit_c_differs_from_head(self, tmp_path):
+        feat, sha_c, sha_head = self._seed_repo(tmp_path)
+        # At C: the replayed ledger only knows phase=Analysis.
+        out_c = _q_probe(
+            json.dumps({"op": "state", "feature": feat, "as_of": sha_c}),
+            session="ses_077", tmp_path=tmp_path)
+        assert out_c["op"] == "state"
+        assert out_c["as_of_commit"] == sha_c, (
+            f"as_of must resolve <commit> to its sha: {out_c}")
+        assert out_c["phase"] == "Analysis", (
+            f"state-at-C must replay phase=Analysis: {out_c}")
+        # At HEAD (no as_of): the live path sees the advanced ledger.
+        out_head = _q_probe(
+            json.dumps({"op": "state", "feature": feat}),
+            session="ses_077", tmp_path=tmp_path)
+        assert out_head["as_of_commit"] == sha_head, (
+            f"no-as_of must stay at HEAD: {out_head}")
+        assert out_head["phase"] == "Programming", (
+            f"state-at-HEAD must see the live ledger: {out_head}")
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_drift_at_commit_classifies_seeded_drift(self, tmp_path):
+        _, sha_c, _ = self._seed_repo(tmp_path)
+        # At C the marker still exists — no drift.
+        out_c = _q_probe(
+            json.dumps({"op": "drift", "as_of": sha_c}),
+            session="ses_077", tmp_path=tmp_path)
+        assert out_c["op"] == "drift"
+        assert out_c["as_of_commit"] == sha_c
+        c_hits = [d for d in out_c.get("drift_records", [])
+                  if d.get("src") == "src/x.py"]
+        assert c_hits == [], (
+            f"drift-at-C must see the intact marker (no MOVED): {out_c}")
+        # At HEAD the marker is gone — MOVED drift.
+        out_head = _q_probe(
+            json.dumps({"op": "drift"}),
+            session="ses_077", tmp_path=tmp_path)
+        head_hits = [d for d in out_head.get("drift_records", [])
+                     if d.get("src") == "src/x.py"]
+        assert any(d.get("classification") == "MOVED" for d in head_hits), (
+            f"drift-at-HEAD must classify the deleted marker as MOVED: "
+            f"{out_head}")
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_plan_as_of_resolves_and_marks_scope(self, tmp_path):
+        _, sha_c, _ = self._seed_repo(tmp_path)
+        out = _q_probe(
+            json.dumps({"op": "plan",
+                        "path": ".opencode/lib/omt_shared.ts",
+                        "tool": "edit", "as_of": sha_c}),
+            session="ses_077", tmp_path=tmp_path)
+        assert out["op"] == "plan"
+        assert out["as_of_commit"] == sha_c, (
+            f"plan as_of must resolve the commit: {out}")
+        # plan honours as_of for IR + ledger folds; the live session-state /
+        # receipt readers are out of scope and the envelope must say so.
+        assert "as_of_scope" in out, (
+            f"plan as_of must mark its replay scope: {out}")
+
+
+# ---------------------------------------------------------------------------
 # Behaviour-preserving: runBeforeGatesDry does not break real runBeforeGates throw-on-block
 # ---------------------------------------------------------------------------
 

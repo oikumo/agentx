@@ -217,6 +217,94 @@ export function rotateLedgerIfNeeded(root?: string): void {
   } catch { /* best-effort — rotation failure never breaks a session */ }
 }
 
+// --- as_of historical replay (feature_077 / mh8 T1-4 / mh2 U18) -------------
+// Read harness substrates at a past commit via `git show <commit>:<path>`
+// (read-only; never mutates the working tree). Every reader fails open like
+// its live sibling: a substrate missing at the commit reads as []/null.
+export function gitShow(commit: string, rel: string, root?: string): string | null {
+  try {
+    return execFileSync("git", ["show", `${commit}:${rel}`], {
+      cwd: root ?? REPO_ROOT, encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"], maxBuffer: 16 * 1024 * 1024,
+    })
+  } catch { return null }
+}
+
+// repo-relative paths under `subdir` as of `commit` (fail-open []).
+export function gitLsPathsAt(commit: string, subdir: string, root?: string): string[] {
+  try {
+    const out = execFileSync(
+      "git", ["ls-tree", "-r", "--name-only", commit, "--", subdir],
+      { cwd: root ?? REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
+    return out.split("\n").map((s) => s.trim()).filter(Boolean)
+  } catch { return [] }
+}
+
+// Resolve any ref ("HEAD~3", tag, short sha) to a full commit sha; null when
+// the ref does not resolve (callers fail open to their as_given value).
+export function resolveGitRef(ref: string, root?: string): string | null {
+  try {
+    return execFileSync("git", ["rev-parse", "--verify", `${ref}^{commit}`], {
+      cwd: root ?? REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"],
+    }).trim() || null
+  } catch { return null }
+}
+
+function parseJsonlText(text: string | null): any[] {
+  if (text == null) return []
+  const out: any[] = []
+  for (const line of text.split("\n")) {
+    const s = line.trim()
+    if (!s) continue
+    try { out.push(JSON.parse(s)) } catch { /* skip corrupt line */ }
+  }
+  return out
+}
+
+function ledgerArchiveNamesAt(commit: string, root?: string): string[] {
+  return gitLsPathsAt(commit, ".meta/.omt", root)
+    .map((p) => p.split("/").pop() || "")
+    .filter((n) => /^ledger-\d{6}\.jsonl$/.test(n))
+    .sort()
+}
+
+// Ledger at commit: latest archive + hot (mirrors readLedger's window).
+export function readLedgerAt(commit: string, root?: string): any[] {
+  const archives = ledgerArchiveNamesAt(commit, root)
+  const latest = archives.length ? archives[archives.length - 1] : null
+  const older = latest
+    ? parseJsonlText(gitShow(commit, `.meta/.omt/${latest}`, root)) : []
+  return [...older, ...parseJsonlText(gitShow(commit, ".meta/.omt/ledger.jsonl", root))]
+}
+
+// Full history at commit: ALL archives + hot (mirrors readLedgerAll).
+export function readLedgerAllAt(commit: string, root?: string): any[] {
+  const archives = ledgerArchiveNamesAt(commit, root)
+  return [
+    ...archives.flatMap((n) => parseJsonlText(gitShow(commit, `.meta/.omt/${n}`, root))),
+    ...parseJsonlText(gitShow(commit, ".meta/.omt/ledger.jsonl", root)),
+  ]
+}
+
+export function loadIrAt(commit: string, root?: string): any | null {
+  try {
+    const text = gitShow(commit, ".meta/.omt/harness.ir.json", root)
+    return text == null ? null : JSON.parse(text)
+  } catch { return null }
+}
+
+export function loadKbIrAt(commit: string, root?: string): any | null {
+  try {
+    const text = gitShow(commit, ".meta/.omt/kb.ir.json", root)
+    return text == null ? null : JSON.parse(text)
+  } catch { return null }
+}
+
+// Thoughts index at commit (readThoughtsIndex sibling).
+export function readThoughtsAt(commit: string, root?: string): any[] {
+  return parseJsonlText(gitShow(commit, ".meta/.omt/thoughts.jsonl", root))
+}
+
 // --- e2e receipt status check (the OMT-harness second-edit guard) -----------
 // Extracted from omt_enforcer.ts (R1); the enforcer calls omtHarnessE2eStatus
 // from its before-hook (R2: the receipt_guard module). The guard requires a

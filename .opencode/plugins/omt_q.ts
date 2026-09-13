@@ -33,6 +33,8 @@ import {
   initOmtShared, repoRoot, loadIr, readLedger, readLedgerAll, appendLedger,
   readThoughtsIndex, loadKbIr, omtHarnessE2eStatus,
   irToolDescription,
+  gitShow, readLedgerAt, readLedgerAllAt, loadIrAt, loadKbIrAt,
+  readThoughtsAt, resolveGitRef,
   UNLOCK_WINDOW_MS, THOUGHT_PATTERN, relOf,
 } from "../lib/omt_shared"
 import {
@@ -67,14 +69,15 @@ function headSha(): string {
 // someone regrew the allowlist = reverting A1). Fail-open on missing /
 // unreadable file.
 // ---------------------------------------------------------------------------
-function parseKnownSuiteFailures(root: string): {
+// feature_077 (T1-4): takes source TEXT (live read or gitShow at as_of) so
+// historical replay never touches the working tree. Fail-open on null.
+function parseKnownSuiteFailures(srcText: string | null): {
   nodeIds: string[]
   parse_failed: boolean
 } {
   try {
-    const p = join(root, "scripts", "omt", "tdd", "state.py")
-    if (!existsSync(p)) return { nodeIds: [], parse_failed: true }
-    const src = readFileSync(p, "utf8")
+    if (srcText == null) return { nodeIds: [], parse_failed: true }
+    const src = srcText
     const m = src.match(/KNOWN_SUITE_FAILURES\s*=\s*frozenset\(\{([^}]*)\}\)/)
     if (!m) return { nodeIds: [], parse_failed: true }
     const ids = (m[1].match(/['"]([^'"]+)['"]/g) || [])
@@ -474,47 +477,45 @@ function foldDelegateHint(
 // U3 drift: KB-vs-source classification + count_drift direction-b only.
 // KB>skeleton IS drift; KB<skeleton is NOT drift (per edge case #5 + the v1
 // "new = not-yet-tracked is NOT drift" rule).
-function foldDrift(): {
+// feature_077 (T1-4): optional `commit` replays KB records AND the referenced
+// source files via gitShow (no working-tree reads) — drift-at-<commit>.
+function foldDrift(commit?: string): {
   drift_records: any[]
   count_drift: { kb: number; skeleton: number; direction_b_only: boolean }
 } {
-  const kb = loadKbIr()
+  const kb = commit ? loadKbIrAt(commit) : loadKbIr()
   const records = Array.isArray(kb?.records) ? kb.records : []
+  const readSrcText = (rel: string): string | null => {
+    if (commit) return gitShow(commit, rel)
+    const absPath = join(repoRoot(), rel)
+    if (!existsSync(absPath)) return null
+    try { return readFileSync(absPath, "utf8") } catch { return null }
+  }
   const drift_records: any[] = []
   let skeleton = 0
   for (const r of records) {
     const src = String(r?.src || "")
     const line = Number(r?.line || 0)
     if (!src || line < 1) continue
-    const absPath = join(repoRoot(), src)
-    let classification = "OK"
-    if (!existsSync(absPath)) {
-      classification = "GONE"
+    const srcText = readSrcText(src)
+    if (srcText == null) {
       drift_records.push({ ...r, classification: "GONE" })
       continue
     }
-    try {
-      const srcText = readFileSync(absPath, "utf8")
-      const lines = srcText.split("\n")
-      skeleton += 1 // count KB records whose source is at least intact
-      const recLine = lines[line - 1] || ""
-      // Check if the line at the recorded position still looks like a thought marker.
-      // THOUGHT_PATTERN matches lines like "# TA:" / "// TA:" / "<!-- TA:". The
-      // ^\s* prefix anchors at start-of-line; we pass the stale recLine as a
-      // single-line string so ^ matches at position 0 (m flag with multi-line
-      // text would also work; here we compare the actual source line in isolation).
-      const re = new RegExp(THOUGHT_PATTERN, "")
-      if (!re.test(recLine)) {
-        classification = "MOVED"
-        drift_records.push({ ...r, classification: "MOVED", line_drift: true })
-        continue
-      }
-      // The recorded thought text may have shifted; we don't auto-migrate.
-      classification = "OK"
-    } catch {
-      classification = "GONE"
-      drift_records.push({ ...r, classification: "GONE" })
+    const lines = srcText.split("\n")
+    skeleton += 1 // count KB records whose source is at least intact
+    const recLine = lines[line - 1] || ""
+    // Check if the line at the recorded position still looks like a thought marker.
+    // THOUGHT_PATTERN matches lines like "# TA:" / "// TA:" / "<!-- TA:". The
+    // ^\s* prefix anchors at start-of-line; we pass the stale recLine as a
+    // single-line string so ^ matches at position 0 (m flag with multi-line
+    // text would also work; here we compare the actual source line in isolation).
+    const re = new RegExp(THOUGHT_PATTERN, "")
+    if (!re.test(recLine)) {
+      drift_records.push({ ...r, classification: "MOVED", line_drift: true })
+      continue
     }
+    // The recorded thought text may have shifted; we don't auto-migrate.
   }
   return {
     drift_records,
@@ -558,6 +559,28 @@ function buildCtxFromInputs(args: {
   }
 }
 
+// feature_077 (T1-4): historical phase pick over an as-of ledger — mirrors
+// session_state.getActiveFeaturePhase's latest-record semantics + tombstone
+// retirement, minus the 8h liveness window (a commit's records are ALL "past";
+// the window is meaningless for replay). "abandoned" records never win.
+function featurePhaseAt(records: any[], feature: string, session?: string): any | null {
+  const idx: number[] = []
+  records.forEach((r: any, i: number) => {
+    if (r?.kind === "phase" && r?.feature === feature && r?.phase &&
+        r.phase !== "abandoned") idx.push(i)
+  })
+  if (!idx.length) return null
+  const live = idx.filter((i) => !records.slice(i + 1).some((x: any) =>
+    x?.kind === "phase" && x?.phase === "abandoned" &&
+    x?.feature === feature && x?.abandons === records[i].phase))
+  if (!live.length) return null
+  if (session && live.some((i) => records[i].session === session)) {
+    const mine = live.filter((i) => records[i].session === session)
+    return records[mine[mine.length - 1]]
+  }
+  return records[live[live.length - 1]]
+}
+
 // Shared envelope emit + ledger append (consolidates the 3-op duplication:
 // latency_ms + appendLedger{kind:"q"} + JSON.stringify). Fail-open on ledger.
 function emitQEnvelope(
@@ -594,13 +617,19 @@ function createQTools() {
       const verbose = args?.verbose === true
       const feature = args?.feature
       const session = args?.session
-      const as_of_commit = headSha()
-      const records = readLedger()
+      // feature_077 (T1-4): as_of replays ledger/thoughts/kb/state.py at the
+      // resolved commit; phase uses a tombstone-aware historical pick
+      // (featurePhaseAt) instead of the live 8h-window selector.
+      const asOfSha = args?.as_of ? (resolveGitRef(args.as_of) ?? args.as_of) : null
+      const as_of_commit = asOfSha ?? headSha()
+      const records = asOfSha ? readLedgerAt(asOfSha) : readLedger()
       try {
         // phase (U1 pipe-through via getActiveFeaturePhase, fails to "Unknown")
         let phase = "Unknown"
         if (feature) {
-          const phaseRec = getActiveFeaturePhase(feature, session)
+          const phaseRec = asOfSha
+            ? featurePhaseAt(records, feature, session)
+            : getActiveFeaturePhase(feature, session)
           if (phaseRec && phaseRec.phase) phase = String(phaseRec.phase)
         }
         // tdd_position: latest kind:tdd for feature, joined to tdd_testlist
@@ -629,8 +658,15 @@ function createQTools() {
         // U9 skip_reason_tally + live_smoke_count
         const { tally: skip_reason_tally, live_smoke_count } =
           foldSkipReasonTally(records)
-        // U10 known_suite_failures
-        const ksf = parseKnownSuiteFailures(repoRoot())
+        // U10 known_suite_failures (T1-4: source at as_of commit when set)
+        const ksf = parseKnownSuiteFailures(
+          asOfSha
+            ? gitShow(asOfSha, "scripts/omt/tdd/state.py")
+            : (() => {
+                const p = join(repoRoot(), "scripts", "omt", "tdd", "state.py")
+                if (!existsSync(p)) return null
+                try { return readFileSync(p, "utf8") } catch { return null }
+              })())
         // U13 recent_consults + consult_needed
         const { recent_consults, consult_needed } =
           foldRecentConsults(records, feature)
@@ -648,13 +684,13 @@ function createQTools() {
         // risky_thoughts: thoughts on files touched under feature (re-scan source)
         const risky_thoughts: any[] = []
         try {
-          const thoughts = readThoughtsIndex()
+          const thoughts = asOfSha ? readThoughtsAt(asOfSha) : readThoughtsIndex()
           risky_thoughts.push(...thoughts)
         } catch { /* fail open */ }
         // T3-2 delegate-advisory fold (feature_071): advisory hint on resume.
         let delegateHint: { subagent_type: string; suggested_prompt: string } | null = null;
         try {
-          const allRecs = readLedgerAll();
+          const allRecs = asOfSha ? readLedgerAllAt(asOfSha) : readLedgerAll();
           delegateHint = foldDelegateHint(allRecs.length ? allRecs : records, { feature, session });
         } catch {
           try { delegateHint = foldDelegateHint(records, { feature, session }); } catch { delegateHint = null; }
@@ -676,8 +712,9 @@ function createQTools() {
             last_activity_ts: tsMax > 0 ? new Date(tsMax).toISOString() : "",
             risky_thoughts: verbose ? risky_thoughts : summarizeThoughts(risky_thoughts),
             ...(delegateHint ? { delegate_hint: delegateHint } : {}),
+            ...(asOfSha ? { as_of_scope: "replayed:ir+ledger+thoughts+kb+state_py" } : {}),
           },
-          { feature, session },
+          { feature, session, ...(asOfSha ? { as_of: as_of_commit } : {}) },
         )
       } catch {
         const envelope = {
@@ -699,7 +736,13 @@ function createQTools() {
     async execute(args, context) {
       const start = Date.now()
       const path = args?.path ?? ""
-      const as_of_commit = headSha()
+      // feature_077 (T1-4): as_of replays the gate SET (IR at commit) + the
+      // ledger-side folds (last_escape, delegate hint). Live-only by design:
+      // gate impls evaluate the LIVE session/phase state and receipts — a
+      // historical "would this have blocked?" verdict is out of scope (the
+      // envelope's as_of_scope says exactly this).
+      const asOfSha = args?.as_of ? (resolveGitRef(args.as_of) ?? args.as_of) : null
+      const as_of_commit = asOfSha ?? headSha()
       try {
         if (!path) {
           const envelope = { as_of_commit, op: "plan", path, error: "path required" }
@@ -710,13 +753,14 @@ function createQTools() {
           tool: args?.tool,
           session: args?.session,
         })
-        const decisions = await runBeforeGatesDry(ctx)
+        const decisions = await runBeforeGatesDry(
+          ctx, asOfSha ? loadIrAt(asOfSha) : undefined)
         // T3-1 escape-replay fold (feature_070): read-only last_escape attach.
         // For each BLOCKED gate, find most-recent matching skip (scope allow-list
         // per gate). Agent must still call omt_skip — this is advisory only.
         let lastEscapeByGate: Record<string, any> = {}
         try {
-          const recs = readLedgerAll()
+          const recs = asOfSha ? readLedgerAllAt(asOfSha) : readLedgerAll()
           const scopeAllow: Record<string, string[]> = {
             "g.nav": ["nav", "all"],
             "g.protect": ["all"],
@@ -764,7 +808,7 @@ function createQTools() {
         // T3-2 delegate-advisory fold (feature_071): advisory hint on research-shaped plan.
         let delegateHint: { subagent_type: string; suggested_prompt: string } | null = null;
         try {
-          const allRecs = readLedgerAll();
+          const allRecs = asOfSha ? readLedgerAllAt(asOfSha) : readLedgerAll();
           delegateHint = foldDelegateHint(allRecs, {
             session: args?.session,
             tool: args?.tool ?? "edit",
@@ -779,8 +823,9 @@ function createQTools() {
             session: args?.session,
             predicted_chain, first_blocker, receipt_detail,
             ...(delegateHint ? { delegate_hint: delegateHint } : {}),
+            ...(asOfSha ? { as_of_scope: "replayed:ir+ledger; live:session-state+receipt" } : {}),
           },
-          { path, tool: args?.tool, session: args?.session },
+          { path, tool: args?.tool, session: args?.session, ...(asOfSha ? { as_of: as_of_commit } : {}) },
         )
       } catch {
         const envelope = {
@@ -969,12 +1014,20 @@ function foldSchemaAudit(): {
     args: { as_of: tool.schema.string().optional() },
     async execute(args, context) {
       const start = Date.now()
-      const as_of_commit = headSha()
+      // feature_077 (T1-4): as_of replays kb.ir records + source reads at the
+      // commit; project_drift stays LIVE (ledger-all + homes + git log are
+      // current-state by design — flagged via as_of_scope).
+      const asOfSha = args?.as_of ? (resolveGitRef(args.as_of) ?? args.as_of) : null
+      const as_of_commit = asOfSha ?? headSha()
       try {
-        const { drift_records, count_drift } = foldDrift()
+        const { drift_records, count_drift } = foldDrift(asOfSha ?? undefined)
         return emitQEnvelope(
           start, "drift", ["U3"], "U3",
-          { as_of_commit, drift_records, count_drift, project_drift: foldProjectDrift() },
+          {
+            as_of_commit, drift_records, count_drift, project_drift: foldProjectDrift(),
+            ...(asOfSha ? { as_of_scope: "replayed:kb+src; live:project_drift" } : {}),
+          },
+          asOfSha ? { as_of: as_of_commit } : {},
         )
       } catch {
         const envelope = {

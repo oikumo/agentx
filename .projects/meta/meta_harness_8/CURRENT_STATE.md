@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-13 (auto — feature_077.as_of_historical_temporal_replay Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_077.as_of_historical_temporal_replay/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-12 (auto — feature_076.workflow_index_and_repair_quickfix Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_076.workflow_index_and_repair_quickfix/test_report.md
