@@ -152,3 +152,39 @@ def check_edit_allowed(
     if not has_fire_receipt:
         return {"allowed": False, "code": "ERR_NET_NOT_ENABLED"}
     return {"allowed": True, "code": "OK"}
+
+
+def check_managed_edit_allowed(
+    base: Path | str | None = None,
+    *,
+    task_id: str,
+    generation: int,
+    path: str = "",
+    owner: str | None = None,
+    session: str | None = None,
+) -> dict[str, Any]:
+    """Task-scoped edit check for managed concurrency (feature_081, NEXT_STEP §9).
+
+    Legacy solo behavior (check_edit_allowed) is untouched; when the caller
+    names a task claim, the edit must live inside that generation's
+    workspace — a claim never authorizes the integration worktree
+    (workspace_mismatch), a wrong owner refuses (not_owner), and an old
+    generation refuses (stale_generation). Fail-closed on unreadable bundle.
+    """
+    _ = session
+    try:
+        from . import state as _state  # local: bundle layout lives there
+
+        info = _state.check_workspace_edit(
+            Path(base) if base is not None else Path("."),
+            task_id,
+            generation=generation,
+            path=path,
+            owner=owner,
+        )
+    except Exception as exc:
+        code = getattr(exc, "code", "")
+        if isinstance(code, str) and code:
+            return {"allowed": False, "code": code}
+        return {"allowed": False, "code": "ERR_NET_DOWN"}
+    return {"allowed": True, "code": "OK", "task_id": task_id, "generation": info["generation"]}

@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-13 (auto — feature_081.worktree_execution_isolation Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_081.worktree_execution_isolation/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-13 (auto — feature_080.task_claim_generation Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_080.task_claim_generation/test_report.md

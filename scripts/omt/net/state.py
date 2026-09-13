@@ -46,6 +46,7 @@ from .lock import (
     record_command,
 )
 from .model import PetriNet
+from . import workspace as _workspace
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -599,6 +600,9 @@ def fire(base: Path, transition: str, *, reasoning: str, session: str, expected_
 #
 # Stable codes: task_not_found | task_not_pending | task_not_active |
 # not_owner | stale_generation (+ stale_revision / command_id_conflict).
+# feature_081 (T5-3 2C) adds: workspace stamp on claim/transfer, 
+# head_commit/patch_digest on checkpoint, check_workspace_edit 
+# containment gate (workspace_mismatch).
 
 
 def _binding_index(st: NetState, task_id: str) -> int:
@@ -663,19 +667,27 @@ def claim_task(
         claimed["place"] = "work_active"
         claimed["owner"] = owner
         claimed["generation"] = generation
+        claimed["workspace"] = _workspace.build_workspace(base, task_id, generation)
         st.task_bindings[idx] = claimed
         st.revision += 1
         st.updated_at = _utc_now()
         save(base, st)
+        try:
+            _workspace.ensure_workspace(
+                claimed["workspace"], _workspace.repo_root_for(base)
+            )
+        except Exception:
+            pass
         append_ledger({
             "kind": "net_claim",
             "session": session,
             "task_id": task_id,
             "owner": owner,
             "generation": generation,
+            "workspace": claimed["workspace"]["id"],
             "revision": st.revision,
         })
-        return st, {"task_id": task_id, "owner": owner, "generation": generation}
+        return st, {"task_id": task_id, "owner": owner, "generation": generation, "workspace": claimed["workspace"]}
 
     st, _ = _transact(
         base,
@@ -775,19 +787,27 @@ def transfer_task(
         moved = dict(b)
         moved["owner"] = owner
         moved["generation"] = generation
+        moved["workspace"] = _workspace.build_workspace(base, task_id, generation)
         st.task_bindings[idx] = moved
         st.revision += 1
         st.updated_at = _utc_now()
         save(base, st)
+        try:
+            _workspace.ensure_workspace(
+                moved["workspace"], _workspace.repo_root_for(base)
+            )
+        except Exception:
+            pass
         append_ledger({
             "kind": "net_transfer",
             "session": session,
             "task_id": task_id,
             "owner": owner,
             "generation": generation,
+            "workspace": moved["workspace"]["id"],
             "revision": st.revision,
         })
-        return st, {"task_id": task_id, "owner": owner, "generation": generation}
+        return st, {"task_id": task_id, "owner": owner, "generation": generation, "workspace": moved["workspace"]}
 
     st, _ = _transact(
         base,
@@ -807,6 +827,8 @@ def checkpoint_task(
     generation: int,
     checkpoint: str | None = None,
     results: list[dict[str, Any]] | None = None,
+    head_commit: str | None = None,
+    patch_digest: str | None = None,
     session: str = "",
     expected_revision: int | None = None,
     command_id: str | None = None,
@@ -821,6 +843,8 @@ def checkpoint_task(
         "generation": generation,
         "checkpoint": checkpoint,
         "results": results,
+        "head_commit": head_commit,
+        "patch_digest": patch_digest,
         "session": session,
     }
 
@@ -841,6 +865,13 @@ def checkpoint_task(
             updated["checkpoint"] = checkpoint
         if results is not None:
             updated["results"] = results
+        if head_commit is not None or patch_digest is not None:
+            ws_head = dict(updated.get("workspace") or {})
+            if head_commit is not None:
+                ws_head["head_commit"] = head_commit
+            if patch_digest is not None:
+                ws_head["patch_digest"] = patch_digest
+            updated["workspace"] = ws_head
         st.task_bindings[idx] = updated
         st.revision += 1
         st.updated_at = _utc_now()
@@ -863,6 +894,72 @@ def checkpoint_task(
         apply=_apply,
     )
     return st
+
+
+# ---------------------------------------------------------------------------
+# Workspace containment gate (feature_081 T5-3 2C — NEXT_STEP §8–§9, mh8 D11)
+# ---------------------------------------------------------------------------
+# Read-only authorization: the binding must be active with the caller's
+# generation (stale_generation otherwise — a transferred or reclaimed
+# task's old workspace cannot publish), the owner must match when given
+# (not_owner), and the target path must resolve inside the generation's
+# workspace (workspace_mismatch — a claim NEVER authorizes the
+# integration worktree). No lock, no write: publish paths stay fenced
+# by the 080 _transact ops; this gates harness-mediated file edits.
+
+
+def check_workspace_edit(
+    base: Path,
+    task_id: str,
+    *,
+    generation: int,
+    path: str | Path,
+    owner: str | None = None,
+    session: str = "",
+) -> dict[str, Any]:
+    """Authorize one file edit against a held generation's workspace."""
+    _ = session
+    st = load(base)
+    idx = _binding_index(st, task_id)
+    b = st.task_bindings[idx]
+    if b.get("place") != "work_active":
+        raise SpliceError(
+            "task_not_active",
+            f"task {task_id!r} is in {b.get('place')!r}, not work_active "
+            f"(rev {st.revision}) — nothing held to edit in",
+        )
+    live_gen = int(b.get("generation", 0) or 0)
+    if live_gen != int(generation):
+        raise SpliceError(
+            "stale_generation",
+            f"task {task_id!r} is gen {live_gen}, "
+            f"caller holds gen {generation} (rev {st.revision}) — "
+            "re-claim before editing",
+        )
+    if owner is not None and b.get("owner") != owner:
+        raise SpliceError(
+            "not_owner",
+            f"task {task_id!r} is owned by {b.get('owner')!r}, not "
+            f"{owner!r} (rev {st.revision})",
+        )
+    ws = b.get("workspace") if isinstance(b.get("workspace"), dict) else None
+    expected = (
+        str(ws.get("path"))
+        if ws and ws.get("path")
+        else str(
+            _workspace.workspace_path_for(
+                _workspace.repo_root_for(base), task_id, live_gen
+            )
+        )
+    )
+    if not _workspace.is_path_in_workspace(path, expected):
+        raise SpliceError(
+            "workspace_mismatch",
+            f"task {task_id!r} gen {live_gen} workspace {expected!r} does "
+            f"not contain {str(path)!r} (rev {st.revision}) — claims never "
+            "authorize the integration worktree",
+        )
+    return {"task_id": task_id, "generation": live_gen, "workspace": ws or {"path": expected}}
 
 
 # ---------------------------------------------------------------------------

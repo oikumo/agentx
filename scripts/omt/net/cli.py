@@ -7,6 +7,7 @@ phase-2 extension at 044):
     probe|fire|invariant   feature_039 (observe / marking-only fire / drift)
     splice|sync            feature_040 (structural transactions + net↔reality)
     claim|release|transfer|checkpoint  feature_080 (task claim + generation fencing, T5-2 2B)
+    + feature_081 (workspace stamp + managed gate, T5-3 2C)
     synthesize             feature_042 (goal→net template proposal, D4)
     mine                   feature_044 (ledger→net behavioral draft, D4)
 
@@ -266,6 +267,7 @@ def _task_envelope(op: str, st: Any, task_id: str) -> dict[str, Any]:
             "place": b.get("place"),
             "owner": b.get("owner"),
             "generation": b.get("generation", 0),
+            "workspace": b.get("workspace"),
         },
     }
 
@@ -312,6 +314,8 @@ def _checkpoint(
     generation: int,
     checkpoint: Any,
     results: Any,
+    head_commit: Any,
+    patch_digest: Any,
     session: str,
     expected_revision: int | None,
     command_id: str | None,
@@ -322,6 +326,8 @@ def _checkpoint(
         generation=generation,
         checkpoint=checkpoint,
         results=results,
+        head_commit=head_commit,
+        patch_digest=patch_digest,
         session=session,
         expected_revision=expected_revision,
         command_id=command_id,
@@ -570,6 +576,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_gate = sub.add_parser("gate", help="g.net permission-to-act check (feature_050).")
     p_gate.add_argument("--path", required=True, help="Target path being edited.")
     p_gate.add_argument("--session", default="")
+    p_gate.add_argument("--task-id", "--task_id", default="", help="Managed scope: task id (feature_081 workspace-fenced edit check).")
+    p_gate.add_argument("--owner", default="", help="Managed scope: owner check (feature_081).")
+    p_gate.add_argument("--generation", type=int, default=None, help="Managed scope: held generation (feature_081).")
     p_gate.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
 
     for op in RESERVED_OPS:
@@ -625,6 +634,7 @@ def main(argv: list[str] | None = None) -> int:
             return _emit(*_checkpoint(
                 base, args.task_id, args.generation,
                 payload.get("checkpoint"), payload.get("results"),
+                payload.get("head_commit"), payload.get("patch_digest"),
                 args.session, getattr(args, "expected_revision", None),
                 getattr(args, "command_id", None) or None))
         if op == "splice":
@@ -694,6 +704,19 @@ def main(argv: list[str] | None = None) -> int:
             )
             if not res["allowed"]:
                 return _emit({"ok": False, "allowed": False, "code": res["code"], "message": res["code"]}, 1)
+            if getattr(args, "task_id", ""):
+                if getattr(args, "generation", None) is None:
+                    return _emit({"ok": False, "allowed": False, "code": "workspace_mismatch", "message": "workspace_mismatch"}, 1)
+                managed = gate.check_managed_edit_allowed(
+                    base,
+                    task_id=args.task_id,
+                    generation=args.generation,
+                    path=args.path,
+                    owner=getattr(args, "owner", "") or None,
+                    session=args.session,
+                )
+                if not managed["allowed"]:
+                    return _emit({"ok": False, "allowed": False, "code": managed["code"], "message": managed["code"]}, 1)
             return _emit({"ok": True, "allowed": True, "code": "OK"}, 0)
     except state.SpliceError as exc:
         return _emit(*_error(exc.code, op, str(exc)))

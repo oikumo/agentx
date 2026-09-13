@@ -1,6 +1,7 @@
 // OMT++ omt_net — meta-harness concurrency net (feature_039.adaptive_net_engine
 // + feature_040.net_composition_supervisor + feature_042.goal_net_synthesis
-// + feature_044.mined_behavioral_net + feature_050.net_as_gate)
+// + feature_044.mined_behavioral_net + feature_050.net_as_gate
+// + feature_081.worktree_execution_isolation)
 // Thin proxy around scripts/omt/net_check.py (the state machine lives in
 // Python, scripts/omt/net/; D2 — no src/ import). One registered tool, closed
 // op enum per IDEA-002 v4 §5.0 (probe|fire|splice|sync|synthesize|invariant|gate;
@@ -25,7 +26,7 @@ const OP_ARGS: Record<string, readonly string[]> = {
   invariant: ["expected_revision"],
   synthesize: ["mutation", "reasoning", "session", "feature", "expected_revision"],
   mine: ["mutation", "reasoning", "session", "feature", "expected_revision"],
-  gate: ["path", "session", "expected_revision"],
+  gate: ["path", "session", "expected_revision", "task_id", "owner", "generation"],
   claim: ["task_id", "owner", "reasoning", "session", "expected_revision"],
   release: ["task_id", "owner", "reasoning", "session", "expected_revision"],
   transfer: ["task_id", "owner", "reasoning", "session", "expected_revision"],

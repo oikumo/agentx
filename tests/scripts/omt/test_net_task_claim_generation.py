@@ -242,8 +242,11 @@ class TestCliRoundTrip:
                          "--reasoning", "r", "--session", "s"]) == 0
         env = json.loads(capsys.readouterr().out)
         assert env["ok"] is True and env["revision"] == 1
-        assert env["task"] == {"id": "T1", "place": "work_active",
-                               "owner": "w", "generation": 1}
+        assert env["task"]["id"] == "T1" and env["task"]["place"] == "work_active"
+        assert env["task"]["owner"] == "w" and env["task"]["generation"] == 1
+        # feature_081: claim envelope additionally carries the bootstrapped
+        # workspace (additive — the 080 keys above stay byte-identical).
+        assert env["task"]["workspace"]["id"] == "T1-g1"
         assert cli.main(["checkpoint", "--task-id", "T1", "--generation", "1",
                          "--mutation", '{"checkpoint": "cp"}',
                          "--reasoning", "r", "--session", "s"]) == 0
