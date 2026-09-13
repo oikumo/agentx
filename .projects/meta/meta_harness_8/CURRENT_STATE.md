@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-13 (auto — feature_078.op_graph_transitive_risk Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_078.op_graph_transitive_risk/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-13 (auto — feature_077.as_of_historical_temporal_replay Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_077.as_of_historical_temporal_replay/test_report.md

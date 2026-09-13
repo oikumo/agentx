@@ -8,6 +8,9 @@
 //   op:drift  — KB-vs-source classification + count_drift direction-b only.
 //   op:audit  — T1-2 design↔testing schema audit + project-autolink fix-it
 //               (joins 4.design/features vs 6.testing/features/test_report.md).
+//   op:graph  — T1-3 transitive risk over kb.ir.json refs[] + thoughts join
+//               (BFS depth 1..3 from symbol; HQL grammar explicitly NOT built
+//               until graph proves novel asks).
 //
 // Every response wraps in envelope: {as_of_commit:"<HEAD-sha>", op, ...} where
 // as_of_commit is parsed live via `git rev-parse HEAD` per call. Each call
@@ -527,6 +530,87 @@ function foldDrift(commit?: string): {
   }
 }
 
+// ---------------------------------------------------------------------------
+// T1-3 (feature_078, mh8): transitive risk over kb.ir.json refs[] + thoughts
+// join (read-only). BFS from `symbol` following refs[] up to `depth` (clamped
+// 1..3, default 1). depth_sets[d] = nodes first reached at exactly depth d;
+// risk_nodes = union excluding the root symbol. related_thoughts = thoughts
+// whose text mentions the symbol or any risk node (case-insensitive substring,
+// capped at 5, 120-char truncation like summarizeThoughts). HQL grammar is
+// explicitly NOT built here — parked until graph proves novel asks (per T1-3
+// acceptance). Fail-open: unknown symbol → {error} envelope, empty risk.
+// feature_077 (T1-4) pattern: optional `commit` replays kb.ir + thoughts via
+// gitShow/readThoughtsAt (no working-tree reads).
+// ---------------------------------------------------------------------------
+function foldGraph(
+  symbol: string,
+  depth: number,
+  commit?: string,
+): {
+  risk_nodes: string[]
+  depth_sets: Record<string, string[]>
+  related_thoughts: { path: string; line: number; thought: string }[]
+  error?: string
+} {
+  const maxDepth = Math.min(3, Math.max(1, Math.floor(depth) || 1))
+  const kb = commit ? loadKbIrAt(commit) : loadKbIr()
+  const records = Array.isArray(kb?.records) ? kb.records : []
+  const refsById = new Map<string, string[]>()
+  for (const r of records) {
+    const id = String(r?.id || "")
+    if (!id) continue
+    const refs = Array.isArray(r?.refs) ? r.refs.map((x: any) => String(x)) : []
+    refsById.set(id, refs)
+  }
+  if (!refsById.has(symbol)) {
+    return {
+      risk_nodes: [], depth_sets: {},
+      related_thoughts: [],
+      error: `unknown symbol '${symbol}' (not a kb.ir.json record id)`,
+    }
+  }
+  const visited = new Set<string>([symbol])
+  const depth_sets: Record<string, string[]> = {}
+  let frontier = [symbol]
+  for (let d = 1; d <= maxDepth; d++) {
+    const next = new Set<string>()
+    for (const id of frontier) {
+      for (const ref of refsById.get(id) || []) {
+        if (!visited.has(ref)) next.add(ref)
+      }
+    }
+    const level = Array.from(next).sort()
+    depth_sets[String(d)] = level
+    for (const id of level) visited.add(id)
+    frontier = level
+    if (!frontier.length) {
+      for (let fill = d + 1; fill <= maxDepth; fill++) depth_sets[String(fill)] = []
+      break
+    }
+  }
+  visited.delete(symbol)
+  const risk_nodes = Array.from(visited).sort()
+  // Thoughts join: mention of the symbol or any risk node in thought text.
+  const needles = [symbol, ...risk_nodes].map((s) => s.toLowerCase())
+  const related_thoughts: { path: string; line: number; thought: string }[] = []
+  try {
+    const thoughts = commit ? readThoughtsAt(commit) : readThoughtsIndex()
+    for (const t of thoughts) {
+      const text = String(t?.thought || "").toLowerCase()
+      if (!text) continue
+      if (needles.some((n) => n && text.includes(n))) {
+        related_thoughts.push({
+          path: String(t?.path ?? ""),
+          line: Number(t?.line ?? 0),
+          thought: _trunc(String(t?.thought ?? ""), 120),
+        })
+        if (related_thoughts.length >= 5) break
+      }
+    }
+  } catch { /* fail open */ }
+  return { risk_nodes, depth_sets, related_thoughts }
+}
+
 // Synthetic GateCtx builder (U2 plan op). Mirrors the SDK before-hook shape:
 // input={tool}, output={args:{filePath}} — the BUG-A pin literal.
 function buildCtxFromInputs(args: {
@@ -1039,10 +1123,54 @@ function foldSchemaAudit(): {
     },
   })
 
+  const omt_graph = tool({
+    description: "op=graph impl (unregistered; dispatched via omt_q).",
+    args: {
+      symbol: tool.schema.string().describe("kb.ir.json record id (e.g. doc.mvcpp)"),
+      depth: tool.schema.number().optional().describe("BFS depth 1..3 (default 1)"),
+      as_of: tool.schema.string().optional(),
+    },
+    async execute(args, context) {
+      const start = Date.now()
+      const symbol = String(args?.symbol || "")
+      const depth = Number(args?.depth ?? 1)
+      const asOfSha = args?.as_of ? (resolveGitRef(args.as_of) ?? args.as_of) : null
+      const as_of_commit = asOfSha ?? headSha()
+      try {
+        if (!symbol) {
+          return JSON.stringify({
+            as_of_commit, op: "graph", symbol, depth,
+            error: "symbol required (kb.ir.json record id)",
+            risk_nodes: [], depth_sets: {}, related_thoughts: [],
+          })
+        }
+        const { risk_nodes, depth_sets, related_thoughts, error } =
+          foldGraph(symbol, depth, asOfSha ?? undefined)
+        return emitQEnvelope(
+          start, "graph", ["T1-3"], "T1-3",
+          {
+            as_of_commit, symbol, depth: Math.min(3, Math.max(1, Math.floor(depth) || 1)),
+            risk_nodes, depth_sets, related_thoughts,
+            ...(error ? { error } : {}),
+            ...(asOfSha ? { as_of_scope: "replayed:kb+thoughts" } : {}),
+          },
+          { symbol, ...(asOfSha ? { as_of: as_of_commit } : {}) },
+        )
+      } catch {
+        const envelope = {
+          as_of_commit, op: "graph", symbol, depth,
+          risk_nodes: [], depth_sets: {}, related_thoughts: [],
+          error: "graph op failed (fail-open)",
+        }
+        return JSON.stringify(envelope)
+      }
+    },
+  })
+
   const omt_q = tool({
     description: irToolDescription(
       "omt_q",
-      "TA: Interrogative layer — read-only. op=state(feature?,session?,as_of?,verbose?) | plan(path,tool?,session?,as_of?) | drift(as_of?) | audit(as_of?). state default ≤2KB summary; verbose:true = full dump. Returns JSON envelope with as_of_commit=HEAD-sha.",
+      "TA: Interrogative layer — read-only. op=state(feature?,session?,as_of?,verbose?) | plan(path,tool?,session?,as_of?) | drift(as_of?) | audit(as_of?) | graph(symbol,depth?,as_of?). state ≤2KB; verbose=full. Returns JSON envelope with as_of_commit=HEAD-sha.",
     ),
     // NOTE: the literal "TA:" appears in the description above — that's
     // intentional: omt_q is in @var.harness_paths (so editing this file trips
@@ -1050,7 +1178,7 @@ function foldSchemaAudit(): {
     // very file is the v1.3 thesis demonstration (the interrogative tool
     // predicts the receipt+think gates on itself).
     args: {
-      op: tool.schema.string().describe("state|plan|drift|audit"),
+      op: tool.schema.string().describe("state|plan|drift|audit|graph"),
       feature: tool.schema.string().optional(),
       session: tool.schema.string().optional(),
       path: tool.schema.string().optional(),
@@ -1058,6 +1186,10 @@ function foldSchemaAudit(): {
       as_of: tool.schema.string().optional(),
       verbose: tool.schema.boolean().optional()
         .describe("state: restore the full dump (default = ≤2KB summary)"),
+      symbol: tool.schema.string().optional()
+        .describe("graph: kb.ir.json record id (e.g. doc.mvcpp)"),
+      depth: tool.schema.number().optional()
+        .describe("graph: BFS depth 1..3 (default 1)"),
     },
     async execute(args, context) {
       switch (args?.op ?? "") {
@@ -1065,8 +1197,9 @@ function foldSchemaAudit(): {
         case "plan": return omt_plan.execute(args, context)
         case "drift": return omt_drift.execute(args, context)
         case "audit": return omt_audit.execute(args, context)
+        case "graph": return omt_graph.execute(args, context)
         default:
-          return "⛔ omt_q: unknown op — want state|plan|drift|audit"
+          return "⛔ omt_q: unknown op — want state|plan|drift|audit|graph"
       }
     },
   })

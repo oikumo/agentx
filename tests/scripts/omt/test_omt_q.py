@@ -823,5 +823,86 @@ class TestRunBeforeGatesDryDoesNotBreakRealPath:
             f"{data['dryDecisions']}")
 
 
+# ---------------------------------------------------------------------------
+# feature_078 (T1-3 / mh2 U5 + HQL Phase-C): op:graph transitive risk
+# ---------------------------------------------------------------------------
+
+_GRAPH_KB = {"records": [
+    {"id": "g.a", "refs": ["g.b", "g.d"]},
+    {"id": "g.b", "refs": ["g.c"]},
+    {"id": "g.c", "refs": []},
+    {"id": "g.d", "refs": []},
+]}
+
+_GRAPH_THOUGHTS = (
+    '{"ts": "2026-09-12T00:00:00Z", "path": "src/g.py", "line": 1, '
+    '"thought": "risk: g.c needs care when touching g.a"}\n'
+)
+
+
+class TestOpGraphTransitiveRisk:
+    """feature_078 (T1-3): op:graph BFS over kb.ir.json refs[] + thoughts join.
+    Golden: depth-1 vs depth-2 risk sets differ correctly (g.c only at depth 2).
+    HQL grammar explicitly NOT built — no op:hql (unknown-op guard pins this)."""
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_graph_depth1_returns_direct_refs_only(self, tmp_path):
+        out = _q_probe(
+            json.dumps({"op": "graph", "symbol": "g.a", "depth": 1}),
+            session="ses_g1", tmp_path=tmp_path,
+            extra_files={
+                ".meta/.omt/kb.ir.json": _GRAPH_KB,
+                ".meta/.omt/thoughts.jsonl": _GRAPH_THOUGHTS,
+            })
+        assert out["op"] == "graph", f"graph op missing: {out}"
+        assert out["symbol"] == "g.a"
+        assert sorted(out["risk_nodes"]) == ["g.b", "g.d"], (
+            f"depth-1 risk must be direct refs only: {out}")
+        assert sorted(out["depth_sets"]["1"]) == ["g.b", "g.d"]
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_graph_depth2_adds_transitive_and_thought_join(self, tmp_path):
+        out = _q_probe(
+            json.dumps({"op": "graph", "symbol": "g.a", "depth": 2}),
+            session="ses_g2", tmp_path=tmp_path,
+            extra_files={
+                ".meta/.omt/kb.ir.json": _GRAPH_KB,
+                ".meta/.omt/thoughts.jsonl": _GRAPH_THOUGHTS,
+            })
+        assert out["op"] == "graph"
+        assert sorted(out["risk_nodes"]) == ["g.b", "g.c", "g.d"], (
+            f"depth-2 risk must add transitive g.c via g.b: {out}")
+        assert sorted(out["depth_sets"]["2"]) == ["g.c"], (
+            f"depth-2 set must be exactly the transitive node: {out}")
+        assert any("g.c" in t.get("thought", "") for t in out["related_thoughts"]), (
+            f"thoughts join must surface the g.c mention: {out}")
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_graph_unknown_symbol_fail_open_and_no_hql(self, tmp_path):
+        out = _q_probe(
+            json.dumps({"op": "graph", "symbol": "g.nope", "depth": 1}),
+            session="ses_g3", tmp_path=tmp_path,
+            extra_files={".meta/.omt/kb.ir.json": _GRAPH_KB})
+        assert out["op"] == "graph"
+        assert out["risk_nodes"] == [], f"unknown symbol must be empty risk: {out}"
+        assert "error" in out, f"unknown symbol must carry error: {out}"
+        # HQL grammar NOT built: op:hql stays an unknown op (plain-text
+        # dispatcher message, not a JSON envelope — read raw stdout).
+        probe = tmp_path / "probe_hql.ts"
+        probe.write_text(
+            _q_probe_template
+                .replace("%LIB%", str(SHARED_LIB))
+                .replace("%PLUGIN%", str(OMT_Q_PLUGIN))
+                .replace("%ARGS%", json.dumps({"op": "hql"}))
+                .replace("%SESSION%", "ses_g3b"),
+            encoding="utf-8",
+        )
+        proc = subprocess.run([BUN, str(probe), str(tmp_path)],
+                              capture_output=True, text=True, timeout=60)
+        assert proc.returncode == 0, f"bun probe failed:\n{proc.stderr}\n---"
+        assert "unknown op" in proc.stdout, (
+            f"op:hql must stay unknown (grammar parked): {proc.stdout}")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
