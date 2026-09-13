@@ -5,6 +5,19 @@
 
 ---
 
+## 2026-09-13 (iter — T3-4 session 4, recon round 4, PAUSED pre-implementation)
+
+- **T3-4 (feature_093.task_cost_benchmark) paused 4th time** — no code written; session re-locked the design via a FOURTH fresh-context recon at HEAD: 4 new TA: thoughts in analysis_001 (123–126), incl. net-gate drift check (cli.py gate compares net rev vs last net_* ledger record → ERR_NET_DRIFT_CONFLICT; concurrent order safe by construction as claims/fires append net_* records before first gate shell-out); g.think masking (net/state.py 5 TA + harnessc.py 4 TA → B needs omt_think{op:list} consult before no-work_start edit, else g.net removal experiment shows false no-slip); uv.lock gitignored → sandbox setup must copy live uv.lock before uv sync (pinned resolution); claim_task side effects (ensure_workspace → .worktrees/<task>-g<gen>/ + branch, fail-open) + coordination_root defaulting to bundle dir; concrete anchors/commands locked (module-level regression append, UI view-loop 12/16-space anchor, verify commands, "✅ RED"/"⛔ Test still fails" assert strings, run_pytest argv, string-aware JSONC deny parse). KB consult recorded (g.kb: no bench records, expected). Phase re-declared minor_feature/Programming (8h expiry — re-declare on resume). Resume: `.sandbox/pause_2026-09-13f.md` (supersedes e) → analysis_001 (16 TA thoughts) → write `scripts/omt/bench/` package → canary + 8-group goldens → first-numbers run → close-out.
+
+---
+
+## 2026-09-13 (iter — T3-4 session 3, recon lock, PAUSED pre-implementation)
+
+- **T3-4 (feature_093.task_cost_benchmark) paused 3rd time** — no code written; session locked the remaining design via fresh-context recon at HEAD: 6 new TA: thoughts in analysis_001 (117–122), incl. CORRECTION that scripts/omt/bench/* IS g.receipt surface (round-robin applies to writing the package), net-state copy needed for EVERY sandbox (g.net fail-closes without sidecar), concurrent-task B-before-fire ordering (fire receipt is session-agnostic), fixture read-first attribution, major/resume task concrete shapes; worktree viability + seeded targets + live net arcs re-verified.
+- Resume: `.sandbox/pause_2026-09-13e.md` (supersedes d) → analysis_001 (12 TA thoughts) → write `scripts/omt/bench/` package → canary + 8-group goldens → first-numbers run → close-out.
+
+---
+
 ## 2026-09-13 (auto — feature_092.resume_digest Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_092.resume_digest/test_report.md
