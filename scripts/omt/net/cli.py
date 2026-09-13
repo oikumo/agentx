@@ -36,6 +36,7 @@ from .errors import (
     TransitionNotEnabledError,
     UnknownTransitionError,
 )
+from .lock import LockError
 
 RESERVED_OPS: tuple[str, ...] = ()
 # TA: xref: feature_042 (goal_net_synthesis): RESERVED_OPS emptied — synthesize
@@ -230,8 +231,8 @@ def _probe(base: Path, max_states: int) -> tuple[dict[str, Any], int]:
     return envelope, 0
 
 
-def _fire(base: Path, transition: str, reasoning: str, session: str, expected_revision: int | None = None) -> tuple[dict[str, Any], int]:
-    st = state.fire(base, transition, reasoning=reasoning, session=session, expected_revision=expected_revision)
+def _fire(base: Path, transition: str, reasoning: str, session: str, expected_revision: int | None = None, command_id: str | None = None) -> tuple[dict[str, Any], int]:
+    st = state.fire(base, transition, reasoning=reasoning, session=session, expected_revision=expected_revision, command_id=command_id)
     envelope = {
         "ok": True,
         "op": "fire",
@@ -250,6 +251,8 @@ def _splice(base: Path, args: argparse.Namespace, mutation: Any) -> tuple[dict[s
         reasoning=args.reasoning,
         session=args.session,
         feature=args.feature,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
     )
     envelope = {
         "ok": True,
@@ -397,6 +400,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_fire.add_argument("--reasoning", required=True)
     p_fire.add_argument("--session", default="")
     p_fire.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_fire.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079: same ID + same command replays, no double-fire).")
 
     p_splice = sub.add_parser(
         "splice", help="Atomic structural transaction (conformance-gated, §3)."
@@ -410,6 +414,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_splice.add_argument("--session", default="")
     p_splice.add_argument("--feature", default="")
     p_splice.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_splice.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079: same ID + same command replays, no double-apply).")
 
     p_sync = sub.add_parser(
         "sync", help="net↔reality bootstrap + resync (proposal-only, D4)."
@@ -483,7 +488,7 @@ def main(argv: list[str] | None = None) -> int:
         if op == "probe":
             return _emit(*_probe(base, args.max_states))
         if op == "fire":
-            return _emit(*_fire(base, args.transition, args.reasoning, args.session, getattr(args, "expected_revision", None)))
+            return _emit(*_fire(base, args.transition, args.reasoning, args.session, getattr(args, "expected_revision", None), getattr(args, "command_id", None) or None))
         if op == "splice":
             mutation = None
             if args.mutation:
@@ -553,6 +558,8 @@ def main(argv: list[str] | None = None) -> int:
                 return _emit({"ok": False, "allowed": False, "code": res["code"], "message": res["code"]}, 1)
             return _emit({"ok": True, "allowed": True, "code": "OK"}, 0)
     except state.SpliceError as exc:
+        return _emit(*_error(exc.code, op, str(exc)))
+    except LockError as exc:
         return _emit(*_error(exc.code, op, str(exc)))
     except state.NetNotBootstrappedError as exc:
         return _emit(*_error("net_not_bootstrapped", op, str(exc)))

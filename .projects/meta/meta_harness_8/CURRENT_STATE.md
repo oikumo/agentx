@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-13 (auto — feature_079.net_transaction_authority Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_079.net_transaction_authority/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-13 (auto — feature_078.op_graph_transitive_risk Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_078.op_graph_transitive_risk/test_report.md

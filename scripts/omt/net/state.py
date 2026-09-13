@@ -38,6 +38,13 @@ from typing import Any
 
 from .errors import PetriNetError, TransitionNotEnabledError
 from .io import document_from_json, net_to_json
+from .lock import (
+    CoordinationLock,
+    canonical_hash,
+    coordination_root,
+    lookup_command,
+    record_command,
+)
 from .model import PetriNet
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -395,7 +402,10 @@ def save(base: Path, st: NetState) -> None:
 
 def init_empty(base: Path) -> NetState:
     """Create an empty-net bundle at revision 0 (test/dev bootstrap — the real
-    net is born via omt_net{op:sync}; IDEA-002 v4 §5.1)."""
+    net is born via omt_net{op:sync}; IDEA-002 v4 §5.1).
+
+    feature_079 (T5-1 2A): creation takes the shared lock like every other
+    mutation path (no revision/idempotency params — test/dev bootstrap)."""
     st = NetState(
         net=PetriNet(),
         layout=None,
@@ -404,7 +414,8 @@ def init_empty(base: Path) -> NetState:
         overlay=default_overlay(0),
         updated_at=_utc_now(),
     )
-    save(base, st)
+    with CoordinationLock(coordination_root(base)).exclusive():
+        save(base, st)
     return st
 
 
@@ -456,7 +467,81 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     ]
 
 
-def fire(base: Path, transition: str, *, reasoning: str, session: str, expected_revision: int | None = None) -> NetState:
+# ---------------------------------------------------------------------------
+# Transaction authority (feature_079 T5-1 2A — NEXT_STEP §5, mh8 D10)
+# ---------------------------------------------------------------------------
+
+def _require_revision(st: NetState, expected_revision: int | None) -> None:
+    """Authoritative revision check — call AFTER load() with the lock held.
+
+    Replaces the old fire()-local fast check (same `stale_revision` code and
+    D19 message, now enforced inside the critical section so two processes
+    starting from rev N cannot both commit).
+    """
+    if expected_revision is not None and expected_revision != st.revision:
+        raise SpliceError(
+            "stale_revision",
+            f"D19 stale menu: expected rev {expected_revision} != live rev "
+            f"{st.revision} — re-render (sync net_to_md) before firing",
+        )
+
+
+def _transact(
+    base: Path,
+    *,
+    op: str,
+    payload: dict[str, Any],
+    expected_revision: int | None,
+    command_id: str | None,
+    apply: Any,
+) -> tuple[NetState, dict[str, Any]]:
+    """Run `apply()` (load → check → mutate → save → ledger) as one atomic
+    transaction under the shared `CoordinationLock`.
+
+    Idempotency: the first commit under a `command_id` records its canonical
+    hash + revision + result; a retry with the same ID and identical payload
+    replays the original result WITHOUT re-applying (no revision bump, no
+    double-fire); the same ID with a different payload raises
+    `command_id_conflict`. Callers without `command_id` take the lock but
+    skip the index (solo behavior frozen, D8).
+    """
+    # TA: why: why (feature_079): the lock must span load-through-commit —
+    # the pre-lock fast check in cli.py stays a courtesy rejection only; the
+    # load inside apply() re-reads under the lock so the revision comparison
+    # cannot interleave with another committer (the TOCTOU this slice closes).
+    root = coordination_root(base)
+    canonical = canonical_hash(op, payload)
+    with CoordinationLock(root).exclusive():
+        if command_id:
+            prior = lookup_command(root, command_id)
+            if prior is not None:
+                if prior.get("canonical") != canonical:
+                    raise SpliceError(
+                        "command_id_conflict",
+                        f"command_id {command_id!r} already committed a "
+                        f"different command (rev {prior.get('revision')}) — "
+                        "retry with a fresh command_id",
+                    )
+                return load(base), {
+                    "replayed": True,
+                    "revision": prior.get("revision"),
+                    "result": prior.get("result", {}),
+                }
+        if expected_revision is not None:
+            _require_revision(load(base), expected_revision)
+        st, info = apply()
+        if command_id:
+            record_command(
+                root,
+                command_id,
+                canonical,
+                st.revision,
+                json.loads(json.dumps(info, ensure_ascii=False, default=str)),
+            )
+        return st, info
+
+
+def fire(base: Path, transition: str, *, reasoning: str, session: str, expected_revision: int | None = None, command_id: str | None = None) -> NetState:
     """Validate enablement at the live marking, apply, persist atomically,
     ledger `kind:"net_fire"` (IDEA-002 §5.0 — marking-only; no conformance
     regression). Disabled/unknown transitions raise before any write.
@@ -465,28 +550,40 @@ def fire(base: Path, transition: str, *, reasoning: str, session: str, expected_
     (the rev stamped in the WORK.md Tasks menu the user picked from), refuse
     with SpliceError("stale_revision") when it differs from the loaded
     revision — the caller re-renders (sync net_to_md) first (D4, never silent).
+
+    feature_079 (T5-1 2A): the whole load→check→mutate→save→ledger sequence
+    now runs inside the shared CoordinationLock (`_transact`), so the
+    expected_revision comparison is authoritative, not a TOCTOU-prone
+    pre-check; `command_id` makes retries idempotent (replay, no double-fire).
     """
-    st = load(base)
-    if expected_revision is not None and expected_revision != st.revision:
-        raise SpliceError(
-            "stale_revision",
-            f"D19 stale menu: expected rev {expected_revision} != live rev "
-            f"{st.revision} — re-render (sync net_to_md) before firing",
-        )
-    successor = st.net.fire_marking(
-        tuple(st.live_marking[p] for p in st.net.place_order), transition
-    )  # TransitionNotEnabledError / UnknownTransitionError raised here, pre-write
-    st.live_marking = dict(zip(st.net.place_order, successor))
-    st.revision += 1
-    st.updated_at = _utc_now()
-    save(base, st)
-    append_ledger({
-        "kind": "net_fire",
-        "session": session,
-        "transition": transition,
-        "revision": st.revision,
-        "reasoning": reasoning,
-    })
+    payload = {"transition": transition, "reasoning": reasoning, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        successor = st.net.fire_marking(
+            tuple(st.live_marking[p] for p in st.net.place_order), transition
+        )  # TransitionNotEnabledError / UnknownTransitionError raised here, pre-write
+        st.live_marking = dict(zip(st.net.place_order, successor))
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_fire",
+            "session": session,
+            "transition": transition,
+            "revision": st.revision,
+            "reasoning": reasoning,
+        })
+        return st, {}
+
+    st, _ = _transact(
+        base,
+        op="fire",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
     return st
 
 
@@ -1030,27 +1127,53 @@ def splice(
     reasoning: str,
     session: str,
     feature: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
 ) -> tuple[NetState, dict[str, Any]]:
     """Atomic structural transaction (IDEA-002 v4 §3/§5.0). Modes:
     add|remove|disable|undo|repair. Returns (state, info) — info carries the
-    conformance record + mode extras (removed/subnet/undoes)."""
-    if mode == "add":
-        if mutation is None:
-            raise SpliceError("invalid_mutation", "mode add requires --mutation")
-        return _splice_add(base, mutation, reasoning=reasoning, session=session, feature=feature)
-    if mode == "remove":
-        if mutation is None:
-            raise SpliceError("invalid_mutation", "mode remove requires --mutation")
-        return _splice_remove(base, mutation, reasoning=reasoning, session=session, feature=feature)
-    if mode == "disable":
-        return _splice_disable(
-            base, mutation, subnet, reasoning=reasoning, session=session, feature=feature
-        )
-    if mode == "undo":
-        return _splice_undo(base, reasoning=reasoning, session=session, feature=feature)
-    if mode == "repair":
-        return _splice_repair(base, reasoning=reasoning, session=session, feature=feature)
-    raise SpliceError("invalid_mutation", f"unknown splice mode: {mode!r}")
+    conformance record + mode extras (removed/subnet/undoes).
+
+    feature_079 (T5-1 2A): runs inside the shared CoordinationLock via
+    `_transact` (authoritative revision check + `command_id` idempotency).
+    `repair` still bumps nothing (no state mutation) but takes the lock so a
+    concurrent committer cannot interleave mid-realignment."""
+    payload = {
+        "mode": mode,
+        "mutation": mutation,
+        "subnet": subnet,
+        "reasoning": reasoning,
+        "session": session,
+        "feature": feature,
+    }
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        if mode == "add":
+            if mutation is None:
+                raise SpliceError("invalid_mutation", "mode add requires --mutation")
+            return _splice_add(base, mutation, reasoning=reasoning, session=session, feature=feature)
+        if mode == "remove":
+            if mutation is None:
+                raise SpliceError("invalid_mutation", "mode remove requires --mutation")
+            return _splice_remove(base, mutation, reasoning=reasoning, session=session, feature=feature)
+        if mode == "disable":
+            return _splice_disable(
+                base, mutation, subnet, reasoning=reasoning, session=session, feature=feature
+            )
+        if mode == "undo":
+            return _splice_undo(base, reasoning=reasoning, session=session, feature=feature)
+        if mode == "repair":
+            return _splice_repair(base, reasoning=reasoning, session=session, feature=feature)
+        raise SpliceError("invalid_mutation", f"unknown splice mode: {mode!r}")
+
+    return _transact(
+        base,
+        op="splice",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1150,27 +1273,35 @@ def sync(base: Path, *, reasoning: str = "", session: str = "", direction: str =
     bootstrap = not is_bootstrapped(base)
     gate = None
     if bootstrap:
-        net = PetriNet()
-        net.add_place("feature_ready", 1)
-        net.add_place("resource_token", 1)
-        net.add_place("goal_satisfied", 0)
-        for resource in RESOURCE_PLACES:  # feature_041 R1 catalog (all M0=1)
-            net.add_place(resource, 1)
-        st = NetState(
-            net=net,
-            layout=None,
-            live_marking={
-                "feature_ready": 1,
-                "resource_token": 1,
-                "goal_satisfied": 0,
-                **{resource: 1 for resource in RESOURCE_PLACES},
-            },
-            revision=0,
-            overlay=default_overlay(0),
-            updated_at=_utc_now(),
-        )
-        gate = _conformance_gate()
-        save(base, st)
+        # feature_079 (T5-1 2A): creation is a mutation path — double-checked
+        # under the shared lock so two first-callers converge on one rev-0
+        # bundle instead of interleaving two saves.
+        with CoordinationLock(coordination_root(base)).exclusive():
+            if not is_bootstrapped(base):
+                net = PetriNet()
+                net.add_place("feature_ready", 1)
+                net.add_place("resource_token", 1)
+                net.add_place("goal_satisfied", 0)
+                for resource in RESOURCE_PLACES:  # feature_041 R1 catalog (all M0=1)
+                    net.add_place(resource, 1)
+                st = NetState(
+                    net=net,
+                    layout=None,
+                    live_marking={
+                        "feature_ready": 1,
+                        "resource_token": 1,
+                        "goal_satisfied": 0,
+                        **{resource: 1 for resource in RESOURCE_PLACES},
+                    },
+                    revision=0,
+                    overlay=default_overlay(0),
+                    updated_at=_utc_now(),
+                )
+                gate = _conformance_gate()
+                save(base, st)
+            else:
+                st = load(base)
+                bootstrap = False
     else:
         st = load(base)
     features, checkboxes, projects = _scan_reality()
