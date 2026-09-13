@@ -8,8 +8,8 @@
     "meta_md": 6144,
     "nav_index": 64000,
     "nav_tip": 512,
-    "tool_args": 2400,
-    "tool_schemas": 1792,
+    "tool_args": 2464,
+    "tool_schemas": 1856,
     "work_md": 8192,
     "work_scratchpad": 3072
   },
@@ -501,8 +501,8 @@
       "tags": "CMD_NAV"
     },
     "omt_net": {
-      "args": "op,transition?,reasoning?,session?,max_states?,mode?,mutation?,subnet?,feature?,direction?,dry_run?,work_md?,path?,expected_revision?",
-      "description": "Concurrency net \u2014 SSOT (IDEA-002 v4 \u00a75.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net\u2194ledger drift) | synthesize(template\u2192splice proposal, D4) | mine(ledger\u2192net draft, D4) | gate(path,session?).",
+      "args": "op,transition?,reasoning?,session?,max_states?,mode?,mutation?,subnet?,feature?,direction?,dry_run?,work_md?,path?,expected_revision?,task_id?,owner?,generation?",
+      "description": "Concurrency net \u2014 SSOT (IDEA-002 v4 \u00a75.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net\u2194ledger drift) | synthesize(template\u2192splice proposal, D4) | mine(ledger\u2192net draft, D4) | gate(path,session?) | claim(task,owner?,gen-fenced).",
       "perm": "allow",
       "tags": "CMD_NET"
     },

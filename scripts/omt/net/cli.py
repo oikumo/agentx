@@ -6,6 +6,7 @@ phase-2 extension at 044):
 
     probe|fire|invariant   feature_039 (observe / marking-only fire / drift)
     splice|sync            feature_040 (structural transactions + net↔reality)
+    claim|release|transfer|checkpoint  feature_080 (task claim + generation fencing, T5-2 2B)
     synthesize             feature_042 (goal→net template proposal, D4)
     mine                   feature_044 (ledger→net behavioral draft, D4)
 
@@ -242,6 +243,92 @@ def _fire(base: Path, transition: str, reasoning: str, session: str, expected_re
     return envelope, 0
 
 
+# feature_080.task_claim_generation (T5-2 2B): thin envelopes over the
+# claim/release/transfer/checkpoint transactions in state.py. The `task`
+# block reports the post-commit binding so workers learn their generation
+# without a follow-up probe.
+def _task_envelope(op: str, st: Any, task_id: str) -> dict[str, Any]:
+    b = next(
+        (
+            x
+            for x in (st.task_bindings or [])
+            if isinstance(x, dict) and x.get("id") == task_id
+        ),
+        {},
+    )
+    return {
+        "ok": True,
+        "op": op,
+        "revision": st.revision,
+        "marking": st.live_marking,
+        "task": {
+            "id": task_id,
+            "place": b.get("place"),
+            "owner": b.get("owner"),
+            "generation": b.get("generation", 0),
+        },
+    }
+
+
+def _claim(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    st = state.claim_task(
+        base,
+        args.task_id,
+        owner=args.owner or args.session or "context",
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("claim", st, args.task_id), 0
+
+
+def _release(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    st = state.release_task(
+        base,
+        args.task_id,
+        owner=args.owner or None,
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("release", st, args.task_id), 0
+
+
+def _transfer(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    st = state.transfer_task(
+        base,
+        args.task_id,
+        owner=args.owner or args.session or "context",
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return _task_envelope("transfer", st, args.task_id), 0
+
+
+def _checkpoint(
+    base: Path,
+    task_id: str,
+    generation: int,
+    checkpoint: Any,
+    results: Any,
+    session: str,
+    expected_revision: int | None,
+    command_id: str | None,
+) -> tuple[dict[str, Any], int]:
+    st = state.checkpoint_task(
+        base,
+        task_id,
+        generation=generation,
+        checkpoint=checkpoint,
+        results=results,
+        session=session,
+        expected_revision=expected_revision,
+        command_id=command_id,
+    )
+    return _task_envelope("checkpoint", st, task_id), 0
+
+
 def _splice(base: Path, args: argparse.Namespace, mutation: Any) -> tuple[dict[str, Any], int]:
     st, info = state.splice(
         base,
@@ -401,6 +488,35 @@ def _build_parser() -> argparse.ArgumentParser:
     p_fire.add_argument("--session", default="")
     p_fire.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
     p_fire.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079: same ID + same command replays, no double-fire).")
+    p_claim = sub.add_parser("claim", help="Claim a pending task (task-aware work_start, gen-fenced).")
+    p_claim.add_argument("--task-id", "--task_id", required=True)
+    p_claim.add_argument("--owner", default="", help="New owner (default: --session).")
+    p_claim.add_argument("--reasoning", required=True)
+    p_claim.add_argument("--session", default="")
+    p_claim.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_claim.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_080: same ID + same claim replays, no double-claim).")
+    p_release = sub.add_parser("release", help="Release an active claim back to pending.")
+    p_release.add_argument("--task-id", "--task_id", required=True)
+    p_release.add_argument("--owner", default="", help="Owner check (optional; mismatch refuses).")
+    p_release.add_argument("--reasoning", required=True)
+    p_release.add_argument("--session", default="")
+    p_release.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_release.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_080).")
+    p_transfer = sub.add_parser("transfer", help="Hand an active claim to a new owner (gen+1).")
+    p_transfer.add_argument("--task-id", "--task_id", required=True)
+    p_transfer.add_argument("--owner", required=True, help="New owner.")
+    p_transfer.add_argument("--reasoning", required=True)
+    p_transfer.add_argument("--session", default="")
+    p_transfer.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_transfer.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_080).")
+    p_checkpoint = sub.add_parser("checkpoint", help="Record checkpoint/result evidence against a held generation.")
+    p_checkpoint.add_argument("--task-id", "--task_id", required=True)
+    p_checkpoint.add_argument("--generation", type=int, required=True, help="Held generation (stale refuses).")
+    p_checkpoint.add_argument("--mutation", default="", help="JSON evidence object ({checkpoint?, results?}).")
+    p_checkpoint.add_argument("--reasoning", required=True)
+    p_checkpoint.add_argument("--session", default="")
+    p_checkpoint.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_checkpoint.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_080).")
 
     p_splice = sub.add_parser(
         "splice", help="Atomic structural transaction (conformance-gated, §3)."
@@ -489,6 +605,28 @@ def main(argv: list[str] | None = None) -> int:
             return _emit(*_probe(base, args.max_states))
         if op == "fire":
             return _emit(*_fire(base, args.transition, args.reasoning, args.session, getattr(args, "expected_revision", None), getattr(args, "command_id", None) or None))
+        if op == "claim":
+            return _emit(*_claim(base, args))
+        if op == "release":
+            return _emit(*_release(base, args))
+        if op == "transfer":
+            return _emit(*_transfer(base, args))
+        if op == "checkpoint":
+            payload: dict[str, Any] = {}
+            if args.mutation:
+                try:
+                    payload = json.loads(args.mutation)
+                except json.JSONDecodeError as exc:
+                    return _emit(*_error(
+                        "invalid_mutation", op, f"--mutation is not valid JSON: {exc}"
+                    ))
+            if not isinstance(payload, dict):
+                return _emit(*_error("invalid_mutation", op, "--mutation must be a JSON object"))
+            return _emit(*_checkpoint(
+                base, args.task_id, args.generation,
+                payload.get("checkpoint"), payload.get("results"),
+                args.session, getattr(args, "expected_revision", None),
+                getattr(args, "command_id", None) or None))
         if op == "splice":
             mutation = None
             if args.mutation:

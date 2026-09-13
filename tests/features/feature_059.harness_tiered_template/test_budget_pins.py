@@ -22,9 +22,9 @@ import harnessc
 # failure seen pre-074..076 was line-number drift of later .omt appends, NOT
 # new record kinds (nav_index kinds remain doc/flow/xref/tool/msg; the
 # feature_059 contract holds). Re-measured via _sizes() at HEAD.
-NAV_INDEX_CEIL = 63931
-TOOL_ARGS_CEIL = 2367    # re-pin 2026-09-13 (feature_078): deliberate omt_q graph args (symbol/depth describes) +2B nav drift; harness budgets still OK (tool_args 2367/2400, tool_schemas 1780/1792)
-TOOL_SCHEMAS_CEIL = 1780  # re-pin 2026-09-13 (feature_078): +2B compressed omt_q description, same class
+NAV_INDEX_CEIL = 63963
+TOOL_ARGS_CEIL = 2454    # re-pin 2026-09-13 (feature_080): deliberate omt_net claim ops (task_id/owner/generation describes + op enum) +32B nav drift; harness budgets still OK (tool_args 2454/2464, tool_schemas 1812/1856)
+TOOL_SCHEMAS_CEIL = 1812  # re-pin 2026-09-13 (feature_080): claim hint in omt_net description, same class
 
 
 def _sizes():

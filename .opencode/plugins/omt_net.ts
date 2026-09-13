@@ -13,7 +13,7 @@ import { tool } from "@opencode-ai/plugin"
 import { execFileSync } from "node:child_process"
 import { initOmtShared, repoRoot, irToolDescription } from "../lib/omt_shared"
 
-const OPS = ["probe", "fire", "invariant", "splice", "sync", "synthesize", "mine", "gate"]
+const OPS = ["probe", "fire", "invariant", "splice", "sync", "synthesize", "mine", "gate", "claim", "release", "transfer", "checkpoint"]
 
 // Per-op argv whitelist mirroring the cli.py subparser declarations
 // (cross-source pinned @ tests/scripts/omt/test_omt_net_plugin_args.py).
@@ -26,14 +26,18 @@ const OP_ARGS: Record<string, readonly string[]> = {
   synthesize: ["mutation", "reasoning", "session", "feature", "expected_revision"],
   mine: ["mutation", "reasoning", "session", "feature", "expected_revision"],
   gate: ["path", "session", "expected_revision"],
+  claim: ["task_id", "owner", "reasoning", "session", "expected_revision"],
+  release: ["task_id", "owner", "reasoning", "session", "expected_revision"],
+  transfer: ["task_id", "owner", "reasoning", "session", "expected_revision"],
+  checkpoint: ["task_id", "generation", "mutation", "reasoning", "session", "expected_revision"],
 }
 
 function createNetTool() {
   return tool({
-    description: irToolDescription("omt_net", "Concurrency net — SSOT (IDEA-002 v4 §5.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net↔ledger drift) | synthesize(template→splice proposal, D4) | mine(ledger→net draft, D4) | gate(path,session?)."),
+    description: irToolDescription("omt_net", "Concurrency net — SSOT (IDEA-002 v4 §5.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net↔ledger drift) | synthesize(template→splice proposal, D4) | mine(ledger→net draft, D4) | gate(path,session?) | claim(task,owner?,gen-fenced)."),
 // TA: gotcha: gotcha (feature_050 wrap-up): TS fallback seed must BYTE-match the .omt @tool omt_net payload — currently 1B off: seed says gate(path,session). but .omt payload says gate(path,session?). → harnessc "TS fallback seed drifted" error (358 vs 359 B); add the ? to the seed string
     args: {
-      op: tool.schema.string().describe("probe|fire|splice|sync|invariant|synthesize|mine|gate"),
+      op: tool.schema.string().describe("probe|fire|splice|sync|invariant|synthesize|mine|gate|claim|release|transfer|checkpoint"),
       transition: tool.schema.string().optional().describe("fire: transition name"),
       reasoning: tool.schema.string().optional().describe("fire/splice: why (audit, D4)"),
       session: tool.schema.string().optional().describe("session id (default: context)"),
@@ -46,6 +50,9 @@ function createNetTool() {
       dry_run: tool.schema.boolean().optional().describe("sync: dry-run render/propose without writing"),
       path: tool.schema.string().optional().describe("gate: target path being edited"),
       expected_revision: tool.schema.number().optional().describe("all ops: stale-rev guard (feature_050)"),
+      task_id: tool.schema.string().optional().describe("claim: task id"),
+      owner: tool.schema.string().optional().describe("claim: task owner"),
+      generation: tool.schema.number().optional().describe("claim: held generation"),
     },
     async execute(args, context) {
       const op = String(args?.op ?? "")

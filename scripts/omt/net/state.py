@@ -588,6 +588,284 @@ def fire(base: Path, transition: str, *, reasoning: str, session: str, expected_
 
 
 # ---------------------------------------------------------------------------
+# Task claim + generation fencing (feature_080 T5-2 2B — NEXT_STEP §6, mh8 D9)
+# ---------------------------------------------------------------------------
+# Slice-1 (feature_064) left bindings observation-only: `generation` recorded,
+# never enforced; atomic claims deferred here. Every op below runs inside the
+# T5-1 `_transact` authority (lock + expected_revision + command_id), so the
+# revision check and the binding+marking update commit atomically: revision is
+# the short CAS token, per-task generation is the long ownership fence (D9 —
+# an unrelated rev bump never revokes a held generation).
+#
+# Stable codes: task_not_found | task_not_pending | task_not_active |
+# not_owner | stale_generation (+ stale_revision / command_id_conflict).
+
+
+def _binding_index(st: NetState, task_id: str) -> int:
+    for i, b in enumerate(st.task_bindings or []):
+        if isinstance(b, dict) and b.get("id") == task_id:
+            return i
+    raise SpliceError(
+        "task_not_found",
+        f"no task binding {task_id!r} (rev {st.revision})",
+    )
+
+
+def _move_pool_token(st: NetState, src: str, dst: str) -> None:
+    """Move one pool token src→dst when both places exist (pool nets).
+
+    Binding-only bundles (no work_* places) skip the move; on pool nets a
+    missing source token refuses so the binding can never outrun the marking
+    (atomic marking+binding update)."""
+    if src not in st.live_marking or dst not in st.live_marking:
+        return
+    if st.live_marking.get(src, 0) < 1:
+        raise SpliceError(
+            "task_not_active" if src == "work_active" else "task_not_pending",
+            f"no {src} token to move for the claim transaction "
+            f"(rev {st.revision})",
+        )
+    st.live_marking[src] -= 1
+    st.live_marking[dst] = st.live_marking.get(dst, 0) + 1
+
+
+def claim_task(
+    base: Path,
+    task_id: str,
+    *,
+    owner: str,
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Claim a pending task: the task-aware `work_start` (NEXT_STEP §6).
+
+    Moves the binding work_pending→work_active, stamps `owner`, bumps the
+    per-task generation (first claim 0→1), and moves one pool token alongside
+    it. A lost same-task race refuses with `task_not_pending` (the binding is
+    no longer pending) — exactly one winner. Unrelated revision bumps do not
+    touch the held generation (D9)."""
+    payload = {"task_id": task_id, "owner": owner, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        if b.get("place") != "work_pending":
+            raise SpliceError(
+                "task_not_pending",
+                f"task {task_id!r} is in {b.get('place')!r}, not work_pending "
+                f"(rev {st.revision}) — already claimed or finished",
+            )
+        generation = int(b.get("generation", 0) or 0) + 1
+        _move_pool_token(st, "work_pending", "work_active")
+        claimed = dict(b)
+        claimed["place"] = "work_active"
+        claimed["owner"] = owner
+        claimed["generation"] = generation
+        st.task_bindings[idx] = claimed
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_claim",
+            "session": session,
+            "task_id": task_id,
+            "owner": owner,
+            "generation": generation,
+            "revision": st.revision,
+        })
+        return st, {"task_id": task_id, "owner": owner, "generation": generation}
+
+    st, _ = _transact(
+        base,
+        op="claim",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
+    return st
+
+
+def release_task(
+    base: Path,
+    task_id: str,
+    *,
+    owner: str | None = None,
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Release an active claim back to pending (owner optionally checked).
+
+    Generation is monotonic — release keeps it, the next claim bumps it (D9).
+    A wrong-owner release refuses with `not_owner`."""
+    payload = {"task_id": task_id, "owner": owner, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        if b.get("place") != "work_active":
+            raise SpliceError(
+                "task_not_active",
+                f"task {task_id!r} is in {b.get('place')!r}, not work_active "
+                f"(rev {st.revision}) — nothing to release",
+            )
+        if owner is not None and b.get("owner") != owner:
+            raise SpliceError(
+                "not_owner",
+                f"task {task_id!r} is owned by {b.get('owner')!r}, not "
+                f"{owner!r} (rev {st.revision})",
+            )
+        _move_pool_token(st, "work_active", "work_pending")
+        released = dict(b)
+        released["place"] = "work_pending"
+        released.pop("owner", None)
+        st.task_bindings[idx] = released
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_release",
+            "session": session,
+            "task_id": task_id,
+            "revision": st.revision,
+        })
+        return st, {"task_id": task_id}
+
+    st, _ = _transact(
+        base,
+        op="release",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
+    return st
+
+
+def transfer_task(
+    base: Path,
+    task_id: str,
+    *,
+    owner: str,
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Hand an active claim to a new owner in one transaction (recovery path).
+
+    Generation increments (the old owner's fence is revoked, D9); no token
+    moves — the task stays active."""
+    payload = {"task_id": task_id, "owner": owner, "session": session}
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        if b.get("place") != "work_active":
+            raise SpliceError(
+                "task_not_active",
+                f"task {task_id!r} is in {b.get('place')!r}, not work_active "
+                f"(rev {st.revision}) — nothing to transfer",
+            )
+        generation = int(b.get("generation", 0) or 0) + 1
+        moved = dict(b)
+        moved["owner"] = owner
+        moved["generation"] = generation
+        st.task_bindings[idx] = moved
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_transfer",
+            "session": session,
+            "task_id": task_id,
+            "owner": owner,
+            "generation": generation,
+            "revision": st.revision,
+        })
+        return st, {"task_id": task_id, "owner": owner, "generation": generation}
+
+    st, _ = _transact(
+        base,
+        op="transfer",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
+    return st
+
+
+def checkpoint_task(
+    base: Path,
+    task_id: str,
+    *,
+    generation: int,
+    checkpoint: str | None = None,
+    results: list[dict[str, Any]] | None = None,
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> NetState:
+    """Record checkpoint/result evidence against a held generation.
+
+    The binding must be active AND its generation must equal the caller's —
+    anything else refuses with `stale_generation` (a transferred or reclaimed
+    task's old owner cannot submit)."""
+    payload = {
+        "task_id": task_id,
+        "generation": generation,
+        "checkpoint": checkpoint,
+        "results": results,
+        "session": session,
+    }
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        idx = _binding_index(st, task_id)
+        b = st.task_bindings[idx]
+        live_gen = int(b.get("generation", 0) or 0)
+        if b.get("place") != "work_active" or live_gen != int(generation):
+            raise SpliceError(
+                "stale_generation",
+                f"task {task_id!r} is {b.get('place')!r} gen {live_gen}, "
+                f"caller holds gen {generation} (rev {st.revision}) — "
+                "re-claim before submitting",
+            )
+        updated = dict(b)
+        if checkpoint is not None:
+            updated["checkpoint"] = checkpoint
+        if results is not None:
+            updated["results"] = results
+        st.task_bindings[idx] = updated
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_checkpoint",
+            "session": session,
+            "task_id": task_id,
+            "generation": live_gen,
+            "revision": st.revision,
+        })
+        return st, {"task_id": task_id, "generation": live_gen}
+
+    st, _ = _transact(
+        base,
+        op="checkpoint",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
+    return st
+
+
+# ---------------------------------------------------------------------------
 # Conformance gate (P8 — IDEA-002 v4 §5.0 trigger matrix)
 # ---------------------------------------------------------------------------
 
