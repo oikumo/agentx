@@ -2,7 +2,7 @@
 name = "agentx"
 version = "0.2.0"
 readme = "README.md"
-description = "Educational LLM agent framework with a modern Textual TUI and console REPL — chat, RAG, function calling, and graph-based reasoning workflows."
+description = "Educational LLM agent framework with a console REPL — chat, RAG, function calling, and graph-based reasoning workflows."
 license = "Apache-2.0"
 requires-python = ">=3.14"
 dependencies = [
@@ -29,7 +29,6 @@ dependencies = [
     "aiohttp==3.14.3",
     "numpy>=2.5.1",
     "uuid64>=0.2.0",
-    "textual>=8.2.8",
     "httptools==0.8.0",
     "watchfiles==1.2.0",
     "deepagents==0.7.5",

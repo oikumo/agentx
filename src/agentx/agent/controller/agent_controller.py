@@ -260,7 +260,7 @@ class AgentController:
     # ----------------------------------------------------------- demo (feature_010)
     #  Delegates to DemoController so this file stays under the 300-LOC
     #  god-controller limit (feature_024 regression fix).  Public surface
-    #  unchanged for callers: tests, TUI demo_screen, console views.
+    #  unchanged for callers: tests, console views.
 
     def reset_state(self) -> None:
         """Clear agent state so a demo scenario can be re-seeded (operation_spec §reset_state)."""

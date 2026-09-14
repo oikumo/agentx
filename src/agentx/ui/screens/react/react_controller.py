@@ -1,10 +1,10 @@
 """ReAct screen controller — orchestrates View and Model.
 
-The controller sits between the TUI View (``ReactTUIScreen``) and the Model
+The controller sits between the console view and the Model
 (``ReactAgentService``).  When the user sends a message, the controller
 spawns a background worker thread that calls ``service.stream_agent()``.
 The streaming callbacks are marshalled back to the UI thread via
-``app.call_from_thread()``.
+``app.call_from_thread()`` (console passes None and calls directly).
 
 Design: ``design_001_react_screen.md`` §3.2.
 Operation spec: ``operation_spec_001_react_operations.md`` OP-4/5.
@@ -25,7 +25,7 @@ class ReactController(IReactViewPartner):
     Attributes:
         _service: The ReactAgentService (Model layer).
         _worker_thread: The background thread running the agent.
-        _app: Reference to the Textual App for call_from_thread marshalling.
+        _app: Optional UI app reference for call_from_thread marshalling.
     """
 
     def __init__(self, service: ReactAgentService | None = None) -> None:

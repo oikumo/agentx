@@ -1,10 +1,10 @@
 """Coding screen controller — orchestrates View and Model.
 
-The controller sits between the TUI View (``CodingTUIScreen``) and the Model
+The controller sits between the console view and the Model
 (``CodingAgentService``). When the user sends a message, the controller
 spawns a background worker thread that calls ``service.stream_agent()``.
 The streaming callbacks are marshalled back to the UI thread via
-``app.call_from_thread()``.
+``app.call_from_thread()`` (console passes None and calls directly).
 
 Design: ``design_001_coding_agent_screen.md`` §3.2.
 Operation spec: ``operation_spec_001_coding_operations.md`` OP-4/5.
@@ -25,7 +25,7 @@ class CodingController(ICodingViewPartner):
     Attributes:
         _service: The CodingAgentService (Model layer).
         _worker_thread: The background thread running the agent.
-        _app: Reference to the Textual App for call_from_thread marshalling.
+        _app: Optional UI app reference for call_from_thread marshalling.
         _view: Reference to the View for streaming callbacks.
     """
 
@@ -94,7 +94,7 @@ class CodingController(ICodingViewPartner):
     # ── Streaming ────────────────────────────────────────────────────────────
 
     def set_app(self, app: Any) -> None:
-        """Set the Textual App reference for call_from_thread marshalling.
+        """Set the UI app reference for call_from_thread marshalling.
 
         The View calls this on mount so the controller can marshal callbacks
         back to the UI thread.

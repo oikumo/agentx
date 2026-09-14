@@ -615,7 +615,7 @@ class TestMainControllerWiringUsesSetView(TestCase):
         assert self.controller._react_view is react_view
 
     def test_show_coding_calls_set_view(self) -> None:
-        from agentx.ui.tui.screens.coding.coding_controller import CodingController
+        from agentx.ui.screens.coding.coding_controller import CodingController
 
         coding_view = MagicMock()
         self.provider.create_coding_view.return_value = coding_view

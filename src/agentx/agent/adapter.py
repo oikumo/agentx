@@ -1,29 +1,23 @@
-"""AgentAdapter — factory wiring AgentController ↔ AgentTUIScreen (feature_004 integration, design §10).
+"""AgentAdapter — factory wiring Agent + AgentController (console UI).
 
-Provides a single entry point that the main TUI app calls to build the agent
-triad.  Keeps the wiring self-contained in the agent module so the existing UI
-code is not modified.
+Provides a single entry point that builds the agent pair. Keeps the wiring
+self-contained in the agent module so the existing UI code is not modified.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, cast
 
 from agentx.agent.controller.agent_controller import AgentController
-from agentx.agent.interfaces import IAIServicePartner, IAgentViewPartner
+from agentx.agent.interfaces import IAIServicePartner
 from agentx.agent.model.agent import Agent
 from agentx.agent.types import AgentConfig
-from agentx.agent.view.tui.agent_screen import AgentTUIScreen
-
-if TYPE_CHECKING:
-    from agentx.agent.view.tui.fast_agent_screen import FastAgentTUIScreen
 
 _log = logging.getLogger(__name__)
 
 
 class AgentAdapter:
-    """Creates and wires the Agent + AgentController (+ optional TUI screen)."""
+    """Creates and wires the Agent + AgentController."""
 
     @staticmethod
     def create_agent(
@@ -64,68 +58,3 @@ class AgentAdapter:
 
         controller = AgentController(agent)
         return agent, controller
-
-    @staticmethod
-    def create(
-        config: AgentConfig,
-        ai_service: IAIServicePartner | None = None,
-        resume: bool = True,
-    ) -> tuple[Agent, AgentController, AgentTUIScreen]:
-        """Build a fully wired agent triad.
-
-        Returns ``(agent, controller, screen)``.  The caller pushes *screen*
-        onto the Textual app stack.
-        """
-        agent, controller = AgentAdapter.create_agent(config, ai_service, resume)
-        screen = AgentTUIScreen(controller)
-        _wire_view(controller, screen)
-        return agent, controller, screen
-
-    @staticmethod
-    def create_screen(controller: AgentController) -> AgentTUIScreen:
-        """Create a TUI screen for an existing controller."""
-        screen = AgentTUIScreen(controller)
-        _wire_view(controller, screen)
-        return screen
-
-    @staticmethod
-    def create_fast(
-        config: AgentConfig,
-        ai_service: IAIServicePartner | None = None,
-        resume: bool = True,
-    ) -> tuple[Agent, AgentController, "FastAgentTUIScreen"]:
-        """Build a wired Fast Agent triad (feature_011).
-
-        Mirrors :meth:`create` but uses :class:`FastAgentTUIScreen` (modal-flow
-        host) + :class:`FastAgentTUIView` (no-op partner) instead of
-        :class:`AgentTUIScreen`.  The no-op view swallows the controller's
-        push-style UI callbacks during ``run_cycle()`` — the modal flow queries
-        the controller explicitly via ``get_cycle_summary()``.
-        """
-        # Lazy imports to avoid top-level circular dependency and keep the
-        # Fast Agent UI optional (only loaded when the user opens it).
-        from agentx.agent.view.tui.fast_agent_screen import FastAgentTUIScreen
-        from agentx.agent.view.tui.fast_agent_view import FastAgentTUIView
-
-        agent, controller = AgentAdapter.create_agent(config, ai_service, resume)
-        # The no-op FastAgentTUIView is the controller's partner (NOT the screen).
-        view = FastAgentTUIView()
-        if not isinstance(view, IAgentViewPartner):  # m9-style runtime check
-            raise TypeError("FastAgentTUIView does not implement IAgentViewPartner")
-        controller.set_view(view)
-        screen = FastAgentTUIScreen(controller)
-        return agent, controller, screen
-
-
-def _wire_view(controller: AgentController, screen: AgentTUIScreen) -> None:
-    """Connect *screen* as the controller's view (m9: runtime isinstance check).
-
-    ``AgentTUIScreen`` is registered as a virtual subclass of
-    :class:`IAgentViewPartner` (avoids the Textual/abc metaclass conflict), so
-    the ``isinstance`` check passes at runtime and validates the cast.
-    """
-    if not isinstance(screen, IAgentViewPartner):  # m9
-        raise TypeError(
-            f"screen {type(screen).__name__} does not implement IAgentViewPartner"
-        )
-    controller.set_view(cast(IAgentViewPartner, screen))

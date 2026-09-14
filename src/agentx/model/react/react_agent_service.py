@@ -1,4 +1,4 @@
-"""ReAct agent service — wraps LangChain's ``create_agent`` for the TUI.
+"""ReAct agent service — wraps LangChain's ``create_agent`` for the console REPL.
 
 This is the **Model** layer for the ReAct screen.  It creates a LangChain
 ReAct agent (via :func:`langchain.agents.create_agent`) with the user's

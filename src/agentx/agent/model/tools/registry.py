@@ -1,7 +1,7 @@
 """Tool registry — dict-backed O(1) lookup (design §6.4).
 
 Registration is fail-fast: schemas are structurally validated before insert.
-Implements :class:`IToolRegistryPartner` so the controller and TUI depend on
+Implements :class:`IToolRegistryPartner` so the controller and console views depend on
 the abstraction, not the concrete registry.
 """
 

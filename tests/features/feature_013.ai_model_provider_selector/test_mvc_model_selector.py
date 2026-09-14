@@ -21,19 +21,19 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SRC = REPO_ROOT / "src" / "agentx"
 
-# Files created/touched by feature_013.
+# Files created/touched by feature_013 (console-only after TUI removal).
 NEW_FILES = [
     SRC / "model" / "ai" / "model_registry.py",
     SRC / "ui" / "screens" / "models" / "models_controller.py",
-    SRC / "ui" / "tui" / "screens" / "models_screen.py",
+    SRC / "ui" / "screens" / "models" / "models_view.py",
 ]
 TOUCHED_FILES = [
     SRC / "model" / "ai" / "providers.py",
     SRC / "model" / "ai" / "service.py",
     SRC / "agent" / "model" / "ai_adapter.py",
     SRC / "ui" / "screens" / "main" / "main_controller.py",
-    SRC / "ui" / "tui" / "screens" / "main_screen.py",
-    SRC / "ui" / "tui" / "framework" / "widgets.py",
+    SRC / "ui" / "screens" / "main" / "main_view.py",
+    SRC / "ui" / "common" / "ui_console.py",
     SRC / "ui" / "screens" / "chat" / "chat_controller.py",
     SRC / "ui" / "screens" / "rag" / "rag_chat_controller.py",
     SRC / "model" / "rag" / "rag.py",
@@ -51,9 +51,9 @@ def _read(p: Path) -> str:
 
 
 VIEW_FILES = [
-    SRC / "ui" / "tui" / "screens" / "models_screen.py",
-    SRC / "ui" / "tui" / "screens" / "main_screen.py",
-    SRC / "ui" / "tui" / "framework" / "widgets.py",
+    SRC / "ui" / "screens" / "models" / "models_view.py",
+    SRC / "ui" / "screens" / "main" / "main_view.py",
+    SRC / "ui" / "common" / "ui_console.py",
 ]
 MODEL_FILES = [
     SRC / "model" / "ai" / "model_registry.py",

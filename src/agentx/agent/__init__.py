@@ -2,7 +2,7 @@
 
 MVC++ triad:
   - Model:     ``agent.model.agent.Agent`` (facade) + subsystems
-  - View:      ``agent.view`` (console + TUI)
+  - View:      ``agent.view`` (console)
   - Controller:``agent.controller`` (AgentController, SessionController, ToolController)
 
 Abstract Partners live in ``agent.interfaces``; persistence in ``agent.persistence``

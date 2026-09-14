@@ -1,4 +1,4 @@
-"""Coding agent service — wraps LangChain's create_agent for the TUI.
+"""Coding agent service — wraps LangChain's create_agent for the console REPL.
 
 This is the **Model** layer for the Coding screen. It creates a LangChain
 agent (via :func:`langchain.agents.create_agent`) with the user's

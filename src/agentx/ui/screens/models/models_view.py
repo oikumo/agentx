@@ -19,7 +19,7 @@ class ConsoleModelsView(IModelsView):
 
     #: Exit tokens for the models REPL (case-insensitive). Matches the RAG
     #: views convention (``rag_chat_controller``: quit/exit; ``rag_*_view``:
-    #: cancel/back/q/quit) and the TUI ``models_screen`` ``q`` binding.
+    #: cancel/back/q/quit).
     #: Without these the picker traps the user on ``Invalid selection``.
     _EXIT_TOKENS = frozenset({"q", "quit", "back", "exit"})
 

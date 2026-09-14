@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from agentx.agent.interfaces import IAgentViewPartner
     from agentx.ui.screens.models.models_controller import ModelsController
     from agentx.ui.screens.react.react_controller import ReactController
-    from agentx.ui.tui.screens.coding.coding_controller import CodingController
+    from agentx.ui.screens.coding.coding_controller import CodingController
     # Console parity interfaces (feature_024)
     from agentx.ui.interfaces import (
         IReactViewPartner,
@@ -77,21 +77,8 @@ class MainController(IMainViewPartner):
         self.add_command(AIChat("chat", self))
         self.add_command(NewSessionCommand("new", self))
         self.add_command(LSCommand("ls", self))
-        # feature_027: console `rag` repoints to v2 (console-only); the TUI path
-        # keeps v1's RagShowCommand. When a console provider (ConsoleProvider)
-        # supplied v2, RagV2ShowCommand routes `rag` → show_rag_v2; otherwise
-        # register v1's RagShowCommand for the TUI path. v2 is console-only.
-        # Lazy runtime import (circular-safe): ConsoleProvider is only in
-        # TYPE_CHECKING above, so `isinstance` needs the real class at runtime.
-        # Importing inside load_commands avoids an unbound name (NameError) while
-        # keeping the top-level import cycle-free (pause_2026-08-15_l §Fix 2,
-        # option A — distinguishes the real ConsoleProvider from a TUIProvider/
-        # mock by class identity, which a hasattr capability check could NOT).
-        from agentx.ui.providers import ConsoleProvider
-        if isinstance(self._provider, ConsoleProvider):
-            self.add_command(RagV2ShowCommand("rag", self))
-        else:
-            self.add_command(RagShowCommand("rag", self))
+        # `rag` always routes to v2 (console-only; TUI removed).
+        self.add_command(RagV2ShowCommand("rag", self))
         self.add_command(VersionCommand("version", self))
         # Console parity commands (feature_024)
         self.add_command(ReactCommand("react", self))
@@ -165,7 +152,7 @@ class MainController(IMainViewPartner):
         return self._rag_v2_controller, self._rag_v2_view
 
     def show_agent(self) -> None:
-        """Create and wire an Agent + AgentController for the TUI agent screen.
+        """Create and wire an Agent + AgentController for the console agent view.
 
         C5: reuses an already-wired controller (no fresh agent on every open).
         I1/I4: the :class:`AgentAdapter` owns AI-service wiring and resumes the
@@ -211,9 +198,8 @@ class MainController(IMainViewPartner):
         """Create and wire a Fast Agent (feature_011) — modal-dialog UX.
 
         Builds an :class:`Agent` + :class:`AgentController` (reusing the same
-        engine as the Advanced Agent) and wires a no-op
-        :class:`FastAgentTUIView` as the controller's partner.  The Fast Agent
-        screen is pushed by :meth:`MainTUIScreen.action_open_fast_agent`.
+        engine as the Advanced Agent) and wires the console fast-agent view
+        as the controller's partner.
 
         C5: reuses an already-wired controller (no fresh agent on every open).
         """
@@ -305,7 +291,7 @@ class MainController(IMainViewPartner):
         """
         if self._coding_controller is not None:
             return
-        from agentx.ui.tui.screens.coding.coding_controller import CodingController
+        from agentx.ui.screens.coding.coding_controller import CodingController
 
         coding_controller = CodingController()
         if self._provider is not None:

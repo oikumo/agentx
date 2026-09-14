@@ -358,9 +358,9 @@ class IChatViewPartner(ABC):
 class IReactViewPartner(ABC):
     """Abstract partner for ReAct View (implemented by ReactController).
 
-    This is the interface the TUI View calls to interact with the Controller.
+    This is the interface the View calls to interact with the Controller.
     The View receives this via constructor injection and should type-hint it
-    as ``Any`` (duck-typed) to avoid a metaclass conflict with Textual's
+    as ``Any`` (duck-typed) to avoid a metaclass conflict with UI framework
     Screen.  ``register_partner`` virtually registers the screen as a
     subclass of this ABC.
     """
@@ -408,9 +408,9 @@ class IReactViewPartner(ABC):
 class ICodingViewPartner(ABC):
     """Abstract partner for Coding View (implemented by CodingController).
 
-    This is the interface the TUI View calls to interact with the Controller.
+    This is the interface the View calls to interact with the Controller.
     The View receives this via constructor injection and should type-hint it
-    as ``Any`` (duck-typed) to avoid a metaclass conflict with Textual's
+    as ``Any`` (duck-typed) to avoid a metaclass conflict with UI framework
     Screen. ``register_partner`` virtually registers the screen as a
     subclass of this ABC.
     """
@@ -677,7 +677,7 @@ class IConsoleFastAgentViewPartner(ABC):
 # ── RAG v2 (feature_027) — console-only; v1 IRagView/IRagViewPartner locked ──
 # v2 is a console sibling of v1. The outer ABC pair + 3 inner ABC pairs (G6(a)
 # narrow closure); PDF/MD ingestion views are G4-new ABC pairs. v1's ABCs are
-# NOT touched (D3 defer — v1 stays for the TUI path).
+# v1 kept (console `rag` now routes to v2).
 
 class IRagV2View(ABC):
     """Abstract interface for the console RAG v2 outer view."""

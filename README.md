@@ -9,11 +9,11 @@
 
 ## What is agentx?
 
-**agentx** is a Python-based LLM agent framework with a modern **Textual TUI** and **console REPL** interface, created strictly for educational purposes. It lets you interact with language models through chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows.
+**agentx** is a Python-based LLM agent framework with a **console REPL** interface, created strictly for educational purposes. It lets you interact with language models through chat, web search, PDF Q&A, function calling, and graph-based reasoning workflows.
 
 ```text
-┌─ AgentX TUI ──────────────────────────────────────────────────┐
-│  Welcome to AgentX TUI                                        │
+┌─ AgentX Console ──────────────────────────────────────────────┐
+│  Welcome to AgentX                                            │
 │  Press 'c' Chat, 'r' RAG, 'f' Fast Agent, 'a' Advanced Agent  │
 │  Press 't' ReAct, 'd' Coding, 'm' Models, 'h' Help, 'q' Quit  │
 │                                                               │
@@ -31,14 +31,14 @@
 
 
 **Key Features:**
-- 🎨 **Modern TUI** - Textual-based interface with keyboard navigation
+- 🖥️ **Console REPL** - Keyboard-driven terminal interface
 - 💬 **AI Chat** - Multi-provider LLM support (OpenRouter, OpenAI, Google Gemini, NVIDIA NIM, Ollama, LlamaCpp)
 - 📚 **RAG** - PDF Q&A, web ingestion, Chroma/FAISS/Pinecone vector stores
 - 🤖 **Intelligent Agent** - Autonomous perceive→decide→act→reflect cycle with tool registry, policy DSL engine, and self-improvement loop
 - 🧠 **Petri Net Sessions** - Graph-based session/user objective management
 - 🖥️ **Petri Net Studio** - A standalone browser-based Petri net workbench (`tools/petri-net-studio/`) with exact engine parity to the Python model, structural analysis (reachability/deadlocks/bounds/liveness), a reachability-graph explorer, and a full React Flow editor/simulator
 - 🔌 **LangChain/LangGraph** - Full integration for agentic workflows
-- 🧪 **2500+ Tests** - Comprehensive unit + integration + automated TUI tests (2241 pytest + 283 Vitest)
+- 🧪 **2500+ Tests** - Comprehensive unit + integration + automated tests (pytest + Vitest)
 
 Developed with **opencode** using the **META HARNESS** (OMT++ methodology: Analysis → Design → Programming → Testing with visible artifacts).
 
@@ -348,18 +348,18 @@ agentx        # run from anywhere
 
 Uninstall with `uv tool uninstall agentx`.
 
-You'll see the console interface (the default). Commands: `c` for chat, `r` for RAG, `m` for models, `q` to quit. To launch the TUI instead: `uv run agentx --tui`. `--no-tui` is still accepted (no-op) for backwards compatibility.
+You'll see the console interface. Commands: `c` for chat, `r` for RAG, `m` for models, `q` to quit. Legacy `--tui`/`--no-tui` flags are accepted as no-ops for backwards compatibility.
 
 ---
 
 ## 🎨 Features
 
-### Modern TUI (Textual Interface)
+### Console REPL
 
-**Default mode** - A beautiful, keyboard-driven terminal UI:
+**Only mode** - A keyboard-driven console REPL:
 
 ```text
-┌─ AgentX TUI ────────────────────────────────────────────────┐
+┌─ AgentX Console ────────────────────────────────────────────┐
 │  agentx 0.2.0                                               │
 │  Session: session_2026-06-27_18-30-00                       │
 ├─────────────────────────────────────────────────────────────┤
@@ -436,7 +436,7 @@ Multi-provider LLM support with streaming responses:
 | Ollama | Local models | `OLLAMA_HOST` |
 | LlamaCpp | Local GGUF models | Manual config |
 
-Use the **Models screen** (press `m` from the main TUI) to select the active provider at runtime. The selection is persisted to `~/.agentx/model_selection.json` and used across chat, RAG, and agent features.
+Use the **Models screen** (press `m` from the main menu) to select the active provider at runtime. The selection is persisted to `~/.agentx/model_selection.json` and used across chat, RAG, and agent features.
 
 **Example Conversation:**
 ```text
@@ -535,7 +535,7 @@ An autonomous agent subsystem that runs a **perceive → decide → act → refl
 | **Memory Manager** | Volatile + persistent memory with metadata and source tracking |
 | **Persistence** | stdlib `sqlite3` (no ORM, no Alembic) — schema, agent DB, and repositories |
 
-**Advanced Agent Screen (TUI):**
+**Advanced Agent Screen:**
 
 Press `a` from the main screen to open the full-featured agent workspace:
 
@@ -594,13 +594,13 @@ A streamlined, modal-dialog-driven agent UX for quick tasks. Press `f` from the 
 | Goal completion | Manual (Stop when done) | Auto via SuccessCriteria |
 | Best for | Quick one-shot tasks | Complex multi-goal workflows |
 
-The Fast Agent reuses the same `Agent` facade + `AgentController` under the hood — zero Model-layer changes. It's the first use of `textual.screen.ModalScreen` in the codebase.
+The Fast Agent reuses the same `Agent` facade + `AgentController` under the hood — zero Model-layer changes. It uses a console modal-dialog flow (Goal → Running → Reflection → Result).
 
 ---
 
 ### 🎛️ Models Screen (feature_013)
 
-A runtime AI model provider selector accessible from the main TUI screen (press `m`):
+A runtime AI model provider selector accessible from the main menu (press `m`):
 
 ```text
 ┌─ Models ────────────────────────────────────────────────────┐
@@ -664,8 +664,8 @@ A new **Reasoning + Acting** chat screen that uses LangChain's `create_agent` (R
 **Architecture:**
 - **Model**: `ReactAgentService` wraps `langchain.agents.create_agent` with `InMemorySaver` checkpointer
 - **Controller**: `ReactController` implements `IReactViewPartner`; spawns daemon worker thread for agent streaming
-- **View**: `ReactTUIScreen` extends `BaseAgentXScreen`; displays thinking/tool/answer blocks with distinct styling
-- **Integration**: Added `t` binding + 🧠 ReAct button to Main screen; MenuGrid expanded to 3×3 (7 buttons)
+- **View**: `ConsoleReactView` is the console view; displays thinking/tool/answer blocks with distinct styling
+- **Integration**: Added `t` binding + 🧠 ReAct entry to the main menu
 
 **Key Bindings:**
 | Key | Action |
@@ -735,8 +735,8 @@ A new **Coding Agent** chat screen that uses LangChain's `create_agent` with fil
 **Architecture:**
 - **Model**: `CodingAgentService` wraps `langchain.agents.create_agent` with 5 file tools + `InMemorySaver` checkpointer
 - **Controller**: `CodingController` implements `ICodingViewPartner`; spawns daemon worker thread for agent streaming
-- **View**: `CodingTUIScreen` extends `BaseAgentXScreen`; displays thinking/tool/answer blocks with diff highlighting
-- **Integration**: Added `d` binding + 💻 Coding button to Main screen; MenuGrid grew to 8 buttons (Coding added on top of the 3×3 ReAct layout)
+- **View**: `ConsoleCodingView` is the console view; displays thinking/tool/answer blocks with diff highlighting
+- **Integration**: Added `d` binding + 💻 Coding entry to the main menu
  
 **Key Bindings:**
 | Key | Action |
@@ -903,9 +903,9 @@ If `OPENROUTER_API_KEY` is not set, the application will prompt for it on startu
 
 ## 🎮 Usage
 
-Run `uv run agentx` (or `agentx` if globally installed) — see Quick Start above. The app starts in **console mode** by default; pass `--tui` for the TUI. `--no-tui` is still accepted (no-op) for backwards compatibility.
+Run `uv run agentx` (or `agentx` if globally installed) — see Quick Start above. The app starts in **console mode**. Legacy `--tui`/`--no-tui` flags are accepted as no-ops for backwards compatibility.
 
-### TUI Navigation
+### Console Navigation
 
 | Key | Action |
 |-----|--------|
@@ -1009,11 +1009,10 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 │  (NOT a separate controller layer):                         │
 │  ui/screens/{main,chat,rag,react,models}/ — controllers     │
 │      + console views (MainController, ChatController, ...)  │
-│  ui/tui/screens/ — Textual TUI screens (BaseAgentXScreen,   │
-│      ModalScreen, BlockingTaskRunner daemon-thread runner)  │
+│  ui/screens/ — Console views per feature screen              │
 │  agent/controller/ — AgentController, SessionController,    │
 │      ToolController                                         │
-│  agent/view/       — AgentTUIScreen, AgentDemoScreen        │
+│  agent/view/       — Console agent view                      │
 └─────────────────────────────────────────────────────────────┘
                              │
                              │ Talks through (ABC interfaces)
@@ -1056,7 +1055,7 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 **Key Design Patterns:**
 - **Abstract Partner**: View↔Controller communication via ABCs
 - **Command Pattern**: Main screen input dispatch
-- **Provider Pattern**: Runtime UI selection (TUI vs Console)
+- **Provider Pattern**: Console UI via provider (`ConsoleProvider`)
 - **Facade Pattern**: `Agent` class orchestrates all agent subsystems
 - **Data Provider (DP)**: SQL encapsulation in `*_db.py` classes
 
@@ -1082,8 +1081,8 @@ uv run pytest tests/model/ -v
 # Run agent subsystem tests
 uv run pytest tests/features/feature_007.agentx_intelligent_agent_behaviour/ -v
 
-# Run TUI automated tests
-uv run pytest tests/tui/ -v
+# Run automated tests
+uv run pytest tests/ -v
 
 # Run MVC++ architecture check
 uv run scripts/omt/mvc_check.py
@@ -1101,7 +1100,7 @@ uv run pytest tests/ --cov=agentx --cov-report=html
 **Test Coverage:**
 - ✅ Petri nets & session management
 - ✅ Commands & controllers
-- ✅ Views & adapters (console + TUI)
+- ✅ Views (console)
 - ✅ AI services & RAG orchestration
 - ✅ Agent tool registry (sensors, actuators, discovery)
 - ✅ Policy DSL engine (parsing, evaluation, conflict detection)
@@ -1109,7 +1108,7 @@ uv run pytest tests/ --cov=agentx --cov-report=html
 - ✅ Goal manager & memory manager
 - ✅ Agent persistence (stdlib sqlite3 repositories)
 - ✅ Agent facade cycle (perceive→decide→act→reflect→persist)
-- ✅ Demo scenarios & Textual pilot e2e tests
+- ✅ Demo scenarios & automated e2e tests
 - ✅ TDD enforcement engine (AST analysis, two-hats gate, coverage gap detection)
 - ✅ Meta Harness navigation tools (feature_020: grep-based doc nav, plugin load safety)
 - ✅ Think Anywhere thought-tags (feature_021: inline `TA:` tags, think-gate decider, session digest)
@@ -1120,7 +1119,7 @@ uv run pytest tests/ --cov=agentx --cov-report=html
 
 **Characteristics:**
 - **Isolation**: All tests are isolated with mocking (no external dependencies)
-- **TUI Tests**: Automated end-to-end tests using Textual Pilot
+- **Automated Tests**: End-to-end console tests
 - **MVC++ Compliant**: 0 errors, 0 warnings on agent module
 - **Fast**: Full suite runs in seconds
 
@@ -1134,10 +1133,9 @@ Check your spelling with `help`. Commands are case-sensitive.
 ### API key prompt on startup
 Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 
-### TUI not showing / keyboard input not working
+### Console input not working
 - Ensure you're running in a proper terminal (not piped input)
 - Check TTY capability: `sys.stdin.isatty() and sys.stdout.isatty()`
-- You must opt in explicitly: `uv run agentx --tui` (console mode is now the default)
 
 ### LLM connection errors
 - Verify your API key is valid
@@ -1155,22 +1153,22 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 
 ### Completed Features
 - ✅ **feature_002**: RAG (retrieval augmented generation — Chroma/FAISS/Pinecone, PDF/web ingestion, vector search)
-- ✅ **feature_004**: Modern TUI with Textual
+- ✅ **feature_004**: Modern TUI with Textual (removed — console-only now)
 - ✅ **feature_005**: File system agentic tools
 - ✅ **feature_006**: opencode process enforcement (OMT++ gate, MVC++ linter)
 - ✅ **feature_007**: Intelligent agent behaviour (tools, policy DSL, reflection, self-improvement)
 - ✅ **feature_010**: Agent demo screen (seeded scenarios A & B)
 - ✅ **feature_011**: Fast Agent modal UX (Goal → Running → Reflection → Result)
-- ✅ **feature_012**: TUI framework (reusable base-class library for all screens)
+- ✅ **feature_012**: TUI framework (removed — console-only now)
 - ✅ **feature_013**: AI model provider selector (6 providers: OpenRouter, OpenAI, Gemini, NVIDIA, Ollama, LlamaCpp)
-- ✅ **feature_014**: Non-blocking TUI runner (daemon thread + queue poll, no UI freeze)
+- ✅ **feature_014**: Non-blocking runner (daemon thread + queue poll, no UI freeze; TUI removed — console-only now)
 - ✅ **feature_016**: TDD enforcement (Kent Beck Red→Green→Refactor cycle, two-hats gate, AST analysis)
 - ✅ **feature_018**: ReAct chat screen (Reasoning + Acting with visible thinking, tool calls, streaming)
 - ✅ **feature_019**: Coding Agent screen (File system tools: search, read, edit, list, create with diff highlighting)
 - ✅ **feature_020**: Meta Harness Navigation (grep-optimized docs, consolidated `omt_nav{op:…}` plugin tool)
 - ✅ **feature_021/022**: Meta Harness Think Anywhere v1+v2 (persistent inline `TA:` thought-tags, consolidated `omt_think{op:…}`, per-file think-gate, compact session digest)
 - ✅ **feature_023**: Meta Harness improvement F14–F17 (production hook effects root-caused + tested)
-- ✅ **feature_024**: Console parity — all TUI features (react/coding/models/agent/fast-agent) available in `--no-tui` REPL via `IUIProvider` + streaming
+- ✅ **feature_024**: Console parity — all features (react/coding/models/agent/fast-agent) available in the console REPL via `IUIProvider` + streaming (now the only UI)
 - ✅ **feature_026**: `omt_q` interrogative layer — read-only `op:state` / `op:plan` / `op:drift` answering resume questions without re-derivation (returns JSON envelope with `as_of_commit`)
 - ✅ **feature_031**: Petri Net library project — shared cross-language Petri net contract (`shared/petri-net/` FORMAT + examples)
 - ✅ **feature_032/033**: Petri net format + I/O (canonical JSON format, strict parser)
@@ -1179,7 +1177,7 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_036**: Petri Net Studio v3 — reachability-graph explorer (elkjs layout, SCC/deadlock views), firing-sequence animation, example gallery, `npm run conformance` (283 Vitest live)
 - ✅ **feature_037**: `omt_tdd` testlist prose fallback (`_parse_behaviors` — JSON array/string/bullets/numbered)
 - ✅ **feature_038**: `omt_tdd` toolchain-aware dispatch — routes `.py`→pytest, `.ts/.tsx`→vitest from resolved project root
-- ✅ **feature_tui_dark_mode**: Default dark theme, `k` toggles, `Ctrl+Shift+T` cycles 21 themes
+- ✅ **feature_tui_dark_mode**: Default dark theme (removed with the TUI — console-only now)
 - ✅ **meta_harness_dsl (R0–R8)**: Harness as code — OMT-HDL single source (`.meta/META_HARNESS.omt`) compiled to AGENTS.md / opencode.jsonc / plugin-IR / nav-index projections with drift tests + size budgets; 64 KB ledger rotation; enforcer split (`lib/enforcer/` ×7)
 - ✅ **meta_harness_2–9 (all CLOSED 2026-09-14)**: Harness evolution programs — nav (020) + think-anywhere v1/v2 (021/022) + improvements (023) + interrogative ops (026) + scoped gating (028) + TDD prose fallback + toolchain-aware (037/038) + MH6 (051–059) + MH7 (060–064/066) + MH8 (065–096: 31 items incl. TDD sync/lint, schema autolink, nav caps, escape/delegate folds, typed policy, task-prep slice, receipt batch, completion hardening, workflow repair 6/6, temporal replay, graph risk, transaction authority, claim generation, worktree isolation, capacity arbitration, verification lane, recovery journal, evidence deps, skip audit, KB recency, structural pins, scaffolds/LSP, budget-diet-bot, resume digest, cost benchmark 17/17 + 6/6 first-numbers, knowledge pilot, fresh-review 0 wins) + MH9 (097–101: rebase → honest-cost → boundary → work contract → frontier MERGE) — suite 2241/2241 @ close, `check` 265/0
 - ✅ **meta_harness_concurrent + net_enforced_harness**: Adaptive net engine (039) + composition supervisor (040) + resource places (041) + goal-net synthesis (042) + dashboard (043) + mined net (044) + WORK-driven net (045) + session whitelist (046) + WIP-limited pool (047/048) + start menu (049) + net-as-gate (050) — live `net_rev:57`, pool places 12/15
@@ -1250,7 +1248,6 @@ Apache 2.0 - Educational and experimental purposes.
 
 - Developed with assistance from [opencode](https://opencode.ai) coding agent
 - Built on [LangChain](https://python.langchain.com/) ecosystem
-- TUI powered by [Textual](https://textual.textualize.io/)
 - Following the OMT++ methodology (documented in [.meta/software_development_process/omt_agent_guide.md](.meta/software_development_process/omt_agent_guide.md))
 
 ---

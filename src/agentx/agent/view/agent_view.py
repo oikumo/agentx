@@ -1,7 +1,6 @@
 """Console AgentView — implements :class:`IAgentViewPartner` for terminal output.
 
-A simple, dependency-free view used by tests and non-TUI runs.  The TUI screen
-(``view/tui/agent_screen.py``) provides the rich Textual experience.
+A simple, dependency-free console view used by tests and console runs. This is the view.
 """
 
 from __future__ import annotations

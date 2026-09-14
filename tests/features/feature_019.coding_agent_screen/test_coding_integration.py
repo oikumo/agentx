@@ -22,7 +22,7 @@ from agentx.model.coding.coding_tools import (
     _file_create_impl,
 )
 from agentx.model.coding.coding_agent_service import CodingAgentService
-from agentx.ui.tui.screens.coding.coding_controller import CodingController
+from agentx.ui.screens.coding.coding_controller import CodingController
 
 
 class TestCodingToolsIntegration:

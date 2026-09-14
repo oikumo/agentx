@@ -17,9 +17,9 @@ if TYPE_CHECKING:
 
 class ProviderRegistry:
     """Registry for UI providers.
-    
-    Allows switching between different UI implementations (TUI, console, etc.)
-    without changing controller code.
+
+    Allows switching between different UI implementations
+    without changing controller code. Console is the only UI.
     """
 
     _providers: dict[str, IUIProvider] = {}
@@ -238,13 +238,5 @@ class ConsoleProvider(IUIProvider):
         self._initialized = False
 
 
-# Register console provider as fallback
-# Note: TUI provider will be added in ui/tui/provider.py
+# Register console provider (the only UI — TUI removed).
 ProviderRegistry.register("console", ConsoleProvider())
-
-# Import TUI provider to register it (if available)
-try:
-    from agentx.ui.tui import provider as tui_provider_module
-    # TUI provider is registered in its module
-except ImportError:
-    pass  # TUI not available, use console only
