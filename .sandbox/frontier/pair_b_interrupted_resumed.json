@@ -1,0 +1,127 @@
+{
+ "head": "96d319a",
+ "s0_base": "f1be918",
+ "contract": {
+  "op": "work_contract",
+  "request": {
+   "task": "Resume interrupted gate_driver repair follow-up",
+   "acceptance_refs": [
+    "test_omt_enforcer_guard_source_pins.py (32 pins)"
+   ]
+  },
+  "scope": {
+   "path": ".opencode/lib/enforcer/gate_driver.ts",
+   "tool": "edit",
+   "task_type": "bug_fix",
+   "candidate_id": ".opencode/lib/enforcer/gate_driver.ts@f1be918",
+   "revision": "f1be918",
+   "identity": "UNKNOWN (solo, no claim)"
+  },
+  "obligations": {
+   "completed": [
+    "g.nav: consulted",
+    "g.phase: feature_100 Analysis declared"
+   ],
+   "unresolved": [
+    {
+     "gate_id": "g.receipt",
+     "clearing_action": "refresh e2e receipt (one edit/file/round)"
+    },
+    {
+     "gate_id": "g.tests",
+     "clearing_action": "omt_skip{scope:\"tests\", reason:\"canary\"}"
+    }
+   ]
+  },
+  "next_action": {
+   "action": "clear g.receipt: refresh e2e receipt (one edit/file/round)",
+   "reason": "first blocker (would_block=2); harness surface needs staged receipt",
+   "required_evidence": [
+    "repro test for the fix",
+    "targeted suite green, no new MVC violations",
+    "KB consult for touched surface",
+    "e2e receipt (harness surface)"
+   ]
+  },
+  "decision": {
+   "blocked": true,
+   "first_blocker": "g.receipt",
+   "via": "activation_solo_skip"
+  },
+  "stale_or_unknown": [
+   "dry/live report-parity: UNKNOWN (live evaluates all obligations per S2 F03; dry op:plan continues-all — block agrees, report shape may differ)",
+   "cost: PROXY only (no host per-call token usage — tokens_est/io_bytes/delivered-bytes are proxies, not metered)",
+   "C6: UNKNOWN Petri execution (lifecycle ops bypass transition relation — no execution guarantee claimed)",
+   "C1: UNKNOWN replay durability (clear-before-record crash window open — do not depend on replay surviving it)",
+   "stale revision: rendered @f1be918 but dispatch @3490fd5 — re-render before acting (S4 rechecks at dispatch)"
+  ],
+  "detail_refs": [
+   "gate_driver.ts:342-361 (S2 F03 live evaluates all)",
+   "policy_decision.ts:138 (ONE evaluator)",
+   "feature_099 test_report.md (allow/deny matrix)",
+   "CURRENT_STATE.md newest entry (session trail)"
+  ],
+  "note": ""
+ },
+ "frontier": {
+  "op": "frontier",
+  "candidate_id": ".opencode/lib/enforcer/gate_driver.ts@f1be918",
+  "facts_ref": "contract@f1be918 blocked=True",
+  "enabled": [
+   {
+    "action": "clear g.receipt: refresh e2e receipt (one edit/file/round)",
+    "reason": "blocks first=g.receipt"
+   },
+   {
+    "action": "clear g.tests: omt_skip{scope:\"tests\", reason:\"canary\"}",
+    "reason": "blocks first=g.receipt"
+   }
+  ],
+  "frontier": [
+   {
+    "action": "clear g.receipt: refresh e2e receipt (one edit/file/round)",
+    "reason": "blocks first=g.receipt"
+   },
+   {
+    "action": "clear g.tests: omt_skip{scope:\"tests\", reason:\"canary\"}",
+    "reason": "blocks first=g.receipt"
+   }
+  ],
+  "analysis": "dead-obligation scan: 2 unresolved share one receipt refresh (1 pass)",
+  "omitted_count": 0,
+  "unknowns": [
+   "dry/live report-parity: UNKNOWN (live evaluates all obligations per S2 F03; dry op:plan continues-all — block agrees, report shape may differ)",
+   "cost: PROXY only (no host per-call token usage — tokens_est/io_bytes/delivered-bytes are proxies, not metered)",
+   "C6: UNKNOWN Petri execution (lifecycle ops bypass transition relation — no execution guarantee claimed)",
+   "C1: UNKNOWN replay durability (clear-before-record crash window open — do not depend on replay surviving it)",
+   "stale revision: rendered @f1be918 but dispatch @3490fd5 — re-render before acting (S4 rechecks at dispatch)"
+  ],
+  "note": ""
+ },
+ "metrics": {
+  "pair": "pair_b_interrupted_resumed",
+  "acceptance": "pass (oracle class-1: acceptance refs present, verifies assumed green in demo)",
+  "first_useful_action_steps": {
+   "A": 3,
+   "B": 1,
+   "C": 1
+  },
+  "avoided_attempts": {
+   "A": 0,
+   "B": 1,
+   "C": 1
+  },
+  "recovery_accuracy": "oriented from projection alone",
+  "cost_io_bytes": {
+   "A": 1676,
+   "B": 1957,
+   "C": 2046
+  },
+  "cost_tokens_est_PROXY": {
+   "A": 419,
+   "B": 489,
+   "C": 511
+  },
+  "cost_note": "PROXY only — no host per-call token usage (S1 §2); arm C analysis cost = its extra render bytes (counted above)"
+ }
+}

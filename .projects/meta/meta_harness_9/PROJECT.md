@@ -162,6 +162,7 @@ Milestones: **M0** (S1+S2: truth + cost) → **M1** (S3+S4: guide one real task 
 - [x] S1 benchmark follow-up (fixture re-baseline green at HEAD + g.phase/g.tests removal deltas + proxies labeled — `feature_098` Done; real 6-task re-run + 8-gate matrix deferred to S1-full).
 - [x] S2 truthful-boundary residual (F09→F05-caller→F02→F03, 4 files one round, pins 32/32 + e2e 1/1 + bench unchanged — `feature_099` Done).
 - [x] S3 thin work contract (read-only projection over 072/073/092 + 055/062, ≤2KB cap + continuation, 2-task demo orients from projection alone + parity note — `feature_100` Done; sidecar `.sandbox/work_contract/`, suite 2241/2241).
+- [x] S4 frontier experiment, verdict MERGE (paired A/B/C on identical S3 facts + 2KB budget: routine converges, interrupted B/C 3→1 first-useful + 1 avoided at +17–22% proxy bytes, C +89B for zero extra — `feature_101` Done; sidecar `.sandbox/frontier/`, suite 2241/2241; Petri stays analysis-only, runtime retired, S5+ parked).
 
 ---
 

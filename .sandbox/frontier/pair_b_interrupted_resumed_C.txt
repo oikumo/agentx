@@ -1,0 +1,31 @@
+📋 WORK CONTRACT — bug_fix .opencode/lib/enforcer/gate_driver.ts@f1be918
+request: Resume interrupted gate_driver repair follow-up
+accept: test_omt_enforcer_guard_source_pins.py (32 pins)
+scope: .opencode/lib/enforcer/gate_driver.ts [edit] id=UNKNOWN (solo, no claim)
+obligations: 2 done / 2 open
+  ✓ g.nav: consulted
+  ✓ g.phase: feature_100 Analysis declared
+  ✗ g.receipt — clear: refresh e2e receipt (one edit/file/round)
+  ✗ g.tests — clear: omt_skip{scope:"tests", reason:"canary"}
+next: clear g.receipt: refresh e2e receipt (one edit/file/round)
+why: first blocker (would_block=2); harness surface needs staged receipt
+evidence: repro test for the fix; targeted suite green, no new MVC violations; KB consult for touched surface; e2e receipt (harness surface)
+decision: BLOCKED first=g.receipt via=activation_solo_skip
+stale-or-unknown:
+  ? dry/live report-parity: UNKNOWN (live evaluates all obligations per S2 F03; dry op:plan continues-all — block agrees, report shape may differ)
+  ? cost: PROXY only (no host per-call token usage — tokens_est/io_bytes/delivered-bytes are proxies, not metered)
+  ? C6: UNKNOWN Petri execution (lifecycle ops bypass transition relation — no execution guarantee claimed)
+  ? C1: UNKNOWN replay durability (clear-before-record crash window open — do not depend on replay surviving it)
+  ? stale revision: rendered @f1be918 but dispatch @3490fd5 — re-render before acting (S4 rechecks at dispatch)
+refs:
+  → gate_driver.ts:342-361 (S2 F03 live evaluates all)
+  → policy_decision.ts:138 (ONE evaluator)
+  → feature_099 test_report.md (allow/deny matrix)
+  → CURRENT_STATE.md newest entry (session trail)
+frontier[C]: 2 next / 2 enabled
+  ▸ clear g.receipt: refresh e2e receipt (one edit/file/round)
+    why: blocks first=g.receipt
+  ▸ clear g.tests: omt_skip{scope:"tests", reason:"canary"}
+    why: blocks first=g.receipt
+  ◈ analysis(+cost): dead-obligation scan over unresolved (1 pass, cost counted below)
+unknowns carried: parity + proxy + C6 + C1 (see contract)

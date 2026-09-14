@@ -1,0 +1,24 @@
+📋 WORK CONTRACT — bug_fix src/agentx/session/summary.py@3490fd5
+request: Fix null-check crash in session summary formatter
+accept: tests/test_session_summary.py::test_null_summary
+scope: src/agentx/session/summary.py [edit] id=UNKNOWN (solo, no claim)
+obligations: 2 done / 0 open
+  ✓ g.nav: consulted via omt_nav quick_ref
+  ✓ g.kb: consulted (no surface match)
+next: edit src/agentx/session/summary.py with edit, then validate
+why: no blockers — preflight 0 would-block; low risk (no contracts/auth/boundary signals)
+evidence: repro/behavioral test for the fix; targeted suite green, no new MVC hard violations
+decision: CLEAR via=activation_solo_skip
+stale-or-unknown:
+  ? dry/live report-parity: UNKNOWN (live evaluates all obligations per S2 F03; dry op:plan continues-all — block agrees, report shape may differ)
+  ? cost: PROXY only (no host per-call token usage — tokens_est/io_bytes/delivered-bytes are proxies, not metered)
+  ? C6: UNKNOWN Petri execution (lifecycle ops bypass transition relation — no execution guarantee claimed)
+  ? C1: UNKNOWN replay durability (clear-before-record crash window open — do not depend on replay surviving it)
+refs:
+  → WORK.md Tasks menu (pool 0/0/7)
+  → .opencode/lib/enforcer/task_prep.ts:116 (block == preflight)
+  → .opencode/lib/enforcer/preflight.ts:103 (projection core)
+frontier[B]: 1 next / 1 enabled
+  ▸ edit src/agentx/session/summary.py with edit, then validate
+    why: no blockers — preflight 0 would-block; low risk (no contracts/auth/boundary signals)
+unknowns carried: parity + proxy + C6 + C1 (see contract)

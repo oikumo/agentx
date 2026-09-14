@@ -5,6 +5,61 @@
 
 ---
 
+## 2026-09-14 (auto — feature_101.mh9_s4_frontier_experiment Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_101.mh9_s4_frontier_experiment/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-14 (iter 4 — S4 verified, verdict MERGE, ready for Done)
+
+### Done
+
+- Design short note `design_001_frontier_schema.md` (advisory shape + cap + arm contracts + acceptance).
+- Programming sidecar `.sandbox/frontier/frontier.py` (imports S3 contract, no second engine): 2 pairs × 3 arms ≤2048B (A1348/B1600/C1689 routine; A1676/B1957/C2046 interrupted), first-useful 1/1/1 + 3/1/1, avoided 0/0/0 + 0/1/1; cap/stale/contradiction probes green (fixed `facts_ref` case bug).
+- `verdict.md` MERGE: fold enabled-ordering into preflight text; Petri stays analysis-only; runtime retired; keep re-entry = S1-full natural wins + payback + C6 map.
+- Testing: `test_report.md` PASS — check 265/0 + build OK (before AND after) + bench fixture_nophase success/0-miss/559 + suite 2241/2241.
+
+### In progress / Blocked
+
+- Nothing active. feature_101 ready for `omt_complete` → Done.
+
+### Next
+
+- `omt_complete` feature_101 → mark PROJECT.md S0–S4 complete; S5+ stays parked per §4.
+
+### Notes / context
+
+- HEAD `96d319a`; pair C-interrupted fits by 2B (tight, honest); arm C analysis +89B for zero extra avoided in seeded demos.
+
+---
+
+## 2026-09-14 (iter 3 — S4 scaffolded via feature_101, Analysis signed)
+
+### Done
+
+- Scaffolded `feature_101.mh9_s4_frontier_experiment` (`minor_feature`, project linked → active) + declared Analysis (scope: paired read-only frontier-vs-preflight ending in keep/merge/drop).
+- Wrote `analysis_001_frontier_experiment.md`: D3 overlap gate (§2 row 4), frozen advisory profile, arms A/B/C on identical S3 facts + 2KB budget, 2 task classes paired, 5 metrics with proxy labels, frontier schema preview, sidecar `.sandbox/frontier/`, keep/merge/drop exit.
+- Filled FEATURE.md summary/scope/traceability (Requirements+Analysis [x], Design short note pending).
+- `check` 265/0 + `build` OK green (budgets tool_args 2455/2464, schemas 1840/1856); no live-surface edits.
+
+### In progress / Blocked
+
+- S4 Analysis signed, Design pending (short frontier-schema note only). Nothing blocked.
+
+### Next
+
+- Design (short note) → Programming (sidecar paired harness + pair results) → Testing (verdict + test report) → `omt_complete` feature_101. S5+ stays parked.
+
+### Notes / context
+
+- Resume: this entry → `analysis_001_frontier_experiment.md` → FEATURE.md traceability.
+- HEAD `96d319a`; S0 base `f1be918`; S3 sidecar reused as fact source.
+
+---
+
 ## 2026-09-14 (auto — feature_100.mh9_s3_thin_work_contract Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_100.mh9_s3_thin_work_contract/test_report.md
