@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-09-13 (auto — project.py log)
+
+- 2026-09-14 final audit: v1 intact (99/99 model+analysis+coverability green) + 59 io tests from studio track = 158/158 green; io.py additive, pyproject unchanged, tree clean; closing as complete (v1 SHIPPED 2026-08-23, v2 backlog unscheduled)
+
+---
+
 ## 2026-08-23 (auto — feature_031.petri_net_library Done)
 
 - shipped: major_feature · test report @ 6.testing/features/feature_031.petri_net_library/test_report.md

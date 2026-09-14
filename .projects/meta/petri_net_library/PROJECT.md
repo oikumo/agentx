@@ -1,6 +1,6 @@
 # PROJECT: petri_net_library — Weighted P/T Petri-net library for agentx
 
-> Status: **active** · v1 SHIPPED 2026-08-23 (feature_031.petri_net_library Done) · v1.1 (2026-08-22), iter 9 (2026-08-23) — project home created from the requirement anchor `.meta/doc/petri_nets/petri_net_python_coding_agents.md`. Scope LOCKED by user approval ("execute the project", 2026-08-22); v1 implemented, tested, and landed (suite 1577 passed, 0 regressions).
+> Status: **complete** · v1 SHIPPED 2026-08-23 (feature_031.petri_net_library Done) · v1.1 (2026-08-22), iter 9 (2026-08-23) — project home created from the requirement anchor `.meta/doc/petri_nets/petri_net_python_coding_agents.md`. Scope LOCKED by user approval ("execute the project", 2026-08-22); v1 implemented, tested, and landed (suite 1577 passed, 0 regressions).
 
 ---
 
