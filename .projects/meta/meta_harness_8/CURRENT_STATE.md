@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-09-14 (auto — feature_095.fresh_review_loop Done)
+
+- shipped: minor_feature · review doc @ `.sandbox/meta_harness_8_idea.md` (no test_report — §12 decl-only, acceptance = review + 0/1 wins)
+- **T5-8 (feature_095.fresh_review_loop) SHIPPED** — fresh review @ HEAD `a48e0d9`, 0 new wins (user-approved).
+  - Audit: 265 records 0 errors, 19 gotchas, nav 64990B, diet-warns tool_args 9B / schemas 16B / agents_md 26B, suite baseline 2241, skips 81/7d (nav-escapes 39), dangling 176 (165 expired).
+  - All T1–T5 + mh6 13/13 + 037/038 verified shipped; D3 + mh5 #4/#5/#7 verified rejected. 5 candidates evaluated, all 0 (dangling managed, budgets monitored, nav trending, repair hygiene, no blocked tool).
+  - Discipline: phase Analysis→Testing→Done; KB + think consults; .sandbox-only write (no src/tests/net edits); check 0 errors + build OK post-ship.
+- Backlog EMPTY. Repair flag still open: `meta_harness_development_self_evaluation.md` unindexed.
+
+---
+
+
 ## 2026-09-14 (auto — feature_094.selective_verifiable_knowledge_pilot Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_094.selective_verifiable_knowledge_pilot/test_report.md
