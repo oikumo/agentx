@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_9 — Roadmap Execution (Work Contract + Petri Frontier + Measured Economy)
 
-> Status: **draft** · **v0.2 (2026-09-14)** — created by `project.py new --slug meta_harness_9`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_9`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **active** · **v0.2 (2026-09-14)** — created by `project.py new --slug meta_harness_9`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_9`; log sessions in CURRENT_STATE.md (newest on top).
 > Refined per user pick: **stronger file-anchored critique + S0–S4 only** (S5+ parked with re-entry criteria, not scheduled).
 
 ---
@@ -158,7 +158,9 @@ Milestones: **M0** (S1+S2: truth + cost) → **M1** (S3+S4: guide one real task 
 
 - [x] v0.1 (2026-09-14): created + full-roadmap review + S0–S7b plan.
 - [x] v0.2 (2026-09-14): refined per user pick — file-anchored critique (F09 `:154-159`, F02 `:100-103`, F05-caller `:455` vs `:512`, F03 `:219-221/:366-398`, C6 `:296-300/:819-834/896` vs `:763-768`, C1 `:730-742` vs `:672-675`) + scope cut to S0–S4 with §4 parked + re-entry criteria.
-- [ ] S0 rebase (sign §2 at HEAD + pins + budget sheet).
+- [x] S0 rebase (signed §2 at HEAD `f1be918` + pins + budget sheet — `feature_097` `analysis_001_s0_rebase.md`; `check` 265/0 + `build` OK; net rev 57 drained_complete).
+- [x] S1 benchmark follow-up (fixture re-baseline green at HEAD + g.phase/g.tests removal deltas + proxies labeled — `feature_098` Done; real 6-task re-run + 8-gate matrix deferred to S1-full).
+- [x] S2 truthful-boundary residual (F09→F05-caller→F02→F03, 4 files one round, pins 32/32 + e2e 1/1 + bench unchanged — `feature_099` Done).
 
 ---
 

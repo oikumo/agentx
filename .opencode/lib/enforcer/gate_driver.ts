@@ -339,6 +339,12 @@ export async function runBeforeGates(
     rel = getSearchPath(output)
   }
   const ctx: GateCtx = { env, session, tool, input, output, rel, abs, memo: new Map() }
+  // feature_099 S2 (F03): obligations compose — a "stop" (g.protect override /
+  // g.tests) no longer suppresses unrelated later gates on the live path. The
+  // chain evaluates every applicable gate (dry-path continue-all contract);
+  // the first OmtBlock still refuses the edit. A pure-stop chain still returns
+  // without throwing (same allow semantics), but nothing is silently skipped.
+  let stopped = false
   for (const gate of gates) {
     const tools = String(gate.tools ?? "").split("|").filter(Boolean)
     if (tools.length && !tools.includes(tool)) continue
@@ -346,8 +352,9 @@ export async function runBeforeGates(
     // repo target stays with the impl, matching the pre-HDL-2 semantics).
     if (rel !== null && gate.when && !evalPredExpr(gate.when, ctx, ir)) continue
     const impl = IMPLS[gate.id] ?? genericImpl
-    if ((await impl(gate, ctx)) === "stop") return
+    if ((await impl(gate, ctx)) === "stop") stopped = true
   }
+  void stopped
 }
 
 // Phase-A interrogative layer (feature_026.omt_q_interrogative_first_ops):

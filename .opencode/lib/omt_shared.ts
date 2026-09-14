@@ -151,11 +151,20 @@ export function readJsonl(path: string): any[] {
   } catch { return [] }
 }
 
-export function appendJsonl(path: string, record: Record<string, unknown>): void {
+export function appendJsonl(path: string, record: Record<string, unknown>): boolean {
   try {
     mkdirSync(dirname(path), { recursive: true })
     appendFileSync(path, JSON.stringify({ ts: new Date().toISOString(), ...record }) + "\n")
-  } catch { /* best-effort */ }
+    return true
+  } catch { /* best-effort for advisory paths; authority callers must check the return or use appendJsonlOrThrow */ return false }
+}
+
+// feature_099 S2 (F09): authority writes must report failure — throws on
+// mkdir/append error so ledger/phase/complete records cannot silently vanish
+// while the caller proceeds as recorded. Advisory paths keep using appendJsonl.
+export function appendJsonlOrThrow(path: string, record: Record<string, unknown>): void {
+  mkdirSync(dirname(path), { recursive: true })
+  appendFileSync(path, JSON.stringify({ ts: new Date().toISOString(), ...record }) + "\n")
 }
 
 // --- ledger rotation (meta_harness_dsl R4; audit F21/C10) -------------------

@@ -452,7 +452,7 @@ export function createPhaseTools(env: EnforcerEnv) {
       try {
         const tddRes = await $`uv run scripts/omt/tdd_check.py validate-exit --feature ${feature}`
           .cwd(directory).quiet().nothrow()
-        const tddData = JSON.parse(tddRes.stdout.toString() || '{"ok":true}')
+        const tddData = JSON.parse(tddRes.stdout.toString() || '{"ok":false,"error":"empty verifier output (fail-closed, feature_099 S2)"}')
         if (!tddData.ok) {
           let msg = `⛔ TDD phase exit blocked:\n`
           if (tddData.dangling_reds?.length)

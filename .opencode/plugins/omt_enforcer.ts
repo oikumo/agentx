@@ -76,9 +76,12 @@ export default async ({ client, $, directory: cwd, worktree }) => {
     tool: { ...createPhaseTools(env), ...createTddTools(env) },
 
     "tool.execute.before": async (input, output) => {
-      try {
-        const session = input?.sessionID || undefined
+      const session = input?.sessionID || undefined
 
+      // feature_099 S2 (F02): advice may fail open, authority must not.
+      // nav/kb instrumentation stays warn+allow; the gate chain below refuses
+      // on unknown/internal errors (fail-closed) instead of allowing the edit.
+      try {
         // feature_020: nav-vs-search tracking (instrumentation — the g.nav
         // block decision is in the data-driven chain below).
         await navTrack(env, session, input)
@@ -86,7 +89,11 @@ export default async ({ client, $, directory: cwd, worktree }) => {
         // feature_kb_akb: KB consult tracking — g.kb gate predicate consumes
         // state.kb(session).consulted (gate_driver.ts SESSION_FLAGS).
         await kbTrack(env, session, input)
+      } catch (e: any) {
+        safeLog("warn", "before-hook instrumentation error (failing open): " + (e?.message || e))
+      }
 
+      try {
         // HDL-2 (improvement006/OPT-F): the gate chain is data-driven — the
         // driver iterates IR before-gates in order=, matching tools= and
         // evaluating when= via the @pred registry (lib/enforcer/gate_driver.ts).
@@ -99,7 +106,7 @@ export default async ({ client, $, directory: cwd, worktree }) => {
           typeof raw === "string" && raw ? raw : null)
       } catch (e: any) {
         if (e instanceof OmtBlock) throw e          // intentional gate → block the edit
-        safeLog("warn", "before-hook internal error (failing open): " + (e?.message || e))
+        throw new OmtBlock(`⛔ OMT++ gate (authority resolution failed closed): ${(e?.message || e)}`)
       }
     },
 
