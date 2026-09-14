@@ -1,696 +1,665 @@
-# META HARNESS roadmap: product refinement, verified work and token efficiency
+# META HARNESS roadmap
 
-**Reviewed:** 2026-09-13
+META HARNESS should help a coding agent finish the work requested by the user with less total effort and a result that is inexpensive to review. Its central architectural direction is **a compact executable work contract with a weighted Place/Transition Petri net as its formal control core**. The net governs workflow progression, resource ownership and synchronization; typed records preserve intent, task identity, permissions, repository state and evidence.
 
-**Implementation baseline:** `b60ade730cf9d1cdb5d7ff7d612d39d2d81f79f9`, with existing uncommitted policy/compiler/project changes. Current observations are separated from historical results in §3.5 and §11.
+The immediate opportunity is to make the next useful action easier to choose and the completion claim more trustworthy. Build on the existing compiler, preparation, resume and coordination mechanisms. Measure their contribution before expanding the platform.
 
-**Inputs:** [original readiness assessment](META_HARNESS_PRODUCTION_READINESS.md) and [revised qualification assessment](META_HARNESS_PRODUCTION_READINESS_REVISED.md).
+This is the single strategic roadmap. The [active project](../.projects/meta/meta_harness_8/PROJECT.md) remains the execution ledger for scheduled features and shipped work; it does not define a competing architecture. Proposed contracts and milestones below describe future work unless the current-state section explicitly identifies an implementation. Editing this roadmap does not activate a runtime capability or change repository permissions.
 
-**Same-day revisions 2026-09-13 (compressed per §7.4; detail in §11 and git history):** productivity reprioritization · product refinement + §3.5 fresh probes · request-fidelity and guidance-economy contracts (§4.6, §7.1) · productivity economy (fixed/marginal, attempts, dogfood, §7.4 ratchets) · state-of-the-art economy (prior-art extension §2.2, assembly-order §6.2, fixture battery, items 10–11) · critical economy (context precision/recall, tripwires, model portability, pre-pilot) · meta thesis + reversible-git allowance (§1.1, §6.5, items 12–14).
+## 1. Intent, target and objectives
 
-**Execution-coupling refinement:** 2026-09-13 — external critical review found the document accumulating revision layers while no §5.1 item has closed: meta-work outrunning executed work, the defect §6 calls deliberation inflation. Responses: a revision-execution coupling rule (§7.4); staged activation of the §7.1 measures (M0 minimum set named, the rest dormant); acceptance-oracle qualification, a canonical attempt-trace format (item 3), a dogfood→fixture conversion rule and a moving-baseline repin rule (§7.2); sequencing effort hints (§5.1); §3.5 hygiene row updated to reflect the in-tree `6.testing/` reconciliation.
+### 1.1 Product purpose
 
-**Joint-objective refinement:** 2026-09-13 — external deep evaluation found four structural weaknesses: human-minute cost never integrated with the token objective (a token win bought with review minutes read as success); the M0 comparator pairing mismatched guarantee classes (verified harness vs bare native biases the result against the guarantee and could trip the §7.3 kill criterion on a design error); the acceptance oracle was named ten times but never tiered; and the queue itself had no WIP cap. Responses: joint cost objective (§1), oracle ladder and like-for-like pairing (§7.2), A+ folded into item 3 acceptance (§5.1), queue WIP cap (§5.1), revision-coupling graded rule (§7.4), task-granularity and oracle decision rows (§10), cache-TTL note (§6.2).
+The initial target is a developer maintaining an existing repository with executable checks, using an agent for fixes, changes, investigations and interrupted work. The first useful product experience is:
 
-**Petri-net economy revision:** 2026-09-13 — external critical evaluation found the roadmap's most distinctive component treated purely as cost: §2.1 held Petri nets to "optional until they improve a measured user outcome" without naming any mechanism by which they could. Responses: the net named as the compiled-work IR (§1.1 property 4); net-fronted guidance — enabled-set queries replace trial-and-refusal, refusal text generated from net structure (§6, §5.1 item 15, §10); marking-derived resume state and firing-trace evidence named net-unique (§6.1, §1.1); net-mined demotion candidates (§7.3); λ calibration procedure (§1); fixture judging-tier and item-3 run-time honesty (§7.2, §5.1). Logged **unearned** (§7.4).
+**Request a change → receive concise guidance → work and resume without rediscovery → review the requested outcome and its current evidence.**
 
-**V2-fusion and certification-economy revision:** 2026-09-13 — re-evaluation against the [V2 roadmap](META_HARNESS_ROADMAP_V2.md) and the [Petri improvement proposal](META_HARNESS_ROADMAP_PETRI_IMPROVEMENTS_V1.md) found three structural weaknesses: no stated V1↔V2 relationship (two documents now write Work-IR semantics — dual authority), certification's economy role only implicit (pre-execution deadlock/goal analysis is the net's strongest free economy but unnamed as such), and no solo frontier cost model (a shell-out per query would re-create g.net's subprocess overhead at the guidance boundary). Responses: V1↔V2 authority split and design-coupling rule (§9); certification economy and versioned frontier contract (§6.6); solo-equals-managed semantics decision (§10); certification cost measure (§7.1). Logged **unearned** (§7.4; unearned count: 4).
+The agent should not need to learn feature identifiers, manually move tokens, repeat facts across process documents, or ask for permission already granted. The harness should perform deterministic bookkeeping and expose only information needed for the next decision. Complex work can require more structure; a small documentation edit should not inherit the ceremony of a concurrent integration.
 
-**Petri work-IR precision revision:** 2026-09-13 — deep re-evaluation against [the Petri improvement proposal](META_HARNESS_ROADMAP_PETRI_IMPROVEMENTS_V1.md) found the thesis overprecise: "the net is the IR", "the marking *is* task state" and "firing trace is replayable acceptance evidence" do not describe the implementation, and the last is an F05-class overclaim inside the plan's own core claim. Also stale: §6/§9 treated the T3-3 resume digest as backlog though feature 092 shipped this day. Responses: the Work-IR contract (§6.6: S-tuple, conjunctive legality, joint scope-filtered frontier, three net roles, binding↔marking projection invariant, evidence-guarded verification, held-resource and receipted-effect semantics, revision-generation durability, per-net certification, honest UNKNOWN, I-PN register); §1.1 property 4, §2.1 verdict, item 15 (first experiment now read-only), §6 rows, item 4 anchor, §9 ordering and the §10 decision row corrected; shipped-resume status recorded in §3.5. Logged **unearned** (§7.4; unearned count: 3 — execution since the previous revision: feature 092 shipped, feature 093 recon complete).
+The product has three distinct outcomes:
 
-**Status:** useful internal development harness; product value and verified execution remain unproven. This document proposes implementation work and release criteria; it does not implement fixes, qualify a release, or modify the canonical project backlog.
+- **Request fulfillment:** the requested behavior, artifact or explanation was delivered within the authorized scope.
+- **Verification:** named checks were evaluated against a named candidate, with explicit results and limitations.
+- **User acceptance:** the user or independent task oracle accepted the outcome.
 
-## 1. Product decision
+A workflow reaching its terminal state does not establish the other outcomes by itself.
 
-**Make the coding agent complete more correct work with fewer total tokens, fewer unnecessary interactions, and less recovery effort.** The harness should supply the context and tools needed for the next useful action, perform deterministic bookkeeping itself, and preserve enough verified state that the agent rarely has to rediscover prior work.
+### 1.2 Governing objectives
 
-The primary optimization objective is **total model tokens per independently accepted task**, including failed attempts, repeated context, reasoning/output, tool-result ingestion, verification diagnosis, retries, and recovery. Track accepted throughput and human intervention alongside it. A shorter prompt that causes another investigation or repair cycle is a regression if total accepted-task cost increases.
-
-Tokens are the primary measure, not the whole objective: a mechanism that saves 500 prompt tokens and adds thirty seconds of human review has transferred cost upstream, not removed it. Define **task cost C = accepted-task tokens + λ × human minutes** (review, approval, repair, restart), with λ set from local observed rates and published alongside results — human minutes dominate real cost per unit, so λ·minutes is usually the larger term. λ is set from a logged calibration sample (the first measured tasks' review and intervention minutes under the pilot protocol), published with the results and re-estimated per milestone; an uncalibrated λ is reported as such rather than silently defaulted, because a joint-cost claim with an unstated exchange rate is unfalsifiable. Report the two components separately; promote a mechanism only when the joint C falls with the same λ held fixed across compared conditions. A mechanism that shifts cost from tokens into review or approval minutes is a regression unless the joint total falls, and this rule is exactly what stops the "shrink the report, grow the interrogation" failure class.
-
-“Optimal” means the best measured tradeoff for the supported workload and runtime, subject to correctness and required policy constraints. There is no established universal minimum. Keep the non-dominated choices when one uses fewer tokens but takes longer; state the selected tradeoff. Report monetary cost separately because cached-input pricing and different models can change spend without reducing token volume.
-
-Harness cost has a **fixed component** (instruction surface, tool schemas, startup and guidance context) and a **marginal component** per action and task. Small tasks are the hardest case: where fixed cost dominates, every added mechanism is net-negative. Publish the measured task-size break-even — the smallest task class where total accepted-task cost beats the native runtime — keep the shipped bug_fix/test fast path ([feature 054](../.meta/software_development_process/2.requirements/features/feature_054.small_task_fast_path/FEATURE.md)) as the model for task-type-differentiated light lanes, and treat growth of the fixed surface as a measured recurring cost, never as free capacity (§7.4).
-
-Total accepted-task cost also decomposes as **(tokens per attempt) × (attempts per accepted task)**. Context economy moves the first factor; guidance quality, truthful prediction and first-pass correctness move the second. Report both factors (§7.1): an optimization that cheapens each attempt while inducing more attempts can be a net regression that the aggregate metric alone would hide, and the two factors are optimized by different mechanisms.
-
-The same discipline applies to **generated tokens**. Reasoning and output are frequently the dominant variable cost on current models, and the harness influences them directly: confusing refusals induce deliberation loops, unbounded report surfaces induce verbosity, and tool descriptions elicit argument styles. Output economy is therefore a co-equal lever with input economy: each agent-facing surface (refusal, status, digest, completion report) carries an explicit output contract — bounded default, decision-complete, expansion on demand — and reasoning share is read next to guidance-sufficiency events to expose deliberation inflation (§6, §7.1).
-
-Two further cost dimensions are first-class rather than tuning details. **Cached-input share:** where the host prices cached prefixes below fresh input, context assembly order is an architecture contract — stable content first, volatile content last, and no rotating data in stable positions (§6.2); cached-input share is a named measure with a target (§7.1). **Per-tier fixed cost:** installation tiers differ not only in features but in the fixed token cost every session pays; that cost is measured per tier and published, and capabilities deferred from qualification — managed concurrency today — do not continue to tax the default solo install (§5 M2, §7.4).
-
-**First delivery order:** capture a reproducible baseline and fix misleading success → measure native-runtime versus harness task economy → combine task preparation and resume → test a minimal workflow in other repositories → reduce measured waste → reuse sound verification → qualify and package the proven workflow. Close critical enforcement defects alongside measurement. Broader concurrency follows demonstrated solo value.
-
-Today, the defensible claim remains **development assistance**. The repository has substantial policy, testing, navigation, and coordination machinery, but current completion and enforcement behavior still prevents a verified-solo claim. Managed concurrency has advanced considerably since both assessments; it needs integration and failure qualification of existing components, not a fresh implementation of the entire T5 plan.
-
-The first target user is a developer maintaining an existing repository with runnable acceptance checks, repeatedly resuming agent work and manually checking whether a task is actually finished. This is a customer hypothesis to test, not established demand. The initial execution profile is one trusted operator, one qualified adapter/runtime, one workspace, and one active writer. Cooperative mistakes are in scope. An unrestricted malicious process that can rewrite the harness and its evidence is outside this boundary.
-
-The unit of product value is an accepted user change at lower total agent effort. Verified solo execution remains the first qualified release boundary, while productivity experiments can proceed in disposable fixtures before the entire release program is complete. Qualification is a constraint on advertised guarantees, not a prerequisite to reducing duplicate reads or measuring waste.
-
-"Accepted" must remain traceable to the work the user requested. The task record keeps a bounded verbatim extract of the request, acceptance cases derive from and cite it, and completion reports back in user terms with visible deviations (§4.6). Work beyond the request is waste even when its tokens were spent efficiently, and a completion claim that outruns the requested scope is a fidelity failure, not a success. The agent's paraphrase of a task never becomes the authoritative statement of what was asked; after compaction or a session boundary, the harness re-anchors to the request itself.
-
-| Capability | Current assessment | Next defensible release claim |
+| Objective | Required outcome | Measurement |
 |---|---|---|
-| Development assistance | Useful existing scaffold; limitations must be visible. | Installable preview with explicit support and evidence boundaries. |
-| Verified solo execution | **NOT QUALIFIED.** Current F02, F03, F05, and F09 failures were reproduced locally during this review. | Qualified only for a named runtime/adapter profile after all applicable release gates pass. |
-| Managed concurrent execution | **NOT QUALIFIED.** Locking, claims, lanes, and recovery exist; execution and durability gaps remain. | Separately qualified local coordinator plus at most two workers. |
+| Productivity | More accepted requested work for the same resources. | Accepted tasks per elapsed time; acceptance rate; human intervention and review minutes. |
+| Agent token economy | Lower total model usage across the entire task. | Input and generated tokens across all attempts, helpers, compaction, verification diagnosis and recovery. |
+| Work guidance | The first action after guidance advances the requested outcome. | Tokens to first useful action, repeated refusals, avoidable retries, missing-context recovery. |
+| Request fidelity | Requested outcomes survive interpretation, compaction, amendments and handoff. | Omitted outcomes, unauthorized additions, correctly retained constraints, independently checked acceptance cases. |
+| Trustworthy completion | Reports reflect actual candidate-bound evidence. | Seeded false-success cases rejected; valid controls accepted; review effort recorded. |
+| Petri value | Formal control reduces coordination errors or wasted action discovery. | Incremental benefit over equivalent preflight; model/runtime agreement; detected workflow defects; analysis cost. |
 
-Installation Tiers 1–3 select features. They do not select the strength of a guarantee. Preserve that distinction in onboarding, commands, and release notes.
+Token reduction is constrained by quality and user effort. Lower usage obtained by abandoning difficult tasks, weakening checks, or transferring recovery to the user is not an improvement. Report money, human minutes and elapsed time alongside tokens; do not conceal tradeoffs inside one score.
 
-### 1.1 The meta thesis: from harness to compiled verified work
+Initial research targets are **20% lower total tokens on resumed tasks** and **30% fewer repeated refusals on tasks where guidance is relevant**, with acceptance and authorization controls preserved. These are targets to test, not results or universal release thresholds. Routine trivial tasks may favor a minimal configuration.
 
-The end state this roadmap serves is not a better harness but a **compiler for verified agent work**: a system that compiles a repository, a verbatim user request and declared checks into (a) the minimal context that makes the next correct action cheap and (b) the evidence-bound workflow that makes the result reviewable — targeting any capable runtime, not only this one. "Meta" is not another layer of gates on top of gates. It is four properties that no system compared in §2.2 currently has:
+### 1.3 Architectural ambition
 
-1. **Work, not compliance, is the compiled output.** Gates, navigation and knowledge are optimization passes over a single objective — accepted user work per total token — and each is removable when its measured contribution turns negative (§7.4). Governance runs under the economy it enforces.
-2. **Reports are assembled, not narrated.** Completion outcomes come from recorded evidence; the agent contributes phrasing, not facts (§4.6). This inverts the industry-default posture in which the model that did the work also reports on it.
-3. **The improvement loop is a managed task class.** The harness modifies itself as ordinary measured work: telemetry → ranked hypothesis → bounded mechanism change → measured outcome, each proposal carrying its own cost and a pre-registered expected effect (§7.2–§7.3). The components already exist here — the ceremony meter (feature 057), the skip taxonomy (feature 056), mined behavioral nets and goal-net synthesis (features 044/042), the compile-enforced gate budget — but they are not yet connected into this loop.
-4. **The net is the Work IR's formal control core.** Between the verbatim request and executed work sits one executable intermediate representation whose state is `S = (N, M, B, P, E, R, V)` (§6.6): the weighted Petri net and its marking are authoritative for workflow and resource control, typed bindings carry identity-rich task state revision-coupled to the marking, and compiled policy/evidence guards cover what uncolored net predicates cannot. The joint frontier query answers "what is legal next, and what exactly is owed" in one call instead of a refusal-retry conversation; the marking-plus-bindings state makes resume structurally faithful; the firing trace is replayable **control provenance** — never by itself acceptance evidence; and net structure supports reachability and deadlock analysis before tokens are spent on broken workflows. None of the systems in §2.2 exposes a formally analyzable model of the agent's own workflow; this is how the harness can be stricter and cheaper at once. Like every other mechanism its economy is measured, not presumed (§5.1 item 15).
+Aim to exceed ordinary harness practice through the integration of four capabilities:
 
-The thesis is falsifiable together with the product (§7.3): if the compiled context plus evidence layer does not beat the native runtime on the core classes, the meta claim retires with the harness claim, and what remains is the request-fidelity and evidence layer — still beyond current practice, but a component rather than a system. The guardrails are inherited rather than new: self-modification stays shadow-evaluated and policy-versioned (§4.3); the loop's own cost sits inside the maintenance-cost measure (§7.1); automatic policy self-modification remains deferred (§9) until the measured loop demonstrates value on advisory and context surfaces first.
+1. A request-linked work contract that drives guidance and completion.
+2. A shared evaluator used for preparation, decisions, refusal explanations and replay.
+3. An executable Petri model whose declared properties match the runtime it controls.
+4. A measured improvement loop that removes mechanisms whose cost exceeds their demonstrated value.
 
-## 2. How the two assessments are fused
+This is an engineering hypothesis, not a claim of unique invention or established superiority. Petri nets, workflow verification, context selection and event-driven runtimes have substantial prior art. The advantage must appear in accepted repository work.
 
-The original is the stronger diagnostic reference: it contains concrete source paths, historical probes, measurement limitations, and backlog mapping. The revision is the stronger acceptance specification: it adds capability-specific blockers, explicit decision semantics, an evidence lifecycle, and release gates. Neither is a current release certificate.
+## 2. Current implementation state
 
-| Topic | Retain | Update in this roadmap |
+### 2.1 Assessment baseline
+
+Source inspection is anchored to clean checkout `81b3aa15287ac8da8899f6a3a66d4999c8b7d652`, dated 2026-09-13. The compiler and generated projections pass: **265 records, zero errors**. There is an existing unindexed self-evaluation workflow warning and three near-cap budget warnings. This establishes compiler consistency at that checkout, not product qualification.
+
+| Area | What exists | Remaining implication |
 |---|---|---|
-| Findings | Stable F01–F12 identifiers and original failure explanations. | Reassess each against current source and distinguish partial implementation from qualification. |
-| Decision semantics | Revised `ALLOW / DENY / UNKNOWN / ERROR` and independent obligations. | Apply first at critical boundaries; avoid making a complete evaluator rewrite prerequisite to fixing false completion. |
-| Product boundary | Assistance → verified solo → managed concurrency. | Add distribution, onboarding, support, upgrade, release automation, and adoption validation. |
-| Concurrency | Original transaction/isolation design and revised race/crash acceptance. | Credit features 079–085; replace “implement T5” with specific remaining integration and recovery work. |
-| Measurement | Original task-cost pilot and revised acceptance/cost metrics. | Make tokens per accepted task and accepted throughput the governing objective; put T3-4, preparation, resume, and verification reuse first. |
-| Invariants | Revised I01–I10 register. | Use the revision's numbering; the original assigns different meanings to some I-identifiers. F-identifiers remain stable. |
-| Evidence | Original source map and revised evidence lifecycle. | Historical pass counts and temporary probes remain historical/local evidence. They do not close release blockers. |
+| Policy compilation | `.meta/META_HARNESS.omt` compiles gates, predicates, tools, budgets and generated instructions. | This is a static Policy IR; it is not a complete executable representation of a user task. |
+| Preparation and prediction | Features 055/062 provide preflight; 072 types part of policy; 073 assembles a bounded task-preparation response. | Preparation remains a standalone module. Dry evaluation can omit live checks; its policy note can assume a solo marking. |
+| Resume | Feature 092 ships `omt_status{op:"resume"}` with a 2,048-byte cap and document anchors. | It reconstructs process state; a durable original-request and acceptance contract is still missing. |
+| Context economy | Fast paths, consultation reuse, navigation caps, ceremony measurements and budget warnings exist. | Record/file byte counts are not end-to-end token measurements. |
+| Petri engine | Weighted P/T firing, reachability, deadlock, invariant and liveness analysis; conformance machinery and independent implementations exist. | Engine agreement does not establish correctness of a particular workflow or coverage of every runtime mutation. |
+| Coordination | Locks, revision checks, task claims/generations, scope arbitration, verification/integration lanes, recovery markers and dependency checks exist. | Several execution, evidence and crash-recovery boundaries remain incomplete. |
+| Distribution | Tier/template initialization and local OpenCode plugins exist. | A minimal independently installable and qualified harness profile has not been established here. |
+| Measurement backlog | Feature 093 is scaffolded and paused before implementation; T3-6 selective knowledge remains pending. | Finish a first measurement result instead of opening another broad redesign. |
 
-The recommendation to delay the *managed release claim* still stands. T5-1 through T5-7 are already recorded as shipped; further coordination work must demonstrate a productivity benefit before competing with the solo token-economy work. Their original acceptance scope and broader product qualification scope remain separate.
+The active project's latest record identifies **two unfinished backlog items: T3-4 task-cost benchmark and T3-6 knowledge pilot**, followed by the recurring T5-8 review. Features 089 conventions/lints, 090 scaffolds, 091 budget warnings and 092 resume are shipped. Earlier statements treating those features as pending are obsolete.
 
-### 2.1 Critical assessment of the previous roadmap
+The resume report records a 432-byte digest replacing a roughly 58 KB reread set during one internal session. That is a promising observation about delivered bytes, not a controlled token saving, a reliability result, or evidence of general adoption. The recorded feature-092 suite result was 2,214 passing tests; the fresh verification record for this edit is in section 11.
 
-The roadmap's strengths are its acceptance-based cost metric, explicit evidence limitations, and decision to reuse existing mechanisms. Its weakness is that it still describes a large engineering program more clearly than a product a developer can adopt and judge.
+Current representation budgets include `AGENTS.md` 2,918/2,944 bytes, argument descriptions 2,455/2,464, tool descriptions 1,840/1,856, navigation index 64,990/65,536 and IR 20,113/20,480. Budget pressure creates maintenance work, but index size only becomes model cost when content is actually delivered. Measure that path before tightening or raising limits.
 
-| Problem in the previous plan | Product consequence | Refinement |
+Sources: [project state](../.projects/meta/meta_harness_8/CURRENT_STATE.md), [compiler](../scripts/omt/harnessc.py), [task preparation](../.opencode/lib/enforcer/task_prep.ts), [resume implementation](../.opencode/plugins/omt_status.ts), [resume test report](../.meta/software_development_process/6.testing/features/feature_092.resume_digest/test_report.md).
+
+### 2.2 Reliability findings that still matter
+
+The established finding identifiers are retained for traceability. “Source-confirmed” means the behavior is visible in this checkout; it does not mean a new live-host fault campaign was performed.
+
+| Finding | Current disposition | Required closure |
 |---|---|---|
-| The first comparator is the existing harness. | A large improvement can still be worse than the runtime alone. | M0 compares native OpenCode, current Meta Harness, and one proposed refinement under matched conditions (§7.2). |
-| Generic productivity is the main promise. | No clear reason to install another layer. | Test one promise: resume a repository task and obtain a reviewable result whose checks are tied to the current change. |
-| Packaging and outside users arrive at M5. | Repository coupling and unwanted ceremony can survive every internal experiment. | Add a minimal installation and observed user pilot at M1; reserve release distribution/upgrade guarantees for M5. |
-| “Shipped” components sit beside unresolved behavior at their integration boundaries. | Feature count and test count overstate readiness. | Keep shipped records, but require an end-to-end task demonstration and named residual regressions. |
-| Tokens dominate the objective. | Token reduction can hide setup effort, slower work, needless approvals, or rejected changes. | Treat acceptance, elapsed time, intervention, activation, and repeat use as constraints; report maintenance/payback separately. |
-| Every gate has a rationale, but its marginal value is unmeasured. | The harness can make agents comply with the harness rather than complete user work. | Measure each optional mechanism and remove or demote those without observed benefit. Keep required safeguards fixed during comparisons. |
-| A large qualification register lacks small delivery boundaries. | More design can postpone fixing obvious defects. | Use the bounded work packages in §5.1; begin with a reproducible compiler baseline and F05/F02/F03/F09. |
+| F01 — Mutation coverage | Source-confirmed: the before-hook extracts one scalar path; mediated tool/path forms are bounded. | Normalize complete effect/path sets. Publish a support matrix covering patches, moves, deletes, scripts and child processes. |
+| F02 — Critical error handling | Source-confirmed: unexpected before-hook errors are caught and allowed through. | Distinguish optional advice failures from missing or invalid authority. Critical unknown/error cannot authorize a protected effect. |
+| F03 — Independent obligations | Source-confirmed: a successful test-file gate returns `stop`; protected-file overrides can also stop the chain. | Satisfying one obligation must not suppress unrelated obligations. Retain allow and deny controls. |
+| F04 — Authority lifetime | Partial mechanisms exist; a complete progress/consultation/grant lifetime contract remains a qualification requirement. | Scope permissions to subject, task, workspace and relevant generation; keep progress and consultation separate from authority. |
+| F05 — Truthful completion | Source-confirmed: `omt_complete` substitutes `{"ok":true}` for empty verifier output and does not require successful process exit. | Nonzero, empty, malformed or incomplete verification results cannot create verified completion. |
+| F06 — Stage lifecycle | Staging exists; a qualified owned finish/verify/consume lifecycle is not established by this assessment. | Qualify the lifecycle before relying on staged acceptance, or exclude it from the first verified profile. |
+| F07 — Evidence validity | Content-related fields and dependency checks exist; lane success can still come from supplied verdicts. | Trusted execution of declared checks, complete candidate identity and explicit invalidation. |
+| F08 — Transaction authority | Locking and revision fencing exist; the old “no lock” diagnosis is obsolete. | Close consistent reads, command replay and interrupted publication as one protocol. |
+| F09 — Durable acknowledgment | Source-confirmed: TypeScript `appendJsonl` swallows write failures. | Authoritative write failure cannot acknowledge success; recovery must preserve intervening work. |
+| F10 — Truthful prediction | Partial: dry net evaluation skips the live subprocess; task prep is not complete permission evidence. | Identical action and snapshot use identical decision semantics; unavailable facts remain unknown. |
+| F11 — Context value | Partial: navigation limits record count, and resume can hard-cut to fit its cap. | Bound actual delivered content while retaining necessary facts and usable continuation. |
+| F12 — Qualification | Extensive tests exist; feature tests are not an end-to-end release certificate. | Retained artifact-install, real-adapter, failure, recovery and acceptance evidence for each advertised profile. |
 
-**Verdict:** retain the compiler, policy/evidence concepts and existing OpenCode integration; narrow the default workflow. The candidate differentiator is traceable repository-specific acceptance and recovery. It is not yet a demonstrated competitive advantage. Petri mechanisms sit in two distinct seats: the net is *retained* as the control core wherever managed guarantees depend on well-defined legality and recovery (C1–C5, §6.6), while every user-facing net mechanism — frontier queries, IR-derived resume, mined demotion evidence (§5.1 item 15) — is a measured candidate held to the same attempts-per-task standard as every other mechanism. The thesis's contested edge over §2.2 practice is guidance quality (prose constraints exist everywhere); its uncontested edges are the joint structured frontier, per-net certification, mined-vs-designed comparison and replayable control provenance.
+The [hook](../.opencode/plugins/omt_enforcer.ts), [gate driver](../.opencode/lib/enforcer/gate_driver.ts), [completion implementation](../.opencode/lib/enforcer/phase_gate.ts), [shared IO](../.opencode/lib/omt_shared.ts) and [completion tests](../tests/scripts/omt/test_completion_hardening.py) support these distinctions. The completion tests exercise the Python verifier, including failed feature behavior; that does not close its TypeScript caller's empty-output contract.
 
-**Self-critique of this revision, applied within it rather than deferred:** two further weaknesses were identified while evaluating the current document. First, the cost model skewed input-side — output/report verbosity, interaction costs and reasoning had cost rows only for deliberation, and no output contracts or interaction measures existed. Generated-token output contracts, interaction economy, startup payload and the one-shot guidance rate now cover these (§1, §6, §7.1). Second, the plan had stopping rules for tuning but no falsification criterion for the product thesis, inviting the same sunk-cost escalation criticized above. Pre-declared kill/pivot criteria and a telemetry-first demotion rule now cover it (§7.3, §10). Both are recorded here so the next review can check they were actually applied, not just proposed.
+### 2.3 Remaining control and concurrency gaps
 
-### 2.2 Comparison with current harness practice
-
-Primary documentation accessed **2026-09-13**. This is a capability and design comparison, not a benchmark ranking or certification of the other systems. Hosted products, SDKs, workflow engines and research agents serve different scopes; their documented capabilities do not imply equivalent guarantees. No competing harness was run in this review.
-
-| Reference | Documented practice | Meta Harness assessment and next step |
+| Gap | Source evidence | Consequence |
 |---|---|---|
-| **OpenAI Codex** | Filesystem/network sandboxing and approval policy are distinct controls. App Server exposes task activity through thread/turn/item events, approval requests, command results and token-usage notifications. [Sandbox](https://learn.chatgpt.com/docs/sandboxing), [App Server](https://learn.chatgpt.com/docs/app-server). | OpenCode-specific hooks and policy files are not a portable enforcement boundary. Specify required adapter capabilities and normalize observed events into the task/evidence contract. Use host usage reporting where available; do not infer a Codex adapter exists. |
-| **Claude Code** | Hooks have explicit event-specific decision/error behavior; ordinary command-hook failures and timeouts can be non-blocking. Its Bash sandbox enforces filesystem/network limits on processes and children. [Hooks](https://code.claude.com/docs/en/hooks), [sandboxing](https://code.claude.com/docs/en/sandboxing). | “Uses hooks” is insufficient assurance, even in a mature product. Test missing plugins, malformed results, timeouts and supported effect paths on the real host. Fix F02/F03 and distinguish process containment from repository workflow policy. |
-| **Anthropic long-running-agent harness** | Initial setup, explicit feature acceptance, incremental work, progress artifacts and end-to-end checks help subsequent sessions resume and avoid premature completion. Its tool-design guidance additionally recommends returning distilled results rather than raw output and coupling constraints with the actions they govern. These are documented patterns, not universal architecture. [Engineering report](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents), [tools for agents](https://www.anthropic.com/engineering/writing-tools-for-agents), [context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents). | WORK/project/ledger machinery already covers parts of this pattern, yet entry points are stale and resume remains backlog. Finish one trustworthy task digest and acceptance flow before adding more orchestration. Adopt the tool-response design rules in §6.2's output contracts; they are documented practice, not evidence of savings here. |
-| **OpenCode** | Native allow/ask/deny permissions, local or packaged plugins, tool hooks, and an experimental compaction hook are documented extension points. [Permissions](https://opencode.ai/docs/permissions/), [plugins](https://opencode.ai/docs/plugins/). | This is both the first integration target and the essential baseline. Reuse its loop, permissions and compaction facilities where compatible. Qualify the installed runtime/plugin versions; an experimental hook requires a fallback and compatibility test. |
-| **OpenHands Software Agent SDK** | Separates SDK, tools, workspace implementations and agent server; exposes typed events, context condensation and local/remote execution models. [Architecture](https://docs.openhands.dev/sdk/arch/overview). | AgentX's wheel packages the application, not an independent Meta Harness product. Establish a minimal dependency boundary and event contract without rebuilding a general agent SDK or remote server. |
-| **LangGraph** | Checkpointers persist thread-scoped graph state; stores hold cross-thread data. Persistence backends and checkpoint inspection support continuation and recovery. [Persistence](https://docs.langchain.com/oss/python/langgraph/persistence), [checkpointers](https://docs.langchain.com/oss/python/langgraph/checkpointers). | Separate progress, knowledge, permission and accepted evidence. Existing JSONL/journal machinery needs a defined commit/recovery protocol. Checkpoint presence alone does not prove that external effects or verification are valid; importing LangGraph would not close C1–C5 by itself. |
-| **mini-SWE-agent** | A deliberately small Bash-based loop, linear history and replaceable execution environment make it useful as a baseline. [Project documentation](https://mini-swe-agent.com/latest/). | Complexity must earn its cost. Include a minimal-loop comparison only if the same model/task configuration is feasible; classify it separately where policy guarantees differ. Published benchmark scores do not establish Meta Harness's relative performance. |
-| **Aider** | A tree-sitter/graph-ranked "repo map" delivers a token-budgeted, importance-ranked view of the codebase, and benchmark-driven development measures editor changes end-to-end. [Repo map](https://aider.chat/docs/repomap.html), [benchmarks](https://aider.chat/docs/benchmarks.html). | The closest published prior art for §6.1's context value test: rank code context by signal per token before applying any byte budget. Pilot an equivalent ranked map surface for cross-layer tasks; keep it advisory and measured. |
-| **SWE-agent** | Its edit-format work treats how an agent specifies edits (whole file, search/replace, diff) as a design variable that moves both tokens per edit and error/repair frequency. [Documentation](https://swe-agent.com/latest/). | Validates the attempts-decomposition in §1: a cheaper per-attempt format that raises repair rounds is a regression. Review this harness's edit/patch surfaces (F01) under both factors, not bytes alone. |
-| **GitHub Spec Kit** | Spec-driven development: constitution, specification, plan and implementation phases with explicit checks before code. [Project](https://github.com/github/spec-kit). | An independent expression of §4.6's request-fidelity contract. Compare its lightweight acceptance derivation; adopt only pieces that measurably reduce deviation or rework. |
-| **LangChain Deep Agents** | Documented harness pattern: summarization keeps a bounded in-context summary while preserving full history on the filesystem, an on-demand compaction tool triggers between tasks, and subagent isolation quarantines heavy subtasks so only final results enter the main thread. [Overview](https://docs.langchain.com/oss/python/deepagents/overview), [context engineering](https://docs.langchain.com/oss/python/deepagents/context-engineering). | The closest shipped analogue to the digest-as-compaction-anchor (§6.1) and the delegation quarantine proposal (§5.1 item 11): bounded anchor plus recoverable detail, heavy reads kept out of the main thread. Both remain to be measured here. |
+| C1 — Commit and replay diverge | `_transact` clears its pending marker before recording command replay data; reconciliation does not reconstruct the original result. | A successful state advance can outlive the information needed to retry it safely. |
+| C2 — Snapshot visibility | `save` replaces three files sequentially; `load` reads them separately. | Locking writers alone does not guarantee that readers observe one complete revision. |
+| C3 — Workspace reality | `ensure_workspace` creates a directory and best-effort branch; it does not create a linked Git worktree. | Workspace metadata is insufficient evidence that isolated execution exists. |
+| C4 — Execution identity | The live net gate passes path/session; task/generation/owner checks exist on other entry points. | Helper-level fencing does not establish identity propagation across every actual write path. |
+| C5 — Verifier authority | Lane operations accept a verdict and a caller-supplied coordinator flag. | State movement does not prove that trusted checks ran on the candidate or integrated result. |
+| **C6 — Executable model coverage** | `_move_pool_token` directly adjusts counters; absent lane places can be treated as binding-only occupancy by `validate_task_bindings`. | The current control net is not yet a complete executable specification of the advertised lifecycle. |
 
-**Implication inferred from these sources and the repository review:** task continuity, runtime extension, permissions, tracing and context management are already available in several forms. Invest in the integration that makes a repository task's state, verification and recovery understandable and dependable. Adopt existing runtime capabilities; retain custom mechanisms only where they add measurable value. A standard protocol can transport a tool call without ensuring it mediates every write. Two transferable designs stand out for the token-economy objective: Aider's signal-per-token ranking of code context and Deep Agents' compaction-with-preservation plus isolation pattern; both are candidates for measured adoption here rather than reinvention (§6, §5.1 item 11). Where the next step would exceed all of them: none of the compared systems assembles completion reports from recorded evidence rather than agent narrative, runs its own governance under a measured token economy with demotion and sunset rules, or closes the telemetry-to-mechanism improvement loop as a managed task class. Those three properties — not hooks, persistence or sandboxing, which exist in some form everywhere — are the defensible delta for a harness that claims to go beyond harnesses (§1.1), and the net-as-IR property adds what none of them structurally can: a formally analyzable model of the agent workflow itself, enabling enabled-set guidance, marking-derived resume state, firing-trace evidence and pre-execution reachability checks (§5.1 item 15).
+C6 is central to the Petri strategy. Checking that counts agree is weaker than checking that a state change is an enabled transition of the declared model. A certificate for the net cannot certify lifecycle behavior implemented outside that net.
 
-## 3. Implementation evidence and current-state reconciliation
+Sources: [state and transaction implementation](../scripts/omt/net/state.py), [lock and journal helpers](../scripts/omt/net/lock.py), [workspace implementation](../scripts/omt/net/workspace.py), [net CLI](../scripts/omt/net/cli.py). Existing transaction, claim, recovery and lane tests remain useful; extend their coverage instead of recreating their features.
 
-### 3.1 Evidence boundary
+**Current defensible profile:** development assistance. Verified solo and managed local execution remain unqualified at the product boundary. This limits the claims made about the system; it does not prevent read-only guidance experiments.
 
-The checkout was clean at the start of the original review. That review inspected the actual compiler, TypeScript hook/gates, completion path, state helpers, net transaction and workspace implementation, CLI, initializer, and relevant tests. Navigation used the repository's `omt_nav` plugin through Bun because this host does not register the `omt_*` tools. That is a limitation of this session's integration, not evidence that OpenCode cannot load the plugins. The earlier productivity revision preserved those observations. This product review refreshes selected findings in §3.5; it does not recertify the entire implementation.
+## 3. State of the art and strategic choices
 
-Other work appeared during the review in `WORK.md`, the project manifest, and feature 089 scaffolding. Those changes were preserved. This is a working-tree assessment, not an immutable release audit; the final validation record states its limits.
+The following primary documentation was checked on 2026-09-13. This is a comparison of documented design, not a performance ranking; competing harnesses were not benchmarked during this assessment.
 
-| Check | Observation from the baseline review |
-|---|---|
-| Compiler and projection verification | `uv run scripts/omt/harnessc.py check --verify-projections`: 263 records, zero errors; the existing unindexed self-evaluation workflow warning remains. |
-| Runtime discovery | Installed OpenCode `1.18.30`, Bun `1.3.14`; plugin dependency remains `@opencode-ai/plugin` `1.17.11`. These identifiers do not by themselves establish compatibility. |
-| Existing behavioral tests | Current suite run recorded in §11. New net transaction, claim, workspace, capacity, verification, recovery, and dependency test modules are present. |
-| Fresh isolated probes | F02, F03, F05, and F09 reproduced through real TypeScript modules with temporary state and stubbed subprocess responses. No actual guarded file edit was executed. |
-| Product qualification | No complete retained clean-install → real-adapter allow/refuse → verification → upgrade/recovery qualification report was established. |
-| Outcome efficiency | No new task-cost benchmark was run. |
-
-Recorded compiler size snapshot: `AGENTS.md` 2,918/2,944 bytes; tool descriptions 1,812/1,856; argument descriptions 2,454/2,464; nav index 63,963/64,000; IR 20,079/20,480; gates 10/12. At that snapshot, 37 nav bytes and 10 argument-description bytes remained. These are representation budgets, not measurements of complete model schemas or end-to-end task cost. Do not automatically raise or tighten them without examining actual delivered context and maintenance cost. Source: [compiler](../scripts/omt/harnessc.py), `measure_budgets`.
-
-### 3.2 Material progress since the original assessment
-
-The [meta_harness_8 project](../.projects/meta/meta_harness_8/PROJECT.md) now records the following work, corroborated by source and test files:
-
-| Shipped slice | What exists now | What it does not yet establish |
+| Reference | Established practice | Decision for META HARNESS |
 |---|---|---|
-| 077 / T1-4 | Historical reads of policy, ledger, thoughts and KB through `git show`; historical-state tests. | Complete historical authority: some live observations remain explicitly outside replay. |
-| 078 / T1-3 | Bounded graph traversal and risk/thought joins. | An authoritative risk classifier or a reason to introduce HQL now. |
-| 079 / T5-1 | `CoordinationLock`, in-lock revision checks, command ID index, and a multiprocess same-revision race test. | Atomic multi-file publication, crash-safe idempotency, or consistent unlocked readers. |
-| 080 / T5-2 | Claim/release/transfer/checkpoint operations with ownership generations. | End-to-end actor authorization through every adapter entry point. |
-| 081 / T5-3 | Workspace metadata, directory/branch bootstrap, path containment helper and CLI gate parameters. | A populated linked Git worktree or automatic use of managed identity by the live hook. |
-| 082 / T5-4 | Two-worker capacity and component-aware scope arbitration. | Protection of every actual write or useful parallel throughput. |
-| 083 / T5-5 | Submit/verify/integrate state transitions, serialized lanes, immutable submission references. | Actual verifier execution or verification of the combined integration candidate. |
-| 084 / T5-6 | Heartbeats, recovery candidates, generation transfer, pending transaction marker and reconciliation. | Recovery after every real process-kill boundary or atomic state/event/idempotency completion. |
-| 085 / T5-7 | Pinned upstream dependencies, staleness checks and objective-status evaluation. | Proof that the supplied evidence describes passing checks against real current content. |
-| 086–088 | Ordered skip audit, scope alignment, and per-file recent-read consultation exemption. | Consistent authority lifetimes or content-versioned knowledge relevance. |
+| OpenCode | Local/package plugins, tool hooks and an experimental compaction hook. [^opencode] | Reuse the host's execution loop and extension points. Qualify actual installed hooks and effect coverage. |
+| Anthropic's long-running-agent work | Incremental work, explicit feature requirements, progress artifacts and end-to-end checks address context loss and premature completion. [^anthropic] | Task continuity and explicit checks are baseline expectations; demonstrate a cheaper, more faithful implementation. |
+| Aider | A dependency-graph-ranked repository map selects relevant code within a token budget. [^aider] | Retrieve by relevance to the current change before applying size caps. Compare selected context against simpler retrieval. |
+| OpenHands SDK | Typed action/observation events, separate tools/workspaces/server packages and context condensation. [^openhands] | Keep policy and work semantics outside a host adapter; avoid building another general agent SDK. |
+| LangGraph | Checkpointed graph state supports continuation and inspection. [^langgraph] | Reuse the persistence principle; distinguish a checkpoint from an attested external effect. |
+| mini-SWE-agent | A deliberately small agent loop is a serious design baseline. [^mini] | Include native/static/minimal comparisons so complexity must demonstrate incremental value. |
 
-The project records six remaining backlog items: T2-6, T2-7, T3-3, T3-4, T3-6, T3-7, plus the recurring T5-8 review loop. Feature 089 scaffolding appeared for T2-6 during this review. The older Quick Start and WORK pause text still point to already-shipped T1/T5 slices. Reconcile those entry points in a separate project-maintenance change; do not treat the stale startup summary as implementation truth.
+The proposed advantage is the **combination** of request-linked acceptance, compact state-derived guidance, model-checked control and evidence-bound recovery. No source review establishes that other systems cannot implement these capabilities. Claims of exclusive functionality or superiority should be replaced with comparative task results.
 
-### 3.3 Finding reconciliation
+Three strategic corrections follow:
 
-“Open” below means the product requirement remains unresolved at the inspected baseline. “Partial” credits implemented mechanisms without claiming that the whole finding is fixed. Local reproductions still need retained repository regressions and real-adapter qualification. The priority column describes release-blocker severity, not the new implementation order: F10/F11 and the T3 productivity work now lead the optimization sequence in §5.
+- **A richer preflight is not automatically a Petri advantage.** Compare joint Petri guidance with ordinary preflight given the same facts and presentation budget.
+- **Semantic consolidation does not require a platform rewrite first.** A thin read model and one normalized action can prove or disprove value before a new store, SDK or adapter program.
+- **Formal methods are mature tools, not product differentiation by themselves.** Compare P/T modeling with an explicit state machine plus resource counters on the same representative workflows. The useful distinction is clearer composition, reusable analysis and fewer implementation errors, not greater computational expressiveness.
 
-| ID | Current disposition and evidence | Required next outcome | Priority |
-|---|---|---|---|
-| **F01** Mutation coverage/matching | **Open.** Before-hook still extracts one scalar path; edit-tool names remain bounded. `pathIn()` uses exact matching for entries without trailing `/`, while harness classification includes prefixes. | One normalized action/path contract covering supported mutation forms; unsupported mutation refused in the verified profile. | P0 solo |
-| **F02** Critical fail-open | **Open; reproduced locally.** Malformed net JSON caused the actual before-hook to return normally and log “failing open.” Unknown predicate fallback remains permissive. | Critical missing/invalid authority refuses; optional advice degrades independently. | P0 solo |
-| **F03** Independent gates | **Open; reproduced locally.** Approved test edit stopped at `g.tests`; zero net calls and no later thought evaluation. | Successful test approval satisfies that obligation and continues through all others. Audit protected-path success exits too. | P0 solo |
-| **F04** Scope/lifetime | **Partial.** Generation-fenced net claims are new. Legacy cross-session grants and differing progress/consult lifetimes remain; feature 088 also intentionally reuses recent reads across sessions. | Explicit per-record scope/lifetime; no cross-session authority fallback in a profile promising isolation. Consultation reuse must remain distinct from permission. | P0 managed; solo blocker wherever session isolation is claimed |
-| **F05** Truthful completion | **Open; reproduced locally.** `exitCode:1` plus empty output wrote completion and advanced Done. Explicit `ok:false` correctly blocked. Feature 075 tests behavior, but `omt_complete` still defaults empty stdout to `ok:true`. | Require process success, valid response, declared checks and matching candidate before verified completion. Docs/no-test and waived outcomes remain explicit. | P0 solo |
-| **F06** Stage lifecycle | **Open.** Stage helper checks file membership and optional policy digest; CLI remains create/status/clear. | Owned stage with finish/verify/consume lifecycle, or disable staged acceptance in the first verified profile. | P0 if enabled; otherwise P1 |
-| **F07** Evidence contract | **Partial.** Receipts have content/policy/results fields; net submissions and dependencies now carry digests. Missing receipt results still pass compatibility handling; toolchain and complete input closure are not enforced. | One versioned acceptance manifest with mandatory fields, actual verifier evidence, and explicit scope. | P0 solo and managed |
-| **F08** Transaction authority | **Substantially implemented, incomplete.** Original “no lock” finding is obsolete for `_transact` paths. Multi-file save, marker ordering, idempotency recovery and unlocked reads still leave gaps (§3.4). | Qualify one commit/recovery protocol across authoritative files, events and command results. | P0 managed |
-| **F09** Durable writes/recovery | **Partial overall; TS append failure reproduced locally.** Net recovery machinery is new, but `appendJsonl()` still swallows errors and TDD rollback still restores whole-file snapshots without checking intervening edits. | Failed authoritative writes cannot acknowledge success; recovery preserves newer content. | P0 solo and managed |
-| **F10** Truthful prediction/prep | **Partial.** Historical replay and graph inspection improved; dry net evaluation still skips the live permission call while projections can say “all clear.” Task prep remains a standalone slice. | Same action/snapshot semantics; unavailable evidence is machine-readable `unknown`; measure preparation before wider wiring. | P1; P0 if permission certainty is claimed |
-| **F11** Knowledge/context value | **Partial.** Recent-read reuse reduces some friction; nav still caps records, not returned bytes/tokens; ceremony metrics remain narrow proxies. | Bounded delivered context, relevant versioned retrieval, and measured avoided rediscovery. | P1 |
-| **F12** Independent qualification | **Open at product boundary.** More behavioral and multiprocess tests exist. Recovery tests manually construct markers; lane tests supply verdicts; template tests include static pins. No tracked CI configuration found in the inspected standard paths. | Retained faults, actual adapter workflows, clean-install/upgrade/recovery and required-check release automation. External CI remains unknown. | P0 qualification |
+## 4. Guidance for work requested by the user
 
-Source locations: [hook](../.opencode/plugins/omt_enforcer.ts), [gate driver](../.opencode/lib/enforcer/gate_driver.ts), [phase/completion](../.opencode/lib/enforcer/phase_gate.ts), [shared IO/evidence](../.opencode/lib/omt_shared.ts), [scope helpers](../.opencode/lib/enforcer/session_state.ts), [typed policy](../.opencode/lib/enforcer/policy_decision.ts), [TDD rollback](../.opencode/lib/enforcer/tdd_hats.ts), [preflight](../.opencode/lib/enforcer/preflight.ts), [task prep](../.opencode/lib/enforcer/task_prep.ts), [net state](../scripts/omt/net/state.py).
+### 4.1 Capture intent without an interview
 
-### 3.4 Specific remaining concurrency gaps
+At task entry, retain a durable request reference and a bounded exact extract, including the referents needed to interpret “this file,” “continue,” or “the previous change.” Derive observable acceptance cases with references to that request. A model-generated paraphrase is a working interpretation, not a replacement authority.
 
-These are current source-based findings. They extend F01/F04/F07/F08/F09/F12 without renumbering the original register. They have not been demonstrated as live-runtime exploits or as a complete crash campaign.
+Proceed on clear requests and routine implementation choices. Ask only when missing information materially changes the requested outcome, authorized scope or a consequential action. Existing authorization persists. An automatic acceptance-confirmation round trip for every task would work against the product's purpose.
 
-| Gap | Current evidence | Required implementation/qualification |
-|---|---|---|
-| **C1: commit, event and retry can diverge** | `_transact()` clears the pending marker before `record_command()`. Reconciliation compares revisions and appends a generic event; it does not reconstruct the original command result/index entry. A later transaction does not first require the pending marker to be resolved. | Preserve enough intent/result identity to finish or reject interrupted commands deterministically; reconcile before new mutation; acknowledge only a recoverable committed command. Test retry after every write boundary. |
-| **C2: storage visibility/durability remains partial** | `save()` replaces three files sequentially; readers call `load()` without the mutation lock. Marker fsync failures are swallowed, and bundle/event/index writes do not together form a durable commit. The command index prunes after 500 entries. | Consistent reader generation, explicit process-crash versus power-loss scope, propagated required durability errors, and a documented retry-retention contract that prevents expired IDs from silently replaying effects. |
-| **C3: workspace metadata exceeds actual bootstrap** | `ensure_workspace()` performs mkdir and best-effort `git branch`; there is no `git worktree add` in that implementation. Git failure can leave an apparently valid claim. | Create and verify the linked checkout at the expected base; refuse managed activation if bootstrap is incomplete; inspect branch/base/working tree through a real repository fixture. |
-| **C4: managed checks are not fully connected to execution** | CLI exposes task/generation/owner, but the live `g.net` shell call passes path/session only. Activation still uses concurrency marking; `check_workspace_edit()` has an optional owner and ignores session. | An explicit managed profile activates claim/workspace checks even with one enrolled worker, threads identity through every write entry point, and enforces declared scope and expected base content. |
-| **C5: lane verdicts are supplied assertions** | `verify_result()` and `integrate_finish()` accept `verdict` plus a `coordinator` Boolean; CLI exposes `--coordinator`. These functions move state without running verification or constructing/checking the combined candidate. | A trusted coordinator/verifier boundary executes declared checks, validates results/content identity, and conditionally accepts the actual integrated candidate. A caller-set role flag must not be the full authority contract. |
+Keep the requested outcome separate from the anticipated file footprint. A supporting test or necessary caller update may be within the original task even when its path was not predicted. Scope checks should distinguish a justified implementation consequence from an unrelated product addition; otherwise strict path prediction produces needless clarification.
 
-Sources: [transaction and lane implementation](../scripts/omt/net/state.py), [lock/index/journal](../scripts/omt/net/lock.py), [workspace bootstrap](../scripts/omt/net/workspace.py), [net CLI](../scripts/omt/net/cli.py), [live gate](../.opencode/lib/enforcer/gate_driver.ts). Retain the existing locking, generation and lane design; close these seams before claiming managed execution.
+For investigations, acceptance is an evidenced answer. For documentation, it is the requested artifact with appropriate content/link checks. For code, it is the requested behavior with suitable verification. Do not turn every task type into a feature-development workflow.
 
-### 3.5 Fresh product-review observations — 2026-09-13
+### 4.2 One task view
 
-HEAD remains `b60ade730cf9d1cdb5d7ff7d612d39d2d81f79f9`. At review start, `.meta/META_HARNESS.omt`, `scripts/omt/harnessc.py`, `WORK.md` and the project manifest were modified; feature 089 and this roadmap were untracked. These pre-existing changes were preserved. The following observations supersede historical status only for the checks named:
-
-| Check | Fresh observation | Consequence |
-|---|---|---|
-| Compiler/projection check | Initial check exited 1: nav index **64,956 > 64,000 bytes**, with a stale projection. Concurrent feature-089 work then raised the cap to **65,536** and refreshed projections. Recheck **passed: 265 records, zero errors**; the workflow-index warning remains. | Initial drift is resolved in the observed working tree, not by this roadmap edit. Freeze that identity before benchmarking. The budget increase establishes neither token savings nor runtime qualification. |
-| F05 completion probe | Real completion module, stubbed verifier: exit 1 + empty stdout still records completion and Done. Explicit `ok:false` refuses; exit 0 + `ok:true` is the positive control. | “Done” cannot be the acceptance oracle. Fix this small boundary before promoting verification reuse. |
-| F02/F03/F09 probes | Malformed net response returns from the real before-hook without refusal; an approved test path stops the dry gate chain before net/thought checks; unwritable ledger append returns without a record. | All four previously reproduced defects remain reproducible. Tests must retain refusal and positive controls, then exercise actual host effects. |
-| Concurrency source recheck | `_transact()` still clears the pending marker before storing command replay data; workspace bootstrap still creates a directory/branch rather than a linked checkout; the live net call still supplies path/session only. | C1/C3/C4 remain source-supported gaps. Existing helper tests and shipped feature names do not close execution qualification. |
-| Context delivery | `capNavLines()` still limits **25 records**, with no bound on an individual record. Startup points to shipped work; project status still lists six unfinished items. | Measure real delivered payloads and implement a provenance-aware resume digest. A smaller index is not itself evidence of lower task tokens. |
-| Resume digest | T3-3 shipped as feature 092 (2026-09-13): goldens plus boundary e2e green, suite 2214/2214. Re-anchoring to the verbatim *request extract* and the measured task-cost effect remain open. | Supersedes the §6 "T3-3 still backlog" claim; ships item 4's structural precondition while its benefit claim moves to item 3 measurement. |
-| Distribution/automation | `pyproject.toml` builds `src/agentx`, with application dependencies; plugin SDK remains pinned to `1.17.11`. No tracked CI files found in `.github`, `.circleci`, or the checked standard root paths. | Test a minimal non-AgentX install early. CI outside those paths is unknown; require retained release automation rather than assuming it exists. |
-| Host portability | This session does not expose `omt_*` as tools; the nav plugin was invoked through Bun. | Add a capability/health report that distinguishes installed instructions, registered tools, active hooks and enforced effects. A readable AGENTS.md is not proof of mechanical enforcement. |
-| Repo hygiene (observed at `1a6a9b4`; updated at this revision) | `harnessc check` stopped on a stray root-level `6.testing/` directory — the feature-089 test report committed to the wrong path in `1a6a9b4`. **The current working tree shows the reconciliation staged** (the report renamed into `.meta/.../6.testing/`) alongside in-flight feature-090 work; re-run `harnessc check` unmodified before freezing the M0 baseline. The baseline candidate must pass `harnessc check` unmodified, and commit-time tooling that let a root-level stray through is itself a lint candidate (extend the feature-089 `harnessc lint` subcommand). |
-
-Probe output: `/tmp/meta-harness-product-review-probes.json`, from the inspected `/tmp/meta-harness-roadmap-probes.ts`. Each probe uses a disposable state root; subprocess results are synthetic and no actual guarded edit occurs. The compiler and suite results are working-tree observations, not immutable release evidence. Fresh suite and document validation are recorded in §11.
-
-## 4. Target product contract
-
-### 4.1 User journey
-
-The supported path should minimize the agent's repeated decisions and context acquisition during a normal task. Deterministic checks and bookkeeping run in code; the agent receives their concise results:
-
-1. **Install and diagnose.** Identify runtime/adapter, verify policy/state compatibility, explain available capability and any missing prerequisite.
-2. **Prepare.** Capture a bounded verbatim extract of the user's request, then derive intended behavior, scope, acceptance cases and verification targets from it in one bounded task response. Resolve ambiguity with one bounded clarification, not an interview and not a guess.
-3. **Work.** Evaluate every applicable obligation for each supported action; preserve useful progress with clear refusal reasons; surface a drift signal when proposed work falls outside the requested scope.
-4. **Verify.** Freeze the candidate and relevant inputs; execute the declared checks outside long-held state locks.
-5. **Accept.** Recheck candidate/authority/evidence, acknowledge durable state, and report `verified`, `failed`, `waived`, or `not_verified` explicitly for each acceptance case, in user terms, with visible deviations from the request.
-6. **Resume or recover.** Explain the last valid state, outstanding checks and safe next action without repeating all context or overwriting newer work.
-
-These are proposed product operations, not six mandatory model round trips or claims that matching public commands exist today. Combine preparation/resume facts in one bounded response and reuse unchanged evidence when valid. Evolve the existing CLI/tools rather than adding a separate command for every internal mechanism. Acceptance does not itself authorize publication or another external effect.
-
-### 4.2 Small explicit contracts
-
-| Contract | Required information |
-|---|---|
-| Task | ID, bounded verbatim request extract (or durable reference to it), requested outcome, scope, observable acceptance cases each citing the request, execution profile, verification targets, waiver policy, scope-change history. |
-| Action | ID and payload identity, complete normalized path set, operation, workspace, expected base content, task/actor/claim where applicable. |
-| Decision | `ALLOW/DENY/UNKNOWN/ERROR`, applicable obligations, reason codes, evidence identities, unresolved checks and recovery action. |
-| Progress | Task phase/checkpoint and provenance; no implicit permission. |
-| Grant | Subject, scope, issuer, workspace, task/session, policy generation, expiry and revocation. |
-| Evidence | Candidate and input digests, policy/verifier/toolchain identities, required/actual checks, process status, result scope, raw evidence reference. |
-| Accepted result | Current candidate/evidence references, outcome, visible waivers, durable command identity; integrated candidate/dependency versions in managed mode. |
-| Completion report | Outcome per acceptance case with evidence references, the request extract, visible deviations and waivers, remaining work, and a task cost card — attempts, total tokens with cached/uncached split, human interventions — phrased in user terms, not internal mechanism names. The cost card makes the economy visible exactly where trust is formed: the user accepts work knowing what it cost to produce. |
-
-Candidate identity includes relevant uncommitted/untracked inputs, deletions, modes, symlink targets, tests and configuration. Exclude generated logs/state/receipts narrowly to avoid recursive digests. A verifier that changes an input invalidates the run. Start with a conservative input manifest; narrower reuse must earn its validity through invalidation tests.
-
-### 4.3 Architecture boundaries
-
-Keep `.omt` as canonical policy and the compiler as its validator/projector. Keep the adapter responsible for normalizing and mediating effects. The evaluator computes decisions from one consistent snapshot; it neither executes verification nor pretends a read-only prediction grants authority. Authoritative persistence records commands and evidence. The verifier executes acceptance. Agent-facing context explains those results and retrieves knowledge.
-
-Migrate typed obligations incrementally using labeled old/new decision comparisons. Newly permitted cases need an explicit rationale and regression. The currently trusted policy must govern activation of its successor; record old/new policy, compiler, adapter and state compatibility, and keep a tested recovery target. Shadow evaluation must never authorize writes.
-
-### 4.4 Minimum useful product and integration boundary
-
-The first demonstrable workflow is: **install in an existing repository → define one change and its checks → interrupt and resume → review the current patch and its evidence**. The developer should understand the result without learning feature IDs, Petri-net transitions or internal consultation sequences. Existing advanced diagnostics remain available on demand.
-
-Expose this through existing status/preparation/completion surfaces wherever possible. The default response gives the intended outcome, candidate identity, checks passed/failed/not run, outstanding action, and evidence location. A refusal names the unmet obligation and a bounded recovery action. “Verified” means the declared checks passed for the named inputs; it never means all possible defects were excluded. Keep workflow completion, verification outcome and user acceptance distinct.
-
-Publish one support profile initially: exact OpenCode/plugin versions, OS/toolchain, observable usage fields, supported file/shell operations, compaction/resume behavior and disabled capabilities. A diagnostic must positively establish tools and hooks are active. Missing or incompatible integration yields assistance-only or unavailable status, never a silent verified-mode downgrade.
-
-Native sandboxing limits effects to its configured boundary; it does not automatically enforce every OMT phase or protected-path rule inside that boundary. For verified operation mediation, either qualify a broker that validates the complete permitted action or constrain the process's write access so it cannot bypass that broker. Include shell children, scripts, multi-file patches, moves/deletions and symlink behavior in the support matrix. Unsupported paths cannot inherit a verified guarantee from a tool name.
-
-Reuse host permissions and existing session authorization. Avoid a second prompt when the same action is already authorized. Deterministic obligations can still fail and explain why, but routine bookkeeping should not require user confirmation. Measure unnecessary prompts separately from necessary boundary approvals. Authorization defaults follow reversibility rather than tool identity: effects that are cheaply undoable under the workspace's own version control (tracked-file edits, local commits) run without pre-authorization under a post-hoc audit lane, while non-undoable effects — remote publication, deletion of uncommitted or untracked content, protected paths — keep explicit pre-authorization. The git-local allowance (§6.5) is the first instance of this principle.
-
-### 4.5 Early adoption experiment
-
-At M1, prepare a minimal local installation artifact for **two non-AgentX repositories** with different layouts, and observe **three developers other than the maintainer** using disposable copies. Recruitment and repository access are future execution dependencies; no external contact is authorized by this document edit. Start with assistance-only claims until the applicable qualification gates pass.
-
-Because external recruitment is unauthorized and slow, run a **zero-recruitment pre-pilot** at M1 first: the maintainer installs into the two disposable repositories using only the written guide and machine diagnostics, following a strict protocol (no editing policy mid-task, every friction event logged with timestamp and recovery action). This substitutes only for installation-quality and self-service evidence — never for independent-user activation, which the maintainer cannot simulate — and it costs no recruitment. If the maintainer cannot complete install → first accepted task cleanly, the external pilot would fail and its budget is spent on simplification instead.
-
-Proposed pilot criteria, to revise after the baseline: at least two participants complete setup and a first independently accepted task within 30 minutes without maintainer repair; at least two voluntarily use it for three further eligible tasks within two weeks. Record setup time, time to first useful result, confusing refusals, override requests, support minutes, failed tasks and reasons for abandonment. These small numbers test usability and interest, not market fit or statistical reliability.
-
-Compare native-runtime and harness-assisted sessions. If benefit depends on the maintainer interpreting state or editing policy for every task, simplify the product before packaging more features. If usage telemetry is unavailable, label token measures incomplete and report the observable outcomes without inventing usage. Store pilot traces locally by default, redact secrets, set retention/deletion controls, and obtain separate authorization before exporting repository content.
-
-### 4.6 Done definition, request fidelity and drift control
-
-The harness exists to complete work the user requested, and "done" must stay anchored to that request rather than to the agent's evolving interpretation of it. Three anchoring mechanisms keep the request authoritative, and three reporting rules keep the completion honest:
-
-- **Request capture.** Task preparation stores a bounded verbatim extract of the user's request, or a durable reference when the request is a longer conversation. The extract is part of the resume digest, so a fresh session, post-compaction recovery or worker handoff re-anchors to the request itself, never to a paraphrase. The extract also carries a bounded **deictic snapshot** — the referents that make the words interpretable (target file or symbol, failing case, the prior decision a pronoun points to), because verbatim words without referents re-anchor to ambiguity rather than to the request. Acceptance cases cite the request. An ambiguous request gets one bounded clarification at preparation time — not a guess, and not an interview loop — and that clarification **doubles as acceptance confirmation**: it presents the derived acceptance cases against the extract, and the user's confirmation or correction makes the contract bilateral before work begins. Agent-derived acceptance the user never saw is the quiet failure mode this prevents — the agent writing the test it can pass rather than the one that was asked for.
-- **Drift signals.** Actions or proposed edits outside the declared scope produce a visible advisory: non-blocking in assistance mode, always recorded. Scope additions require an explicit re-anchor — either the user amends the request (logged, with acceptance cases re-derived) or the addition is reported as a deviation at completion. The digest carries the request extract forward unchanged, so the agent cannot silently rewrite what was asked.
-- **Truthful completion in user terms.** The completion report names the outcome for each acceptance case (`verified`, `failed`, `waived`, `not_verified`), quotes or references the request, lists deviations and waivers, and states what remains. It uses the user's vocabulary, not feature IDs, transitions or internal obligation names. "Done" never claims more than the declared checks against the named candidate (§4.4); when the user's real acceptance differs from the declared checks, that gap is itself reported rather than papered over.
-
-Completion reporting adds three rules:
-
-- **Harness-assembled outcomes.** The outcome table of a completion report is assembled from recorded evidence — check results, digests, ledger events — with the agent contributing the user-terms phrasing, not the facts. A completion narrative that outruns recorded evidence is the same class of defect as F05: the report can be no more truthful than the state it cites.
-- **Deviation taxonomy.** Deviations are classified, not narrated: **scope additions** (delivered beyond the request), **omissions** (requested, not delivered), **quality gaps** (delivered with failed or waived checks) and **interpretation choices** (ambiguity the agent resolved without asking). Each class is counted separately in the fidelity measures (§7.1); an unclassified deviation does not count as reported. Drift advisories recorded during the task seed the deviation table at completion: a fired advisory that was never re-anchored must appear as a classified deviation, so the deviation record derives from logged events, not from the agent's recollection.
-- **Investigation tasks.** Where the request asks a question rather than a change ("why does X fail"), acceptance is an evidenced answer to that question. The completion report answers it directly; "I fixed X instead" is a scope deviation, not a success.
-- **Compound requests.** A request containing several independently acceptable outcomes is decomposed into one task each, with every acceptance case citing the shared request extract. The completion report then reports per outcome; "all of it, mostly done" appears as per-outcome results with omissions visible, never as a single done claim.
-- **Drift-checkpoint amortization.** The default is one bounded clarification at preparation time. For task classes where measured drift or rework concentrates late — long tasks, ambiguous scope — one additional mid-task scope echo (acceptance cases and current scope in bounded form) is permitted when its expected rework reduction exceeds its interaction cost. The checkpoint, its cost and its outcome are recorded so the tradeoff is measured rather than habitual (§7.1); late drift is itself a reported signal, since advisories that first fire after most of the task's tokens are spent indicate the preparation anchor was too weak.
-
-The report itself is bounded — request extract, outcome per acceptance case, classified deviations, waivers, remaining work, with expansion on demand — because review cost is part of the product promise: the user must be able to trust the done claim for less effort than re-doing the work, and that review effort is measured (§7.1).
-
-These are product semantics for the first workflow (§4.4), implemented on the existing task-preparation and digest surfaces (§5.1 item 4); they add no mandatory model round trip. Fidelity is measured, not assumed: scope-drift events, request-traced acceptance cases, completion deviations and user amendments belong to the measurement record from M0 onward (§7.1).
-
-## 5. Delivery roadmap: productivity first
-
-The roadmap now has a productivity sequence and a supporting reliability lane. Measurement and low-impact context improvements can start immediately. An optimization that reuses authority or verification must first satisfy the relevant reliability contract. M-identifiers below replace the earlier qualification-first milestone ordering.
-
-| Milestone | Agent productivity deliverable | Dependencies | Exit criterion |
-|---|---|---|---|
-| **M0 — Establish truth and task cost** | Reproducible compiler/runtime baseline, F05/F02/F03/F09 fixes, task-level usage trace with a defined usage-unavailable proxy variant (§7.1), independent acceptance oracle and native-runtime comparator. | Instrumentation can start now; do not rely on current Done records. Fixes and the benchmark can proceed independently. | Baseline includes failed attempts, repeated inputs, retries, verification and recovery; missing usage is explicit, and the proxy variant is labeled when request-level usage is unavailable. Critical boundary regressions and positive controls pass before qualification. |
-| **M1 — Prepare, resume and test adoption** | Compose existing status, task prep, nav/KB and progress into a bounded response; persist a compact resume digest; minimal install pilot (§4.5). | M0 measurements; truthful handling of unknown state. Prototype/pilot may use assistance-only claims. | Routine prep/resume needs one bounded response, retains critical facts and lowers total task effort; non-maintainers demonstrate activation and repeat use or trigger simplification. |
-| **M2 — Eliminate repeated context and ceremony** | Selective context delivery, compact tool outputs, stable tool/schema exposure where supported, batched independent reads, a consistent per-operation snapshot, the context assembly order contract (§6.2), per-tier startup-payload accounting with published fixed-cost ceilings, and the reversibility-aware authorization lane measured in the dogfood lane (§6.5). | M0/M1 measurements identify the main costs. | Lower input tokens per accepted task, fewer redundant calls, higher cached-input share on warm sessions, and fewer ceremony confirmations per accepted task — all without increased repair, stale decisions or missing obligations. |
-| **M3 — Reuse valid verification and knowledge** | Candidate-bound verification reuse, bounded batch completion where enabled, versioned relevant lessons and precise failure diagnostics. | Evidence/ownership fixes for every reused result. | Unchanged relevant inputs reuse valid evidence; changed inputs reverify; repeated failure diagnosis declines; accepted-task cost improves. |
-| **M4 — Prove and tune the improvement** | Controlled comparisons, one-change-at-a-time removal experiments, task-class policies and small external-repository pilot. | M0 baseline plus each candidate optimization. | Accepted-task tokens improve beyond benchmark noise; correctness/critical refusal controls hold; latency and intervention tradeoffs are reported. |
-| **M5 — Release the proven workflow** | Versioned independent artifact, concise onboarding, support profile, upgrade/rollback, diagnostic export and qualification report. | Demonstrated M4 value; early pilot evidence; required solo release gates pass. | Clean artifact install, upgrade and rollback pass in non-AgentX repositories; accepted-task benefit survives onboarding/support cost. |
-
-**Execution order:** M0 → M1 → M2 → M3 → M4 → M5, with M4 comparisons after each slice rather than one final benchmark. M1 includes early installation and user feedback; M5 adds supported release lifecycle. Reliability fixes run alongside the affected slices. Managed concurrency is an optional later experiment; it must beat a solo baseline on accepted throughput while accounting for all worker, coordinator and integration tokens.
-
-### 5.1 Immediate implementation queue
-
-Use the existing meta_harness_8 home. Create follow-up feature records when implementation starts, keeping shipped features intact.
-
-| Order / priority | Bounded deliverable | Existing home / dependency | Concrete acceptance |
-|---|---|---|---|
-| **0 / P0 baseline** | Capture source/runtime identities and confirm the feature-089 compiler/projection repair. | Existing feature **089** work; recheck now passes (§3.5). | Freeze the passing compiler state and dirty/untracked input manifest for the benchmark. Do not reopen the resolved budget error or count its larger cap as token savings. |
-| **1 / P0 truth** | Fix the completion subprocess contract, then authoritative append failure. | **F05/F09**, feature 075 residual; `phase_gate.ts`, `omt_shared.ts`. Two small changes. | Nonzero/empty/malformed/missing-result verifier responses never write complete/Done; failed append never acknowledges success; explicit valid success still works. Retain the current reproductions as behavioral regressions. |
-| **2 / P0 mediation** | Fix critical error handling and independent gate composition; publish the first operation coverage matrix. | **F02/F03/F01**, gate driver/hook and live adapter tests. | Approved test/protected-path obligation does not suppress net/thought obligations; critical authority error refuses; optional advice failure remains separate; real allowed and refused edits corroborate the matrix. Unsupported shell effects prevent a verified mediation claim. |
-| **3 / P0 measurement** | Instrument bug-fix and resume tasks, then the complete solo corpus. | **T3-4**; can proceed alongside 1–2, using an independent oracle. Extends the shipped ceremony meter and ledger medians ([feature 057](../.meta/software_development_process/2.requirements/features/feature_057.gate_budget_ceremony_meter/FEATURE.md)) rather than building a parallel instrument; the bug_fix/test fast path ([feature 054](../.meta/software_development_process/2.requirements/features/feature_054.small_task_fast_path/FEATURE.md)) is the first task-type lane to measure; the dogfood lane (§7.2) starts logging at M0. | Repeatable report compares native runtime/current harness/one refinement, records acceptance and full available usage, and labels missing usage. Pin all configurations and retain raw result references. Ships the canonical attempt-trace format (§7.2), the qualified acceptance oracle with seeded broken-candidate refusals (§7.2 ladder), **and the A+ static-instructions condition from the first slice** (item 12 folds into this row): A+ versus B on routine and resume classes is reported in the M0 baseline, since without it no later optimization is attributable to the runtime surface. |
-| **3b / P0 safe economy** | Bound the largest single responses: per-record byte cap with explicit continuation, deduplication of identical consecutive reads, summary-first tool outputs. | **F11**, features 069/088 surfaces; runs in parallel with item 3. | Restricted to the trivially-safe class (§7.2): changes that provably preserve information. Required facts remain reachable through continuation; smoke-pair total task tokens do not worsen; full-pilot confirmation follows when the M0 baseline exists. |
-| **4 / P1 first workflow** | One-response preparation/resume plus runtime health status, request capture and user-terms completion reporting (§4.6). | **T3-3 (feature 092, shipped 2026-09-13 — structural precondition met) + T3-5 / feature 073**, preflight foundations; M0. | Fresh session and post-compaction fixture recover the request extract, scope, acceptance, candidate and outstanding checks; the digest re-anchors to the request rather than a paraphrase; changed inputs invalidate stale facts; health report distinguishes tools, hooks and actual mediation; the completion report maps acceptance cases to evidence in user terms, with outcomes assembled from recorded evidence and deviations classified (§4.6). No additional mandatory agent tool. |
-| **5 / P1 adoption** | Minimal install artifact and observed pilot in other repositories. | Feature **059** foundation; item 4; assistance-only until qualified. | §4.5 activation/repeat-use results and support burden recorded; works without AgentX application dependencies or maintainer policy repair. Failure returns work to simplifying the workflow. |
-| **6 / P1 measured economy** | Bound/deduplicate the highest-cost output; remove the largest avoidable round trip. | **F10/F11**, features 069/073, T3-7 when justified; item 3 measurements. | Single oversized records have usable continuation; compaction/handoff restores needed content; independent reads share a valid snapshot. Total task cost improves after expansion/recovery costs. |
-| **7 / P1 evidence reuse** | Candidate-bound verifier manifest, conservative invalidation and bounded completion reuse. | **F04/F06/F07/F09**, features 074/075; item 1 and declared input closure. | Changed source/tests/config/policy/toolchain invalidate evidence; unchanged inputs reuse it; verifier-mutated inputs fail acceptance; waivers and no-test tasks are explicit. Disable stage acceptance until its lifecycle qualifies. |
-| **8 / P1 retention of value** | Pilot selective lessons; run gate-removal and task-class comparisons. | **T3-6 + T3-4**, resume foundation. | Lower rediscovery/retry cost on held-out tasks; unused/stale lessons retire; optional mechanisms with no net benefit are removed or demoted. Required safeguards retain all controls. |
-| **9 / P2 release** | Versioned standalone artifact, qualification runner and upgrade/rollback support. | M4/pilot value; all applicable §8 gates, including F01/F12. | Clean install→task→resume→verify→upgrade→rollback succeeds for the named profile; retained CI evidence and a concise diagnostic bundle explain support failures. |
-| **10 / P1 loop economy** | Unchanged-failure-signature retry cap with forced escalation, plus a cost-anomaly advisory when a task exceeds its measured class cost envelope. | **F10/F11**; extends the [feature 057](../.meta/software_development_process/2.requirements/features/feature_057.gate_budget_ceremony_meter/FEATURE.md) meter and feature 069 caps; item 3 measurements supply the envelopes. | Identical-signature retries are capped (default two) and escalate to strategy change, clarification or stop; the advisory fires on seeded overruns naming the top waste indicators; attempts per accepted task decline on affected classes without a rise in human intervention. The advisory enters under the §7.4 net-zero rule — a demoted advisory offsets it. |
-| **11 / P1 delegation economy** | A context-quarantine delegation rule: exploration and heavy reads run in a helper agent whose bounded summary is all that enters the main thread; full results stay on disk. | **F11**, T3-6/T3-7 when justified; item 3; Deep Agents' isolation pattern (§2.2). | Cross-layer and major-feature classes show lower main-thread input tokens at equal acceptance; the decision rule (bounded-summarizable result, inputs not needed downstream) is documented; helper usage remains fully counted (§7.1) so quarantine cannot hide cost, only relocate it. |
-| **12 / folded** | *Folded into item 3 (2026-09-13 joint-objective revision):* A+ is not optional — without it no later per-mechanism attribution distinguishes harness value from static-instruction value, so the M0 baseline ships it in the first slice rather than after. | See item 3. | See item 3. |
-| **13 / P1 authorization economy** | Apply the maintainer-directed git allowance drift (2026-09-13): the agent may run all git commands except remote-touching ones, with locally irreversible and enforcement-surface classes still gated (§6.5); generalize it into the reversibility-aware authorization lane. | Host permission list and enforcer tests; **F01** normalized action contract for verified-profile promotion; assistance mode can relax immediately. | Assistance mode: ceremony confirmations and human commit-minutes per accepted task fall — the observed "user commit pending" pattern disappears — while seeded remote-push, `reset --hard`, `clean` and `hooksPath` attempts still refuse. Verified profile: the allowance cannot be routed around through aliases, `-c` overrides or environment indirection, and the refusal-matrix rows are retained. Enters under the §7.4 net-zero rule by retiring the blanket commit deny. |
-| **14 / P1 meta lane** | Connect telemetry → ranked hypothesis → bounded change → measured outcome as a managed task class: every self-improvement proposal pre-registers its expected effect and its own cost. | Features 056/057 meters and 042/044 synthesis; §7.3 rules; dogfood lane (§7.2). | The loop's net realized savings — realized minus loop cost — is reported per milestone; proposals that miss pre-registration twice lose priority; no automatic policy self-modification: human-approved, shadow-evaluated changes only (§4.3, §9). |
-| **15 / P1 net-fronted guidance** | One joint legal-action frontier query per task boundary (`omt_net probe` extended: **Petri-enabled ∧ guard-ALLOW**, revision-stamped, decision-complete, filtered to the task's declared scope) replaces sequential gate refusals; blocked rows carry the missing obligation and exact remedy; refusal text generated from net structure plus violated guard; Work-IR-derived state section in the resume digest (§6.1, §6.6). **Read-only first:** the initial experiment changes only the guidance surface — no enforcement or gate-order change. | §6.6 contract; item 3's attempts decomposition supplies the measure; extends the existing net surface — no new subsystem. Enters under §7.4 net-zero by absorbing or demoting an existing guidance advisory. | Attempts per accepted task, repeat-refusal rate and tokens-to-first-valid-action fall on routine classes; one-shot guidance rate rises on the battery; frontier-query latency counted in state/runtime overhead; no obligation, refusal-matrix or enforcement-order regression. |
-
-Sequencing effort, so the queue does not read as fourteen equal costs: items 0–3 and 3b are day-scale (S); items 4–7 are milestone-scale (M); items 9–14 run M–L and none should start while items 1–3 are open, because their envelopes, baselines and comparator all come from item 3. **Queue WIP cap: at most two items open at once, counting an item as open from first edit until its concrete acceptance cell is met.** Completion — not initiation — is the measured behavior of this queue, and the cap applies to P0 work too (a queue with five open P0 items is the road map's own deliberation inflation). Item 3's day-scale hint covers instrumentation plumbing only: oracle qualification runs, seeded refusals and the A+ baseline attempts consume measured run time — budget them as runs, not as build time.
-
-Items 1–3 form the first implementation batch, with separate reviewable changes. The maintainer selects scope and support claims; the adapter work owns effect normalization and compatibility, compiler/state work owns policy/evidence validity, and evaluation work owns the independent oracle. These are responsibilities, not a requirement for separate agents or a larger team. Do not start a second coordination program while this batch lacks retained results.
-
-F01 mediation remains a verified-release blocker; F04/F06/F07 must be resolved before relying on scoped grants, staged acceptance or evidence reuse. Preserve independent regression cases and positive controls. No broad policy rewrite or concurrency platform is a dependency of measuring and eliminating duplicated context.
-
-Apply the repository's implementation gates when executing these items. This document update changes the proposed work order; it does not authorize source fixes, test modifications, relaxed policy, or alterations to the source assessments.
-
-### 5.2 First slice: exact done definition
-
-Deliver the small truth fixes and a T3-4 baseline report before choosing compression ratios or adding another tool. The measurement slice is:
-
-1. Pin task definitions, source candidate, model/runtime configuration and independent acceptance cases. Record each task's request extract so acceptance stays traceable to the requested work (§4.6).
-2. Record request-level token usage and task-level outcome, including all retries and helper agents if used.
-3. Attribute avoidable work to startup/schema exposure, retrieval, repeated content, orchestration, verification diagnosis, resume and repair.
-4. Run matched native-runtime/current-harness attempts for a routine bug fix and an interrupted/resumed task first; expand to the full corpus before generalizing.
-5. Identify the largest repeatable source of waste, select one bounded optimization, and replay the same acceptance cases.
-
-A baseline can be collected despite known harness defects because acceptance is assessed independently. In the supporting lane, retain the F05 reproduction at the TypeScript completion boundary and require process success plus an explicit valid result before completion. Assert no completion/Done ledger event on failure. This prevents future internal metrics from rewarding a false success.
-
-## 6. Where the token savings should come from
-
-These are hypotheses grounded in the inspected mechanisms, not measured savings. Optimize in the order demonstrated by M0, considering how often a cost occurs across future tasks.
-
-| Cost source | Current evidence or uncertainty | Proposed optimization | Proof that it helps |
-|---|---|---|---|
-| Repeated startup and policy/tool descriptions | Byte budgets exist; complete request payload cost is not measured. | Minimal stable core; load task-relevant context and optional schemas only when supported and needed. | Actual request input tokens and cache use improve; required tools/rules stay discoverable. |
-| Fragmented preparation | Status, preflight, nav/KB and standalone task prep contain useful pieces. | One bounded task response assembled from shared state and relevant retrieval. | Lower total preparation tokens and round trips with the same obligations and acceptance. |
-| Request drift and rework | Unmeasured. Resume is still backlog (T3-3) and the request itself is not pinned, so silent scope expansion and post-compaction reinterpretation are plausible. | Pinned verbatim request extract, drift advisories, explicit re-anchoring and user-terms completion (§4.6). | Fewer out-of-scope actions and less rework; deviations surface at completion instead of in review; clarification round trips stay bounded at one. |
-| Post-interruption rediscovery | T3-3 resume digest shipped 2026-09-13 (feature 092); its measured benefit remains open under item 3; startup pointers can still be stale. | Persist a compact task digest with source/evidence references and invalidation rules. | Resume reaches the next correct action without replaying whole documents; fresh-session control retains all critical facts. |
-| Oversized or repeated tool results | Nav caps record count, so a single record can still be large. | Returned-token budget or labeled byte fallback, summary-first output, stable IDs, continuation and requestable detail. | End-to-end tokens fall; additional expansion calls do not erase savings or hide needed facts. |
-| Serial discovery and bookkeeping | Redundant calls are plausible; frequency needs measurement. | Batch independent reads; join facts, classify paths and compute obligations in code. | Fewer model round trips and lower total tokens; authorization/mutations remain explicit and ordered. |
-| Repeated local state parsing | Helpers read IR/ledger independently; disk bytes are not automatically model tokens. | One immutable snapshot per operation, then measured indexing/caching with correct invalidation. | Lower measured latency/IO; token savings claimed only when model turns or delivered context also decline. |
-| Redundant verification | Current phase/batch/evidence mechanisms do not establish reliable reusable acceptance. | Run required checks at meaningful boundaries; reuse only a valid candidate/input/toolchain-bound result. | Fewer redundant runs and diagnostic tokens; seeded relevant changes still invalidate evidence. |
-| Repeated failed repair | Diagnostics and knowledge exist, but avoided recurrence is unmeasured. | Stable failure signature, changed-state check, bounded diagnostic output, validated reusable lesson, and an unchanged-signature retry cap (default two) that forces a strategy change or escalation instead of another identical attempt (§5.1 item 10). | Fewer repeat attempts and intervention minutes per accepted task; necessary transient-error retries remain distinguishable. |
-| Deliberation inflation | Pre-unlock ceremony is metered (feature 057), but guidance quality is not yet measured for decision-completeness; reasoning usage is counted without per-decision attribution. | Decision-complete guidance: every refusal names the unmet obligation, the exact recovery action and the authoritative fact reference; no advisory fires without a next action. | Reasoning tokens per accepted task and the repeat-refusal rate fall together; advisory precision (§7.1) rises. |
-| Sequential trial-and-refusal | Guidance arrives one refusal at a time: the agent discovers obligations by violating them. The repeat-refusal rate is measured (§7.1), but the enabled alternative set is never offered up front, and refusal text is prose rather than derived from the violated rule's structure. | Net-fronted guidance (§5.1 item 15, §6.6): one joint frontier query per task boundary returns the legal actions and their outstanding obligations, computed as Petri-enabled ∧ guard-ALLOW and filtered to the task's declared scope so drift becomes absence from the frontier rather than a prose advisory; refusal text is generated from net structure plus the violated guard (violated arc, missing place, exact remedy), decision-complete by construction. | Attempts per accepted task and repeat-refusal rate fall together on routine classes; one-shot guidance rate rises on the battery; enabled-set latency counted in state/runtime overhead; no obligation or refusal-matrix regression. |
-| Cache-breaking churn | Stable-prefix caching exists host-side; which harness outputs invalidate the prompt cache is unmeasured. | A context assembly order contract (§6.2): stable-first (instructions, schemas, repository policy), volatile-last (task digest, live state), no rotating values in stable positions; cache-invalidation events counted per session, with any change to a stable-prefix component reviewed as a single event that re-primes every warm session. | Cached-input share rises and re-sent history falls at equal or better outcomes, verified through host usage reporting. |
-| Output and report verbosity | Report and status surfaces are not bounded today; their generated-token cost and the review cost they induce are unmeasured. | Output contracts per agent-facing surface: bounded default, decision-complete, expansion on demand (§1); the completion report carries a default token ceiling (§4.6). | Report tokens and completion review cost fall with no rise in follow-up clarification round trips. |
-| Exploration in the main thread | Heavy reads enter the primary context by default; the quarantine benefit is unmeasured. | Delegation context quarantine for exploration-heavy subtasks (§5.1 item 11): a bounded summary returns, full results stay on disk, helper usage is fully counted. | Main-thread input tokens fall on cross-layer and major-feature classes at equal acceptance; rediscovery does not increase. |
-| Coordination overhead | Existing worker/claim/lane machinery is substantial; productivity gain is unmeasured. | Prefer solo execution for dependent/small tasks; evaluate parallel work only for independent substantial subtasks. | Combined worker/coordinator/merge usage pays for itself through accepted throughput or lower total cost. |
-| Authorization ceremony on reversible actions | The blanket commit deny converts a mechanical, locally reversible, reviewable agent action into a mandatory human action every task — observed as the recurring "user commit pending" state in WORK.md; interaction economy is not yet measured. | Reversibility-aware authorization (§6.5): the git-local allowance first — pre-authorization only for remote-touching, locally irreversible and enforcement-surface operations; reversible mutations run under post-hoc audit with batched review. | Ceremony confirmations and human commit-minutes per accepted task fall; boundary approvals and seeded negative controls hold; the unrecoverable-mistake rate does not rise. |
-| Static instruction surface | AGENTS.md, tool descriptions and startup text are delivered — and cached — every session, but their wording is never experimentally varied; quality is presumed, not measured. | Instruction-surface variants judged by the guidance fixture battery (Tier 0-eligible), confirmed on task classes at Tier 1; promote wording that raises the one-shot guidance rate. | One-shot rate improves at equal or lower delivered tokens with no obligation regression; the active variant identity is recorded so context regressions are attributable. |
-| Single-model routing | All task classes run the same model and effort today, although task classification already exists (feature 054 lanes, task types). | Route task classes to the cheapest model and effort that hold acceptance on that class, as a named experiment once M2 cost envelopes exist; count all retry costs. | Per-class accepted-task cost falls with acceptance and refusal controls held; routing is per class, never per task instance. |
-
-### 6.1 Context delivery and resume
-
-Build context around the next unresolved decision. Return task identity, intended outcome, active scope, changed/relevant files or symbols, applicable obligations, verification status, unresolved blockers and the next valid action. Include provenance/version references so facts can be checked without reopening whole documents.
-
-Use progressive detail: concise result first, a bounded relevant excerpt next, full supporting evidence on demand. Budgets are configurable by task class and calibrated from total task cost; neither a fixed record count nor an arbitrary small token ceiling establishes optimality. Mandatory constraints and decisive error details must survive compression. If required evidence does not fit, expose an explicit continuation requirement rather than silently dropping it.
-
-A fact earns its delivered tokens when it is **project-specific**, **expensive to guess wrong** and **used by the current task**. Generic knowledge the model can infer cheaply is the first content to drop; project-specific constraints with costly wrong guesses are the last. This value test ranks content for selection before any byte budget is applied, so selection is driven by value rather than by size alone.
-
-Deduplication must account for what the current agent actually has. A reference can replace content already present in the usable context; after compaction, a fresh session, or a model/worker handoff, restore the necessary excerpt or digest. Do not treat a past consultation event as proof of current understanding. Summaries retain acceptance criteria, decisions and rationale, unsuccessful approaches, current candidate identity and outstanding work; stale summaries must not authorize actions.
-
-The resume digest doubles as the **compaction anchor**. When the host compacts the conversation or a session boundary occurs, re-anchoring reads the digest rather than re-deriving facts from history, so recovery cost is bounded by digest size instead of session length. A digest that cannot serve this role is incomplete regardless of how small it is. Where a task's control state lives in the net, the digest's state section is a projection over the Work IR (§6.6): the marking supplies workflow position, lane occupancy and resource availability, and the bindings supply which task, generation, scope, checkpoint and evidence — two tasks with identical markings must still resume distinctly. The agent reads structured state rather than a narration of it, so resume is structurally faithful to the workflow the gates enforce at a fraction of a re-derived summary's cost.
-
-Keep full traces and verbose reports on disk with selective retrieval. This roadmap is a planning reference, not a new startup payload. Future implementation should not inject the entire roadmap or assessment into routine sessions.
-
-### 6.2 Tools, prompts and deterministic work
-
-Keep tool contracts concise, stable and unambiguous. Measure the entire serialized schema and actual request payload, not only description strings. If the host supports optional tool exposure, test whether task-scoped schemas save tokens without causing rediscovery or unavailable-tool failures. Avoid changing the schema set every turn if that increases churn or loses useful cache reuse.
-
-Preserve stable instruction/schema prefixes where supported and isolate changing task facts. Make the order a contract rather than a preference: stable components (instructions, tool schemas, repository policy) occupy the earliest positions and never embed rotating values — timestamps, rolling counters, "as of today" statistics — while volatile facts (task digest, live state) arrive last. Any change to a stable-prefix component is a reviewed event, because it invalidates the prompt cache of every warm session at once (§7.4). Verify cache behavior through observed usage; a hoped-for cache hit is not a saving. Caching may reduce billed cost and latency while leaving total logical input tokens unchanged. Audit the harness's own startup surface against this contract as a Tier-0 item: rotating values — session dates, resource counters, net revisions, DONE-rotation payloads — currently occupy stable positions, and each rotation re-primes every warm session; moving them to the volatile tail is trivially safe under §7.2's fast lane. Note the provider cache's TTL: a stable prefix only pays if the warm window spans the gap between turns, so long deliberation or idle pauses re-prime regardless of ordering — favor mechanisms that shorten turn-to-turn time (bounded outputs, prepared digests) rather than assuming the cache will wait.
-
-Let code perform joins, state folds, path matching, repeated formatting and bounded log extraction. Combine independent reads where their results are needed together. Batch mutations only inside an authorized, recoverable lifecycle; fewer tool calls do not justify bypassing approval, freshness checks or verification.
-
-Default output should name the result, reason and next action. Successful deterministic checks usually need a compact summary and an evidence reference. Failures need the first actionable cause, relevant context and a bounded log excerpt; retain the complete log for expansion. Removing detail that causes another troubleshooting turn can cost more than including it initially.
-
-### 6.3 Verification, knowledge and recovery
-
-Verification economy depends on sound evidence identity. An unchanged candidate with unchanged declared inputs and toolchain can reuse a valid result where policy permits. A changed relevant source/test/configuration/policy input invalidates affected evidence. Use conservative scope until selective invalidation is proven. Targeted checks can guide development, while required integration/release checks still run at their defined boundary.
-
-Store evidence and machine state outside the changing input set to avoid invalidating every result with its own log. A test-process timeout must be distinguished from a behavioral failure; repeated retries require a relevant state change or a justified transient-error policy. Preserve the candidate when stopping an unproductive retry sequence.
-
-Retrieve lessons by changed surface, contract and source version. Store concise, validated explanations with supporting tests or incident references. Promote frequently useful deterministic lessons into checks, then retire redundant prose through review. Measure avoided rediscovery and reduced repair cost; a growing knowledge index is not itself success.
-
-### 6.4 Minimal product delivery
-
-Package the demonstrated workflow after proving its economics. The current [AgentX package](../pyproject.toml) carries application dependencies; the [initializer](../scripts/omt/harnessc.py) provides a useful tier/template foundation. Define a minimal harness runtime/dependency manifest, install it in a non-AgentX repository, and make product-owned files, repository policy and user state explicit.
-
-Use one short install → prepare → act → verify → resume guide and machine-readable diagnostics. Include onboarding tokens and maintainer intervention in the pilot cost. Ship only the compatibility, upgrade, recovery and support material needed for the first supported local profile. Broader packaging, hosted services, pricing and enterprise features remain secondary until the productivity benefit is repeatable.
-
-### 6.5 Reversibility-aware authorization and the git-local allowance
-
-Maintainer-directed drift, recorded 2026-09-13: relax the agent's git restrictions — allow all git commands except those that touch remote repositories. The direction is correct economy and is adopted here; the boundary needs one refinement before it is sound. The class that can be safely allowed is not "local git" but **reversible git** — operations whose effects git's own object database and reflog preserve. Two local classes fail that test and remain gated.
-
-| Git operation class | Examples | Default | Rationale |
-|---|---|---|---|
-| Read-only inspection | `status`, `diff`, `log`, `show`, `blame`, `reflog`, `ls-files` | Allow | No mutation. |
-| Local, object-preserving mutation | `add`, `commit`, `branch`, `switch` or `checkout` of committed states, `merge`, `rebase`, `tag`, `stash push/apply`, `restore --staged`, `worktree add` | **Allow — the drift** | Reflog and the object database keep every step recoverable; commits are cheap, reviewable checkpoints. |
-| Remote-touching | `push`, `fetch`, `pull`, `clone` from a remote URL, `ls-remote`, `remote add/set-url`, `send-pack`, `submodule update --remote` | Deny or approval | External effect, not locally reversible; publication authority stays with the user (§4.1). |
-| Locally irreversible | `reset --hard`, `clean`, `restore` or `checkout --` discarding uncommitted work, `stash drop/clear`, `branch -D` of unmerged branches, `gc --prune`, `reflog expire`, `worktree remove` with dirty state | Deny or approval | Destroys uncommitted or unreferenced content that no git object protects. |
-| Enforcement-surface subversion | `config core.hooksPath`, `config alias.*` with `!` shell escapes, `config remote.*`, `.git/hooks` edits, `-c` inline equivalents, `GIT_DIR` and related environment indirection | Deny | The mediated process must not rewrite the mediation boundary (F01). |
-
-The economy case: the current blanket commit deny is pure ceremony. It converts a mechanical, reviewable, locally reversible agent action into a mandatory human action on every task — visible in this repository as the recurring "user commit pending" state in WORK.md — and it forfeits git's cheapest gift to this harness: **commits are free durable checkpoints**. Under the allowance, candidate identity (§4.2) becomes a commit SHA plus a dirty/untracked manifest, the resume digest anchors to the last commit rather than custom snapshot state, and verification reuse keys evidence to commit identity. Commit messages follow the standard output contract (§1): bounded, in user terms, with the diff as expansion on demand. The allowance governs the git verb only — file-edit gates, protected-path and secrets rules are unchanged.
-
-Mediation and rollout: pattern-level deny matching cannot express this boundary — a safe `checkout <branch>` and an unsafe `checkout -- <path>` share a verb, and aliases, `-c` overrides and environment indirection can smuggle any effect — so the verified profile requires the F01 normalized action contract before the allowance inherits a verified guarantee. Two stages: apply the relaxation now in assistance mode (drop the blanket commit deny from the host permission list, add the remote, irreversible and subversion deny patterns), where risk is bounded by git's own reversibility and the dogfood lane measures it — commits per task, human commit-minutes removed, seeded remote-push, `reset --hard`, `clean` and `hooksPath` attempts still refusing; promote to the verified profile only with the F01 contract closed and the refusal-matrix rows above retained.
-
-### 6.6 The Petri work-IR contract
-
-The §1.1 property-4 claim rests on one explicit contract; stating it removes three overclaims at once ("the net is the whole IR", "the marking is task state", "the firing trace is acceptance evidence" — the last being an F05-class defect inside the plan's own thesis) and is the precondition for items 3, 9 and 15 and the managed gates of §8. State is a tuple **S = (N, M, B, P, E, R, V)**: net structure N; live marking M, authoritative for workflow/resource control facts only; typed task bindings B (identity, owner, generation, scope, checkpoint, dependency versions) revision-coupled to M; compiled policy and guards P; verification evidence E; external-effect receipts R; and revision/semantics identity V. Legality is conjunctive: `legal(a) = Petri_enabled(N, M, t_a) ∧ guard(P, B, E, R, a) = ALLOW`, with UNKNOWN and ERROR authoritative as such — never silently permissive (F02). The item-15 frontier query returns this joint legal/blocked set, bounded and revision-stamped, blocked rows carrying the missing obligation and its exact remedy, filtered to the task's declared scope.
-
-Three net roles stay separate: the **operational control net** is authoritative; **synthesized goal nets** are proposals until validated and compiled into the operational model; **mined behavioral nets** are descriptive evidence for §7.3 demotion and simplification, never policy by observation, and mined-vs-operational comparison must first reconcile abstraction level. Keep the uncolored weighted kernel plus typed bindings — a projection invariant ties them (`M[p] = count(bindings at p)` for managed places), giving colored-net benefits without colored-engine cost; colored or timed nets remain deferred until the aggregate+binding architecture measurably fails on real workloads. Long-running resource holds use start/finish semantics, never a self-loop (`ready + resource_free → active + resource_held → done + resource_free`); external effects — workspaces, test runs, git effects — follow `reserved → started → attested → committed`, the final transition requiring a receipt bound to candidate, base and toolchain, so a claim cannot activate without a verified real checkout (C3) and completion cannot advance on a caller-supplied verdict (C5).
-
-Verification is an **evidence-guarded transition**: `verify` fires only with a trusted, content-bound receipt (candidate and base digests, policy/toolchain identities, acceptance references, verifier identity); an agent's own success report cannot fire it (I-PN-03). A firing trace is replayable **control provenance**, never acceptance evidence (I-PN-04): acceptance joins trace + receipts + request mapping. Authority closure (C1/C2) targets immutable revision generations — `net-revisions/<id>/` plus an atomic CURRENT pointer — so readers never observe torn multi-file state and interrupted transactions reconcile before any new mutation; acknowledged success without recoverable command identity is a defect class, not a boundary case. Each structural net revision carries a certification artifact (invariants, deadlock, reachability, goal-reachability, explicit UNKNOWN on truncated exploration — "no deadlock found in N states" says what it says, no more); engine conformance and per-net workflow soundness are separate gates, and runtime bundles pin a `petri_semantics` identifier and conformance fingerprint so historical traces are never silently reinterpreted. The invariant register for §8 qualification: **I-PN-01** control ownership · **I-PN-02** binding projection · **I-PN-03** no self-asserted verification · **I-PN-04** provenance ≠ acceptance · **I-PN-05** revision-coupled state · **I-PN-06** honest analysis · **I-PN-07** mined is descriptive · **I-PN-08** held resources modeled · **I-PN-09** conformance ≠ soundness · **I-PN-10** receipted external effects.
-
-Certification is an economy mechanism, not only a correctness gate. Reachability, deadlock and goal-reachability analysis is paid once per structural revision at compile time; an impossible or deadlocked workflow discovered by the agent mid-task costs whole attempts instead. Every token spent advancing a workflow whose goal place is unreachable is waste with no offsetting output, so certification moves that class from per-attempt marginal cost to amortized compile cost — the formal version of catching a broken plan before executing it, and a mechanism no §2.2 system exposes. Certification cost is itself metered (§7.1 state/runtime overhead), bounded by the exploration cap with honest UNKNOWN, and counts in the mechanism's net-zero contribution (§7.4) — analysis whose compile cost exceeds the attempts it saves is demoted like any other mechanism. The item-15 frontier returns one versioned entry shape — action, transition, `petri_status`, `guard_status`, `missing_obligations[]` each with stable reason code and exact recovery action, authority revision — bounded, decision-complete, matching the V2 frontier contract ([§9](#9-backlog-reconciliation-and-deferrals) authority split) so V1 measurements and V2 conformance vectors stay comparable. In the solo profile the joint frontier evaluates in-process: a shell-out per query would rebuild g.net's subprocess overhead at the guidance boundary while claiming to remove it, and the frontier's latency lands in the state/runtime-overhead measure with a named cap.
-
-## 7. Measurement and optimization protocol
-
-### 7.1 Count the whole task
-
-Use T3-4 as the measurement home. For a fixed corpus, let A be the number of independently accepted task outcomes, counted once per task run. Failed attempts and retries contribute usage but never inflate A.
+Preparation and resume should expose one bounded view containing:
 
 ```text
-tokens per accepted task = sum(all request input + all generated tokens) / A
-accepted throughput     = A / elapsed execution time
-money per accepted task = sum(actual cost across all attempts) / A
+request and acceptance references
+current task, candidate and relevant scope
+completed outcomes and unresolved obligations
+next useful action, reason and required evidence
+stale or unknown facts
+detail references
 ```
 
-Request input includes instructions, schemas, conversation replay and tool results as actually delivered on each model call. Repeated text counts each time it is supplied. Report cached and uncached input separately; do not add cached input a second time to a total that already includes it. Count generated/reasoning usage according to the runtime's reporting contract without double-counting reasoning already included in output totals. Missing usage is unknown, not zero.
+The existing preparation and resume implementations are the starting point. They should eventually become projections of the same work state, with no independent authority stores. A digest is a navigation aid; it is never a permission grant.
 
-Decompose the primary metric for diagnosis: **tokens per accepted task = (tokens per attempt) × (attempts per accepted task)**. Context economy moves the first factor; guidance quality, truthful prediction and first-pass correctness move the second. Report both factors beside the aggregate. An optimization that cheapens each attempt while inducing more attempts can be a net regression the aggregate alone would hide, and the two factors are optimized by different mechanisms (§6).
+The default response should fit an explicit budget, initially using the shipped 2 KB resume envelope where sufficient. Required constraints, acceptance coverage and uncertainty must survive. If they cannot fit, return a bounded summary plus an explicit required continuation; do not cut a constraint mid-sentence and label the result complete.
 
-When the runtime does not expose request-level usage, run the defined proxy variant instead of stalling the program. Instrument delivered-payload bytes (serialized instructions and schemas, tool results, guidance responses), model turn counts and tool-call counts, and report them as labeled proxies, never as tokens. Calibrate the proxies against real usage on any run where both are available, and state the observed calibration gap. The proxy variant is sufficient for M0 baselines and for the trivially-safe fast lane (§7.2); promoting a mechanism that can remove information still requires request-level usage or an explicit, recorded justification for the exception.
+### 4.3 Progress, amendments and completion
 
-Include coordinator/helper-agent requests, summary/compaction calls where observable, unsuccessful branches, verification diagnosis and recovery. A tool log stored on disk consumes no model tokens until retrieved; its repeated inclusion in later requests can consume tokens repeatedly. Local subprocess time and disk reads are measured separately. If A is zero, report no finite accepted-task unit cost.
+An action is useful when it resolves an acceptance obligation, acquires necessary evidence or advances the relevant workflow. Merely making an allowed call is not evidence of progress. “Next” should rank such actions by expected value and cost after legality has been established.
 
-| Measure | What to report |
+User amendments create a new request/specification revision. Preserve the amendment trail and invalidate affected acceptance/evidence. Resume and handoff must retain completed work, unresolved failures, interpretation choices and the latest authorized intent.
+
+Assemble completion facts from evidence, then let the agent explain them in user terms. Each requested outcome receives `verified`, `failed`, `waived` or `not_verified`, with omissions and scope additions visible. A waiver is not a pass. Record user acceptance separately.
+
+Keep the user-facing report brief; detailed cost and control traces remain expandable. Do not require a cost dashboard or a repeated quotation of the request in every routine reply. Telemetry belongs on disk unless it explains a material tradeoff.
+
+## 5. The executable work contract
+
+### 5.1 Static policy and task execution
+
+Preserve two stages:
+
+```text
+OMT policy source → Policy IR
+request + acceptance + repository snapshot + Policy IR + capabilities → WorkSpec
+WorkSpec + revisioned execution state → Work IR
+```
+
+The first stage already exists in substantial form. The second is a proposed contract built incrementally over existing mechanisms.
+
+Language-model interpretation proposes outcomes, dependencies and a template. Deterministic compilation validates their structure and specializes policy. It cannot prove that an arbitrary natural-language request was understood correctly. Request traceability and independent acceptance remain necessary.
+
+The diagram shows authority and derived views. External effects enter the work state through validated receipts.
+
+```mermaid
+flowchart TD
+    Q["Request and acceptance"] --> C["Work compiler"]
+    P["Compiled policy and capabilities"] --> C
+    C --> W["Work specification and revisioned state"]
+    W --> D["Petri control and typed guard evaluator"]
+    D --> G["Guidance and resume projections"]
+    D --> X["Supported adapter effects"]
+    X --> E["Effect and verifier receipts"]
+    E --> W
+    W --> R["Evidence-based completion"]
+    C --> A["Workflow analysis"]
+    A --> W
+```
+
+### 5.2 One logical state, explicit owners
+
+```text
+WorkSpec = (Q, A, N, G, X, Vspec)
+WorkState_r = (M_r, B_r, E_r, R_r, Vstate_r)
+WorkIR_r = (WorkSpec, WorkState_r)
+```
+
+| Field | Owns |
 |---|---|
-| **Primary: tokens per accepted task** | Full input/output usage, task-class breakdown, workload-weighted aggregate, and p50/p95 where sample size permits. Per-class reporting is mandatory; an aggregate is reported only with the task mix stated and held fixed — a metric denominated in accepted tasks otherwise rewards refusing expensive work. |
-| **Accepted throughput** | Correct tasks per elapsed time; report total latency distribution as well. |
-| **Quality constraints** | Independent acceptance rate, regressions, all enumerated critical refusal cases, and valid positive controls. |
-| **Request fidelity** | Scope-drift advisories triggered; acceptance cases traced to the request extract; deviations and user amendments visible at completion; clarification round trips per task. |
-| **Guidance sufficiency** | Refusals resolved without a repeat refusal for the same cause; rediscovery events (the same artifact re-read within a short window); next-action validity — whether the agent's first action after a guidance response makes progress, judged mechanically where possible (repeat-refusal rate; phase or obligation advance within a bounded action window). |
-| **Advisory precision** | Advisories fired, advisories acted upon, and precision (acted-upon ÷ fired) by advisory class. Low-precision advisories train agents to ignore signals and are demotion candidates under the same ablation rule as optional mechanisms (§7.4). |
-| **Completion review cost** | Human time to accept or reject a completion report, and report length in tokens. The done-promise is only delivered if review is cheaper than re-doing the work. Every sampled report carries the §4.2 cost card; a missing card is a fidelity failure. |
-| **Reasoning share** | Reasoning/thinking usage per accepted task where the runtime reports it, read next to guidance-sufficiency events to expose deliberation inflation (§6). |
-| **Human burden** | Intervention minutes, unnecessary clarifications/overrides, and recovery effort. |
-| **Interaction economy** | Approvals and confirmations per accepted task by class, separated into boundary approvals (necessary effect authorization) and ceremony confirmations (harness-induced); approval-batching candidates ranked by observed frequency. |
-| **Startup payload** | Cold-start delivered tokens per installation tier — instructions, schemas and first status — as the measured fixed component of §1, published per tier alongside the task-size break-even. |
-| **Context precision and recall** | Precision: share of delivered context bytes an accepted action or the resume anchor actually used (citation, diff-dependence or retained-excerpt evidence), per task class. Recall: rediscovery and re-clarification events traced to content that existed but was not delivered. Precision without recall is silent starvation — compression that drops needed facts reads as a token win until a fresh investigation erases it. Report both per class; optimize the joint frontier, never precision alone. |
-| **Tokens to first action** | Delivered plus generated tokens before the first obligation-advancing action, measured on fresh tasks and on resume. This is the operational form of the §1 fixed cost: a stable high value indicates a startup surface read but not used, and ranks fixed-surface content for the value test (§6.1) by evidence rather than by intent. |
-| **Instruction-surface version** | Identity of the active AGENTS.md/tool-description variant and its measured one-shot rate, so context regressions are attributable to wording changes (§6). |
-| **One-shot guidance rate** | Fraction of the retained stuck-situation fixtures (§7.2) whose known-correct next action is reached after a single guidance response. |
-| **Guidance decay** | Repeat occurrences of the same guidance class within and across tasks (dogfood lane). A falling decay curve is guidance functioning as training and compounding; flat decay alongside a high one-shot rate means the guidance fixes events, not classes. |
-| **Input composition** | Actual schema/startup, history, retrieved evidence, repeated context and failure-diagnostic contributions; label attribution estimates. |
-| **Waste indicators** | Duplicate delivered content, unnecessary round trips, verification reruns without relevant change, unchanged-failure retries and resume rereads. |
-| **Cache and spend** | Cached/uncached input, cache-invalidation events per session, cache behavior and actual billed cost using the run's recorded prices; distinguish savings from token-volume reduction. |
-| **Maintenance cost** | Tokens spent implementing, testing and maintaining the optimization; human effort separately. |
-| **State/runtime overhead** | Local decision and frontier-query latency, per-revision certification cost (compile-time analysis, exploration-capped, UNKNOWN counted), subprocess time, bytes parsed and snapshot/index behavior; not a substitute for model-token accounting. |
+| Q | Request reference, exact extract, referents and accepted amendments. |
+| A | Observable acceptance cases, verification methods and permitted waivers. |
+| N | Weighted P/T control topology and its semantic identity. |
+| G | Typed policy guards, authorization rules and evidence requirements. |
+| X | Supported effect contracts and runtime capability profile. |
+| M | Aggregate control/resource marking. |
+| B | Named tasks, lifecycle position, owner, generation, workspace, scope and dependency identities. |
+| E | Candidate-bound verification evidence and acceptance mappings. |
+| R | External-effect receipts and unresolved effect state. |
+| V | Schema, compiler, policy, Petri semantics, adapter contract, specification and state revisions. |
 
-**Staged activation.** Measures activate per milestone; the full table above is the target state, not the M0 build list. **M0 minimum set:** tokens per accepted task with the attempts decomposition, acceptance-oracle results, waste indicators, interaction ceremony counts, human burden. **M1 adds:** request fidelity, guidance sufficiency, one-shot rate, completion review cost. **M2 adds:** context precision/recall, cached-input share and cache-invalidation events, startup payload per tier, tokens to first action. **M3 adds:** reasoning share, guidance decay, advisory precision, instruction-surface version. A dormant measure recorded "not yet instrumented" is expected; instrumenting beyond the active set before its milestone is itself a fixed-cost addition and needs §7.4 justification.
+A specification change creates a new identity; invalidate only the analyses and evidence whose declared dependencies changed. Execution revisions advance under one authority protocol. Physical files or database tables are implementation choices, not the public meaning of Work IR.
 
-### 7.2 Controlled experiments
+Keep the [Petri interchange format](../shared/petri-net/FORMAT.md) focused on structural nets and initial marking. Work IR can reference it without adding task identities, mutable evidence or repository policy to the generic Petri format.
 
-Start with local bug fix and interrupted/resumed task for instrumentation. Expand to five solo task classes: local bug fix, cross-layer change, major feature, harness repair and resume. Treat concurrent conflict as a separate sixth cohort after its execution boundary is ready.
+### 5.3 Migration discipline
 
-The harness's own development is the **always-on dogfood lane**. From M0 onward, every real harness task — features, fixes, repairs and resumes — is instrumented as continuous, zero-recruitment data, dominated by the harness-repair class. Dogfood records never replace controlled comparisons: the maintainer is not an independent user, and policy evolves mid-corpus. They supply what curated benchmarks lack — real frequency data on which guidance is actually consulted, which refusals repeat, and which context is re-read — and those frequencies feed the ranking in §7.3. Dogfood frequency data is only as clean as the state it derives from: the tree currently shows 169 dangling phase records (164 expired) and the seven-day skip/ceremony imbalance §7.3 cites; lifecycle GC of expired phases is a prerequisite chore, not an optional one, before dogfood frequencies rank anything. A **meta cohort** records the harness's own self-improvement tasks — mechanism changes, guidance rewrites, budget changes — with their own token cost and realized savings, so the improvement loop's net productivity is a measured quantity rather than an assumption (§5.1 item 14). Telemetry follows the disk-first rule: raw events are written to disk and only aggregates enter delivered context, so measurement itself stays off the fixed-cost ledger.
+Start with a read-only projection of current state, labeling missing or inconsistent fields. Migrate one lifecycle action and its guard/evidence path at a time. During each slice, designate one writer and make legacy views derived or read-only. Dual writes with “eventual reconciliation” would recreate the authority ambiguity being removed.
 
-Add a **guidance fixture battery** to make guidance quality regression-testable rather than only field-observed: a retained, versioned set of canonical stuck situations — refusal recovery, unknown authority, post-compaction resume, scope drift, verifier failure — each with a known-correct next action. The one-shot guidance rate (§7.1) is the fraction resolved by a single guidance response. Fixtures are cheap to run and mechanically judgeable; they turn "decision-complete guidance" from an aspiration into a property checked like seeded refusal cases, and guidance rewrites that regress the battery do not reach Tier 1. **Fixture conversion rule:** any guidance or refusal class recurring three or more times in dogfood telemetry within one milestone becomes a battery fixture at the next milestone, so the battery grows from observed friction rather than from anticipated friction. Fixture judging uses the cheapest sufficient oracle tier: mechanical where the correct next action is a checkable tool call, the pinned tier-4 judge only where correctness is semantic — every fixture records the tier that judges it, since a battery judged entirely by an LLM is a model comparison, not a guidance test.
+Preserve current fixtures for compatibility, but do not let permissive legacy behavior inherit a verified claim. Unsupported schema/semantics versions must be explicit. Cross-language canonicalization and replay vectors matter before a second implementation becomes authoritative.
 
-**The acceptance oracle is a tiered ladder, not an abstraction.** Acceptance is judged at the cheapest tier available for the task: **(1) mechanical declared checks** — exit status, test suites, lint under the pinned toolchain; **(2) retained fixture oracles** — the guidance battery and seeded defect cases judged by their recorded expected outcomes; **(3) human confirmation** on the completion report, timed and counted in human burden; **(4) an LLM judge** only where tiers 1–3 are inapplicable, pinned in version with position and verbosity biases controlled, with its own disagreement rate against tier 3 sampled. Every benchmark task names its tier in the attempt trace; mixing tiers across conditions invalidates the comparison. The seeded-broken-candidate qualification (below) applies at every tier — including tier 3, where a maintainer who accepts a seeded broken candidate disqualifies that run and forces the question of what the oracle is for.
+## 6. Petri nets as the control core
 
-**Like-for-like pairing by guarantee class.** Comparing verified-harness tokens against bare-native tokens measures a guarantee the native condition never offered, and can trip the §7.3 kill criterion on a design error rather than a product failure. Pair by class instead: **economy pairing** — harness assistance mode (no verification gates) versus native runtime, same tasks, tokens per accepted task; **assurance pairing** — harness verified profile versus native plus unassisted manual review, priced in reviewer minutes and compared on joint cost C (§1). A harness that loses the economy pairing but wins the assurance pairing has a viable product; a harness that wins neither has the §7.3 answer. **Pre-registered expectations:** before the first M0 run, record the expected winner per class (native expected on trivially small tasks where fixed cost dominates; harness expected on resume and interrupted tasks), so a result confirms or refutes a stated hypothesis instead of becoming post-hoc narrative.
+### 6.1 Why this core is useful
 
-Three further protocol requirements close comparability gaps. **Oracle qualification:** before the independent acceptance oracle scores any condition, it must reject a seeded set of broken candidates (nonzero-exit completion, missing-check acceptance, stale-input reuse) and accept one valid control; an oracle that has not itself been qualified cannot certify, and this matters here because the harness's own shipped defects are exactly in the oracle's jurisdiction. **Canonical attempt trace:** every attempt, in every condition, produces one versioned on-disk record — task identity, request extract reference, condition (A/A+/B/C/D), model/runtime/toolchain pins, per-call usage, tool calls, attempt outcome, acceptance verdict and its evidence; comparability across conditions and later re-analysis without re-running depends on this artifact existing before the first benchmark run (§5.1 item 3 owns it). **Moving baseline:** the native-runtime comparator and model pins are re-frozen at every milestone; a mechanism whose benefit rests on a native weakness is re-benchmarked when the host runtime or pinned model changes materially, and expires if the gap closes on its own.
+Weighted P/T nets provide a concise representation of concurrent activities, synchronization, resource acquisition and release. They make resource conservation and permitted lifecycle movement inspectable independently of agent prose. The current library already supplies relevant analysis primitives and explicitly represents incomplete results.
 
-Tier the experiments so the cost of a decision matches its risk. **Tier 0 (smoke):** two tasks × two conditions × two or three attempts, hours of work — sufficient for instrumentation sanity checks and for the trivially-safe fast lane: changes that provably preserve information (a byte cap with explicit continuation, deduplication of identical consecutive reads, summary-first output with the full result retained on disk, and instruction-surface variants judged by the guidance fixture battery). Tier 0 is also the mandatory first stage for every candidate mechanism, not only safe output bounding: a candidate that shows no direction or any harm at Tier 0 is redesigned or dropped before Tier 1 spends a full matrix on it. **Tier 1 (pilot):** the sizes specified below — required for any mechanism that can hide facts or change obligations (schema reduction, context selection, tier changes, guidance rewrites). **Tier 2 (expanded):** multiple independent tasks per class plus held-out non-AgentX tasks — required before any general benefit claim. Count the experiments' own token and effort cost inside the maintenance-cost measure and cap it; an experiment program that consumes the savings it exists to find is itself a regression.
+Use that foundation for three product mechanisms:
 
-For an initial pilot, use at least five independent attempts per task and condition: 25 attempts per five-task solo condition, or 30 including the separate concurrent cohort. This is a pilot size, not proof of rare-failure reliability. Pin candidate/content, task definitions, model/runtime/toolchain, machine and independent acceptance cases. Randomize matched task order, separate cold/warm context and cache cases, and prevent earlier solutions leaking into later attempts.
+1. **Guidance:** compute the relevant legal-action frontier and explain missing prerequisites.
+2. **Pre-execution analysis:** find modeled deadlocks, impossible goals and resource inconsistencies before expensive agent work.
+3. **Recovery and replay:** reconstruct control progression and distinguish completed, reserved, stale and unresolved work.
 
-Compare current behavior with one optimization, then the combined configuration. Change one mechanism at a time to identify its contribution. Sequence the conditions by decision value: A versus B first — whether the harness beats the native runtime at all is the product question — and fund C/D only if B is economically viable. With five paired attempts per class, only large relative differences are reliably detectable; pre-register each Tier-1 experiment's primary metric and minimum detectable effect, treat the matched task pair as the analysis unit, and leave smaller observed differences unconfirmed until replicated. Hold the model configuration fixed initially; any later model/effort-routing comparison is a separate experiment with the same acceptance criteria and all retry costs included.
+A token has no knowledge of repository correctness. Paths, content hashes, identities, approvals and timestamps belong in typed state and guards. Every rule does not need a place.
 
-**Required conditions:** A = native OpenCode with normal repository instructions and host permissions; **A+ = native OpenCode plus harness-generated static instructions (compiled AGENTS.md and nav output) with no harness tools or gates — the cheapest decisive ablation: if A+ matches B on the core classes, the runtime surface is cost without benefit (§5.1 item 12)**; B = current Meta Harness; C = B plus one refinement; D = combined retained refinements after individual comparisons. Use disposable copies, equivalent task information and the same model/effort/toolchain where supported. Report capability differences explicitly: native task completion is an economic baseline, not proof that native OpenCode enforces every OMT obligation. Keep a separate refusal/control matrix for each claimed profile. Other harnesses are optional secondary comparators and cannot support causal claims about OMT if model/runtime configuration also changes.
+### 6.2 Close the model/runtime gap first
 
-Five repeats of one task per class mostly measure run variability, not workload diversity. Expand to multiple independent tasks per class and reserve held-out tasks from non-AgentX repositories before claiming general benefit. Freeze acceptance cases before execution, retain failures/timeouts in denominators, specify a retry/cost cap, and report uncertainty rather than treating an arbitrary percentage as significant. Log any human amendment of the acceptance criteria. A passing test suite and a maintainer's satisfaction are related observations, not interchangeable acceptance measures.
+For each lifecycle operation, publish its mapping to an enabled transition or a declared, checked transition sequence. The state update must satisfy:
 
-Ablation means disabling one optional advisory/formatting behavior in a disposable benchmark or comparing existing supported tiers. Keep the expected correctness and policy constraints fixed; a tier with fewer guarantees is labeled as a different capability and cannot establish an equivalent cheaper verified result. Do not silently disable live mandatory gates to improve numbers.
+```text
+M_next = fire(N, M_current, transition)
+projection(B_next) = M_next on all managed task places
+resource invariants remain true
+```
 
-### 7.3 Promotion and stopping rules
+A direct counter update is acceptable only as an optimized implementation of that specified relation, with differential conformance checks. It cannot invent movement absent from the net. Ordinary reads or candidate edits may leave the control marking unchanged; such stuttering actions must have explicit phase/identity guards and evidence-invalidation semantics.
 
-Promote an optimization only when accepted-task token cost improves reproducibly, critical seeded cases and positive controls still pass, and acceptance/regression outcomes show no unexplained deterioration. Report latency and human-burden changes; fewer tokens with materially worse throughput is an explicit tradeoff. If uncertainty overlaps no improvement, gather a larger sample or leave the optimization experimental.
+For managed task places:
 
-**Telemetry-first demotion.** Before commissioning any new experiment, mine the telemetry the harness already records — gate skip counts, logged escapes and ceremony medians ([feature 057](../.meta/software_development_process/2.requirements/features/feature_057.gate_budget_ceremony_meter/FEATURE.md), feature 056 taxonomy). The cheapest ablation is one the existing data already suggests. Live example at this revision: the primary operator's seven-day record shows roughly 36 logged navigation-gate escapes and 35 friction skips against zero ceremony records before phase declarations — a precision problem the §7.4 net-zero rule can act on without a single new benchmark run. Skip telemetry alone is not a retirement criterion (a gate may be effective but over-broad, or merely encountered more often); it ranks candidates for the next controlled ablation. Mined behavioral nets (feature 044) make the same candidates structural: a transition that has never fired across the dogfood window is retirement evidence independent of skip counts, and a place that repeatedly blocks the same action class is guidance-debt evidence pointing at the refusal text to fix.
+```text
+M[p] = number of bindings whose lifecycle place is p
+```
 
-**The improvement loop follows its own rules.** Every mechanism change proposed from telemetry, the meta cohort or a roadmap revision pre-registers its expected effect and its own implementation cost; realized-versus-expected is reported; a proposal that misses its pre-registration twice loses priority. The loop's aggregate net savings — realized savings minus loop cost, including this document's maintenance — is a named measure. A self-improvement program that returns less than it costs is demoted like any other mechanism under §7.4.
+Anonymous tokens and binding-only lanes are explicit compatibility modes. A profile claiming formal lifecycle coverage must instantiate the required places and transitions. It cannot satisfy projection equality by synthesizing an absent place's token count from its bindings.
 
-**Anti-gaming tripwires.** A telemetry-driven loop that promotes mechanisms on single measures will optimize its own telemetry. Every promoted measure ships with a named gaming vector and a paired tripwire that exposes it: tokens per accepted task games toward cheap classes — tripwire: fixed task mix with per-class reporting; one-shot guidance games toward vaguer, always-correct-sounding refusals — tripwire: guidance-decay curve and repeat-refusal rate; context compression games toward starvation — tripwire: context recall and rediscovery events; retry caps game toward longer deliberation inside each attempt — tripwire: tokens-per-attempt reported beside attempts-per-task; ceremony reduction games toward skipped boundary approvals — tripwire: the seeded refusal matrix itself. A pair in which the metric improves while its tripwire degrades is investigated, never promoted; promotion requires improvement on the pair, not on one side.
+This closes C6 and defines when the net becomes an authoritative executable model. Before then, expose it as a partial control abstraction and identify the omitted behavior.
 
-**Model portability.** All §7.2 experiments pin one model, so a promoted mechanism is evidence about that model-harness pair, not about the mechanism. Before any general claim in §10 or in release material, replicate the core A/A+/B comparison on one materially different model (different family or reasoning configuration); the replication need not reach Tier-1 sizes, but the effect's direction and rough magnitude must survive. A mechanism that pays only on one model is recorded as conditional behavior and priced as such in the payback estimate — by default the fixed surface (§1) must be rebuilt or re-tuned per model, which changes every payback calculation that assumed it was portable.
+### 6.3 Compact topology and held resources
 
-**Initial stretch targets, to recalibrate after M0:** at least 20% lower total tokens per accepted routine/resumed task, 40% less duplicated delivered context, and 30% fewer harness-only model round trips. These are proposed targets, not measured results or automatic reasons to compress necessary context. Total task tokens and accepted outcomes decide; proxy targets alone cannot qualify an optimization.
+Use a reusable pool topology and typed task bindings. Do not create a fresh collection of places for every otherwise identical task. A place-count cap is an implementation budget, not a mathematical proof of boundedness or affordable exploration.
 
-Rank work using measured frequency and net token savings per task, confidence in preserving quality, implementation effort, and recurring maintenance cost. For positive per-task savings, estimate token payback as implementation/validation token cost divided by saved tokens per future task; report the assumed task volume and human effort separately. Prefer removing a frequently repeated cost over adding a complex subsystem for an occasional small saving.
+A representative future template is:
 
-Set a bounded experiment budget and retry policy, stated in tokens and human hours before Tier 1 begins; a matrix whose own cost approaches the savings it can plausibly find is reshaped — fewer conditions or cheaper task instances — not funded. Stop tuning when further savings are within measurement noise, required evidence is lost, recovery cost rises, or likely future usage cannot repay the added complexity. Preserve the best measured configuration and its limitations; avoid an endless optimization loop.
-
-**Product falsification criteria.** The optimization program has stopping rules; the product thesis needs them too, or every null result purchases another milestone. Declare them now: if, after M2 and M3, the harness does not beat the native runtime (condition A) on tokens per accepted task for the routine and resume classes while holding acceptance and refusal controls — judged under the §7.2 like-for-like pairing (economy and assurance pairings each rejected separately, so a win on either pairing saves the product along that axis) — or if the measured task-size break-even excludes the classes the target user actually performs, then pivot rather than extend. The default pivot reduces the product to the components that demonstrably paid: the resume digest, verification evidence and request-fidelity reporting, with advisory ceremony retired; the alternative is to stop and publish the results. The decision, its evidence and its scope are recorded like any release decision (§8). A kill criterion stated in advance is what distinguishes a falsifiable product thesis from the sunk-cost escalation §2.1 criticizes.
-
-### 7.4 Standing economy disciplines
-
-Two ratchets erode token economy silently; each gets a standing rule rather than a one-time fix.
-
-- **Budget ratchet.** A delivered-context budget (nav records, index bytes, tool or argument descriptions) may be raised only with a recorded, measured justification: the observed delivered payloads that needed the room and the task classes that consume it. The 64,000 → 65,536 nav-index raise during feature 089 (§3.5) is the template case — correct as the repair of an exceeded budget, wrong as a trend. Index growth is a recurring cost even when no single record is large; stale records retire rather than accumulate, and every raise is logged with its justification.
-- **Net-zero ceremony.** A new mandatory or advisory mechanism must retire, absorb or demote an equivalent existing one. The compile-enforced gate budget (`@budget gates max=12` with skip-frequency retirement candidates, [feature 057](../.meta/software_development_process/2.requirements/features/feature_057.gate_budget_ceremony_meter/FEATURE.md)) is both the precedent and the enforcement point. The same discipline extends to nav records (per-record byte caps with explicit continuation, stale-record retirement) and to advisories (precision-based demotion, §7.1). The ceremony meter's existing medians are the baseline a new mechanism must not worsen. A **sunset clause** backs the ratchet: an advisory or optional gate that survives two milestones without demonstrated value — acted-upon or precision evidence under §7.1 — is demoted by default and must earn fresh justification to return. Demotion is the default outcome of unproven longevity, not an exception requiring special argument.
-- **Surface economy.** Every agent-facing and maintainer-facing surface carries a size budget, documents included: process narration rotates to disk artifacts after two revisions (the WORK.md DONE-rotation pattern), revision logs cap at the most recent refinements, and older validation entries compress to one line plus a pointer. This roadmap declares its own budget — 700 lines — and this revision leaves it within that budget; the next revision pays for additions with compressions, §11 rotation first. A planning document that grows without bound is deliberation inflation in document form, and maintaining it belongs inside the maintenance-cost measure.
-- **Revision-execution coupling.** A substantive roadmap revision — new sections, measures, queue items or decision rows — may land only after at least one §5.1 queue item has closed with its concrete acceptance met since the previous revision. Seven substantive layers landed in one day while queue items 1–3 sat open; that is meta-work consuming the budget the meta-work exists to protect. Graded exceptions prevent stagnation and loophole abuse alike: **(a)** pure compressions and factual corrections are exempt; **(b)** user-directed revisions are exempt but are logged in §11 as *unearned*, and the unearned count must return to zero before the third self-initiated substantive revision; **(c)** between queue closures, self-initiated revisions must be net-negative in line count — they are paid for by deleting what execution has made obsolete. The closing test the next reviewer applies is still "which queue items closed since the last revision," not "what was added."
-
-## 8. Release gates and evidence lifecycle
-
-These gates constrain production claims and unsafe reuse. They do not replace the productivity promotion criteria in §7 or require every qualification task to finish before a read-only context optimization can be benchmarked. A product release must demonstrate both the claimed guarantees and useful accepted-task economics.
-
-Use `reported → reproduced → fixed → qualified` with explicit scope. A checked-in reproducer demonstrates the defect; a passing regression at a named revision establishes a fix for that case; qualification adds the claimed runtime boundary and complete release matrix. Local temporary probes below are not retained product qualification tests.
-
-| Required gate | Verified solo | Managed addition | Decisive evidence |
+| Transition | Consumes | Produces | Additional obligation |
 |---|---|---|---|
-| Named support profile | Required | Coordinator/worker topology and shared storage added. | Runtime/adapter/toolchain/OS/filesystem/policy/state identity. |
-| I01 mutation mediation | Required | Claim, generation, scope and worktree identity on every managed effect. | Real-adapter operation/path matrix including multi-file refusal. |
-| I02 critical fail-closed | Required | Coordination/journal failure included. | Missing/malformed/incompatible authority and subprocess fault cases. |
-| I03 obligation composition | Required | Managed gate remains independent of test/phase approvals. | Pairwise and reordered gate cases plus positive controls. |
-| I04 truthful completion | Required | Coordinator verifies real combined candidate. | Failed/empty/stale/missing-check verifier cases never produce verified Done. |
-| I05 durable acknowledgment | Required for authoritative state | Atomic competing-writer commit/event/idempotency recovery. | Actual process interruption and failed-write tests at each persistence boundary. |
-| I06 current evidence | Required | Upstream and integration-base changes invalidate dependent acceptance. | Candidate/input/policy/toolchain mutation tests and appropriate reuse controls. |
-| I07 truthful prediction | Unknown remains unknown | Managed observation uses a consistent generation. | Preflight/enforcement equivalence for the same available facts. |
-| I08 preserved work | Required | Other workers' candidates preserved too. | Intervening user edit survives failed refactor/recovery. |
-| I09 ownership isolation | Claimed session/workspace semantics required | Full task/actor/claim/coordination isolation. | Cross-session/cross-workspace/stale-owner refusal. |
-| I10 idempotency | Required where retries promise it | Required for every authoritative managed mutation. | Same-ID same-payload replay, conflicting payload refusal, crash retry and retention-boundary cases. |
-| Product lifecycle | Required | Shared-state/worktree migration covered. | Artifact-based install, upgrade, recovery and support diagnostics in a disposable repository. |
-| Required test suite | No required failure | Same plus managed stress/integration demo. | Immutable candidate-specific result report. |
+| start | pending + worker_free | active | Current task claim, permitted workspace and scope. |
+| submit | active | submitted + worker_free | Immutable candidate/input manifest. |
+| verify_start | submitted + verifier_free | verifying | Eligible check contract and current inputs. |
+| verify_pass | verifying | verified + verifier_free | Trusted passing receipt for that candidate. |
+| verify_fail | verifying | pending + verifier_free | Recorded failure; preserve candidate and diagnostics. |
+| integrate_start | verified + integration_free | integrating | Current dependencies and integration-base identity. |
+| integrate_pass | integrating | done + integration_free | Evidence for the actual combined candidate. |
+| integrate_fail | integrating | pending + integration_free | Failure recorded; candidate preserved. |
 
-Each release report must name capability, candidate revision plus dirty/untracked input identity, support profile, policy/state/evidence schema, required findings/checks, actual results, evidence locations and limitations. Missing, stale or failed required evidence yields `not_qualified`. A waiver is reported as a waiver and does not silently count as a verified pass.
+The table is a proposed template, not the current CLI or a mandatory path for every task. A solo/documentation profile can specialize away irrelevant lanes while preserving the meaning of remaining transitions.
 
-Degraded behavior is part of this contract: missing policy/state permits bounded read-only diagnosis but refuses affected authority; optional KB failure is labeled and handled independently; verifier failure preserves the candidate but prevents acceptance; stale evidence requires re-verification; failed acknowledgment requires command reconciliation before retry.
+For two worker slots and single verification/integration lanes, useful invariants are:
 
-## 9. Backlog reconciliation and deferrals
+```text
+M[worker_free] + M[active] = 2
+M[verifier_free] + M[verifying] = 1
+M[integration_free] + M[integrating] = 1
+sum(task lifecycle tokens, including explicit cancellation) = admitted task count
+```
 
-Keep [meta_harness_8](../.projects/meta/meta_harness_8/PROJECT.md) as the existing implementation home. This user-requested roadmap revision proposes productivity-first sequencing; update the canonical execution plan explicitly when scheduling work. Do not infer that the project file or its shipped feature records have already changed.
+These equations apply to this template and its defined admission/cancellation boundaries. Bindings identify which task holds each resource. A resource self-loop on one instantaneous transition checks availability at firing time; it does not hold the resource over external work. Start/finish transitions do.
 
-- Preserve T4-1/T4-2/T4-3 and T5-1…T5-7 shipped records. Add residual acceptance work tied to F/C identifiers and exact reproductions.
-- **Lead with the compiler baseline, small truth fixes and T3-4 measurement (feature 093: recon complete, implementation next); then T3-5 preparation.** T3-3 resume digest shipped as feature 092 (2026-09-13); its measured benefit is due under item 3 before it joins any value claim. Use F10/F11 to make responses truthful, relevant and bounded. Pilot installation early, then prioritize verified reuse and T3-6 knowledge by measured savings. Instrument the harness's own tasks as the dogfood lane from the first slice (§7.2) and extend feature 057's ceremony meter rather than building a second instrument.
-- Items 10–11 (§5.1) add the loop- and delegation-economy mechanisms on top of T3-6/T3-7; they follow the item-3 measurements (envelopes and frequency data first) and inherit the §7.4 net-zero rule.
-- Items 12–14 (§5.1) add the A+ static-only comparator, the git-local allowance drift and the meta improvement lane. The git relaxation is a policy change to the host permission list and the enforcer tests, executed as a separate small change with its negative controls; this roadmap records the direction and the boundary, and does not itself alter enforcement.
-- T2-6 conventions/lints and T2-7 scaffolds remain useful maintenance; coordinate with the already-started feature 089 work. They do not close the current release blockers.
-- T3-7 budget suggestions should target actual repeated model payloads. Internal file-byte reductions alone do not establish token savings.
-- Keep task prep's existing vertical slice; finish truthful snapshot semantics before broad tool exposure.
-- Repair the unindexed workflow warning and stale Quick Start/resume pointers as small, separate changes.
-- Use the bounded experiment loop in §7; avoid repeated broad reviews that produce no implemented, measured productivity gain.
-- **V1↔V2 authority.** The [V2 roadmap](META_HARNESS_ROADMAP_V2.md) is explicitly post-V1: its release claims start from a frozen, qualified V1 profile (its §1 entry gate). Division of authority: this document owns V1 product economy, qualification and the §5.1 queue; V2 owns the Work-IR semantic contract, adapters and managed/distributed execution. §6.6 is the shared anchor — changes to the S-tuple, frontier contract, certification or invariants must land in both documents in the same revision. V2 may be designed now, but no V2-coded feature enters the execution queue while §5.1 items 1–3 are open, and the §7.4 revision-execution coupling rule applies to V2 documents identically: successor design layers do not substitute for closed queue items.
+Cancellation and recovery release resources only after the effect/worker lifecycle permits it. A missed heartbeat is a recovery signal, not proof that a process stopped. Generation fencing prevents stale output from entering current work; process containment determines whether stale physical writes can also be stopped.
 
-Defer broad release packaging until the smallest workflow demonstrates value; a minimal pilot artifact belongs at M1. Defer additional adapters, expanded managed concurrency, distributed execution, an unrestricted policy/query language, mandatory new consultation gates, automatic policy self-modification, a hosted control plane and speculative commercial features. Reconsider each only when observed customer need and expected accepted-task savings or throughput justify its overhead and the relevant capability can be qualified.
+### 6.4 The legal-action frontier
 
-## 10. Risks and decisions still to make
+For a modeled action a and consistent state W:
 
-| Decision | Recommended starting position | Evidence needed before expanding |
+```text
+Legal(a, W) =
+    control_enabled(a, N, M)
+    AND typed_guards(a, G, B, E, R) = ALLOW
+    AND supported_capability(a, X)
+```
+
+The evaluator returns `ALLOW`, `DENY`, `UNKNOWN` or `ERROR`. Only `ALLOW` authorizes a protected effect in a verified profile. All applicable obligations compose; one successful gate cannot terminate their evaluation. If a check depends on unavailable evidence, report that dependency rather than imply that it passed.
+
+“Frontier” means a bounded set of relevant task actions, not an enumeration of every possible shell command. Its contract includes the candidate-action domain, revision, omitted count/continuation and evaluation completeness. A proposed action can always be checked directly; absence from a truncated list is not a denial.
+
+A proposed response shape is:
+
+```json
+{
+  "schema": "work-frontier/1",
+  "spec": "sha256:...",
+  "revision": 184,
+  "candidate": "sha256:...",
+  "task": "T17",
+  "generation": 3,
+  "workspace": "T17-g3",
+  "domain": "proposed action: submit task T17",
+  "complete": true,
+  "actions": [
+    {
+      "action": "submit task T17",
+      "transition": "submit",
+      "decision": "DENY",
+      "petri_status": "enabled",
+      "guard_status": "DENY",
+      "obligations": [
+        {
+          "code": "candidate_changed",
+          "required": "current input manifest",
+          "next_action": "refresh the candidate manifest"
+        }
+      ]
+    }
+  ],
+  "omitted": 0
+}
+```
+
+Generate remedies from failed guards, missing input tokens and dependency relations. Distinguish a remedy the agent may perform now from one needing information or authority. Never present an override invocation as if it creates user authorization.
+
+Legality and ranking are separate. Rank legal alternatives by request relevance, expected progress and observed cost. Petri enabledness alone does not choose a good next action. Bounded backward analysis can suggest a prerequisite sequence; initially use short deterministic chains and label heuristic rankings. Do not claim a globally cheapest plan.
+
+A read-only response is not a reservation. Recheck revision, generation, policy and actual candidate inputs at effect dispatch and commit. A cached frontier may become stale even when no recorded work revision changed, because external file edits can change reality.
+
+### 6.5 What workflow analysis can establish
+
+Engine conformance, workflow analysis and runtime qualification are three separate claims.
+
+Classical workflow-net soundness includes an option to complete from every reachable marking, proper completion and absence of dead transitions. Merely finding one path to a goal is weaker. A terminal workflow also need not satisfy the library's global transition-liveness predicate: after completion, ordinary work transitions are intentionally disabled. For a resource pool, define its final task predicate and restored resources explicitly before adapting workflow-net criteria. [^soundness]
+
+The certificate should state the checked property rather than return one broad `certified:true` flag.
+
+| Analysis | Appropriate claim | Limit |
 |---|---|---|
-| Context budget | Task-scoped summary with relevant excerpts and explicit continuation. | Lower total accepted-task tokens, with critical facts retained and expansion cost included. |
-| Done authority and drift policy | Request-provenance acceptance with advisory drift signals and user-terms completion (§4.6). | Measured drift and rework reduction without added clarification round trips; user amendments logged and rare. |
-| Tool/schema exposure | Concise stable core; optional task-specific exposure only where supported. | Actual request token/cache measurements plus successful tool discovery. |
-| Optimization granularity | One measured mechanism at a time; combine only after individual comparison. | Reproducible benefit beyond noise and no hidden quality/repair regression. |
-| Agent parallelism | Solo for routine or dependent work; bounded independent subtasks only when justified. | All-worker/coordinator token totals, integration cost, and accepted-throughput comparison. |
-| First supported adapter/profile | Existing OpenCode integration, one local profile and one writer. | Real operation coverage and exact runtime/SDK compatibility. |
-| Arbitrary shell mutation | Do not claim verified mediation without a qualified execution boundary. | Broker/sandbox or demonstrably complete mediation of the permitted shell/process behavior. |
-| Staging in first solo release | Enable only with owned finish/verify/consume semantics; otherwise exclude from the verified profile. | Interrupted, stale, cross-task and failed-stage cases. |
-| State persistence design | Extend the existing local design first against a concrete commit/recovery contract. | Full fault campaign; choose a different store only if it simplifies satisfying the contract, through an explicit design decision. |
-| Evidence reuse | Conservative declared input closure. | Dependency invalidation tests proving narrower reuse sound. |
-| Product packaging | Minimal pilot artifact at M1; supported release artifact at M5. | Non-maintainer activation/repeat use, clean non-AgentX install/upgrade/rollback, and onboarding/support cost. |
-| Small-task lane and break-even | Task-type-differentiated light lanes modeled on the bug_fix/test fast path (feature 054); publish the measured break-even task size. | Fixed-cost decomposition per task class (§1); break-even confirmed on non-AgentX tasks before any "cheaper for everything" claim. |
-| Advisory precision policy | Advisory-only signals, precision-metered; low-precision advisories are demoted or retired under the net-zero rule (§7.4). | Acted-upon rate and true-drift catch rate on seeded out-of-scope work; no rise in missed real drift after demotion. |
-| Delegation policy | Advisory context-quarantine rule for exploration-heavy subtasks (§5.1 item 11); the solo main thread remains the default. | Main-thread token reduction at equal acceptance; no rise in rediscovery or integration failures. |
-| Git and reversibility policy | Apply the maintainer-directed drift: all git allowed to the agent except remote-touching, locally irreversible and enforcement-surface classes (§6.5); assistance mode first, verified profile after the F01 contract. | Ceremony confirmations and human commit-minutes fall; seeded remote-push, `reset --hard` and `hooksPath` refusals hold; alias and `-c` routes closed before verified promotion. |
-| Static-versus-runtime split | Decide from the A+ ablation (§5.1 item 12): compiler output plus evidence layer only, or the full runtime surface. | Measured A+ versus B gap on core classes; per-mechanism attribution under §7.2 conditions. |
-| Self-improvement loop scope | Advisory, context and guidance surfaces first; policy self-modification stays deferred (§9). | Net realized loop savings per milestone; pre-registration adherence; no policy or safety regression. |
-| Net-fronted guidance | Joint frontier query (Petri-enabled ∧ guard-ALLOW, scope-filtered, revision-stamped) at task boundaries plus net-generated refusal text (§5.1 item 15, §6.6); first experiment read-only — guidance surface only, enforcement unchanged; the net's guidance use is measured like any other mechanism, not grandfathered in. | Attempts-per-task, repeat-refusal and tokens-to-first-valid-action reductions on measured classes; frontier latency inside the state/runtime overhead row; binding↔marking projection invariant holding in the verified profile; mined-net evidence that the workflow model matches observed behavior; no obligation or refusal-matrix regression. |
-| Solo vs managed control semantics | Same §6.6 semantics in both profiles; solo compiles coordination away (capacity one, in-process frontier evaluation, no net shell-out) rather than switching to different semantics, so the M1–M3 resume/frontier surfaces survive the managed profile instead of being rebuilt (V2 §2.6). | Frontier latency per profile; marking/binding projection and refusal matrix identical across profiles for the same actions. |
-| Model/effort routing | A named experiment after M2 class cost envelopes exist; routing is per task class, never per instance. | Per-class acceptance held at cheaper routing with all retry costs counted. |
-| Cost governor and retry cap | Advisory-only cost-envelope signal plus the enforced identical-signature retry cap (§5.1 item 10). | Attempt reduction on affected classes without suppressed necessary retries; transient-failure policy measured separately. |
-| Product pivot boundary | Pre-declared falsification criteria (§7.3): reduce to resume + verification + request-fidelity layer if the full harness does not beat native on the core classes (per the §7.2 like-for-like pairing) after M3. | The M2–M4 comparison record itself; user-visible value surviving on the reduced surface. |
-| Acceptance oracle tier | Ladder (§7.2): mechanical checks → fixture oracles → human confirmation → pinned LLM judge; every benchmark task names its tier; seeded broken candidates qualify the oracle at every tier including the human. | Judge-vs-human disagreement rate sampled; human tier timed and counted in joint cost C (§1). |
-| Task granularity vs batching | Micro-tasks whose individual preparation cost exceeds their work are candidates for batching under one preparation with per-outcome acceptance (§4.6 compound-requests rule), not forced through the fast path one at a time; batching never merges unrelated user requests that need separate acceptance conversations. | Fixed-cost decomposition per class (§1); batching measured against fast-path latency and per-outcome fidelity. |
-| Claims and business model | Useful local preview, then qualified solo capability. | Repeat external usage and measured value before pricing/hosted expansion. |
+| Place/resource invariant | The stated conservation equation holds for modeled transitions and admitted initial markings. | Runtime updates outside the transition relation invalidate the connection. |
+| Goal reachability | A witness reaches the declared goal in the analyzed model. | A path's existence does not prove inevitable completion or runtime feasibility. |
+| Option to complete | Every reachable modeled state can still reach an allowed final state. | Requires complete applicable analysis; fairness and external-effect assumptions remain separate. |
+| Proper completion | A final task state has no residual task work or held resources under the profile's definition. | A final marking does not prove acceptance checks passed on real content. |
+| Deadlock analysis | A reachable nonterminal state has no permitted modeled continuation, or none exists in a complete search. | Expected terminal states and pending external responses must be classified correctly. |
+| Runtime guard analysis | A specific action's typed obligations allow, deny or remain unresolved at this snapshot. | Arbitrary future data values and external services are not solved by P/T reachability. |
 
-No calendar estimate is asserted. The milestone exits above are the scheduling units; estimate each implementation slice after its reproducer and adapter/storage scope are concrete.
+**Abstraction boundary:** dropping identity, scope, dependency or evidence guards generally permits extra behaviors. Under an established over-approximation relation, a concrete runtime execution projects to a path in that model. Unreachability in the complete over-approximation can then rule out a concrete goal, but a model witness may be spurious. Deadlock freedom in a guard-free model does not establish deadlock freedom after guards restrict choices. Report control-only results as control-only.
 
-## 11. Validation history
+For an initial supported template, analyze finite representative task bindings and finite guard abstractions where feasible, and retain runtime guard checks. Explicitly identify properties not covered. Bounded identity expansion for analysis can be useful without changing the runtime to a colored-net engine.
 
-### Original roadmap review: compiler and source inspection
+Bind each certificate to the net digest, initial marking or certified parameter range, goal predicate, guard abstraction, capacities, compiler/policy/semantics identities and analysis limits. A topology-only cache key is insufficient. Store witnesses/counterexamples off-context and return the useful cause.
 
-`uv run scripts/omt/harnessc.py check --verify-projections` passed with 263 records and zero errors. Warning: `.workflows/meta_harness/meta_harness_development_self_evaluation.md` is still absent from its subject manifest. It remains a small catalog repair, not evidence that generated projections failed.
+Use `PROVEN`, `DISPROVEN` and `UNKNOWN` per property. Truncation does not erase a valid discovered witness, but it cannot justify a universal safety or liveness claim. The generic analyzer's boundedness/liveness conventions are useful foundations; certification must add task/profile-specific meaning.
 
-Source comparison against the original expansion baseline `4a95c911e6113f056b00b53b9b546f7fd0697d51` found substantial additions to net state/CLI, locking/workspace helpers, and tests. The old no-lock conclusion was therefore not carried forward. Current source checks confirmed the original completion default, before-hook catch, test-gate stop, stage/receipt compatibility behavior and best-effort TS IO remain.
+### 6.6 Concrete differentiator experiment
 
-### Original roadmap review: local reproductions
+Use two tasks with independent editing scopes, one verification slot, one integration slot and a dependency-sensitive combined candidate. Exercise interruption after submission, an upstream change before integration and a stale worker retry.
 
-Command: `bun /tmp/meta-harness-roadmap-probes.ts`. Temporary output: `/tmp/meta-harness-roadmap-probes.json`. The script invokes real repository modules, copies policy IR into temporary roots, redirects ledger/net paths, and substitutes subprocess responses. It does not execute an unauthorized edit, run a malicious process, or modify real authorization records.
+Compare:
 
-| Case | Observed result |
+- Ordinary preflight with explicit task/dependency/resource facts.
+- Joint Petri frontier using the same facts and output budget.
+- Frontier plus bounded workflow analysis.
+
+Useful expected behavior is concrete: identify the held verification slot, select another relevant permitted action, invalidate dependent verification when its input changes, and resume the correct task generation. A planted circular prerequisite should be surfaced before worker execution. A frontier that merely reproduces existing preflight text has not earned a separate runtime mechanism.
+
+Measure avoided attempts, recovery accuracy, accepted throughput, all-agent tokens and analysis/query cost. On live workflows, distinguish naturally occurring avoided failures from intentionally seeded defects; seeded detection rates alone do not establish economic return.
+
+### 6.7 Net roles and advanced features
+
+| Role | Authority |
 |---|---|
-| F05: failed verifier, exit 1, empty stdout | Successful completion message, completion record, and Done phase. |
-| F05 control: explicit `ok:false` and failing test | Refusal; no completion or Done. |
-| F05 control: exit 0 and explicit `ok:true` | Completion and Done under the current contract. This is a control, not proof of the proposed richer evidence contract. |
-| F03: approved test edit with thought-bearing fixture | Chain ends at `g.tests`, `stop:true`, zero net subprocess calls. |
-| F02: malformed net subprocess output | Before-hook returns normally and logs a failing-open JSON error. |
-| F09: ledger parent is a regular file | Append returns without error; no record persisted. |
+| Operational control net | Controls the supported lifecycle after model/runtime and authority qualification. |
+| Synthesized workflow | Proposal until validated, analyzed as required and installed through the current authority. |
+| Mined behavioral net | Describes observations; it can recommend changes but cannot authorize them. |
 
-These files are temporary review artifacts, not a shipped regression suite. Retaining their scenarios as repository tests with positive controls belongs to the supporting reliability lane in §5. New concurrency gaps C1–C5 are source-based observations; no exhaustive race/crash or real-adapter campaign was performed in the original review.
+Compare mined and operational models only after aligning task, generation, event and abstraction semantics. Concurrent logs require causal/resource relations; an arbitrary timestamp order can invent sequential dependencies. Rarely used safety transitions are not useless merely because they rarely fire.
 
-### Original roadmap review: suite and document checks
+Keep weighted P/T semantics as the default. Investigate state-space reduction when measured analysis limits justify it; identity-rich nets only when repeated real workflows make binding/guard semantics harder to maintain than the alternative; timed semantics only for explicit temporal proof requirements. Heartbeats and leases alone do not require timed nets. Automatic policy or topology self-modification and distributed coordination remain outside the committed near-term scope.
 
-`uv run pytest` completed with **2,167 passed, 1 failed, 10 warnings in 580.12 seconds** (2,168 collected). The failure was `tests/scripts/omt/test_omt_live_opencode_guards.py::test_plugins_load_and_tools_execute`: the `opencode run --format json` subprocess exceeded its 240-second timeout. The other live smoke passed. Log: `/tmp/meta-harness-roadmap-pytest.log`.
+## 7. Authority, evidence and recovery
 
-The historical feature-059 budget-pin failure did not recur. The live timeout also appears in earlier assessments, but this run does not establish its root cause or prove a plugin-load defect. It does leave that runtime qualification check unsuccessful. Existing net transaction/claim/workspace/capacity/lane/recovery/dependency tests passed; their scope limits in §§3.2–3.4 still apply.
+### 7.1 One decision boundary
 
-The suite ran in the shared working tree while unrelated project/scaffold edits appeared, not in a frozen release checkout. No implementation files were changed by this review, and no failing check was repaired or excluded to improve the result. Temporary runtime artifacts may be refreshed by the normal tests. Historical suite counts in the input reports are not substituted for this result.
+Normalize an action into its complete effect set, task/actor/generation, workspace, expected base/candidate, policy and command identity. The adapter observes and mediates supported effects; the shared evaluator owns their normative decision.
 
-Document validation: local Markdown links resolve, fenced code blocks are balanced, headings are unique, and whitespace checks pass. The sole authored workspace deliverable is this roadmap; both source assessments and unrelated changes are preserved.
+A hook on a named edit tool is not complete mediation of arbitrary shell writes. A verified profile must constrain unsupported mutation paths through host capabilities or a qualified broker. Publish what is supported and qualify it with actual allowed and refused effects. Missing integration must be visible, not a silent downgrade from verified to permissive behavior.
 
-### Early 2026-09-13 revisions — productivity, guidance, state-of-the-art, meta-thesis (compressed ×4)
+Reusing existing authorization reduces ceremony. Reversibility informs the decision but is not blanket authorization: local Git commands can discard uncommitted work or execute hooks. Any policy change must be implemented separately under the current authority; this roadmap grants no Git or publication allowance.
 
-Reordered around tokens-per-accepted-task with milestones, proxy ladder, §2.1 self-critique and eight harness comparisons; §4.6 request-fidelity contract, output contracts, attempt decomposition, dogfood lane, §7.4 ratchets; prior-art rows, assembly-order contract, Tier-0-first sequencing, fixture battery, kill criteria, items 10–14 groundwork; §1.1 compiled-verified-work thesis, §6.5 git-allowance boundary, condition A+, completion cost card, meta cohort. Fresh compiler pass (265 records) and F02/F03/F05/F09 probes reproduced (§3.5). Detail in git history per §7.4.
+### 7.2 Candidate-bound evidence
 
-### Critical-economy refinement — 2026-09-13 (compressed)
+A verification receipt must identify the candidate and relevant inputs, check identity, actual execution result, verifier/toolchain/policy identities, raw result reference, acceptance references and result time. Require process success, valid response shape and all required check results. Self-reported `pass` is insufficient.
 
-External critical review added context precision/recall and tokens-to-first-action (§7.1), anti-gaming tripwires, model-portability gate (§7.3), zero-recruitment pre-pilot (§4.5); markdown-only, checks green. Compressed per §7.4.
+Candidate identity includes relevant dirty/untracked files, deletions, modes, symlinks, tests and configuration. Keep runtime logs and evidence outside the input closure to avoid recursive invalidation. Begin conservatively; narrow reuse only after relevant source/test/configuration/toolchain changes demonstrably invalidate the right receipts.
 
-### Execution-coupling refinement — 2026-09-13
+Freeze or revalidate inputs around verification. A check that changes its own relevant inputs cannot certify the resulting candidate automatically. Recheck dependency identities and the actual combined candidate before integration acceptance.
 
-External critical review of intent, targets and feasibility against harness productivity, agent token economy and user-requested-work guidance, with state of the art as the bar. Principal finding: the document had accreted seven substantive revision layers in one day while no §5.1 queue item had closed — meta-work outrunning executed work. Responses: revision-execution coupling rule (§7.4); §7.1 measures gain staged activation with a named M0 minimum set; §7.2 gains oracle qualification, a canonical attempt-trace format (item 3), a dogfood→fixture conversion rule, and a moving-baseline repin rule; §3.5 hygiene row updated (the `6.testing/` reconciliation is staged in-tree); queue gains effort hints; header revision log compressed. Net line delta +1 (662→663), within the 700-line budget; additions paid by header and §11 compressions.
+Trust is defined by the profile: an enrolled verifier and protected authority store under a trusted local operator. Cryptographic hashes identify content; they do not make a caller's statement truthful or protect against an unrestricted process that can rewrite the authority and evidence.
 
-Verification: markdown-only — no source, test, policy or projection file modified. Document checks re-run on the updated file: links resolve, fences balanced, headings unique. `harnessc check` not rerun as part of this edit; §3.5 records the pending verification once the in-tree reconciliation commits.
+### 7.3 State publication
 
-### Joint-objective and oracle refinement — 2026-09-13 (unearned)
+Require one consistent authoritative revision for marking, bindings, command result and evidence/receipt references. Reconcile unresolved transactions before later mutation. Acknowledged commands must be replayable; the same command ID with a different payload must be rejected.
 
-User-directed deep evaluation: joint task-cost objective C = tokens + λ·human-minutes (§1); acceptance oracle tiered ladder and like-for-like economy/assurance pairings plus pre-registered expected winners (§7.2, §7.3, §10); A+ comparator folded into item 3 acceptance (§5.1); queue WIP cap of two open items (§5.1); graded revision-coupling rule with this revision logged **unearned** (§7.4 — unearned count: 1); cache-TTL note (§6.2); task-granularity/batching decision row (§10). Markdown-only; document checks re-run; budget 663 → under 700 maintained.
+Evaluate two local storage implementations against that contract:
 
-### Petri-net economy revision — 2026-09-13 (unearned)
+- Immutable revision generations, publishing a single current-generation pointer after complete writes.
+- A local transactional store, with immutable larger artifacts referenced by digest.
 
-User-directed deep evaluation of intent, targets and feasibility against harness productivity, token economy and request fidelity, with state of the art as the bar. Principal finding: the plan's most distinctive component — the Petri net — appeared only as a cost line; §2.1 conditioned its retention on measured value without naming any mechanism by which it could produce one. Responses: net-as-IR as §1.1 property 4 (marking as state, enabled-set as guidance, firing trace as evidence, reachability as pre-execution check); §6 trial-and-refusal row and §5.1 item 15; §6.1 marking-derived digest; §2.1/§2.2 delta claims updated; λ calibration procedure (§1); fixture judging-tier note (§7.2); mined-net demotion evidence (§7.3); §4.6 deviation tables seeded from logged drift advisories; item-3 run-time honesty and §10 decision row. Logged **unearned** (§7.4; unearned count: 2 — no queue item has closed since the previous revision). Markdown-only; document checks re-run; budget held under 700 lines.
+The current multi-file replacement protocol needs improvement, but a generation directory is not the only correct design. SQLite supplies mature atomic-commit machinery under documented filesystem assumptions; choosing it would still require application-level effect and recovery qualification. [^sqlite]
 
-### Petri work-IR precision revision — 2026-09-13 (unearned)
+Choose through a bounded implementation comparison, not storage aesthetics. Test actual interruption and failed writes before/after every authoritative boundary. Specify process-crash versus power-loss guarantees, read visibility, command retention, backup/migration and restoration of newer user content. Reclaimed command IDs must never silently become permission to repeat an old effect.
 
-User-directed deep re-evaluation of intent, targets and feasibility against [META_HARNESS_ROADMAP_PETRI_IMPROVEMENTS_V1](META_HARNESS_ROADMAP_PETRI_IMPROVEMENTS_V1.md), with state of the art as the bar. Critical finding: the plan's own distinctive thesis carried an F05-class overclaim (firing trace as acceptance evidence) and two implementation-mismatched claims ("the net is the IR", "marking is task state"); and the T3-3/resume backlog statement was stale (feature 092 shipped 2026-09-13, suite 2214/2214). Adopted from the proposal: Work-IR state tuple and authority split, conjunctive legality, joint scope-filtered frontier, three net roles with mined-is-descriptive, binding↔marking projection invariant, evidence-guarded verification, start/finish resource holds, receipted external effects, immutable revision generations as the C1/C2 target, per-net certification with honest UNKNOWN, semantics pinning, I-PN-01…10 register (§6.6) — applied to §1.1, §2.1, §3.5, §5.1 items 4/15, §6, §9, §10. Rejected: elevating Petri guidance to P0 (its measured-economy discipline stands; made the first experiment read-only instead), and colored/timed nets (deferred to measured failure of aggregate+binding). Logged **unearned** (§7.4; unearned count: 3; execution since the previous revision: feature 092 shipped, feature 093 recon complete). Markdown-only; document checks re-run; budget ≤700 held by compressing two earlier revisions into one pair.
+### 7.4 External effects
 
-### V2-fusion and certification-economy revision — 2026-09-13 (unearned)
+Use an explicit protocol:
 
-User-directed deep re-evaluation of intent, targets and feasibility against the [V2 roadmap](META_HARNESS_ROADMAP_V2.md) and the [Petri improvement proposal](META_HARNESS_ROADMAP_PETRI_IMPROVEMENTS_V1.md), with harness productivity, agent token economy, request-fidelity guidance and the state of the art as the bar. Findings: (i) this roadmap and V2 coexisted with no stated relationship while both write Work-IR semantics — dual authority, and the §7.4 coupling rule did not extend to successor design documents; (ii) the net's strongest economy — proving a workflow impossible before any attempt is attempted — appeared only as a correctness property, and the frontier entry contract existed only in V2 while item 15 bears its measurement; (iii) the solo frontier had no cost model (a shell-per-query design replicates g.net's subprocess overhead). Adopted: V1↔V2 authority split and design-coupling rule (§9); certification economy plus versioned frontier contract and solo in-process evaluation (§6.6); solo-equals-managed semantics decision row (§10); certification cost in §7.1 overhead. Rejected: pulling V2 milestones into the V1 queue (both documents' entry gates forbid it); colored/timed nets (both documents' demand gates still default to weighted P/T). Logged **unearned** (§7.4; unearned count: 4 — no queue item closed since the previous revision). Markdown-only; document checks re-run; budget ≤700 held by compressing the four earliest 2026-09-13 entries into one.
+```text
+eligible → reserved → effect started → effect attested → logical commit
+```
 
-## 12. Source and test map
+Do not hold the state lock while an agent works or a verifier runs. Reserve authority briefly, execute outside the lock, then validate receipt, identity and freshness before commit. The protocol must retain enough intent to distinguish an unperformed effect from an effect whose acknowledgment was lost.
 
-| Area | Primary evidence |
+A workspace claim becomes usable only after a real checkout at the expected repository/base is verified. A receipt for integration identifies the integrated candidate, not just a worker's individually passing branch.
+
+Local state and arbitrary external effects are not one atomic transaction. Prefer idempotent effects or observable reconciliation. If an effect's occurrence is ambiguous, preserve the candidate and diagnose it; blind replay is inappropriate for non-idempotent effects. Recovery does not promise universal exactly-once execution.
+
+## 8. Token economy and evaluation
+
+### 8.1 Count accepted work correctly
+
+Freeze benchmark task boundaries and acceptance cases before execution. Count an original task outcome once; splitting it into more subtasks cannot inflate throughput. Failed attempts, timeouts, abandoned branches and recovery consume resources even when the task never becomes accepted.
+
+For A independently accepted outcomes:
+
+```text
+tokens_per_accepted_task = total_observed_model_tokens / A
+accepted_throughput = A / elapsed_time
+tokens_per_accepted_task =
+    tokens_per_attempt × attempts_per_accepted_task
+joint_cost_per_accepted_task =
+    (billed_model_cost + compute_cost + h × human_minutes) / A
+```
+
+The factorization uses the same attempt population in both factors. Define attempt boundaries before runs. If A is zero, report no finite accepted-task cost. Report acceptance rate and cost over the entire assigned corpus as well, so refusals cannot improve the apparent economics.
+
+Input usage includes repeated history, schemas and tool results every time they are supplied. Cached input is a subset of reported input, not an additional total. Reasoning tokens are added only if the host's output total excludes them. Include helpers/coordinator and summary calls where observable; missing usage is unknown.
+
+The human-minute rate h is a declared sensitivity assumption, not a universal value. Show tokens, money, human minutes and latency separately even when using the joint score.
+
+### 8.2 Start with a small useful instrument
+
+Extend the existing ceremony/ledger measurement foundations in feature 093. First capture:
+
+| Field group | Minimum record |
 |---|---|
-| Original diagnosis and revised acceptance | [Original](META_HARNESS_PRODUCTION_READINESS.md), [revision](META_HARNESS_PRODUCTION_READINESS_REVISED.md) |
-| Canonical policy and compiler/initializer | [Policy](../.meta/META_HARNESS.omt), [compiler](../scripts/omt/harnessc.py) |
-| Approved backlog and session history | [Project](../.projects/meta/meta_harness_8/PROJECT.md), [state log](../.projects/meta/meta_harness_8/CURRENT_STATE.md) |
-| Completion behavior | [TypeScript completion](../.opencode/lib/enforcer/phase_gate.ts), [Python verifier](../scripts/omt/tdd/gates.py), [behavioral tests](../tests/scripts/omt/test_completion_hardening.py) |
-| Transaction and idempotency | [State](../scripts/omt/net/state.py), [lock/index](../scripts/omt/net/lock.py), [transaction tests](../tests/scripts/omt/test_net_transaction_authority.py) |
-| Claims/workspaces/capacity | [Claim tests](../tests/scripts/omt/test_net_task_claim_generation.py), [workspace helper](../scripts/omt/net/workspace.py), [workspace tests](../tests/scripts/omt/test_net_worktree_isolation.py), [capacity tests](../tests/scripts/omt/test_net_two_worker_capacity_scope.py) |
-| Verification/integration/dependencies | [Lane tests](../tests/scripts/omt/test_net_verification_integration_lane.py), [dependency tests](../tests/scripts/omt/test_net_evidence_dependency.py) |
-| Recovery evidence and its limits | [Journal/recovery tests](../tests/scripts/omt/test_net_recovery_journal.py), especially manually constructed marker cases and direct generation handoff |
-| Receipt/live-runtime scope | [Contract receipt test](../tests/scripts/omt/test_omt_harness_e2e.py), [live OpenCode tests](../tests/scripts/omt/test_omt_live_opencode_guards.py) |
-| Packaging/runtime identities | [AgentX package](../pyproject.toml), [plugin dependencies](../.opencode/package.json) |
-| Current harness comparison | Primary documentation linked alongside each claim in §2.2; documentation accessed 2026-09-13, with no comparative runtime benchmark performed. |
+| Identity | Task/request, condition, candidate, model/effort/runtime/toolchain/policy pins. |
+| Outcomes | Independent acceptance, verification result, omission/deviation, timeout or abandonment. |
+| Usage | Per-call input/output/cache fields where available; explicit completeness; helper usage. |
+| Friction | Refusals and causes, retries, tokens/time to first useful action, human interventions. |
+| Provenance | Raw trace/result references and the independent oracle version. |
 
-The roadmap is grounded in this repository, the two supplied assessments and the cited primary documentation. Product recommendations are inferences and testable hypotheses; no external certification, market demand or comparative performance advantage is established.
+When the host lacks usage, record delivered bytes, calls and elapsed time as labeled proxies. Do not convert bytes to tokens with an assumed constant or treat the proxy baseline as proof of a token target.
+
+Do not build every proposed metric before obtaining first numbers. Add context retrieval quality, cache behavior, advisory precision and maintenance payback only when they inform an active decision. A read or citation does not prove that the model used a fact; call such attribution a proxy and use omission/recovery controls.
+
+### 8.3 Mechanisms worth testing
+
+| Cost source | Candidate improvement | Countercheck |
+|---|---|---|
+| Repeated process discovery | One preparation/resume projection with exact task references. | Correct request, constraints and candidate recovered after real compaction. |
+| Oversized results | Summary first, bounded excerpts, stable IDs and continuation. | Expansion/rediscovery cost included; critical facts recoverable. |
+| Unnecessary context | Select by changed surface, contract and costly uncertainty. | Held-out omissions and stale-context cases do not increase. |
+| Repeated refusals | Same-evaluator preflight, then Petri frontier. | First useful action and independent acceptance improve. |
+| Repeated tests/diagnosis | Reuse only valid input-bound evidence; concise failure signatures. | Seeded relevant changes invalidate evidence; required checks remain. |
+| Prompt/schema churn | Stable content before volatile task state where the host supports ordering. | Observe cache usage; do not assume host payload control or cache hits. |
+| Repeated mistakes | Small verified lessons with source versions and expiry. | Avoided recurrence on held-out tasks pays for retrieval/maintenance. |
+| Unproductive retries | Detect unchanged failure signatures and suggest a changed strategy. | Preserve legitimate transient retries and avoid premature abandonment. |
+| Parallel overhead | Delegate only authorized, independent, substantial work. | Count every worker and integration cost; main-thread savings alone are insufficient. |
+
+Safe-looking compression can still impose retrieval latency or hide a needed fact. Even lossless storage with a shorter default display changes the agent's interaction. Use a small paired smoke evaluation before promotion.
+
+### 8.4 Comparators that identify the source of value
+
+| Condition | Purpose |
+|---|---|
+| Native host | Product baseline with normal repository instructions and native permissions. |
+| Static guidance | Same host plus equivalent compiled task/policy information, expressed without calls to unavailable harness tools. |
+| Current harness | Measures the existing runtime's total benefit and burden. |
+| Consolidated preflight | Same enforcement and facts, with one bounded task view. |
+| Petri frontier | Same evaluator/enforcement and presentation budget, adding modeled control/dependency guidance. |
+| Frontier plus analysis | Adds pre-execution property checking, with its cost included. |
+
+Run comparisons sequentially by decision value, not as a large Cartesian product. Native/static/current establishes whether the runtime adds value. Preflight versus frontier isolates Petri guidance. Frontier versus analysis isolates certification. A later state-machine/resource-counter implementation is the architectural control for modeling and maintenance cost.
+
+For assurance comparisons, match the promised outcome: compare a qualified harness with the native host plus the review needed to establish equivalent evidence. Assistance comparisons hold task acceptance constant without pretending that every configuration enforces the same workflow rules.
+
+Begin with one routine fix and one interrupted/resumed task, paired across the conditions needed for the current decision. Two or three repeats are an instrumentation smoke check. Expand to multiple independent tasks across fix, cross-layer change, feature, investigation/documentation and resume; include non-AgentX held-out repositories before general claims. Repeated runs of one task estimate variability, not task diversity.
+
+Freeze criteria, machine/model settings and retry limits; randomize paired order and isolate solutions. Separate cold and warm context. Re-pin when the host/model/policy changes. Broader model claims require a materially different model/configuration, not extrapolation from one pair.
+
+Qualify the oracle with valid candidates and seeded omitted behavior, stale evidence, missing checks and false-success cases. The harness's Done event cannot judge its own success. Use mechanical checks where adequate and independent semantic review where needed. If an LLM judge is necessary, pin it, measure disagreement and count its cost.
+
+### 8.5 Promotion and stopping
+
+Promote an optional mechanism only when repeatable accepted-task benefit exceeds measurement noise without an unexplained quality, authority or human-burden regression. Report per-task-class results with a fixed workload mix. Small pilots justify another experiment, not rare-failure reliability claims.
+
+Before each experiment, state the expected benefit, minimum meaningful effect, sample expansion rule and resource budget. Estimate payback as implementation/evaluation/maintenance cost divided by observed savings per eligible future task. Stop when realistic use cannot repay the mechanism.
+
+If ordinary preflight matches the Petri frontier, merge the guidance surfaces and retain Petri mechanisms only where their modeling/analysis value is demonstrated. If the full runtime loses to static guidance on the target workload, offer the smaller compiler/resume/evidence product. If neither economy nor assurance improves, stop expanding scope and retain only individually useful components.
+
+## 9. Delivery sequence and feasibility
+
+### 9.1 One bounded execution queue
+
+Use the existing project home. Preserve shipped feature records; add residual work with the relevant F/C identifiers when implementation is scheduled. These are recommended implementation slices, not permission to begin unrelated code changes during a documentation task.
+
+Keep at most two implementation slices active, normally one correctness slice and one measurement slice. Complete an accepted result before expanding either. Roles below are responsibilities for a solo maintainer and agent, not a staffing requirement.
+
+| Order | Slice and owner responsibility | Dependencies | Concrete exit | Effort and uncertainty |
+|---|---|---|---|---|
+| 1 | **Task-cost first result** — evaluation; finish feature 093. | Passing compiler snapshot; independent oracle. | Repeatable routine/resume native/static/current traces, honest usage fields, first waste ranking. | Medium; telemetry availability and actual run cost dominate. |
+| 2 | **Truthful boundaries** — runtime; F05/F09, then F02/F03. | Small retained reproductions and positive controls. | Invalid verifier/write results cannot claim success; critical errors refuse; obligations compose on real supported edits. | Small per boundary; host qualification adds uncertainty. |
+| 3 | **Thin work contract** — compiler/runtime; Q/A bindings, candidate identity, normalized action, common decision result. | Current-state map; reuse 072/073/092. | One task resumes with exact request and outcomes; unknown facts remain unknown; no duplicate authority store. | Medium; acceptance interpretation and migration need care. |
+| 4 | **Read-only frontier experiment** — runtime/evaluation. | 1 and 3; frozen enforcement profile. | Preflight/frontier paired results, scoped completeness, stale-state controls and query-cost report. | Medium; existing hidden lifecycle behavior may limit modeled scope. |
+| 5 | **Executable Petri closure** — control runtime; C6. | 3; one supported lifecycle template. | Claim/submit/verify/integrate/recover map to checked transitions; projection and resource invariants hold; hidden lanes excluded or migrated. | Medium to large; model/runtime equivalence is the main risk. |
+| 6 | **Authority and evidence closure** — persistence/verifier; C1–C5 and affected F findings. | 2, 3 and supported action boundary. | Consistent revisions, crash-safe replay, real workspace receipts and current-candidate verification. | Large; implement as separate storage, workspace and verifier slices. |
+| 7 | **Workflow analysis and solo qualification** — control/evaluation. | 5–6 for authoritative claims; read-only analysis can start earlier. | Property-scoped certificate, honest unknowns, fault matrix and accepted-task benefit on supported tasks. | Medium to large; bound analysis and supported effects. |
+| 8 | **Minimal installation and knowledge pilot** — product/evaluation; T3-6. | A useful task view and measurements; trusted reuse for evidence claims. | Disposable non-AgentX installs work; selective lessons or packaging show measured value. | Medium; external adoption remains uncertain. |
+
+Work on 1 and 2 first. A read-only control-analysis prototype need not wait for every reliability defect; a verified authority claim must. If slice 4 shows no incremental guidance value, revise its product scope before investing in broad frontier wiring. C6 remains necessary wherever Petri execution guarantees are claimed.
+
+### 9.2 Milestones
+
+| Milestone | Demonstrable outcome | Exit decision |
+|---|---|---|
+| M0 — Establish truth and cost | First benchmark result plus small truthful-boundary fixes. | Identify a measured next improvement; keep qualification limitations explicit. |
+| M1 — Guide one real task | Request-linked preparation/resume and read-only frontier comparison. | Keep, merge or drop the incremental guidance mechanism. |
+| M2 — Make control and evidence authoritative | One supported lifecycle with model/runtime agreement, consistent state and trusted receipts. | Qualify a narrow solo profile; no global “verified agent” claim. |
+| M3 — Make the useful workflow adoptable | Minimal artifact, non-AgentX tasks, installation/recovery checks and cost report. | Expand only if benefits survive setup and support costs. |
+| M4 — Optional managed local execution | At most two enrolled workers with real isolation, fenced effects and verified integration. | Promote only for workloads with better accepted throughput or joint cost than solo. |
+
+One narrow path through M0–M3 is the committed product direction. Managed execution is conditional. A second adapter, SDK extraction and distributed execution are expansion decisions, not prerequisites for demonstrating solo value.
+
+### 9.3 Feasibility judgment
+
+**High feasibility:** finishing measurement plumbing, correcting completion response handling, removing early-stop composition defects, and joining existing preparation/resume surfaces. Existing implementations make these bounded engineering tasks, although their economic benefit still needs measurement.
+
+**Moderate feasibility:** a compact typed Work IR, one shared evaluator, transition-based lifecycle closure and bounded template analysis. They reuse substantial code, but cannot be achieved honestly by renaming current sidecars or adding a schema alone.
+
+**High execution risk:** complete effect mediation, durable external-effect recovery and trusted verification of integrated candidates. Limit supported operations and failure models; isolate storage and adapter qualification instead of placing a single “managed execution” feature in the queue.
+
+**Unproven demand:** multiple adapters, broad deployment portability, remote workers, advanced Petri semantics and a self-optimizing platform. Delay them until repeated tasks demonstrate a limitation of the local product.
+
+Do not assign a calendar date to the entire program. Estimate a slice after its reproducer, support boundary and oracle are concrete; include benchmark runtime and maintenance in the estimate. Completing feature 093's first result has greater decision value than another general architectural recon pass.
+
+## 10. Qualification, expansion and maintenance
+
+### 10.1 Profiles and release evidence
+
+| Profile | Guarantee boundary | Required evidence |
+|---|---|---|
+| Assistance | Guidance and diagnostics; no complete effect-mediation claim. | Useful task outcomes, truthful unknowns, bounded outputs and documented limitations. |
+| Verified solo | One trusted operator/writer, named adapter and supported effects. | Real allow/deny matrix; valid/current verifier results; durable acknowledgment; preserved work; clean install/resume/recovery. |
+| Managed local | Enrolled workers, real isolated workspaces, generation/scope fencing and coordinated integration. | Solo requirements plus competing writers, stale workers, lane/resource invariants, dependency changes and combined-candidate checks. |
+
+Installation tiers select features, not assurance. Every qualification report names exact candidate/input identity, policy/compiler/adapter/toolchain versions, scope, checks, raw evidence references and unresolved limitations. A failed or missing required check leaves the corresponding claim unqualified.
+
+Minimum Petri/control regressions cover:
+
+- Every managed lifecycle operation matches its declared transition relation.
+- Bindings and marking agree; resources are conserved across pass, fail, cancel and recovery.
+- Identical aggregate markings with different task identities resume differently.
+- An enabled control transition with a denying/unknown guard cannot authorize an effect.
+- A stale frontier or stale generation cannot commit current work.
+- A net witness is not treated as acceptance evidence.
+- Truncated analysis, guard abstraction and expected terminal states are reported correctly.
+- Duplicate commands, interrupted publication and ambiguous external effects do not silently succeed.
+
+These are requirements for later implementation and qualification, not a statement that this documentation edit added those tests.
+
+### 10.2 Expansion gates
+
+Introduce a second adapter only after the normalized contract works on the first and a real user/runtime need exists. Demonstrate equivalent decisions, receipt meanings, resume state and completion on a small shared corpus before advertising portability. Thin adapter boundaries can be designed now without funding a general SDK.
+
+Require managed local execution to beat qualified solo on an actually parallel task class, counting coordinator, worker, verification and merge costs. More active agents are not a throughput result. A single current managed worker still requires identity checks; enforcement cannot depend solely on observing two active tasks.
+
+Treat mining as an offline proposal tool. A proposed policy change must pass current-authority review, replay/differential checks, task evaluation and controlled promotion. Replay checks recorded actions; changed guidance can change future agent behavior, so replay alone cannot establish the performance of a new policy.
+
+Remote execution adds identity, artifact transport, retry, partitions and coordinator recovery. A Petri model does not supply distributed consensus. Reconsider a single coordinator with disposable remote workers only after local semantics and demand are established.
+
+### 10.3 Keep the harness cheaper to maintain
+
+Every optional mechanism needs an observed problem, measurable outcome, bounded default surface and removal path. Merge duplicate checks or projections. Do not impose a literal one-new-gate/one-deleted-gate rule when a newly discovered correctness requirement warrants additional protection; control user-visible ceremony and redundant implementation instead.
+
+Use feature 093's task data and T3-6's selective lessons to rank improvements. Low use alone does not justify removing a rare but necessary safeguard. Distinguish advice, correctness requirements and authority controls before ablation.
+
+Keep this roadmap out of routine startup context. Use section-level retrieval and stable references. Maintain one current-state snapshot and one queue; retain historical narrative in project logs and Git history. A useful size budget is words and delivered payload, not lines that can be satisfied by making paragraphs arbitrarily long.
+
+Self-initiated roadmap expansion should follow a completed slice or a concrete new observation. User-requested analysis remains legitimate work and needs no “unearned revision” ceremony. Evaluate the improvement loop by realized savings after its own analysis, implementation, verification and maintenance cost.
+
+## 11. Evidence and verification record
+
+### 11.1 Local evidence
+
+| Evidence | Use |
+|---|---|
+| [Policy source](../.meta/META_HARNESS.omt) and [compiler](../scripts/omt/harnessc.py) | Static policy, generated surfaces, budgets and consistency checks. |
+| [Project](../.projects/meta/meta_harness_8/PROJECT.md) and [state log](../.projects/meta/meta_harness_8/CURRENT_STATE.md) | Shipped features, two remaining backlog items and paused benchmark. |
+| [Preparation](../.opencode/lib/enforcer/task_prep.ts), [preflight](../.opencode/lib/enforcer/preflight.ts), [typed policy](../.opencode/lib/enforcer/policy_decision.ts) and [status/resume](../.opencode/plugins/omt_status.ts) | Existing projections and limits of dry/live decision agreement. |
+| [Petri model](../scripts/omt/net/model.py), [analysis](../scripts/omt/net/analysis.py), [conformance](../scripts/omt/net/conformance.py) and [interchange contract](../shared/petri-net/FORMAT.md) | Kernel semantics, completeness-aware analysis and format boundary. |
+| [Runtime state](../scripts/omt/net/state.py), [journal/lock](../scripts/omt/net/lock.py) and [workspace](../scripts/omt/net/workspace.py) | C1–C6 and proposed control/effect closure. |
+| [Completion tests](../tests/scripts/omt/test_completion_hardening.py), [transaction tests](../tests/scripts/omt/test_net_transaction_authority.py) and [recovery tests](../tests/scripts/omt/test_net_recovery_journal.py) | Useful existing behavioral coverage, with caller/crash-boundary limitations. |
+| [Lane tests](../tests/scripts/omt/test_net_verification_integration_lane.py) and [dependency tests](../tests/scripts/omt/test_net_evidence_dependency.py) | State progression and dependency checks; supplied verdicts do not establish trusted execution. |
+| [Harness boundary test](../tests/scripts/omt/test_omt_harness_e2e.py) and [live-host checks](../tests/scripts/omt/test_omt_live_opencode_guards.py) | Distinct module and real-adapter verification surfaces. |
+| [Package](../pyproject.toml) and [plugin dependencies](../.opencode/package.json) | Current application coupling and declared plugin dependency identity. |
+
+Assessment date: 2026-09-13. Fresh source findings are distinguished above from historical feature reports and future requirements. No accepted-task token benchmark, competing-harness runtime comparison, complete crash campaign or external adoption study was performed for this document update.
+
+**Fresh checks:** compiler/projection validation passed with 265 records and zero errors; the existing workflow-index and near-cap warnings remain. Final document and required suite validation will be recorded after the consolidated edit is checked.
+
+The illustrative table in section 6.3 was parsed into the repository's Petri library: 10 places, 8 transitions and two admitted tasks produced a complete 26-state reachability graph. Every state preserved the three resource equations and task count; there were no nonterminal deadlocks, and every reachable state retained a path to completion. This checks the example's control model only. Typed guards, external effects, cancellation and the production runtime were excluded; it is not a runtime qualification result.
+
+### 11.2 External primary sources
+
+[^opencode]: OpenCode, [Plugins](https://opencode.ai/docs/plugins/), documentation accessed 2026-09-13. Supports the plugin, tool-hook and experimental compaction integration comparison.
+[^anthropic]: Anthropic, [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents), November 26, 2025; accessed 2026-09-13. Supports the incremental-work, continuity and explicit-check comparison.
+[^aider]: Aider, [Repository map](https://aider.chat/docs/repomap.html), documentation accessed 2026-09-13. Supports relevance-ranked, token-budgeted repository context.
+[^openhands]: OpenHands, [Software Agent SDK architecture overview](https://docs.openhands.dev/sdk/arch/overview), documentation accessed 2026-09-13. Supports typed events, context condensation and package/workspace separation.
+[^langgraph]: LangChain, [LangGraph persistence](https://docs.langchain.com/oss/python/langgraph/persistence), documentation accessed 2026-09-13. Supports checkpointed graph state and continuation.
+[^mini]: mini-SWE-agent, [Overview](https://mini-swe-agent.com/latest/), documentation accessed 2026-09-13. Supports the minimal-loop comparator; published scores are not used as comparative evidence here.
+[^soundness]: W. M. P. van der Aalst and coauthors, [Soundness of Workflow Nets: Classification, Decidability, and Analysis](https://www.vdaalst.com/publications/p628.pdf), author-hosted manuscript, especially section 5; accessed 2026-09-13. Supports the distinction between goal reachability and workflow soundness. Guard-abstraction and qualification recommendations here are applications to this repository.
+[^sqlite]: SQLite, [Atomic Commit in SQLite](https://sqlite.org/atomiccommit.html), documentation accessed 2026-09-13. Supports transactional storage as an alternative with explicit filesystem/durability assumptions.
