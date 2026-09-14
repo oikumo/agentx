@@ -139,7 +139,13 @@ def _harness_repair() -> TaskDef:
             Step("stage", "bash", {"command": "uv run scripts/omt/harnessc.py stage --feature feature_092.resume_digest scripts/omt/harnessc.py"}, role="intervention", gate="g.receipt", expect="pass"),
             Step("fix", "edit", {"path": HARNESS_C, "old": "BUDGET_DIET_PROXIMITY = 65", "new": "BUDGET_DIET_PROXIMITY = 64"}),
             Step("e2e", "verify", {"command": f"uv run pytest {E2E_TEST} -q"}, role="verify", expect="pass"),
-            Step("golden", "verify", {"command": f"uv run pytest {BUDGET_TEST} -q"}, role="verify", expect="pass"),
+            # Hermetic boundary node only: the full file carries a live-check
+            # test (test_live_check_emits_diet_warnings) that fails in a fresh
+            # pinned-rev worktree on sandbox hygiene (bench.spec.json
+            # root_allowlist + empty-ledger project records), not on the
+            # seeded BUDGET_DIET_PROXIMITY fault. The boundary node is the
+            # seeded-fault signal (TA:126).
+            Step("golden", "verify", {"command": f"uv run pytest {BUDGET_TEST}::test_boundary_headroom_64_fires_65_silent -q"}, role="verify", expect="pass"),
             Step("stage_clear", "bash", {"command": "uv run scripts/omt/harnessc.py stage --clear"}, role="intervention", expect="pass"),
             Step("viol_git_push", "bash", {"command": "git push origin HEAD"}, role="violation", expect="blocked"),
             Step("assert_e2e", "assert", {"step": "e2e", "rc_zero": True}, role="verify", expect="pass"),

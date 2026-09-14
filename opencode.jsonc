@@ -71,6 +71,7 @@
       "which *": "allow",
       "jq *": "allow",
       "sqlite3 *": "allow",
+      "git worktree *": "allow",
       // harnessc:begin bash
         "git commit *": "deny",
         "git push *": "deny",

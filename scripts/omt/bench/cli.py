@@ -129,6 +129,20 @@ def run_trial(
         revision = str(setup.get("revision", ""))
     try:
         spec = _spec_for(task_id, deny)
+        if task_id == "concurrent_conflict":
+            # TA:119 placeholder resolution: B's stale claim must carry the
+            # genuine setup revision (so A's claim makes it stale), not 0
+            # (which is a real mismatch check, not "no check").
+            try:
+                setup_rev = int(str(setup.get("setup_revision", "")))
+            except (TypeError, ValueError):
+                setup_rev = None
+            if setup_rev is not None:
+                for s in spec.get("task", {}).get("steps", []):
+                    if s.get("id") == "b_stale_claim":
+                        s_args = dict(s.get("args", {}).get("arguments", {}))
+                        s_args["expected_revision"] = setup_rev
+                        s["args"]["arguments"] = s_args
         spec_path = Path(sandbox_dir) / "bench.spec.json"
         spec_path.write_text(json.dumps(spec), encoding="utf-8")
         cmd = [BUN, str(PROBE_TS), "--sandbox", sandbox_dir, "--spec", str(spec_path)]

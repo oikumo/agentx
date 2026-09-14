@@ -165,11 +165,16 @@ async function execOmt(toolName: string, args: any, session: string): Promise<st
     // SDK array-coercion guard lives in tdd_hats; pass behaviors through as-is.
     return String(await tddTools.omt_tdd.execute(args, ctx));
   }
-  if (toolName === "omt_status") return JSON.stringify(await toolStatus.execute(args, ctx));
-  if (toolName === "omt_think") return JSON.stringify(await toolThink.execute(args, ctx));
-  if (toolName === "omt_nav") return JSON.stringify(await toolNav.execute(args, ctx));
-  if (toolName === "omt_kb_nav") return JSON.stringify(await toolKb.execute(args, ctx));
-  if (toolName === "omt_net") return JSON.stringify(await toolNet.execute(args, ctx));
+  // String-or-object guard (GOTCHA_PROBE_SERIALIZATION): plugin tools that
+  // shell out (omt_net) return an already-serialized JSON string — blind
+  // JSON.stringify would double-encode it (escaped quotes), hiding engine
+  // refusals ('"ok": false') and claim receipts ('"ok": true') from the
+  // transcript asserts. Same shape as the omt_q branch below.
+  if (toolName === "omt_status") { const r: any = await toolStatus.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
+  if (toolName === "omt_think") { const r: any = await toolThink.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
+  if (toolName === "omt_nav") { const r: any = await toolNav.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
+  if (toolName === "omt_kb_nav") { const r: any = await toolKb.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
+  if (toolName === "omt_net") { const r: any = await toolNet.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
   if (toolName === "omt_q") {
     const m = await import(join(LIVE, ".opencode/plugins/omt_q.ts"));
     const { tool } = await m.default({ directory: sandbox, worktree: sandbox });

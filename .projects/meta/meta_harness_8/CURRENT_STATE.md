@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-09-14 (iter — T3-4 session 5, SHIPPED feature_093.task_cost_benchmark)
+
+- **T3-4 (feature_093.task_cost_benchmark) SHIPPED** — resumed via `.sandbox/pause_2026-09-14.md`, fixed the 2 diagnosed findings with resultText evidence, re-ran first-numbers to 6/6 green, closed out.
+  - Fix 1 (concurrent missed=2 + assert fail): probe `execOmt` blind-`JSON.stringify` double-encoded the already-serialized `omt_net` CLI string (escaped quotes hid `'"ok": false'` refusals + `'"ok": true'` receipt) → string-or-object guard on all 5 plugin-tool branches; plus `b_stale_claim.expected_revision: 0` → genuine `setup_revision` in `cli.run_trial` (TA:119). Now TP=3/missed=0/success=true.
+  - Fix 2 (harness_repair regressions=1): golden ran the whole `test_budget_diet.py`; its live-check test fails in fresh worktrees on sandbox hygiene (`bench.spec.json` root_allowlist + empty-ledger project records), not the seeded fault → narrowed to `::test_boundary_headroom_64_fires_65_silent` (TA:126). Now success=true/regressions=0.
+  - First numbers @`3478bb2` → `bench_first_numbers.{json,md}` (schema `bench_first_numbers.v1`): 6/6 ✅, TP=13/FP=0/missed=0, 66 steps / 21 harness calls / 140218 io_bytes / 35053 tokens_est / 22.5 verify_s; resume orientation 288B.
+  - Verification: 17/17 goldens + boundary e2e green (staged T4-2 batch, 3 files, cleared); `check` 0 errors + `build` OK; full suite **2231/2231** (2214 + 17); test report + impl notes scaffolded (feature_090); `omt_complete` ✅.
+  - Incidental (user, kept): `opencode.jsonc` gains `"git worktree *": "allow"` — a stray `""` mid-edit briefly broke deny parsing; user repaired before the final run.
+- Remaining per §Status: T3-6 (1); T5-8 loop when backlog empties. Repair flag (self_evaluation.md unindexed) still open.
+
+---
+
 ## 2026-09-13 (iter — T3-4 session 4, recon round 4, PAUSED pre-implementation)
 
 - **T3-4 (feature_093.task_cost_benchmark) paused 4th time** — no code written; session re-locked the design via a FOURTH fresh-context recon at HEAD: 4 new TA: thoughts in analysis_001 (123–126), incl. net-gate drift check (cli.py gate compares net rev vs last net_* ledger record → ERR_NET_DRIFT_CONFLICT; concurrent order safe by construction as claims/fires append net_* records before first gate shell-out); g.think masking (net/state.py 5 TA + harnessc.py 4 TA → B needs omt_think{op:list} consult before no-work_start edit, else g.net removal experiment shows false no-slip); uv.lock gitignored → sandbox setup must copy live uv.lock before uv sync (pinned resolution); claim_task side effects (ensure_workspace → .worktrees/<task>-g<gen>/ + branch, fail-open) + coordination_root defaulting to bundle dir; concrete anchors/commands locked (module-level regression append, UI view-loop 12/16-space anchor, verify commands, "✅ RED"/"⛔ Test still fails" assert strings, run_pytest argv, string-aware JSONC deny parse). KB consult recorded (g.kb: no bench records, expected). Phase re-declared minor_feature/Programming (8h expiry — re-declare on resume). Resume: `.sandbox/pause_2026-09-13f.md` (supersedes e) → analysis_001 (16 TA thoughts) → write `scripts/omt/bench/` package → canary + 8-group goldens → first-numbers run → close-out.
