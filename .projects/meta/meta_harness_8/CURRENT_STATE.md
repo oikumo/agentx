@@ -5,6 +5,36 @@
 
 ---
 
+## 2026-09-14 (auto — feature_094.selective_verifiable_knowledge_pilot Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_094.selective_verifiable_knowledge_pilot/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-14 (iter — T3-6 SHIPPED feature_094.selective_verifiable_knowledge_pilot)
+
+- **T3-6 (feature_094.selective_verifiable_knowledge_pilot) SHIPPED** — Improvement002 E
+  pilot, Option A (sidecar + advisory, user-approved at gate over B/C/D).
+  - Mechanism: `scripts/omt/kb_pilot/` — `lessons.json` sidecar (3 seeded lessons:
+    tdd_node, stage_policy_order, tests_canary_shadow; symbol/file/dependent/
+    evidence_test/content_version/expiry) + pure advisory `lookup` (active-only,
+    file/symbol/dependent match, empty→[]) + `needs_refresh` + deepcopy
+    `promote`/`retire` (reason + replacement check). Read-only: never blocks,
+    grants, or mutates policy (no `.omt` change, no new gate, no auto-learning).
+  - Verification: 10/10 goldens green first run + boundary e2e green;
+    `check` 0 errors + `build` OK (265 records → 5 projections, budgets green);
+    full suite **2241/2241** (2231 + 10).
+  - Discipline: approval gate held (A picked pre-src); phase→skip→tests canary;
+    2× KB consults (no records, expected); think-gate (`harnessc.py`) consulted;
+    first-write-only on harness surface (no stage needed); `uv` only; reports
+    scaffolded via feature_090 subcommands.
+- Remaining per §Status: T5-8 loop when backlog empties. Repair flag
+  (self_evaluation.md unindexed) still open.
+
+---
+
 ## 2026-09-14 (iter — T3-4 session 5, SHIPPED feature_093.task_cost_benchmark)
 
 - **T3-4 (feature_093.task_cost_benchmark) SHIPPED** — resumed via `.sandbox/pause_2026-09-14.md`, fixed the 2 diagnosed findings with resultText evidence, re-ran first-numbers to 6/6 green, closed out.
