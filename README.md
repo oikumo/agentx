@@ -68,14 +68,14 @@ agentx is developed with **opencode** using a mechanically enforced **META HARNE
 |-----------|----------|---------|
 | **Documentation Structure** | `.meta/` | All development artifacts organized by OMT++ phases |
 | **Enforcement Plugin** | `.opencode/plugins/omt_enforcer.ts` + `.opencode/lib/enforcer/` | Composition root + gate modules driven by `gate_driver.ts` (HDL-2): an IR-ordered chain of 10 gates (budget 12, net-zero) whose order, triggers, predicates, and messages are pure `.omt` declarations |
-| **Status Tool** | `.opencode/plugins/omt_status.ts` | Returns current phase, unlock state, artifact status, TDD state (compact ~350 B/call) + `preflight(tool,path)` ordered gates + `resume` ≤2 KB digest |
-| **Navigation Plugin** | `.opencode/plugins/omt_nav.ts` | feature_020: structured doc navigation via ONE consolidated tool — `omt_nav{op:nav\|list_sections\|cross_ref\|quick_ref}` |
-| **Interrogative Plugin** | `.opencode/plugins/omt_q.ts` | feature_026: read-only resume questions — `op:state` · `op:plan` · `op:drift` — answering "what's the state of X / which gates block this edit / what drifted" without per-session re-derivation |
-| **Knowledge Base Plugin** | `.opencode/plugins/omt_kb_nav.ts` | Application Knowledge Base (AKB) navigation — concept-altitude `TIER_CODE` index (`g.kb` consult before `src/` edits) |
-| **Think Anywhere Plugin** | `.opencode/plugins/omt_think.ts` | feature_021/022: persistent inline `TA:` thought-tags via ONE consolidated tool — `omt_think{op:add\|list\|remove\|verify\|suggest}` — + session digest |
-| **Concurrency Net Plugin** | `.opencode/plugins/omt_net.ts` | feature_039–050 + MH9: Petri-net-gated concurrent development — `omt_net{op:probe\|fire\|splice\|sync\|invariant\|synthesize\|mine\|gate\|claim}`; WIP-limited pool (places 12/15, `net_rev:57` live), net-as-gate (feature_050), session whitelist, claim/generation fencing |
+| **Status Tool** | `.opencode/plugins/omt_status.ts` | Returns current phase, unlock state, artifact status, TDD state (compact ~350 B/call) + `preflight(tool,path)` ordered gates (feature_055, preflight-on-declare 062) + `resume` ≤2 KB digest (feature_092) |
+| **Navigation Plugin** | `.opencode/plugins/omt_nav.ts` | feature_020 + 061/069: structured doc navigation via ONE consolidated tool — `omt_nav{op:nav\|list_sections\|cross_ref\|quick_ref}` (cached hits, answer caps) |
+| **Interrogative Plugin** | `.opencode/plugins/omt_q.ts` | feature_026 + 077/078: read-only resume questions — `op:state` · `op:plan` · `op:drift` · `op:audit` · `op:graph` — answering "state of X / which gates block / what drifted / historical replay / transitive risk" without re-derivation (JSON envelope + `as_of_commit`) |
+| **Knowledge Base Plugin** | `.opencode/plugins/omt_kb_nav.ts` | Application Knowledge Base (AKB) navigation — concept-altitude `TIER_CODE` index (`g.kb` consult before `src/` edits; sticky per-feature 063, per-file recency 088) |
+| **Think Anywhere Plugin** | `.opencode/plugins/omt_think.ts` | feature_021/022 + 058/066: persistent inline `TA:` thought-tags via ONE consolidated tool — `omt_think{op:add\|list\|remove\|verify\|suggest\|review}` — + session digest, batch consult |
+| **Concurrency Net Plugin** | `.opencode/plugins/omt_net.ts` | feature_039–050 + MH8 T5 (079–084): Petri-net-gated concurrent development — `omt_net{op:probe\|fire\|splice\|sync\|invariant\|synthesize\|mine\|gate\|claim}`; WIP-limited pool (places 12/15, `net_rev:57` drained_complete, stable since MH8 close), net-as-gate (050), session whitelist, claim/generation fencing |
 | **MVC++ Linter** | `scripts/omt/mvc_check.py` | Architecture checker for layer violations (View↔Model leaks, SQL outside DP, etc.) |
-| **TDD Engine** | `scripts/omt/tdd_check.py` + `omt_tdd` tool | Mechanically enforces Red→Green→Refactor cycles (two-hats gate); **toolchain-aware** (feature_038) — `.py`→pytest, `.ts/.tsx`→vitest |
+| **TDD Engine** | `scripts/omt/tdd_check.py` + `omt_tdd` tool | Mechanically enforces Red→Green→Refactor cycles (two-hats gate); **toolchain-aware** (038) — `.py`→pytest, `.ts/.tsx`→vitest; `sync` stranded-red closer (065), same-node lint (067) |
 | **Feature Scaffold** | `scripts/omt/new_feature.py` | Creates consistently-named feature directories from templates |
 | **Harness DSL (source of truth)** | `.meta/META_HARNESS.omt` | OMT-HDL v1: every rule, gate, tool, constant, and budget declared as records in ONE file |
 | **Harness Compiler** | `scripts/omt/harnessc.py` | Projects the DSL → `AGENTS.md`, `opencode.jsonc` blocks, plugin IR, nav index; derives records at projection time; drift-tested; lints grammar vocab, tool-seed drift, message orphans, root hygiene |
@@ -154,7 +154,7 @@ The `.projects/` directory is the **per-feature design & project-planning home**
 | `petri_net_library/` | Shared Petri net contract (feature_031) | complete |
 | `net_enforced_harness/` | Net-as-gate (feature_050) | complete |
 | `meta_harness_concurrent/` | Adaptive net engine + composition + WIP pool + dashboard (feature_039–049) | complete |
-| `meta_harness_2/` … `meta_harness_9/` | Harness evolution programs (nav/think/TDD/interrogative → MH9 rebase + benchmark + thin work contract) | complete (2–8) / active (9: feature_097–101) |
+| `meta_harness_2/` … `meta_harness_9/` | Harness evolution programs (nav/think/TDD/interrogative → MH9 rebase + benchmark + thin work contract + frontier) | complete (2–9; MH8 065–096 + MH9 097–101 closed 2026-09-14) |
 
 **Relationship to the phase-gated design doc.** `@phase design_req` (in `.meta/META_HARNESS.omt`) requires a design doc on disk for `major_feature`/`new_screen`. The phase gate's `resolveArtifact` accepts an explicit `design_doc=` argument first (any path that exists), else auto-detects under `.meta/software_development_process/4.design/features/<feature>/`. Pointing `omt_phase{design_doc:".projects/meta/<feature>/PROJECT.md"}` makes the richer `PROJECT.md` the canonical artifact while the auto-detected `design_001_*.md` stub acts as a pointer — both paths satisfy the gate; the `.projects/` folder is the richer of the two by convention.
 
@@ -201,12 +201,20 @@ A process harness that eats the context window would defeat its own purpose. Eve
 
 > **Note on the tool count:** the 18→7 consolidation target predates the later additive harness tools. feature_026 added `omt_q` (interrogative layer), the AKB `omt_kb_nav` grew the family, and feature_039 added `omt_net` (concurrency net) — now **10 tools** (`omt_phase`/`omt_skip`/`omt_complete`/`omt_status`/`omt_tdd`/`omt_nav`/`omt_kb_nav`/`omt_think`/`omt_q`/`omt_net`), pushing `@budget tool_schemas` 1024→1280→1536→1856 B — a deliberate trade: read-only + net tools that collapse per-session re-derivation and serialize concurrent work into deterministic calls.
 
-**Recent hardening highlights:**
+**Foundations (improvement006/007 era, still current):**
 
 - **HDL-2 gate driver** — the before-gate chain iterates IR-declared gates in `order=`, matching `tools=` and evaluating `when=` via a `@pred` registry; after-gates (MVC++ lint, TDD auto-revert) run in the same driver. A new *simple* gate is now a pure `.omt` declaration — no TypeScript to write.
 - **Derive at projection time** — `PHASE_*` / `TT_*` / `SECTION` nav records (and 13 more) are emitted by the compiler; hand-maintained duplicates pruned, killing a whole drift class.
 - **New compile-time lints** — grammar-vocab check (fsm/hat/gate arity), tool seed-drift check (TS seed strings ≡ `.omt` payloads), gate-message orphan check, repo-root hygiene check (allowlisted top level).
 - **On-demand doc diet** — `META_HARNESS.md` 5.5→1.4 KB (stub rotation), `META.md` 6.8→5.0 KB, methodology guide 27.5→23.9 KB with nav cross-ref routes widened 6→16.
+
+**Last changes (MH6 → MH9, 2026-09-06 → 14 — all CLOSED, `check` 265/0, suite 2241/2241):**
+
+- **MH6 (051–059, closed 2026-09-06)** — gate usability: ledger isolation, version canary, concurrency predicate, small-task fast-path, `preflight`, skip taxonomy, ceremony meter, thought-review, tiered template.
+- **MH7 (060–064/066, closed 2026-09-12)** — active-only dangling, nav cache hit, preflight-on-declare, KB sticky per-feature, truthful observation, think batch consult.
+- **MH8 (065–096, 31 items, closed 2026-09-14)** — the big hardening wave: TDD `sync` + same-node lint, schema autolink, nav caps, escape/delegate folds, typed policy, task-prep slice, receipt batch mode, completion hardening, workflow repair (6/6), temporal replay (`op:audit`), graph risk (`op:graph`), transaction authority, claim generation, worktree isolation, capacity arbitration, verification lane, recovery journal, evidence deps, skip audit, KB recency, structural pins, scaffolds/LSP allowlist, budget-diet-bot (warns at ≤64 B headroom), resume digest (`op:resume` ≤2 KB), cost benchmark (093: 17 goldens + 6/6 first-numbers TP=13/FP=0), verifiable-knowledge pilot (094: advisory sidecar only), fresh-review loop (095/096: 0 wins).
+- **MH9 (097–101, closed 2026-09-14)** — rebase + isolation pins → honest-cost follow-up → truthful-boundary residual → thin work contract → frontier experiment (verdict MERGE: fold enabled-ordering into preflight text; Petri stays analysis-only).
+- **Net stable** — no new net topology since 050; `net_rev:57` drained_complete, pool places 12/15, pending 0 / active 0 / done 7.
 
 ### How Enforcement Works
 
@@ -287,13 +295,13 @@ Persistent, grep-friendly `TA:` thought-tags dropped **inline in any non-protect
 | `omt_phase` | Declare OMT++ phase; unlocks `src/` edits |
 | `omt_skip` | Logged process-override escape hatch (scopes: src/tests/nav/all) |
 | `omt_complete` | Verify phase artifacts + advance to next phase |
-| `omt_status` | Process context: phase, TDD state, lint, valid next phases (compact) |
-| `omt_q` | **Interrogative layer (feature_026)** — read-only answers: `op:state` (feature/session context), `op:plan` (which gates would block an edit), `op:drift` (stale projections); returns a JSON envelope with `as_of_commit` |
-| `omt_tdd` | TDD cycle driver — `op:testlist` → `red` → `green` → `refactor` → `done`; **toolchain-aware (feature_038)** — routes `.py`→pytest, `.ts/.tsx`→vitest from the resolved project root |
+| `omt_status` | Process context: phase, TDD state, lint, valid next phases (compact) + `preflight` (055/062) + `resume` ≤2 KB digest (092) |
+| `omt_q` | **Interrogative layer (026 + 077/078)** — read-only: `op:state` (feature/session context), `op:plan` (which gates would block), `op:drift` (stale projections), `op:audit` + `op:graph` (history / transitive risk); JSON envelope with `as_of_commit` |
+| `omt_tdd` | TDD cycle driver — `op:testlist` → `red` → `green` → `refactor` → `done` + `op:sync` (065); **toolchain-aware (038)** — `.py`→pytest, `.ts/.tsx`→vitest; same-node lint (067) |
 | `omt_nav` | Navigate META HARNESS docs — `op:nav` · `list_sections` · `cross_ref` · `quick_ref` (feature_020) |
 | `omt_kb_nav` | Application Knowledge Base (AKB) navigation — `op:nav` · `list_sections` · `cross_ref` · `quick_ref` (TIER_CODE concept-altitude index) |
-| `omt_think` | Persistent inline `TA:` thought-tags — `op:add` · `list` · `remove` · `verify` · `suggest` (feature_021/022) |
-| `omt_net` | **Concurrency net (feature_039–050)** — `op:probe` · `fire` · `splice` · `sync` · `invariant` · `synthesize` · `mine` · `gate` · `claim` — WIP pool, net-as-gate, drift checks |
+| `omt_think` | Persistent inline `TA:` thought-tags — `op:add` · `list` · `remove` · `verify` · `suggest` · `review` (021/022 + 058/066) |
+| `omt_net` | **Concurrency net (039–050 + MH8 T5 079–084)** — `op:probe` · `fire` · `splice` · `sync` · `invariant` · `synthesize` · `mine` · `gate` · `claim` — WIP pool (`net_rev:57` stable), net-as-gate, drift checks |
 
 Command-line engines:
 
@@ -1173,7 +1181,7 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_038**: `omt_tdd` toolchain-aware dispatch — routes `.py`→pytest, `.ts/.tsx`→vitest from resolved project root
 - ✅ **feature_tui_dark_mode**: Default dark theme, `k` toggles, `Ctrl+Shift+T` cycles 21 themes
 - ✅ **meta_harness_dsl (R0–R8)**: Harness as code — OMT-HDL single source (`.meta/META_HARNESS.omt`) compiled to AGENTS.md / opencode.jsonc / plugin-IR / nav-index projections with drift tests + size budgets; 64 KB ledger rotation; enforcer split (`lib/enforcer/` ×7)
-- ✅ **meta_harness_2–9**: Harness evolution programs — nav (020) + think-anywhere v1/v2 (021/022) + improvements (023) + interrogative ops (026) + scoped gating (028) + TDD prose fallback + toolchain-aware (037/038) + MH6 (051–059: ledger isolation, canary, gate predicate, fast-path, preflight, skip taxonomy, ceremony meter, thought review, tiered template) + MH7 (060–064/066: dangling-active, nav cache, preflight-on-declare, KB sticky, truthful observation, think batch) + MH8 (065–096: TDD sync/lint, schema autolink, nav caps, escape/delegate folds, typed policy, task-prep slice, receipt batch, completion hardening, workflow repair, temporal replay, graph risk, transaction authority, claim generation, worktree isolation, capacity arbitration, verification lane, recovery journal, evidence deps, skip audit, KB recency, structural pins, scaffolds/LSP, budget-diet-bot, resume digest, cost benchmark) — suite 2231/2231 @ feature_093 (2026-09-14)
+- ✅ **meta_harness_2–9 (all CLOSED 2026-09-14)**: Harness evolution programs — nav (020) + think-anywhere v1/v2 (021/022) + improvements (023) + interrogative ops (026) + scoped gating (028) + TDD prose fallback + toolchain-aware (037/038) + MH6 (051–059) + MH7 (060–064/066) + MH8 (065–096: 31 items incl. TDD sync/lint, schema autolink, nav caps, escape/delegate folds, typed policy, task-prep slice, receipt batch, completion hardening, workflow repair 6/6, temporal replay, graph risk, transaction authority, claim generation, worktree isolation, capacity arbitration, verification lane, recovery journal, evidence deps, skip audit, KB recency, structural pins, scaffolds/LSP, budget-diet-bot, resume digest, cost benchmark 17/17 + 6/6 first-numbers, knowledge pilot, fresh-review 0 wins) + MH9 (097–101: rebase → honest-cost → boundary → work contract → frontier MERGE) — suite 2241/2241 @ close, `check` 265/0
 - ✅ **meta_harness_concurrent + net_enforced_harness**: Adaptive net engine (039) + composition supervisor (040) + resource places (041) + goal-net synthesis (042) + dashboard (043) + mined net (044) + WORK-driven net (045) + session whitelist (046) + WIP-limited pool (047/048) + start menu (049) + net-as-gate (050) — live `net_rev:57`, pool places 12/15
 - ✅ **improvement006 (A–H)**: Token diet — 18→7 consolidated tools (`omt_tdd`/`omt_nav`/`omt_think` with `op=`), schemas 1484→775 B, WORK.md DONE-rotation (≤8192 B), `@derive` + nav/IR budgets, HDL-2 `gate_driver` (IR-ordered gates), root-hygiene lint
 - ✅ **improvement007 (A–I)**: DSL hardening — `{@var.x}` interpolation, grammar-vocab check, arg-describe diet (1609→2455 B + `tool_args` budget 2464), TS+PY consume the IR (7 hand-mirrors deleted), after-gates in the driver, IR gate messages + orphan check, derive round 2, on-demand doc diet, guide dedup; `harnessc check OK — 265 records`
@@ -1182,7 +1190,7 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - 🔄 **feature_001**: Petri-net-driven user objectives — session lifecycle (create → active → switch, SQLite-backed) is implemented; the Petri-net objective engine is stubbed (`GoalManager`) pending full integration
 - 🔄 **rag_v2 (feature_027 + 029)**: RAG v2 + slash commands — active (`src/agentx/model/rag_v2/`, `ui/screens/rag_v2/`)
 - 🔄 **project_lifecycle (feature_030)**: Project home lifecycle (`uv run scripts/omt/project.py new|link|close|sync`) — active
-- 🔄 **meta_harness_9 (feature_097–101)**: Rebase + isolation pins → benchmark follow-up → truthful boundary → thin work contract → frontier experiment — active
+- ✅ **meta_harness_9 (feature_097–101)**: Rebase + isolation pins → benchmark follow-up → truthful boundary → thin work contract → frontier experiment — complete 2026-09-14 (see above)
 
 > **Note:** Early feature directories in `.meta/` (003, 008, 009, 015) were superseded or folded into the shipped features listed above, so they are not listed separately. `WORK.md` is the live truth: `NEXT: none · Other: none · Blocked: none · Resources: 5/5 free · Pool: pending=0 active=0 done=7 (places 12/15) · net_rev:57` (2026-09-14).
 
