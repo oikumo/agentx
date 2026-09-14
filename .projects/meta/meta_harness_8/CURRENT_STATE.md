@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-09-14 (iter — CLOSED clean, no --force)
+
+- **meta_harness_8 CLOSED** (`project.py close meta_harness_8`, clean — 31/31 linked features terminal-complete, header auto-flipped active→complete, manifest + WORK.md re-synced).
+  - Close gate initially refused: 088 + 093 `complete` records carried `phase:Programming` (non-terminal). User picked honest re-completion over `--force`.
+  - Terminal ceremony: Testing re-declared per feature; goldens re-verified (088 7/7 `test_gkb_read_recency.py`, 093 17/17 `test_task_cost_benchmark.py`) + `check` 0 errors + `build` OK; `omt_complete` ×2 (auto-log entries below).
+  - PROJECT.md: Quick-Start Next → CLOSED, §Status close entry, D15 (clean-close-over-force + `omt_complete`-phase GOTCHA candidate). Home read-only from here.
+- Next: fresh-review only on new signal (new project if backlog refills).
+
+---
+
+## 2026-09-14 (auto — feature_093.task_cost_benchmark Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_093.task_cost_benchmark/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-14 (auto — feature_088.g_kb_per_file_read_recency Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_088.g_kb_per_file_read_recency/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-14 (auto — feature_096.fresh_review_loop_2 Done)
 
 - shipped: minor_feature · review doc @ `.sandbox/meta_harness_8_idea_r2.md` (no test_report — §12 decl-only, acceptance = review + 0/1 wins)

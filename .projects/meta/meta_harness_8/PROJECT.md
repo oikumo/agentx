@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_8 — Consolidated Meta-Harness Backlog (supersedes mh2/mh3/mh5/mh7/concurrent/net_enforced)
 
-> Status: **active** · **v1.0 (2026-09-12)** — created by `project.py new --slug meta_harness_8`. Consolidation session: closed 6 active meta-harness projects (mh2 --force, mh3, mh5, mh7, concurrent --force for 047 tombstone, net_enforced) per user approval; mh4/mh6 already complete (untouched). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_8`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v1.0 (2026-09-12)** — created by `project.py new --slug meta_harness_8`. Consolidation session: closed 6 active meta-harness projects (mh2 --force, mh3, mh5, mh7, concurrent --force for 047 tombstone, net_enforced) per user approval; mh4/mh6 already complete (untouched). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_8`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
@@ -8,7 +8,7 @@
 
 > One line: `meta_harness_8` is the **single actionable backlog** for all pending meta-harness work — 5 tracks (T1–T5), ~30 items condensed from 6 closed projects; nothing scheduled, each item ships as its own feature in track order unless reprioritized.
 
-**Next:** backlog EMPTY (T5-8 R2 done 0-win @ e14fc75) — next fresh-review when new signal appears.
+**Next:** CLOSED 2026-09-14 (clean close, no `--force`; 31/31 linked features terminal-complete) — home is read-only; fresh-review only on new signal, via a new project if the backlog ever refills.
 
 ---
 
@@ -144,7 +144,7 @@
 - [x] T5-8 `fresh-review loop` DONE 2026-09-14 (feature_095.fresh_review_loop, minor_feature) — fresh review `.sandbox/meta_harness_8_idea.md` @ HEAD `a48e0d9`, **0 new wins** (user-approved); all T1–T5 + mh6 13/13 verified shipped, D3 + mh5 rejects stand; 5 candidates all 0. Backlog EMPTY.
 - [x] Repair flag CLOSED 2026-09-14: `meta_harness_development_self_evaluation.md` removed (user-picked delete over index-as-one-shot/archive; 5-line stub, no Rules/strategy/marker, only referenced as drift example) — `harnessc check` 0 errors, `build` OK, `workflows` lists exactly 6, e2e receipt green, suite 2241/2241.
 - [x] T5-8 `fresh-review loop R2` DONE 2026-09-14 (feature_096.fresh_review_loop_2, minor_feature) — fresh review @ HEAD `e14fc75`, **0 new wins** (user-approved run); R1 preserved. Deltas since R1: R1 doc itself + repair close only (no src/tests); check 265/0 + build OK, workflows 6/6, gotchas 19, nav 64990B, skips 83 (+2 own misses), dangling 178 (+2 live), drift [] — all 5 candidates 0. Backlog EMPTY.
-- [ ] Next: fresh-review only on new signal.
+- [x] CLOSED 2026-09-14 (`project.py close meta_harness_8`, clean — no `--force`): close gate initially refused (088 + 093 `complete` records carried `phase:Programming`, not terminal); terminal re-completion ceremony per user pick — Testing re-declared, goldens re-verified (088 7/7, 093 17/17) + `check` 0 errors + `build` OK, `omt_complete` ×2 — then clean close. 31/31 linked features terminal-complete. Home read-only from here (D15).
 
 ---
 
@@ -164,6 +164,7 @@
 - **D12 — managed gates task/owner/gen/workspace/scope-aware:** from the first worker (not `active>1`); no ambient recent-start receipt in managed mode; break-glass explicit + audited; legacy solo verdicts untouched.
 - **D13 — topology migration last within T5; ≤15 cap holds:** 6 lifecycle + 3 resources + optional goals (9–11 places); blocked stays binding metadata; task identity never becomes one-place-per-task.
 - **D14 — `command_id` idempotency on all mutations:** same ID + same payload = same result; same ID + different payload = `command_id_conflict`; stable refusal codes throughout.
+- **D15 — clean close over force-close (2026-09-14, user-picked "Honest re-completion"):** close-gate refusal on 088/093 (non-terminal `phase:Programming` completes) resolved by genuine terminal ceremony (Testing + re-verified goldens + `omt_complete`), NOT `--force`. Forced closes stay reserved for true tombstones/short-slug-era gaps (D1 precedent). Follow-up candidate: GOTCHA/lint against `omt_complete` while phase ≠ Testing/Done (092 showed the same smell, masked by a later Testing complete).
 
 ---
 
