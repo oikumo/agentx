@@ -5,6 +5,25 @@
 
 ---
 
+## 2026-09-14 (auto — feature_096.fresh_review_loop_2 Done)
+
+- shipped: minor_feature · review doc @ `.sandbox/meta_harness_8_idea_r2.md` (no test_report — §12 decl-only, acceptance = review + 0/1 wins)
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-14 (iter — T5-8 R2 fresh-review, 0 wins, feature_096)
+
+- **T5-8 R2 (feature_096.fresh_review_loop_2) SHIPPED** — fresh review @ HEAD `e14fc75`, 0 new wins (user-approved run).
+  - Audit: 265 records 0 errors, build OK, workflows 6/6 (repair CLOSED verified); 19 gotchas, nav 252/64990B, diet-warns tool_args 9B / schemas 16B / agents_md 26B; skips 83/7d (42/41/0, +2 own misses); dangling 178 (165 expired); drift_records [].
+  - Delta `a48e0d9..e14fc75` = R1 review itself + repair close only (no src/tests/net) — suite baseline 2241 holds.
+  - Review doc: `.sandbox/meta_harness_8_idea_r2.md` (R1 preserved at `.sandbox/meta_harness_8_idea.md`).
+  - Discipline: phase Analysis→Testing→Done; KB (no records, expected) + think (harnessc.py) consults; .sandbox-only write + .projects log; check/build re-verified green post-write.
+- Backlog EMPTY. Next fresh-review on new signal.
+
+---
+
 ## 2026-09-14 (iter — repair flag CLOSED, self_evaluation drift removed)
 
 - Deleted `.workflows/meta_harness/meta_harness_development_self_evaluation.md` (user-picked delete; 5-line stub, authority NONE, no strategy, only referenced as drift example).

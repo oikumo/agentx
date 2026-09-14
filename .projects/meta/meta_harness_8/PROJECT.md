@@ -8,7 +8,7 @@
 
 > One line: `meta_harness_8` is the **single actionable backlog** for all pending meta-harness work — 5 tracks (T1–T5), ~30 items condensed from 6 closed projects; nothing scheduled, each item ships as its own feature in track order unless reprioritized.
 
-**Next:** backlog EMPTY (T5-8 done 0-win @ a48e0d9) — next fresh-review when new signal appears.
+**Next:** backlog EMPTY (T5-8 R2 done 0-win @ e14fc75) — next fresh-review when new signal appears.
 
 ---
 
@@ -143,6 +143,7 @@
 - [x] T3-6 `selective verifiable knowledge pilot` DONE 2026-09-14 (feature_094.selective_verifiable_knowledge_pilot, minor_feature — Improvement002 E) — Option A (sidecar `scripts/omt/kb_pilot/lessons.json`, 3 lessons with symbol/file/dependent/evidence/version/expiry) + pure advisory `lookup` (active-only, empty→[]) + `needs_refresh` + deepcopy `promote`/`retire` (reason + replacement check); read-only, no `.omt` change, no new gate. 10 goldens green first run + boundary e2e green; `harnessc check` 0 errors, `build` OK; suite **2241/2241**. Test report @ 6.testing/features/feature_094.selective_verifiable_knowledge_pilot/test_report.md.
 - [x] T5-8 `fresh-review loop` DONE 2026-09-14 (feature_095.fresh_review_loop, minor_feature) — fresh review `.sandbox/meta_harness_8_idea.md` @ HEAD `a48e0d9`, **0 new wins** (user-approved); all T1–T5 + mh6 13/13 verified shipped, D3 + mh5 rejects stand; 5 candidates all 0. Backlog EMPTY.
 - [x] Repair flag CLOSED 2026-09-14: `meta_harness_development_self_evaluation.md` removed (user-picked delete over index-as-one-shot/archive; 5-line stub, no Rules/strategy/marker, only referenced as drift example) — `harnessc check` 0 errors, `build` OK, `workflows` lists exactly 6, e2e receipt green, suite 2241/2241.
+- [x] T5-8 `fresh-review loop R2` DONE 2026-09-14 (feature_096.fresh_review_loop_2, minor_feature) — fresh review @ HEAD `e14fc75`, **0 new wins** (user-approved run); R1 preserved. Deltas since R1: R1 doc itself + repair close only (no src/tests); check 265/0 + build OK, workflows 6/6, gotchas 19, nav 64990B, skips 83 (+2 own misses), dangling 178 (+2 live), drift [] — all 5 candidates 0. Backlog EMPTY.
 - [ ] Next: fresh-review only on new signal.
 
 ---
