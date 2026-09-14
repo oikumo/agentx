@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_9 — Roadmap Execution (Work Contract + Petri Frontier + Measured Economy)
 
-> Status: **active** · **v0.2 (2026-09-14)** — created by `project.py new --slug meta_harness_9`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_9`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v1.0 (2026-09-14)** — S0–S4 shipped (097/098/099/100/101 Done), verdict MERGE, S5+ parked. Created by `project.py new --slug meta_harness_9`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_9`; log sessions in CURRENT_STATE.md (newest on top).
 > Refined per user pick: **stronger file-anchored critique + S0–S4 only** (S5+ parked with re-entry criteria, not scheduled).
 
 ---

@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-09-14 (iter 5 — project CLOSED, S0–S4 complete, verdict MERGE)
+
+### Done
+
+- Verified 097/098/099/100/101 all Done via `omt_q{op:state}`; advanced feature_101 Testing→Done (`omt_complete` + `advance_to:Done`).
+- `check` 265/0 + `build` OK green at close; sidecars `.sandbox/work_contract/` + `.sandbox/frontier/` intact; S5+ stays parked per §4.
+- PROJECT.md v1.0 marked complete; closing via `project.py close + sync`.
+
+### In progress / Blocked
+
+- Nothing active. Follow-on (not in mh9): MERGE text-ordering fold-in + S1-full natural wins — needs its own feature/slice with payback math.
+
+### Next
+
+- `project.py close meta_harness_9` → `sync` → WORK.md Projects reflects complete.
+
+---
+
 ## 2026-09-14 (auto — feature_101.mh9_s4_frontier_experiment Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_101.mh9_s4_frontier_experiment/test_report.md
