@@ -1,0 +1,49 @@
+{
+ "op": "work_contract",
+ "request": {
+  "task": "Fix null-check crash in session summary formatter",
+  "acceptance_refs": [
+   "tests/test_session_summary.py::test_null_summary"
+  ]
+ },
+ "scope": {
+  "path": "src/agentx/session/summary.py",
+  "tool": "edit",
+  "task_type": "bug_fix",
+  "candidate_id": "src/agentx/session/summary.py@3490fd5",
+  "revision": "3490fd5",
+  "identity": "UNKNOWN (solo, no claim)"
+ },
+ "obligations": {
+  "completed": [
+   "g.nav: consulted via omt_nav quick_ref",
+   "g.kb: consulted (no surface match)"
+  ],
+  "unresolved": []
+ },
+ "next_action": {
+  "action": "edit src/agentx/session/summary.py with edit, then validate",
+  "reason": "no blockers — preflight 0 would-block; low risk (no contracts/auth/boundary signals)",
+  "required_evidence": [
+   "repro/behavioral test for the fix",
+   "targeted suite green, no new MVC hard violations"
+  ]
+ },
+ "decision": {
+  "blocked": false,
+  "first_blocker": null,
+  "via": "activation_solo_skip"
+ },
+ "stale_or_unknown": [
+  "dry/live report-parity: UNKNOWN (live evaluates all obligations per S2 F03; dry op:plan continues-all — block agrees, report shape may differ)",
+  "cost: PROXY only (no host per-call token usage — tokens_est/io_bytes/delivered-bytes are proxies, not metered)",
+  "C6: UNKNOWN Petri execution (lifecycle ops bypass transition relation — no execution guarantee claimed)",
+  "C1: UNKNOWN replay durability (clear-before-record crash window open — do not depend on replay surviving it)"
+ ],
+ "detail_refs": [
+  "WORK.md Tasks menu (pool 0/0/7)",
+  ".opencode/lib/enforcer/task_prep.ts:116 (block == preflight)",
+  ".opencode/lib/enforcer/preflight.ts:103 (projection core)"
+ ],
+ "note": ""
+}
