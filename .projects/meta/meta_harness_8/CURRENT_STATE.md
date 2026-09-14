@@ -5,6 +5,15 @@
 
 ---
 
+## 2026-09-14 (iter — repair flag CLOSED, self_evaluation drift removed)
+
+- Deleted `.workflows/meta_harness/meta_harness_development_self_evaluation.md` (user-picked delete; 5-line stub, authority NONE, no strategy, only referenced as drift example).
+- Verification: `harnessc check` 0 errors (only budget-diet warns tool_args 9B / schemas 16B / agents_md 26B); `build` OK (265 records → 5 projections); `workflows` lists exactly 6; e2e `test_omt_harness_e2e.py` green; full suite **2241/2241**.
+- Discipline: approval gate held (delete/index/archive asked); bug_fix phase declared; think-gate + KB consults done; `uv` only; single-file first-edit (no stage needed).
+- Backlog EMPTY. Repair flag CLOSED.
+
+---
+
 ## 2026-09-14 (auto — feature_095.fresh_review_loop Done)
 
 - shipped: minor_feature · review doc @ `.sandbox/meta_harness_8_idea.md` (no test_report — §12 decl-only, acceptance = review + 0/1 wins)
