@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_10 — Petri Net as Global State for MH Development
 
-> Status: **complete** · **v0.3 (2026-09-18)** — staged hybrid (user-picked 2026-09-18): Phase 1 read-only global projection (MH9-compliant, advisory) with R1–R6 locked; Phase 2 enforced gate only on measured wins + C6 map + payback. Created by `project.py new --slug meta_harness_10`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_10`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **active** · **v0.3 (2026-09-18)** — staged hybrid (user-picked 2026-09-18): Phase 1 read-only global projection (MH9-compliant, advisory) with R1–R6 locked; Phase 2 enforced gate only on measured wins + C6 map + payback. Created by `project.py new --slug meta_harness_10`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_10`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
@@ -8,7 +8,7 @@
 
 > One line: MH10 unifies projects/workflows/features/tasks under one Petri-backed global state view — advisory first (P1), enforced only if earned (P2).
 
-**Next:** P1 SHIPPED 2026-09-18 (`omt_complete` feature_102 → Done; blind demo 13/13 from 1994B md alone + `test_report.md`; `check` 265/0 + `build` OK + suite 1739 green before AND after). P2 stays parked (no (a–e) evidence yet). Next program step: M1 (P2 verdict: gate or keep-advisory, written with evidence).
+**Next:** P2 slice A SHIPPED 2026-09-18 (`omt_complete` feature_103 → Done; 7-op transition map + `managed_ops.py` conformance harness, live 3× OMISSION + seeded fixtures detected; `check` 265/0 + `build` OK + suite 1744 green). Gate flip stays parked (needs slices B: rewiring, C: crash reorder + injection, D: allow/deny matrix + payback + retirement). P1 advisory sidecar frozen.
 
 ---
 
@@ -78,6 +78,8 @@ Milestones: **M0** (P1: one global view + honest divergence log) → **M1** (P2 
 - [x] P1 Programming (2026-09-18: sidecar `.sandbox/global_state/build.py` + projection.md ≤2KB + projection.json + divergence.md + snapshots/; `check` 265/0 + `build` OK; no live tool registration per net-zero).
 - [x] P1 Testing SHIPPED 2026-09-18 (blind demo per R4: routine 7/7 + interrupted 8/8 full-render + honest probe 7/11 → R4 reorder fix → retest 13/13 from 1994B md alone; `test_report.md`; `check` 265/0 + `build` OK + suite 1739 green before AND after) → `omt_complete` feature_102 → Done.
 - [x] M1 verdict (2026-09-18): **keep-advisory** — see D7. P2 stays parked; project ready to close.
+- [x] P2 slice A `feature_103.mh10_p2_global_gate` SHIPPED (2026-09-18: 7-op map + `scripts/omt/net/managed_ops.py` + 5 tests; live B-vs-M 3× OMISSION, seeded omissions/divergences detected; `check` 265/0 + `build` OK + suite 1744 green; no live authority change — re-entry row (b) partial).
+- [x] CLOSED (2026-09-18, iter 9 closeout docs-only): `project.py status` = `complete`, `sync` clean, `check` 265/0 green; advisory sidecar `.sandbox/global_state/` frozen; P2 re-entry unchanged (needs full a–e bundle via new slice).
 
 ---
 

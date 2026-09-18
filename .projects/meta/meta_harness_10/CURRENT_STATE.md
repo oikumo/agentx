@@ -5,6 +5,47 @@
 
 ---
 
+## 2026-09-18 (iter 10 — P2 slice A SHIPPED: transition map + conformance harness)
+
+### Done
+
+- Analysis (`analysis_001_transition_map.md`: 7-op inventory + one-template map + harness spec) → Programming (`scripts/omt/net/managed_ops.py`: MANAGED_OPS table + classify/check_counts/check_fixture/check_live; new file, no live-surface edits) → Testing (5 tests green incl. live rev-57 3× OMISSION + seeded omission/divergence detection; `check` 265/0 + `build` OK + suite 1744 green) → `omt_complete` feature_103 → Done (`test_report.md`).
+- Re-entry row (b) partial earned; gate flip stays parked (slices B/C/D).
+
+### Next
+
+- Slice B: rewire `claim_task`/recovery/lane through `fire()` (one-template enforcement, staged).
+- Slice C: record-before-clear + crash-injection suite (C1).
+- Slice D: allow/deny matrix + natural-use payback + net-zero retirement (a/d/e).
+
+---
+
+## 2026-09-18 (auto — feature_103.mh10_p2_global_gate Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_103.mh10_p2_global_gate/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-18 (iter 9 — closeout docs-only: verified complete, advisory frozen)
+
+### Done
+
+- Verified `project.py status meta_harness_10` = `complete`; `PROJECT.md` header + `M1 keep-advisory (D7)` + `CLOSED` status row checked; advisory sidecar `.sandbox/global_state/` frozen (projection.md 1994B + json + divergence.md + 3 snapshots).
+- Objective gap recorded: WORK.md Tasks + session-start menu remain file-parsed, not net-fired (P2 a–e absent by design); re-entry needs full bundle via new declared slice, not this project.
+- No live surfaces touched (home docs only, non-gated per D4/D5).
+
+### In progress / Blocked
+
+- Nothing. Project CLOSED.
+
+### Next
+
+- None on this project. Future P2 (if ever): new slice with (a) natural wins + payback, (b) one-template transition map, (c) record-before-clear + crash suite, (d) allow/deny matrix, (e) net-zero retirement.
+
+---
+
 ## 2026-09-18 (iter 8 — M1 verdict keep-advisory, project ready to close)
 
 ### Done
