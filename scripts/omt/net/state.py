@@ -86,6 +86,9 @@ RESOURCE_PLACES = (
 # reads work_* counts. Per-feature _subnet_mutation stays for pre-pool bundles only.
 POOL_PLACES = ("work_pending", "work_active", "work_done")
 POOL_TRANSITIONS = ("work_start", "work_release", "work_complete")
+LANE_PLACES = ("work_verifying", "work_integration_ready", "work_integrating")
+LANE_TRANSITIONS = ("work_submit", "work_verify_pass", "work_verify_fail",
+                    "work_integrate_start", "work_integrate_pass", "work_integrate_fail")
 MAX_PLACES = 15
 
 # feature_082.two_worker_capacity_scope_arbitration (T5-4 2D — NEXT_STEP
@@ -900,6 +903,58 @@ def _fire_pool_move(
     return True, None
 
 
+def _fire_lane_move(
+    st: NetState, transition: str, src: str, dst: str
+) -> tuple[bool, str | None]:
+    """Prefer a checked template firing for a lane-token move (slice B3).
+
+    Lane moves are binding moves first: on today's pool template the lane
+    places (work_verifying/work_integration_ready/work_integrating) are absent
+    from the marking, so this deterministically takes the labeled
+    ``not_lane_net`` fallback while the call site is already on the
+    one-template shape for the day a B3b migration lands the lane
+    places + transitions. Slot tokens (worker/test/integration) stay
+    code-managed in the caller — this helper only moves the lane/pool token.
+
+    Returns ``(fired, fallback_reason)`` with reason ``not_lane_net`` |
+    ``no_transition`` | ``transition_not_enabled`` |
+    ``transition_shape_mismatch``.
+    """
+    if src not in st.live_marking or dst not in st.live_marking:
+        _move_pool_token(st, src, dst)
+        return False, "not_lane_net"
+    transitions = getattr(st.net, "transitions", ()) or ()
+    if transition not in transitions:
+        _move_pool_token(st, src, dst)
+        return False, "no_transition"
+    pre = dict(st.live_marking)
+    live_tuple = tuple(st.live_marking[p] for p in st.net.place_order)
+    try:
+        successor = st.net.fire_marking(live_tuple, transition)
+    except Exception:
+        _move_pool_token(st, src, dst)
+        return False, "transition_not_enabled"
+    new_marking = dict(zip(st.net.place_order, successor))
+    lane_pool = tuple(dict.fromkeys((*POOL_PLACES, *LANE_PLACES)))
+    shape_ok = (
+        new_marking.get(src, 0) == pre.get(src, 0) - 1
+        and new_marking.get(dst, 0) == pre.get(dst, 0) + 1
+        and all(
+            new_marking.get(p, 0) == pre.get(p, 0)
+            for p in lane_pool
+            if p not in (src, dst) and p in pre
+        )
+    )
+    if not shape_ok:
+        _move_pool_token(st, src, dst)
+        return False, "transition_shape_mismatch"
+    for p, v in pre.items():
+        if p not in (src, dst):
+            new_marking[p] = v
+    st.live_marking = new_marking
+    return True, None
+
+
 def ensure_pool_b2(
     base: Path,
     *,
@@ -1355,7 +1410,7 @@ def submit_result(
             st.live_marking["test_slots"] -= 1
         if "worker_slots" in st.live_marking:
             st.live_marking["worker_slots"] = st.live_marking.get("worker_slots", 0) + 1
-        _move_pool_token(st, "work_active", "work_verifying")
+        lane_fired, lane_fallback = _fire_lane_move(st, "work_submit", "work_active", "work_verifying")
         ws = dict(b.get("workspace") or {})
         submitted = dict(b)
         submitted["place"] = "work_verifying"
@@ -1380,6 +1435,9 @@ def submit_result(
             "generation": live_gen,
             "evidence_digest": submitted["submission"]["evidence_digest"],
             "revision": st.revision,
+            "transition": "work_submit",
+            "fired": lane_fired,
+            "fire_fallback": lane_fallback,
         })
         return st, {"task_id": task_id, "generation": live_gen}
 
@@ -1440,12 +1498,14 @@ def verify_result(
             st.live_marking["test_slots"] = st.live_marking.get("test_slots", 0) + 1
         updated = dict(b)
         if verdict == "pass":
-            _move_pool_token(st, "work_verifying", "work_integration_ready")
+            lane_transition = "work_verify_pass"
+            lane_fired, lane_fallback = _fire_lane_move(st, lane_transition, "work_verifying", "work_integration_ready")
             updated["place"] = "work_integration_ready"
             updated.pop("block_reason", None)
             kind = "net_verify_pass"
         else:
-            _move_pool_token(st, "work_verifying", "work_pending")
+            lane_transition = "work_verify_fail"
+            lane_fired, lane_fallback = _fire_lane_move(st, lane_transition, "work_verifying", "work_pending")
             updated["place"] = "work_pending"
             updated.pop("owner", None)
             updated["block_reason"] = f"verify_fail: {detail or 'local checks failed'}"
@@ -1457,6 +1517,9 @@ def verify_result(
         append_ledger({
             "kind": kind, "session": session, "task_id": task_id,
             "generation": live_gen, "revision": st.revision,
+            "transition": lane_transition,
+            "fired": lane_fired,
+            "fire_fallback": lane_fallback,
         })
         return st, {"task_id": task_id, "generation": live_gen, "verdict": verdict}
 
@@ -1515,7 +1578,7 @@ def integrate_start(
             )
         if "integration_slot" in st.live_marking:
             st.live_marking["integration_slot"] -= 1
-        _move_pool_token(st, "work_integration_ready", "work_integrating")
+        lane_fired, lane_fallback = _fire_lane_move(st, "work_integrate_start", "work_integration_ready", "work_integrating")
         updated = dict(b)
         updated["place"] = "work_integrating"
         st.task_bindings[idx] = updated
@@ -1525,6 +1588,9 @@ def integrate_start(
         append_ledger({
             "kind": "net_integrate_start", "session": session, "task_id": task_id,
             "generation": live_gen, "revision": st.revision,
+            "transition": "work_integrate_start",
+            "fired": lane_fired,
+            "fire_fallback": lane_fallback,
         })
         return st, {"task_id": task_id, "generation": live_gen}
 
@@ -1587,7 +1653,8 @@ def integrate_finish(
             st.live_marking["integration_slot"] = st.live_marking.get("integration_slot", 0) + 1
         updated = dict(b)
         if verdict == "pass":
-            _move_pool_token(st, "work_integrating", "work_done")
+            lane_transition = "work_integrate_pass"
+            lane_fired, lane_fallback = _fire_lane_move(st, lane_transition, "work_integrating", "work_done")
             updated["place"] = "work_done"
             updated.pop("owner", None)
             updated.pop("block_reason", None)
@@ -1601,7 +1668,8 @@ def integrate_finish(
             }
             kind = "net_integrate_pass"
         else:
-            _move_pool_token(st, "work_integrating", "work_pending")
+            lane_transition = "work_integrate_fail"
+            lane_fired, lane_fallback = _fire_lane_move(st, lane_transition, "work_integrating", "work_pending")
             updated["place"] = "work_pending"
             updated.pop("owner", None)
             updated["block_reason"] = f"integration_conflict: {detail or 'combined acceptance failed'}"
@@ -1613,6 +1681,9 @@ def integrate_finish(
         append_ledger({
             "kind": kind, "session": session, "task_id": task_id,
             "generation": live_gen, "revision": st.revision,
+            "transition": lane_transition,
+            "fired": lane_fired,
+            "fire_fallback": lane_fallback,
         })
         return st, {"task_id": task_id, "generation": live_gen, "verdict": verdict}
 

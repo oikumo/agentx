@@ -28,7 +28,12 @@ class TestManagedOpMap:
             "fire",
             "claim_task",
             "release_task",
-            "release_complete",
+            "submit_result",
+            "verify_pass",
+            "verify_fail",
+            "integrate_start",
+            "integrate_pass",
+            "integrate_fail",
             "absent_lane_occupancy",
             "project_sync",
             "session_menu",
@@ -41,6 +46,17 @@ class TestManagedOpMap:
         assert fired == ["fire"]
         happy = [r["op"] for r in mo.MANAGED_OPS if r["fired_today"] == "yes-B2-happy-path"]
         assert happy == ["claim_task", "release_task"]
+        # B3 wires lane edges through fire with labeled fallback (no template
+        # landing yet — B3b needs a cap-safe migration).
+        lane = [r["op"] for r in mo.MANAGED_OPS if r["fired_today"] == "no-B3-fallback"]
+        assert lane == [
+            "submit_result",
+            "verify_pass",
+            "verify_fail",
+            "integrate_start",
+            "integrate_pass",
+            "integrate_fail",
+        ]
 
     def test_agree_without_firing_is_omission(self) -> None:
         mo = _load()

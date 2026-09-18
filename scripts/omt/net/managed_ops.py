@@ -37,10 +37,40 @@ MANAGED_OPS: tuple[dict[str, str], ...] = (
         "fired_today": "yes-B2-happy-path",
     },
     {
-        "op": "release_complete",
-        "path": "scripts/omt/net/state.py:_move_pool_token callers (recovery/lane/integration)",
-        "transition": "work_finish/work_fail/work_cancel",
-        "fired_today": "no",
+        "op": "submit_result",
+        "path": "scripts/omt/net/state.py (_fire_lane_move + submit_result)",
+        "transition": "work_submit",
+        "fired_today": "no-B3-fallback",
+    },
+    {
+        "op": "verify_pass",
+        "path": "scripts/omt/net/state.py (_fire_lane_move + verify_result)",
+        "transition": "work_verify_pass",
+        "fired_today": "no-B3-fallback",
+    },
+    {
+        "op": "verify_fail",
+        "path": "scripts/omt/net/state.py (_fire_lane_move + verify_result)",
+        "transition": "work_verify_fail",
+        "fired_today": "no-B3-fallback",
+    },
+    {
+        "op": "integrate_start",
+        "path": "scripts/omt/net/state.py (_fire_lane_move + integrate_start)",
+        "transition": "work_integrate_start",
+        "fired_today": "no-B3-fallback",
+    },
+    {
+        "op": "integrate_pass",
+        "path": "scripts/omt/net/state.py (_fire_lane_move + integrate_finish)",
+        "transition": "work_integrate_pass",
+        "fired_today": "no-B3-fallback",
+    },
+    {
+        "op": "integrate_fail",
+        "path": "scripts/omt/net/state.py (_fire_lane_move + integrate_finish)",
+        "transition": "work_integrate_fail",
+        "fired_today": "no-B3-fallback",
     },
     {
         "op": "absent_lane_occupancy",
@@ -166,9 +196,21 @@ def check_live(base: Path) -> dict[str, Any]:
     }
 
 
+LANE_EVIDENCE_KINDS = (
+    "net_claim",
+    "net_release",
+    "net_submit",
+    "net_verify_pass",
+    "net_verify_fail",
+    "net_integrate_start",
+    "net_integrate_pass",
+    "net_integrate_fail",
+)
+
+
 def check_ledger_evidence(records: list[dict[str, Any]]) -> dict[str, Any]:
-    """B2 ledger-evidence reader: every net_claim/net_release row must carry
-    the slice-B shape (``transition``/``fired``/``fire_fallback`` keys).
+    """B3 ledger-evidence reader: every claim/release/lane row must carry
+    the slice-B/B3 shape (``transition``/``fired``/``fire_fallback`` keys).
 
     Returns ``{"fired": n, "fallback": {reason: n}, "offenders": [idx],
     "ok": bool}`` — offenders are claim/release rows missing keys (never
@@ -180,7 +222,7 @@ def check_ledger_evidence(records: list[dict[str, Any]]) -> dict[str, Any]:
     for i, r in enumerate(records):
         if not isinstance(r, dict):
             continue
-        if r.get("kind") not in ("net_claim", "net_release"):
+        if r.get("kind") not in LANE_EVIDENCE_KINDS:
             continue
         if not all(k in r for k in ("transition", "fired", "fire_fallback")):
             offenders.append(i)

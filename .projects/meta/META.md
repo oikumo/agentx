@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | agentx_concurrent_development | draft | — | 2026-09-12 | 2026-09-12 |
 | feature_kb_akb | draft | — | 2026-08-22 | 2026-08-22 |
-| meta_harness_10 | active | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release | 2026-09-18 | 2026-09-18 |
+| meta_harness_10 | active | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release, feature_106.mh10_p2b3_lane_integration_rewire | 2026-09-18 | 2026-09-18 |
 | meta_harness_2 | complete | feature_020.meta_harness_navigation, feature_021.meta_harness_think_anywhere, feature_022.meta_harness_think_anywhere_v2, feature_023.meta_harness_improvement, feature_026.omt_q_interrogative_first_ops | 2026-08-22 | 2026-09-12 |
 | meta_harness_3 | complete | feature_028.feature_scoped_gating | 2026-08-22 | 2026-09-12 |
 | meta_harness_4 | complete | feature_037.tdd_testlist_prose_fallback | 2026-08-30 | 2026-08-30 |
