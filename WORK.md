@@ -22,19 +22,19 @@
 ---
 
 ## Tasks
-<!-- net_rev:57 -->
+<!-- net_rev:58 -->
 NEXT: none
 Other enabled: none
 Blocked: none
 Resources: 5/5 free
-Pool: pending=0 active=0 done=7 (places 12/15)
+Pool: pending=0 active=0 done=7 (places 13/15)
 ## Projects (synced by `uv run scripts/omt/project.py sync` — do not hand-edit)
 
 | project | state | features |
 |---|---|---|
 | agentx_concurrent_development | draft | — |
 | feature_kb_akb | draft | — |
-| meta_harness_10 | active | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate |
+| meta_harness_10 | active | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release |
 | meta_harness_2 | complete | feature_020.meta_harness_navigation, feature_021.meta_harness_think_anywhere, feature_022.meta_harness_think_anywhere_v2, feature_023.meta_harness_improvement, feature_026.omt_q_interrogative_first_ops |
 | meta_harness_3 | complete | feature_028.feature_scoped_gating |
 | meta_harness_4 | complete | feature_037.tdd_testlist_prose_fallback |
@@ -56,6 +56,7 @@ Pool: pending=0 active=0 done=7 (places 12/15)
 
 ## Paused (resumable)
 
+- [~] **meta_harness_10 P2 (P1/A/B shipped)** — PAUSED 2026-09-18; resume: `.sandbox/pause_2026-09-18.md` (uncommitted slice-B work in tree).
 - [x] **meta_harness_8 execution — T3-4 (feature_093.task_cost_benchmark)** — SHIPPED 2026-09-14: probe double-encode fix + stale-rev placeholder + harness golden narrow; 17/17 goldens, first-numbers 6/6 green @3478bb2 (TP=13/FP=0/missed=0), suite 2231/2231; test report @ 6.testing/features/feature_093.task_cost_benchmark/test_report.md. Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.
 - [x] **meta_harness_8 execution — T3-3 (feature_092.resume_digest)** — SHIPPED 2026-09-13, same-day pause→resume: one-line probe fix (JSON.stringify; GOTCHA_PROBE_SERIALIZATION TA'd) + 3 follow-on pin re-pins (055 static, budget_diet live, 059 NAV_INDEX 64956→64990); 7 goldens + boundary e2e green, stage cleared, check/build 0 errors, suite 2214/2214; `op:resume` dogfooded for its own resume session. Next per §Scope: T3-4 / T3-6, then T5-8 loop. Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.
 - [x] **meta_harness_8 execution — T1-6 (feature_076.workflow_index_and_repair_quickfix)** — SHIPPED 2026-09-12 (canonical-target fix, authority markers on 6 workflows, `harnessc check_workflows` + `workflows [--subject|--plan]` subcommand; 16 goldens + boundary e2e green; suite 2079/2080, pre-existing 059 pin only). T4-3 (feature_075) shipped earlier. Next per §Scope: T1-4 / T1-3 → T5-1 2A; open repair flag: `meta_harness_development_self_evaluation.md` unindexed (drift warning). Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.

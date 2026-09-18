@@ -1,0 +1,109 @@
+{
+  "format": "petri-net-json",
+  "version": 1,
+  "places": [
+    {
+      "name": "agent_attention",
+      "tokens": 1
+    },
+    {
+      "name": "archive_pool",
+      "tokens": 0
+    },
+    {
+      "name": "e2e_receipt",
+      "tokens": 1
+    },
+    {
+      "name": "feature_ready",
+      "tokens": 1
+    },
+    {
+      "name": "goal_satisfied",
+      "tokens": 0
+    },
+    {
+      "name": "harness_surface_round",
+      "tokens": 1
+    },
+    {
+      "name": "resource_token",
+      "tokens": 1
+    },
+    {
+      "name": "src_edit_capacity",
+      "tokens": 1
+    },
+    {
+      "name": "tests_capacity",
+      "tokens": 1
+    },
+    {
+      "name": "work_active",
+      "tokens": 0
+    },
+    {
+      "name": "work_done",
+      "tokens": 0
+    },
+    {
+      "name": "work_pending",
+      "tokens": 0
+    }
+  ],
+  "transitions": [
+    {
+      "name": "work_complete"
+    },
+    {
+      "name": "work_start"
+    }
+  ],
+  "arcs": [
+    {
+      "source": "agent_attention",
+      "target": "work_start",
+      "weight": 1
+    },
+    {
+      "source": "feature_ready",
+      "target": "work_start",
+      "weight": 1
+    },
+    {
+      "source": "work_active",
+      "target": "work_complete",
+      "weight": 1
+    },
+    {
+      "source": "work_complete",
+      "target": "agent_attention",
+      "weight": 1
+    },
+    {
+      "source": "work_complete",
+      "target": "goal_satisfied",
+      "weight": 1
+    },
+    {
+      "source": "work_complete",
+      "target": "work_done",
+      "weight": 1
+    },
+    {
+      "source": "work_pending",
+      "target": "work_start",
+      "weight": 1
+    },
+    {
+      "source": "work_start",
+      "target": "feature_ready",
+      "weight": 1
+    },
+    {
+      "source": "work_start",
+      "target": "work_active",
+      "weight": 1
+    }
+  ]
+}

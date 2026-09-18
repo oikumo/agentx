@@ -27,6 +27,7 @@ class TestManagedOpMap:
         for expected in (
             "fire",
             "claim_task",
+            "release_task",
             "release_complete",
             "absent_lane_occupancy",
             "project_sync",
@@ -34,9 +35,12 @@ class TestManagedOpMap:
             "crash_window",
         ):
             assert expected in ops, f"managed op {expected!r} missing from map"
-        # Only fire() fires today; everything else is omission/residual by design.
+        # fire() fires; B2 lands literal claim/release firing on the happy path
+        # (labeled fallback where the template cannot express the move).
         fired = [r["op"] for r in mo.MANAGED_OPS if r["fired_today"] == "yes"]
         assert fired == ["fire"]
+        happy = [r["op"] for r in mo.MANAGED_OPS if r["fired_today"] == "yes-B2-happy-path"]
+        assert happy == ["claim_task", "release_task"]
 
     def test_agree_without_firing_is_omission(self) -> None:
         mo = _load()

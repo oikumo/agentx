@@ -85,7 +85,7 @@ RESOURCE_PLACES = (
 # the 15-place cap; resource_report is pool-aware (holders/conflicts); sync_md render
 # reads work_* counts. Per-feature _subnet_mutation stays for pre-pool bundles only.
 POOL_PLACES = ("work_pending", "work_active", "work_done")
-POOL_TRANSITIONS = ("work_start", "work_complete")
+POOL_TRANSITIONS = ("work_start", "work_release", "work_complete")
 MAX_PLACES = 15
 
 # feature_082.two_worker_capacity_scope_arbitration (T5-4 2D — NEXT_STEP
@@ -834,6 +834,131 @@ def _move_pool_token(st: NetState, src: str, dst: str) -> None:
     st.live_marking[dst] = st.live_marking.get(dst, 0) + 1
 
 
+def _fire_pool_move(
+    st: NetState, transition: str, src: str, dst: str, *, slot_delta: int = 0
+) -> tuple[bool, str | None]:
+# TA: risk: slice-B: work_start holds agent_attention (cap 1) while workers=2, so fire adopts pool-place deltas only and refunds resources — claims never leak attention; literal rewire refused until B2 template fix lands work_release + worker_slots arcs
+    """Prefer a checked template firing for a pool-token move (slices B/B2).
+
+    B2: the adopted set is pool places + ``worker_slots`` (``slot_delta`` −1
+    on claim, +1 on release); every other place (agent_attention,
+    feature_ready, …) is refunded to its pre-fire value inside the lock-held
+    transaction, so the attention cap never serializes pool claims. Bundles
+    whose template cannot express the move take a labeled legacy fallback
+    (code-managed slot) — never silent.
+
+    Returns ``(fired, fallback_reason)`` with reason ``not_pool_net`` |
+    ``no_transition`` | ``transition_not_enabled`` |
+    ``transition_shape_mismatch``.
+    """
+    if src not in st.live_marking or dst not in st.live_marking:
+        return False, "not_pool_net"
+    transitions = getattr(st.net, "transitions", ()) or ()
+    if transition not in transitions:
+        _move_pool_token(st, src, dst)
+        if "worker_slots" in st.live_marking:
+            st.live_marking["worker_slots"] = st.live_marking.get("worker_slots", 0) + slot_delta
+        return False, "no_transition"
+    pre = dict(st.live_marking)
+    live_tuple = tuple(st.live_marking[p] for p in st.net.place_order)
+    try:
+        successor = st.net.fire_marking(live_tuple, transition)
+    except Exception:
+        _move_pool_token(st, src, dst)
+        if "worker_slots" in st.live_marking:
+            st.live_marking["worker_slots"] = st.live_marking.get("worker_slots", 0) + slot_delta
+        return False, "transition_not_enabled"
+    new_marking = dict(zip(st.net.place_order, successor))
+    shape_ok = (
+        new_marking.get(src, 0) == pre.get(src, 0) - 1
+        and new_marking.get(dst, 0) == pre.get(dst, 0) + 1
+        and all(
+            new_marking.get(p, 0) == pre.get(p, 0)
+            for p in POOL_PLACES
+            if p not in (src, dst) and p in pre
+        )
+    )
+    if shape_ok and "worker_slots" in pre:
+        if "worker_slots" not in st.net.places:
+            shape_ok = False
+        else:
+            # Template-managed slot only when the firing moves it by
+            # slot_delta; a slot place without arcs (delta 0) stays
+            # code-managed via the labeled fallback below.
+            shape_ok = new_marking.get("worker_slots", 0) == pre.get("worker_slots", 0) + slot_delta
+    if not shape_ok:
+        _move_pool_token(st, src, dst)
+        if "worker_slots" in st.live_marking:
+            st.live_marking["worker_slots"] = st.live_marking.get("worker_slots", 0) + slot_delta
+        return False, "transition_shape_mismatch"
+    for p, v in pre.items():
+        if p not in (src, dst, "worker_slots"):
+            new_marking[p] = v
+    if "worker_slots" in pre:
+        new_marking["worker_slots"] = new_marking.get("worker_slots", pre["worker_slots"])
+    st.live_marking = new_marking
+    return True, None
+
+
+def ensure_pool_b2(
+    base: Path,
+    *,
+    reasoning: str = "B2 template fix: worker_slots + work_release",
+    session: str = "",
+    feature: str = "feature_105.mh10_p2b2_template_fix_work_release",
+) -> tuple[NetState, dict[str, Any]]:
+    """Idempotent B2 pool-template migration (additive only — never removes).
+
+    Lands ``worker_slots`` (M0 = max(0, WORKER_SLOTS_CAPACITY − active
+    bindings)) + ``work_release`` (work_active → work_pending + worker_slots)
+    + the 5 arcs binding them to work_start/work_complete (analysis_001 §3).
+    Reruns are no-ops (same revision, no ledger row). Structural work goes
+    through ``splice(add)`` — conformance gate + ``net_splice`` ledger record
+    + revision bump. Local bundles only (``.meta/.omt/`` is gitignored):
+    snapshot the bundle before running.
+    """
+    st = load(base)
+    if not is_pool_net(st.net):
+        raise SpliceError("not_pool_net", f"B2 migration needs a pool net in {base}")
+    active = _active_task_count(st)
+    missing_places = (
+        []
+        if "worker_slots" in st.net.places
+        else [{"name": "worker_slots", "tokens": max(0, WORKER_SLOTS_CAPACITY - active)}]
+    )
+    missing_transitions = (
+        [] if "work_release" in st.net.transitions else [{"name": "work_release"}]
+    )
+    want_arcs = [
+        {"source": "worker_slots", "target": "work_start", "weight": 1},
+        {"source": "work_complete", "target": "worker_slots", "weight": 1},
+        {"source": "work_active", "target": "work_release", "weight": 1},
+        {"source": "work_release", "target": "work_pending", "weight": 1},
+        {"source": "work_release", "target": "worker_slots", "weight": 1},
+    ]
+
+    def _arc_missing(a: dict[str, str]) -> bool:
+        s, t = a["source"], a["target"]
+        if s in st.net.places and t in st.net.transitions:
+            return s not in st.net.inputs.get(t, {})
+        if s in st.net.transitions and t in st.net.places:
+            return t not in st.net.outputs.get(s, {})
+        return True
+
+    missing_arcs = [a for a in want_arcs if _arc_missing(a)]
+    if not missing_places and not missing_transitions and not missing_arcs:
+        return st, {"migrated": False, "revision": st.revision}
+    mutation = {
+        "add_places": missing_places,
+        "add_transitions": missing_transitions,
+        "add_arcs": missing_arcs,
+    }
+    st2, info = splice(
+        base, "add", mutation=mutation, reasoning=reasoning, session=session, feature=feature
+    )
+    return st2, {"migrated": True, **info}
+
+
 def claim_task(
     base: Path,
     task_id: str,
@@ -891,9 +1016,7 @@ def claim_task(
                 f"task {task_id!r} scope overlaps active task "
                 f"{_blocker!r} (rev {st.revision}) — pick a disjoint scope",
             )
-        if "worker_slots" in st.live_marking:
-            st.live_marking["worker_slots"] -= 1
-        _move_pool_token(st, "work_pending", "work_active")
+        fired, fire_fallback = _fire_pool_move(st, "work_start", "work_pending", "work_active", slot_delta=-1)
         claimed = dict(b)
         claimed["place"] = "work_active"
         claimed["owner"] = owner
@@ -917,6 +1040,9 @@ def claim_task(
             "generation": generation,
             "workspace": claimed["workspace"]["id"],
             "revision": st.revision,
+            "transition": "work_start",
+            "fired": fired,
+            "fire_fallback": fire_fallback,
         })
         return st, {"task_id": task_id, "owner": owner, "generation": generation, "workspace": claimed["workspace"]}
 
@@ -962,9 +1088,7 @@ def release_task(
                 f"task {task_id!r} is owned by {b.get('owner')!r}, not "
                 f"{owner!r} (rev {st.revision})",
             )
-        _move_pool_token(st, "work_active", "work_pending")
-        if "worker_slots" in st.live_marking:
-            st.live_marking["worker_slots"] = st.live_marking.get("worker_slots", 0) + 1
+        fired, fire_fallback = _fire_pool_move(st, "work_release", "work_active", "work_pending", slot_delta=+1)
         released = dict(b)
         released["place"] = "work_pending"
         released.pop("owner", None)
@@ -977,6 +1101,9 @@ def release_task(
             "session": session,
             "task_id": task_id,
             "revision": st.revision,
+            "transition": "work_release",
+            "fired": fired,
+            "fire_fallback": fire_fallback,
         })
         return st, {"task_id": task_id}
 

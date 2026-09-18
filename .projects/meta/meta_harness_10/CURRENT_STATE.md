@@ -5,6 +5,52 @@
 
 ---
 
+## 2026-09-18 (auto — feature_105.mh10_p2b2_template_fix_work_release Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_105.mh10_p2b2_template_fix_work_release/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-18 (iter 12 — P2 slice B2 SHIPPED: additive template fix)
+
+### Done
+
+- B2 lands `worker_slots` (M0 = 2 − active) + `work_release` (active→pending+slot) + 5 arcs via idempotent `ensure_pool_b2` (splice-add, additive only — no arc removals; pool-vs-subnet attention use named divergence). `_fire_pool_move` grows `slot_delta` (default 0 keeps slice-B direct callers green): adopts pool+slot deltas, refunds attention/feature_ready — 2 concurrent claims both `fired=true`.
+- `managed_ops` gains the `release_task` row (happy-path firing) + `check_ledger_evidence` reader (closes its TA todo); 103-test updated to the B2 truth; `work_md` budget deliberately 8192→8704 (+ pin sync); live bundle migrated rev 57→58 (snapshot-guarded, rerun noop) + dashboard snapshot regen'd; WORK.md Tasks re-rendered via `sync net_to_md`.
+- 12/12 new goldens → receipt 95/95 → `check` 265/0 + `build` OK + suite **1763** green → `omt_complete` feature_105 → Done (`test_report.md`).
+- C6 narrows to B3 (lane/integration still counter-move).
+
+### Next
+
+- Slice B3: lane/integration rewiring (`submit/verify/integrate` through fire). Slice C: crash reorder. Slice D: matrix/payback.
+
+---
+
+## 2026-09-18 (iter 11 — P2 slice B SHIPPED: evidence-carrying claim path)
+
+### Done
+
+- Blocker found + honored: template `work_start` holds `agent_attention` (cap 1) while task model allows 2 workers — literal rewire would serialize/break concurrency, so slice B fires with shape-check + resource refund (no leak, legacy acceptance kept) and labels the fallback.
+- ONE `state.py` round (53+/2-: `_fire_pool_move` + claim/release wiring + ledger `transition/fired/fire_fallback`) → 5 goldens green → receipt 76/76 (claim/pool/workers/recovery/lane/worktree/slice-A/conformance/state) → `check` 265/0 + `build` OK + suite 1749 green → `omt_complete` feature_104 → Done (`test_report.md`).
+- C6 now two named residuals: attention-vs-workers conflict, missing `work_release` back-edge.
+
+### Next
+
+- Slice B2: template fix (worker_slots arcs or per-worker attention) + `work_release` landing.
+- Slice B3: lane/integration rewiring. Slice C: crash reorder. Slice D: matrix/payback.
+
+---
+
+## 2026-09-18 (auto — feature_104.mh10_p2_rewire_claims_through_fire Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_104.mh10_p2_rewire_claims_through_fire/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-18 (iter 10 — P2 slice A SHIPPED: transition map + conformance harness)
 
 ### Done
