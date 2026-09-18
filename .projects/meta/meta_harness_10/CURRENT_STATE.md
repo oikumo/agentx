@@ -5,6 +5,20 @@
 
 ---
 
+## 2026-09-18 (iter 13 — P2 slice B3 SHIPPED: evidence-carrying lane path)
+
+### Done
+
+- B3 lands `_fire_lane_move` + 4 wirings (`submit/verify/integrate_start/integrate_finish`) + 7 ledger dicts with `transition/fired/fire_fallback` keys; `managed_ops` gains 6 lane rows + extended ledger-evidence reader; pool-net goldens assert `not_lane_net`/`no_transition` fallbacks, binding/slot/guard behavior unchanged.
+- 9/9 new goldens → receipt 104/104 → `check` 265/0 + `build` OK + suite **1772** green → `omt_complete` feature_106 → Done (`test_report.md`).
+- C6 narrows to B3b (lane template landing: +5 places + 6 transitions within 15-place cap — needs splice design + migration + e2e, separate slice); crash reorder (C) + matrix/payback (D) stay parked.
+
+### Next
+
+- Slice B3b: cap-safe lane template landing. Slice C: crash reorder. Slice D: matrix/payback. Or close the P2 program.
+
+---
+
 ## 2026-09-18 (auto — feature_106.mh10_p2b3_lane_integration_rewire Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_106.mh10_p2b3_lane_integration_rewire/test_report.md
