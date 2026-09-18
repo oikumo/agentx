@@ -8,7 +8,7 @@
 
 > One line: MH10 unifies projects/workflows/features/tasks under one Petri-backed global state view — advisory first (P1), enforced only if earned (P2).
 
-**Next:** P2 slice B3 SHIPPED 2026-09-18 (`omt_complete` feature_106 → Done; evidence-carrying lane path — 9 goldens, receipt 104/104, `check` 265/0 + `build` OK + suite 1772 green; C6 narrows to B3b template landing). P1 advisory sidecar frozen. Remaining P2: B3b (lane template landing, cap-safe) → C (crash reorder) → D (matrix/payback), or close.
+**Next:** P2 slice B3b SHIPPED 2026-09-18 (`omt_complete` feature_107 → Done; cap-safe lane template landing — retire-one + reuse-two + add-three = 15/15, 10 goldens, receipt 141/141, `check` 265/0 + `build` OK + suite 1782 green, live rev 58→60; C6 lane residual CLOSED). P1 advisory sidecar frozen. Remaining P2: C (crash reorder) → D (matrix/payback), or close.
 
 ---
 
@@ -82,6 +82,7 @@ Milestones: **M0** (P1: one global view + honest divergence log) → **M1** (P2 
 - [x] P2 slice B `feature_104.mh10_p2_rewire_claims_through_fire` SHIPPED (2026-09-18: ONE `state.py` round — `_fire_pool_move` + claim/release wiring + `transition/fired/fire_fallback` ledger keys; 5 goldens; receipt 76/76; `check` 265/0 + `build` OK + suite 1749 green; attention-vs-workers + missing `work_release` carried as named residuals).
 - [x] P2 slice B2 `feature_105.mh10_p2b2_template_fix_work_release` SHIPPED (2026-09-18: additive `ensure_pool_b2` migration — `worker_slots` + `work_release` + 5 arcs, 12→13 places; helper `slot_delta` adopts pool+slot and refunds attention so 2-concurrent both fire; `managed_ops` release row + ledger-evidence reader; 12 goldens; receipt 95/95; `check` 265/0 + `build` OK + suite 1763 green; live rev 57→58, WORK.md re-rendered).
 - [x] P2 slice B3 `feature_106.mh10_p2b3_lane_integration_rewire` SHIPPED (2026-09-18: evidence-carrying lane path — ONE `state.py` round (lane helper + 4 wirings + 7 ledger dicts) + ONE `managed_ops.py` round (6 lane rows + extended reader); 9 goldens; receipt 104/104; `check` 265/0 + `build` OK + suite 1772 green; C6 narrows to B3b template landing).
+- [x] P2 slice B3b `feature_107.mh10_p2b3b_lane_template_landing` SHIPPED (2026-09-18: retire `e2e_receipt`→archive_pool + reuse `tests_capacity`/`src_edit_capacity` as lane slots + 3 lane states + 6 transitions + 19 arcs = 15/15; slot-adopting `_fire_lane_move` + 4 call-site wirings; `managed_ops` lane rows `yes-B3b-template`; 10 goldens; receipt 141/141; `check` 265/0 + `build` OK + suite 1782 green; live rev 58→60 snapshot-guarded, WORK.md re-rendered; C6 lane residual CLOSED).
 - [x] CLOSED (2026-09-18, iter 9 closeout docs-only): `project.py status` = `complete`, `sync` clean, `check` 265/0 green; advisory sidecar `.sandbox/global_state/` frozen; P2 re-entry unchanged (needs full a–e bundle via new slice).
 
 ---

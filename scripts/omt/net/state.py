@@ -70,12 +70,15 @@ BOUNDARY_PORTS = ("feature_ready", "resource_token", "goal_satisfied")
 # TA: xref: feature_041 design (resume @ .sandbox/pause_2026-08-30d.md R1-R8): RESOURCE_PLACES catalog (agent_attention/src_edit_capacity/tests_capacity/harness_surface_round/e2e_receipt, ALL cap=1 per IDEA-002 v4 §2.2 — the IDEA-005 example's 2/3 is a sketch, not canonical) joins the sync() bootstrap skeleton + resync emits ONE add_resource_places proposal entry (missing places + retrofit arcs for existing subnets, D4 never auto-applied); _subnet_mutation wires agent_attention (f{N}_start claims, f{N}_complete releases → serial-mirror conflict trap, §2.3); derive_overlay ports.resources = sorted((entry∪exit) ∩ RESOURCE_PLACES) — stays a pure function of the net (P10).
 
 
+# feature_107 (B3b cap-safe lane template): e2e_receipt retired from the net
+# (its 1 token reroutes to archive_pool at migration) — the receipt discipline
+# is evidenced in the ledger + enforced by the TS enforcer, so the net token
+# is redundant. tests_capacity/src_edit_capacity double as the lane slots.
 RESOURCE_PLACES = (
     "agent_attention",
     "src_edit_capacity",
     "tests_capacity",
     "harness_surface_round",
-    "e2e_receipt",
 )
 
 # feature_048.wip_limited_pool (D20 15-place cap): generic WIP pool — 3 pool
@@ -101,6 +104,16 @@ MAX_PLACES = 15
 WORKER_SLOTS_CAPACITY = 2
 TEST_SLOTS_CAPACITY = 1
 INTEGRATION_SLOT_CAPACITY = 1
+
+# feature_107 (B3b cap-safe lane template): slot-place aliases. The live pool
+# template wires the pre-041 resource capacities as the lane slots
+# (tests_capacity = test lane, src_edit_capacity = integration lane — both
+# M0=1/cap 1, matching TEST_/INTEGRATION_SLOTS_CAPACITY), so no new slot
+# places are needed. Reuse-first order keeps the template-wired place
+# canonical; legacy bundles carrying test_slots/integration_slot (or neither
+# — binding counts stay the authoritative fence) work unchanged.
+TEST_SLOT_PLACES = ("tests_capacity", "test_slots")
+INTEGRATION_SLOT_PLACES = ("src_edit_capacity", "integration_slot")
 
 
 def _normalize_scope_entry(entry: object) -> tuple[str, ...]:
@@ -903,10 +916,38 @@ def _fire_pool_move(
     return True, None
 
 
+def _present_slot(st: NetState, names: tuple[str, ...]) -> str | None:
+    """First held slot place in reuse-first order, else None (legacy)."""
+    for p in names:
+        if p in st.live_marking:
+            return p
+    return None
+
+
+def _check_slot_take(st: NetState, place: str | None, *, task_id: str, kind: str) -> None:
+    """Refuse a slot take when the held slot place is empty (fence first)."""
+    if place is None:
+        return
+    if st.live_marking.get(place, 0) < 1:
+        code = "verification_busy" if kind == "test" else "integration_busy"
+        label = "test_slots" if kind == "test" else "integration_slot"
+        raise SpliceError(
+            code,
+            f"no {place} token for task {task_id!r} "
+            f"(rev {st.revision}) — {label} lane busy",
+        )
+
+
 def _fire_lane_move(
-    st: NetState, transition: str, src: str, dst: str
+# TA: risk: B3b slot_deltas: submit frees worker_slots inside the firing (outer manual +1 removed — double-free if both); attention/goal/archive refunded never adopted so lane moves cannot hold attention (work_complete has no lane path)
+    st: NetState,
+    transition: str,
+    src: str,
+    dst: str,
+    *,
+    slot_deltas: dict[str, int] | None = None,
 ) -> tuple[bool, str | None]:
-    """Prefer a checked template firing for a lane-token move (slice B3).
+    """Prefer a checked template firing for a lane-token move (slices B3/B3b).
 
     Lane moves are binding moves first: on today's pool template the lane
     places (work_verifying/work_integration_ready/work_integrating) are absent
@@ -916,24 +957,38 @@ def _fire_lane_move(
     places + transitions. Slot tokens (worker/test/integration) stay
     code-managed in the caller — this helper only moves the lane/pool token.
 
+    B3b generalizes the B2 ``slot_delta`` pattern: ``slot_deltas`` carries the
+    lane-slot moves alongside the lane token (submit takes the test slot and
+    frees the worker slot atomically; verify frees test; start takes
+    integration; finish frees integration). Adopted places are the lane token
+    + listed slots; every other place (agent_attention, feature_ready, …) is
+    refunded to its pre-fire value, so lane moves never hold attention.
+    ``None``/``{}`` keeps B3 callers green.
+
     Returns ``(fired, fallback_reason)`` with reason ``not_lane_net`` |
     ``no_transition`` | ``transition_not_enabled`` |
     ``transition_shape_mismatch``.
     """
-    if src not in st.live_marking or dst not in st.live_marking:
+    deltas = dict(slot_deltas or {})
+
+    def _apply_fallback(reason: str) -> tuple[bool, str | None]:
         _move_pool_token(st, src, dst)
-        return False, "not_lane_net"
+        for p, d in deltas.items():
+            if p in st.live_marking:
+                st.live_marking[p] = st.live_marking.get(p, 0) + d
+        return False, reason
+
+    if src not in st.live_marking or dst not in st.live_marking:
+        return _apply_fallback("not_lane_net")
     transitions = getattr(st.net, "transitions", ()) or ()
     if transition not in transitions:
-        _move_pool_token(st, src, dst)
-        return False, "no_transition"
+        return _apply_fallback("no_transition")
     pre = dict(st.live_marking)
     live_tuple = tuple(st.live_marking[p] for p in st.net.place_order)
     try:
         successor = st.net.fire_marking(live_tuple, transition)
     except Exception:
-        _move_pool_token(st, src, dst)
-        return False, "transition_not_enabled"
+        return _apply_fallback("transition_not_enabled")
     new_marking = dict(zip(st.net.place_order, successor))
     lane_pool = tuple(dict.fromkeys((*POOL_PLACES, *LANE_PLACES)))
     shape_ok = (
@@ -942,15 +997,24 @@ def _fire_lane_move(
         and all(
             new_marking.get(p, 0) == pre.get(p, 0)
             for p in lane_pool
-            if p not in (src, dst) and p in pre
+            if p not in (src, dst) and p not in deltas and p in pre
         )
     )
+    for p, d in deltas.items():
+        if p not in st.net.places:
+            shape_ok = False
+            break
+        if new_marking.get(p, 0) != pre.get(p, 0) + d:
+            shape_ok = False
+            break
     if not shape_ok:
-        _move_pool_token(st, src, dst)
-        return False, "transition_shape_mismatch"
+        return _apply_fallback("transition_shape_mismatch")
     for p, v in pre.items():
-        if p not in (src, dst):
+        if p not in (src, dst) and p not in deltas:
             new_marking[p] = v
+    for p in deltas:
+        if p in pre:
+            new_marking[p] = new_marking.get(p, pre[p])
     st.live_marking = new_marking
     return True, None
 
@@ -1012,6 +1076,104 @@ def ensure_pool_b2(
         base, "add", mutation=mutation, reasoning=reasoning, session=session, feature=feature
     )
     return st2, {"migrated": True, **info}
+
+
+def ensure_pool_b3b(
+# TA: why: B3b cap-safe: retire e2e_receipt (reroute 1 token to archive_pool) + reuse tests_capacity/src_edit_capacity as lane slots + add 3 lane states = 15/15 exact; raise-cap refused (D20 amendment = separate slice), retire-3 refused (needless catalog churn)
+    base: Path,
+    *,
+    reasoning: str = "B3b lane template landing: retire e2e_receipt, add lane states",
+    session: str = "",
+    feature: str = "feature_107.mh10_p2b3b_lane_template_landing",
+) -> tuple[NetState, dict[str, Any]]:
+    """Idempotent B3b lane-template migration (retire-one + add, cap-safe).
+
+    Retires ``e2e_receipt`` (its 1 token reroutes to ``archive_pool`` — the
+    receipt discipline lives in the ledger/enforcer, not the net token) via
+    ``splice(remove)``, then lands the 3 lane state places (M0 mirrors live
+    lane bindings, the B2 ``worker_slots`` pattern) + the 6
+    ``LANE_TRANSITIONS`` + 19 arcs binding them to the reused slot capacities
+    (``tests_capacity``/``src_edit_capacity``) and ``worker_slots``.
+    13-1+3 = 15 places: the cap holds. Reruns are no-ops (same revision, no
+    ledger row). Structural work goes through ``splice`` — conformance gate +
+    ``net_splice`` ledger record + revision bump per leg. Local bundles only
+    (``.meta/.omt/`` is gitignored): snapshot the bundle before running.
+    """
+    st = load(base)
+    if not is_pool_net(st.net):
+        raise SpliceError("not_pool_net", f"B3b migration needs a pool net in {base}")
+    retired = False
+    if "e2e_receipt" in st.net.places:
+        st, _ = splice(
+            base,
+            "remove",
+            mutation={
+                "remove_places": ["e2e_receipt"],
+                "token_policy": "reroute",
+                "reroute": {"e2e_receipt": "archive_pool"},
+            },
+            reasoning=reasoning + " (retire e2e_receipt)",
+            session=session,
+            feature=feature,
+        )
+        retired = True
+    lane_m0 = {
+        "work_verifying": _lane_task_count(st, "work_verifying"),
+        "work_integration_ready": _lane_task_count(st, "work_integration_ready"),
+        "work_integrating": _lane_task_count(st, "work_integrating"),
+    }
+    missing_places = [
+        {"name": p, "tokens": lane_m0[p]}
+        for p in ("work_verifying", "work_integration_ready", "work_integrating")
+        if p not in st.net.places
+    ]
+    missing_transitions = [
+        {"name": t} for t in LANE_TRANSITIONS if t not in st.net.transitions
+    ]
+    want_arcs = [
+        {"source": "work_active", "target": "work_submit", "weight": 1},
+        {"source": "tests_capacity", "target": "work_submit", "weight": 1},
+        {"source": "work_submit", "target": "work_verifying", "weight": 1},
+        {"source": "work_submit", "target": "worker_slots", "weight": 1},
+        {"source": "work_verifying", "target": "work_verify_pass", "weight": 1},
+        {"source": "work_verify_pass", "target": "work_integration_ready", "weight": 1},
+        {"source": "work_verify_pass", "target": "tests_capacity", "weight": 1},
+        {"source": "work_verifying", "target": "work_verify_fail", "weight": 1},
+        {"source": "work_verify_fail", "target": "work_pending", "weight": 1},
+        {"source": "work_verify_fail", "target": "tests_capacity", "weight": 1},
+        {"source": "work_integration_ready", "target": "work_integrate_start", "weight": 1},
+        {"source": "src_edit_capacity", "target": "work_integrate_start", "weight": 1},
+        {"source": "work_integrate_start", "target": "work_integrating", "weight": 1},
+        {"source": "work_integrating", "target": "work_integrate_pass", "weight": 1},
+        {"source": "work_integrate_pass", "target": "work_done", "weight": 1},
+        {"source": "work_integrate_pass", "target": "src_edit_capacity", "weight": 1},
+        {"source": "work_integrating", "target": "work_integrate_fail", "weight": 1},
+        {"source": "work_integrate_fail", "target": "work_pending", "weight": 1},
+        {"source": "work_integrate_fail", "target": "src_edit_capacity", "weight": 1},
+    ]
+
+    def _arc_missing(a: dict[str, str]) -> bool:
+        s, t = a["source"], a["target"]
+        if s in st.net.places and t in st.net.transitions:
+            return s not in st.net.inputs.get(t, {})
+        if s in st.net.transitions and t in st.net.places:
+            return t not in st.net.outputs.get(s, {})
+        return True
+
+    missing_arcs = [a for a in want_arcs if _arc_missing(a)]
+    if not missing_places and not missing_transitions and not missing_arcs:
+        return st, {"migrated": retired, "revision": st.revision}
+    mutation: dict[str, Any] = {}
+    if missing_places:
+        mutation["add_places"] = missing_places
+    if missing_transitions:
+        mutation["add_transitions"] = missing_transitions
+    if missing_arcs:
+        mutation["add_arcs"] = missing_arcs
+    st2, info = splice(
+        base, "add", mutation=mutation, reasoning=reasoning, session=session, feature=feature
+    )
+    return st2, {"migrated": True, "retired": retired, **info}
 
 
 def claim_task(
@@ -1400,17 +1562,16 @@ def submit_result(
                 f"test_slots={TEST_SLOTS_CAPACITY} occupied — task {task_id!r} "
                 f"queues for verification (rev {st.revision})",
             )
-        if "test_slots" in st.live_marking and st.live_marking.get("test_slots", 0) < 1:
-            raise SpliceError(
-                "verification_busy",
-                f"no test_slots token for task {task_id!r} "
-                f"(rev {st.revision}) — verification lane busy",
-            )
-        if "test_slots" in st.live_marking:
-            st.live_marking["test_slots"] -= 1
+        test_slot = _present_slot(st, TEST_SLOT_PLACES)
+        _check_slot_take(st, test_slot, task_id=task_id, kind="test")
+        lane_deltas: dict[str, int] = {}
+        if test_slot is not None:
+            lane_deltas[test_slot] = -1
         if "worker_slots" in st.live_marking:
-            st.live_marking["worker_slots"] = st.live_marking.get("worker_slots", 0) + 1
-        lane_fired, lane_fallback = _fire_lane_move(st, "work_submit", "work_active", "work_verifying")
+            lane_deltas["worker_slots"] = +1
+        lane_fired, lane_fallback = _fire_lane_move(
+            st, "work_submit", "work_active", "work_verifying", slot_deltas=lane_deltas
+        )
         ws = dict(b.get("workspace") or {})
         submitted = dict(b)
         submitted["place"] = "work_verifying"
@@ -1494,18 +1655,26 @@ def verify_result(
         live_gen = _require_lane_generation(b, generation, task_id, st.revision)
         if verdict == "pass":
             _check_deps_satisfied(st, b)
-        if "test_slots" in st.live_marking:
-            st.live_marking["test_slots"] = st.live_marking.get("test_slots", 0) + 1
+        test_slot = _present_slot(st, TEST_SLOT_PLACES)
+        lane_deltas = {test_slot: +1} if test_slot is not None else {}
         updated = dict(b)
         if verdict == "pass":
             lane_transition = "work_verify_pass"
-            lane_fired, lane_fallback = _fire_lane_move(st, lane_transition, "work_verifying", "work_integration_ready")
+            lane_fired, lane_fallback = _fire_lane_move(
+                st,
+                lane_transition,
+                "work_verifying",
+                "work_integration_ready",
+                slot_deltas=lane_deltas,
+            )
             updated["place"] = "work_integration_ready"
             updated.pop("block_reason", None)
             kind = "net_verify_pass"
         else:
             lane_transition = "work_verify_fail"
-            lane_fired, lane_fallback = _fire_lane_move(st, lane_transition, "work_verifying", "work_pending")
+            lane_fired, lane_fallback = _fire_lane_move(
+                st, lane_transition, "work_verifying", "work_pending", slot_deltas=lane_deltas
+            )
             updated["place"] = "work_pending"
             updated.pop("owner", None)
             updated["block_reason"] = f"verify_fail: {detail or 'local checks failed'}"
@@ -1570,15 +1739,16 @@ def integrate_start(
                 f"integration_slot={INTEGRATION_SLOT_CAPACITY} occupied — task "
                 f"{task_id!r} waits (rev {st.revision})",
             )
-        if "integration_slot" in st.live_marking and st.live_marking.get("integration_slot", 0) < 1:
-            raise SpliceError(
-                "integration_busy",
-                f"no integration_slot token for task {task_id!r} "
-                f"(rev {st.revision}) — lane busy",
-            )
-        if "integration_slot" in st.live_marking:
-            st.live_marking["integration_slot"] -= 1
-        lane_fired, lane_fallback = _fire_lane_move(st, "work_integrate_start", "work_integration_ready", "work_integrating")
+        int_slot = _present_slot(st, INTEGRATION_SLOT_PLACES)
+        _check_slot_take(st, int_slot, task_id=task_id, kind="integration")
+        lane_deltas = {int_slot: -1} if int_slot is not None else {}
+        lane_fired, lane_fallback = _fire_lane_move(
+            st,
+            "work_integrate_start",
+            "work_integration_ready",
+            "work_integrating",
+            slot_deltas=lane_deltas,
+        )
         updated = dict(b)
         updated["place"] = "work_integrating"
         st.task_bindings[idx] = updated
@@ -1649,12 +1819,14 @@ def integrate_finish(
         live_gen = _require_lane_generation(b, generation, task_id, st.revision)
         if verdict == "pass":
             _check_deps_satisfied(st, b)
-        if "integration_slot" in st.live_marking:
-            st.live_marking["integration_slot"] = st.live_marking.get("integration_slot", 0) + 1
+        int_slot = _present_slot(st, INTEGRATION_SLOT_PLACES)
+        lane_deltas = {int_slot: +1} if int_slot is not None else {}
         updated = dict(b)
         if verdict == "pass":
             lane_transition = "work_integrate_pass"
-            lane_fired, lane_fallback = _fire_lane_move(st, lane_transition, "work_integrating", "work_done")
+            lane_fired, lane_fallback = _fire_lane_move(
+                st, lane_transition, "work_integrating", "work_done", slot_deltas=lane_deltas
+            )
             updated["place"] = "work_done"
             updated.pop("owner", None)
             updated.pop("block_reason", None)
@@ -1669,7 +1841,9 @@ def integrate_finish(
             kind = "net_integrate_pass"
         else:
             lane_transition = "work_integrate_fail"
-            lane_fired, lane_fallback = _fire_lane_move(st, lane_transition, "work_integrating", "work_pending")
+            lane_fired, lane_fallback = _fire_lane_move(
+                st, lane_transition, "work_integrating", "work_pending", slot_deltas=lane_deltas
+            )
             updated["place"] = "work_pending"
             updated.pop("owner", None)
             updated["block_reason"] = f"integration_conflict: {detail or 'combined acceptance failed'}"

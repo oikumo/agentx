@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-09-18 (auto — feature_107.mh10_p2b3b_lane_template_landing Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_107.mh10_p2b3b_lane_template_landing/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-18 (iter 14 — P2 slice B3b SHIPPED: cap-safe lane template landing)
+
+### Done
+
+- B3b lands the lane template within the 15-place cap: retire-one (`e2e_receipt`→`archive_pool`, receipt lives in ledger/enforcer) + reuse-two (`tests_capacity`/`src_edit_capacity` as test/integration slots, both names aliased) + add-three (`work_verifying/ready/integrating` M0=0 + 6 `LANE_TRANSITIONS` + 19 arcs). `_fire_lane_move` gains `slot_deltas` (adopt-or-manual, B2 pattern); submit frees worker inside the firing (outer manual removed — no double-free); attention/goal/archive refunded, never adopted.
+- 10/10 new goldens → receipt 141/141 → `check` 265/0 + `build` OK + suite **1782** green → live rev 58→60 snapshot-guarded (rerun noop; probe `drained_complete`, resources 4/4) + WORK.md re-rendered (`net_rev:60`, 15/15) → `test_report.md`.
+- C6 lane residual CLOSED (every lane move is a checked firing on the migrated net; legacy bundles keep labeled fallbacks). Crash reorder (C) + matrix/payback (D) stay parked.
+
+### Next
+
+- Slice C: crash reorder (record-before-clear + injection suite). Slice D: matrix/payback. Or close the P2 program.
+
+---
+
 ## 2026-09-18 (iter 13 — P2 slice B3 SHIPPED: evidence-carrying lane path)
 
 ### Done

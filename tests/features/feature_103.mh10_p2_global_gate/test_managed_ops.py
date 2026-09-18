@@ -46,9 +46,9 @@ class TestManagedOpMap:
         assert fired == ["fire"]
         happy = [r["op"] for r in mo.MANAGED_OPS if r["fired_today"] == "yes-B2-happy-path"]
         assert happy == ["claim_task", "release_task"]
-        # B3 wires lane edges through fire with labeled fallback (no template
-        # landing yet — B3b needs a cap-safe migration).
-        lane = [r["op"] for r in mo.MANAGED_OPS if r["fired_today"] == "no-B3-fallback"]
+        # B3b lands the lane template (cap-safe migration): lane edges fire on
+        # the migrated net, legacy bundles keep labeled fallbacks in-ledger.
+        lane = [r["op"] for r in mo.MANAGED_OPS if r["fired_today"] == "yes-B3b-template"]
         assert lane == [
             "submit_result",
             "verify_pass",

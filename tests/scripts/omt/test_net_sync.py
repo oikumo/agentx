@@ -104,12 +104,11 @@ class TestSyncBootstrap:
             "feature_ready",
             "resource_token",
             "goal_satisfied",
-            # feature_041 R1: resource catalog (all M0=1, IDEA-002 v4 §2.2)
+            # feature_041 R1 + feature_107 B3b: resource catalog (e2e_receipt retired)
             "agent_attention",
             "src_edit_capacity",
             "tests_capacity",
             "harness_surface_round",
-            "e2e_receipt",
         }
         assert st.net.transitions == set()  # NO supervisor transitions in v1
         assert st.live_marking == {
@@ -120,11 +119,9 @@ class TestSyncBootstrap:
             "src_edit_capacity": 1,
             "tests_capacity": 1,
             "harness_surface_round": 1,
-            "e2e_receipt": 1,
         }
         assert st.overlay["supervisor"]["places"] == [
             "agent_attention",
-            "e2e_receipt",
             "feature_ready",
             "goal_satisfied",
             "harness_surface_round",
@@ -262,11 +259,10 @@ class TestSyncScan:
             "feature_ready",
             "resource_token",
             "goal_satisfied",
-            "agent_attention",  # feature_041 R1 catalog (all M0=1)
+            "agent_attention",  # feature_041 R1 + feature_107 B3b (e2e_receipt retired)
             "src_edit_capacity",
             "tests_capacity",
             "harness_surface_round",
-            "e2e_receipt",
         }
         assert st.overlay["subnets"] == {}
         # agent approves + applies the proposal through the splice path

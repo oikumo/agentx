@@ -6,7 +6,7 @@ catalog capacities are 1 per §2.2, the IDEA-005 example's 2/3 is a sketch):
 
 - R1: sync() bootstrap materializes the resource catalog
   (agent_attention / src_edit_capacity / tests_capacity /
-  harness_surface_round / e2e_receipt — all M0=1).
+  harness_surface_round — all M0=1; feature_107 B3b retires e2e_receipt).
 - R2: _subnet_mutation wires agent_attention — f{N}_start claims (input),
   f{N}_complete releases (output) → serial-mirror conflict trap (§2.3).
 - R3: derive_overlay ports.resources = sorted((entry ∪ exit) ∩ RESOURCE_PLACES)
@@ -56,7 +56,7 @@ RESOURCE_PLACES = (
     "src_edit_capacity",
     "tests_capacity",
     "harness_surface_round",
-    "e2e_receipt",
+    # feature_107 B3b: e2e_receipt retired (ledger/enforcer evidence replaces the token).
 )
 BOUNDARY = {"feature_ready", "resource_token", "goal_satisfied"}
 
