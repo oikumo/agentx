@@ -48,6 +48,49 @@ RESERVED_OPS: tuple[str, ...] = ()
 DEFAULT_MAX_STATES = 1000
 
 
+class _FriendlyParser(argparse.ArgumentParser):
+    """Argparse errors as JSON envelopes on stdout (feature_111).
+
+    The omt_net plugin surfaces stdout on non-zero exit; the default
+    argparse error goes to stderr so callers saw a bare engine_error
+    plus a usage dump. Emitting the JSON envelope keeps the shape
+    {ok, error, op, message} parsable (message carries the hint).
+    """
+
+    def error(self, message: str) -> None:  # noqa: ANN001, ANN202
+        import sys as _sys
+
+        _argv = _sys.argv[1:]
+        op = "unknown"
+        for tok in _argv:
+            if not str(tok).startswith("-"):
+                op = str(tok)
+                break
+        hint = message
+        if "reasoning" in message:
+            hint += "; hint: pass --reasoning '<why>' for audit (D4) — the omt_net tool exposes it as `reasoning`"
+        print(json.dumps({"ok": False, "error": "invalid_args", "op": op, "message": f"{self.prog}: {hint}"}, ensure_ascii=False))
+        self.exit(2)
+
+
+def _fire_hint(op: str, args: argparse.Namespace, base: Path) -> str:
+    """Human hint for transition_not_enabled (feature_111, message-only)."""
+    base_hint = "transition not enabled at live marking"
+    try:
+        st2 = state.load(base)
+        counts = state.pool_counts(st2.live_marking)
+        pending = counts.get("work_pending", 0)
+        active = counts.get("work_active", 0)
+        if op == "fire" and getattr(args, "transition", "") == "work_start" and pending == 0 and active == 0:
+            return base_hint + " — drained_complete with no pending/active work: solo src edits need no fire receipt (matrix V3 solo unchanged); claim/fire only when the WORK.md pool has pending tokens"
+        blockers = _start_blockers(st2) if op == "fire" else []
+        if blockers:
+            return base_hint + f"; unmarked inputs: {','.join(blockers)}"
+    except Exception:
+        pass
+    return base_hint
+
+
 def _emit(envelope: dict[str, Any], code: int) -> int:
     print(json.dumps(envelope, ensure_ascii=False))
     return code
@@ -696,7 +739,7 @@ def _invariant(base: Path) -> tuple[dict[str, Any], int]:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+    parser = _FriendlyParser(
         prog="omt_net",
         description="Meta-harness concurrency net (IDEA-002 v4 §5.0 closed op enum).",
     )
@@ -1031,7 +1074,7 @@ def main(argv: list[str] | None = None) -> int:
     except state.RevisionMismatchError as exc:
         return _emit(*_error("revision_mismatch", op, str(exc)))
     except TransitionNotEnabledError:
-        return _emit(*_error("transition_not_enabled", op))
+        return _emit(*_error("transition_not_enabled", op, _fire_hint(op, args, base)))
     except UnknownTransitionError:
         return _emit(*_error("unknown_transition", op))
     except PetriNetError as exc:

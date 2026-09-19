@@ -9,9 +9,21 @@ from agentx.utils import utils_directories
 from agentx.utils.utils_directories import is_directory_exists
 
 
-def safe_int(value: str) -> int | None:
+def safe_int(value: object) -> int | None:
+    # Reject bool explicitly (bool subclasses int — int(True)==1 hides bugs
+    # in menu/coordinate parsing). Accept int directly, numeric strings
+    # (whitespace-tolerant); everything else (float, None, junk) → None.
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    if not text:
+        return None
     try:
-        return int(value)
+        return int(text)
     except (ValueError, TypeError):
         return None
 
