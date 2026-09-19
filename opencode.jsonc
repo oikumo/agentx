@@ -72,7 +72,8 @@
       "jq *": "allow",
       "sqlite3 *": "allow",
       "git worktree *": "allow",
-      "time *": "allow",  
+      "time *": "allow",
+      "xargs *": "allow",
       // harnessc:begin bash
         "git commit *": "deny",
         "git push *": "deny",

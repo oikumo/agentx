@@ -23,11 +23,13 @@
 
 ## Tasks
 <!-- net_rev:60 -->
-NEXT: none
+NEXT: proj:agentx_concurrent_development (recommended)
 Other enabled: none
 Blocked: none
 Resources: 4/4 free
 Pool: pending=0 active=0 done=7 (places 15/15)
+Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:meta_harness_10, proj:meta_harness_11, proj:meta_harness_2, proj:meta_harness_3, proj:meta_harness_4, proj:meta_harness_5, proj:meta_harness_6, proj:meta_harness_7, proj:meta_harness_8, proj:meta_harness_9, proj:meta_harness_concurrent, proj:net_enforced_harness, proj:petri_net_library, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, drift:aging-draft:feature_kb_akb, drift:aging-draft:workflows, drift:iteration-log:meta_harness_2, drift:iteration-log:meta_harness_3, drift:iteration-log:meta_harness_5, drift:iteration-log:meta_harness_concurrent, drift:iteration-log:net_enforced_harness, drift:unlinked-project-backed:feature_kb_akb, drift:unlinked-project-backed:meta.workflows_definition_layer, unscoped:001, unscoped:002
+Lanes: verification 0/1 free 1, integration 0/1 free 1
 ## Projects (synced by `uv run scripts/omt/project.py sync` — do not hand-edit)
 
 | project | state | features |
@@ -35,7 +37,7 @@ Pool: pending=0 active=0 done=7 (places 15/15)
 | agentx_concurrent_development | draft | — |
 | feature_kb_akb | draft | — |
 | meta_harness_10 | complete | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release, feature_106.mh10_p2b3_lane_integration_rewire, feature_107.mh10_p2b3b_lane_template_landing, feature_108.mh10_p2c_crash_reorder, feature_109.mh10_p2d_matrix_payback |
-| meta_harness_11 | draft | — |
+| meta_harness_11 | active | feature_110.whole_project_menu_composer, feature_111.multi_select_directive_protocol |
 | meta_harness_2 | complete | feature_020.meta_harness_navigation, feature_021.meta_harness_think_anywhere, feature_022.meta_harness_think_anywhere_v2, feature_023.meta_harness_improvement, feature_026.omt_q_interrogative_first_ops |
 | meta_harness_3 | complete | feature_028.feature_scoped_gating |
 | meta_harness_4 | complete | feature_037.tdd_testlist_prose_fallback |

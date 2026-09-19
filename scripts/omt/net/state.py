@@ -824,6 +824,109 @@ def fire(base: Path, transition: str, *, reasoning: str, session: str, expected_
     return st
 
 
+def apply_selection(
+    base: Path,
+    selection_text: str,
+    valid_ids: set[str] | frozenset[str],
+    enabled: list[str] | set[str] | frozenset[str] | None = None,
+    *,
+    reasoning: str = "",
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> tuple[NetState, dict[str, Any]]:
+    """O2 batch apply (feature_111, M0 serial-atomic).
+
+    Pure parse+plan (`apply_selection.py`) over the caller's live O1 menu IDs,
+    then at most one mutating commit through `_transact` (existing
+    expected_revision + command_id authority). The selection envelope
+    (ids/directives/batch_id) rides in the native ledger record's fields —
+    no new `net_*` kind (replay-safe), no overlay change (`save()` re-derives
+    the overlay from the net, P10 — custom keys would be dropped, so the
+    design's overlay-annotation slot moved to ledger-carried fields).
+    Annotate-only batches write nothing: the report carries annotations +
+    D4 proposals for the agent's next step (durable via session log); the
+    revision check there is a courtesy pre-read (no lock, nothing committed).
+    >1 mutating op refuses `multi_mutate_deferred_o4` (true parallel is O4).
+    """
+    from .apply_selection import (
+        SelectionError,
+        describe_plan,
+        parse_selection,
+        plan_selection,
+    )
+
+    try:
+        sel = parse_selection(selection_text)
+        plan = plan_selection(sel, valid_ids=set(valid_ids), enabled=enabled or [])
+    except SelectionError as exc:
+        raise SpliceError(exc.code, str(exc)) from exc
+    batch_id = uuid.uuid4().hex[:12]
+    summary = describe_plan(plan)
+    payload = {
+        "selection": list(sel.ids),
+        "directives": dict(sel.directives),
+        "batch_id": batch_id,
+        "reasoning": reasoning,
+        "session": session,
+    }
+
+    if not plan.mutate:
+        st = load(base)
+        if expected_revision is not None:
+            _require_revision(st, expected_revision)
+        return st, {
+            "batch_id": batch_id,
+            "summary": summary,
+            "selection": list(sel.ids),
+            "annotations": dict(plan.annotations),
+            "proposals": list(plan.proposals),
+            "revision": st.revision,
+            "mutated": False,
+        }
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        m = plan.mutate[0]
+        successor = st.net.fire_marking(
+            tuple(st.live_marking[p] for p in st.net.place_order), m["transition"]
+        )  # TransitionNotEnabledError / UnknownTransitionError raised here, pre-write
+        st.live_marking = dict(zip(st.net.place_order, successor))
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        append_ledger({
+            "kind": "net_fire",
+            "session": session,
+            "transition": m["transition"],
+            "revision": st.revision,
+            "reasoning": f"{reasoning} [{summary}]" if reasoning else summary,
+            "selection": list(sel.ids),
+            "directives": dict(sel.directives),
+            "batch_id": batch_id,
+        })
+        return st, {
+            "batch_id": batch_id,
+            "summary": summary,
+            "selection": list(sel.ids),
+            "annotations": dict(plan.annotations),
+            "proposals": list(plan.proposals),
+            "revision": st.revision,
+            "mutated": True,
+            "transition": m["transition"],
+        }
+
+    st, info = _transact(
+        base,
+        op="fire",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
+    return st, info
+
+
 # ---------------------------------------------------------------------------
 # Task claim + generation fencing (feature_080 T5-2 2B — NEXT_STEP §6, mh8 D9)
 # ---------------------------------------------------------------------------
@@ -2593,6 +2696,229 @@ def _scan_reality() -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
     return features, checkboxes, projects
 
 
+def _menu_projects_from_work() -> list[dict[str, str]]:
+    """O1: WORK.md ## Projects rows → [{slug, state, features}] (fail-open).
+
+    Parses the synced Projects table via _work_md_path (hermetic override
+    aware); deterministic slug-sorted. Empty when WORK.md is missing.
+    """
+    try:
+        work = _work_md_path()
+        if not work.is_file():
+            return []
+        body = _md_section(work.read_text(encoding="utf-8"), "## Projects")
+        rows: list[dict[str, str]] = []
+        for line in body.splitlines():
+            if not line.startswith("|"):
+                continue
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if len(cells) < 3 or cells[0] in ("project", "") or set(cells[0]) <= set("-: "):
+                continue
+            rows.append({
+                "slug": cells[0],
+                "state": cells[1] if len(cells) > 1 else "?",
+                "features": cells[2] if len(cells) > 2 else "—",
+            })
+        return sorted(rows, key=lambda r: r["slug"])
+    except OSError:
+        return []
+
+
+def _menu_hygiene(projects_menu: list[Any] | None = None) -> list[Any]:
+    """O1: minimal drift hygiene → [{class, key, detail}] (fail-open).
+
+    - aging-draft: draft project with no linked features (—/empty), created
+      >21d ago per the ledger (mirrors omt_q audit aging-draft).
+    - unlinked-project-backed: phase design_doc under .projects/meta/<slug>/
+      with no matching project_link in the full ledger fold (archives + hot,
+      mirrors omt_q audit).
+    - iteration-log: PROJECT.md git-change newer than CURRENT_STATE.md top
+      entry (git fail-open → class omitted).
+    Deterministic class/key sort; never raises.
+    """
+    hygiene: list[Any] = []
+    menu: list[Any] = []
+    try:
+        menu = projects_menu if projects_menu is not None else _menu_projects_from_work()
+    except Exception:
+        menu = []
+    linked: set[str] = set()
+    candidates: set[tuple[str, str]] = set()
+    creates: dict[str, str] = {}
+    try:
+        lp = _ledger_path()
+        ledger_files: list[Path] = []
+        try:
+            ledger_files = sorted(lp.parent.glob("ledger-*.jsonl"))
+        except Exception:
+            ledger_files = []
+        if lp.is_file():
+            ledger_files.append(lp)
+        for path in ledger_files:
+            try:
+                ledger_text = path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for line in ledger_text.splitlines():
+                s = line.strip()
+                if not s:
+                    continue
+                try:
+                    r = json.loads(s)
+                except ValueError:
+                    continue
+                if not isinstance(r, dict):
+                    continue
+                if r.get("kind") == "project_link" and r.get("feature") and r.get("project"):
+                    linked.add(str(r["feature"]))
+                if r.get("kind") == "phase" and r.get("design_doc") and r.get("feature"):
+                    m = re.match(r"^\.projects/meta/([^/]+)/", str(r["design_doc"]))
+                    if m:
+                        candidates.add((str(r["feature"]), m.group(1)))
+                if r.get("kind") == "project" and r.get("project") and r.get("op") == "create":
+                    slug = str(r["project"])
+                    if slug not in creates:
+                        creates[slug] = str(r.get("ts", ""))
+    except Exception:
+        pass
+    try:
+        now = datetime.now(timezone.utc)
+        for p in menu:
+            if not isinstance(p, dict):
+                continue
+            slug = str(p.get("slug", ""))
+            state = str(p.get("state", ""))
+            feats = str(p.get("features", ""))
+            if state == "draft" and feats in ("—", "-", "", "_(none)_", "_(no projects)_"):
+                age_days = -1.0
+                if creates.get(slug):
+                    try:
+                        created = datetime.fromisoformat(creates[slug].replace("Z", "+00:00"))
+                        age_days = (now - created).total_seconds() / 86400.0
+                    except ValueError:
+                        age_days = -1.0
+                if age_days > 21:
+                    hygiene.append({
+                        "class": "aging-draft", "key": slug,
+                        "detail": f"draft {slug}, no linked features",
+                    })
+    except Exception:
+        pass
+    try:
+        for feature, slug in sorted(candidates):
+            if feature not in linked:
+                hygiene.append({
+                    "class": "unlinked-project-backed", "key": feature,
+                    "detail": f"design_doc under .projects/meta/{slug}/ without project_link",
+                })
+    except Exception:
+        pass
+    try:
+        root = REPO_ROOT / ".projects" / "meta"
+        if root.is_dir():
+            for child in sorted(root.iterdir()):
+                if not child.is_dir():
+                    continue
+                proj_md = child / "PROJECT.md"
+                cs_md = child / "CURRENT_STATE.md"
+                if not proj_md.is_file() or not cs_md.is_file():
+                    continue
+                last_change = ""
+                try:
+                    import subprocess  # noqa: PLC0415 (lazy — git fail-open)
+                    last_change = subprocess.run(
+                        ["git", "log", "-1", "--format=%cs", "--",
+                         f".projects/meta/{child.name}/PROJECT.md"],
+                        cwd=str(REPO_ROOT), capture_output=True, text=True,
+                        timeout=10,
+                    ).stdout.strip()
+                except Exception:
+                    last_change = ""
+                top = ""
+                try:
+                    m = re.search(r"^## (\d{4}-\d{2}-\d{2})", cs_md.read_text(encoding="utf-8"), re.M)
+                    top = m.group(1) if m else ""
+                except OSError:
+                    top = ""
+                if last_change and top and last_change > top:
+                    hygiene.append({
+                        "class": "iteration-log", "key": child.name,
+                        "detail": f"PROJECT.md changed {last_change} > top log entry {top}",
+                    })
+    except Exception:
+        pass
+    return sorted(hygiene, key=lambda h: (h.get("class", ""), h.get("key", "")))
+
+
+def _menu_unscoped() -> list[Any]:
+    """O1: WORK.md PENDING FEATURES block → [{id, note}] (fail-open).
+
+    Scoped strictly to the PENDING FEATURES block (never the whole file, so
+    scoped feature_N dirs never leak in as unscoped). Empty without the block.
+    """
+    try:
+        work = _work_md_path()
+        if not work.is_file():
+            return []
+        text = work.read_text(encoding="utf-8")
+        idx = text.find("PENDING FEATURES")
+        if idx < 0:
+            return []
+        block = text[idx:]
+        nxt = block.find("\n## ", 1)
+        if nxt > 0:
+            block = block[:nxt]
+        ids: dict[str, str] = {}
+        for m in re.finditer(r"feature_(\d+)", block):
+            ids.setdefault(m.group(1), "scope unset")
+        return [{"id": k, "note": v} for k, v in sorted(ids.items())]
+    except OSError:
+        return []
+
+
+def _menu_lanes(
+    live_marking: dict[str, int],
+    bindings: list[dict[str, Any]] | None = None,
+) -> dict[str, Any] | None:
+    """O1 G3: lane occupancy from bindings (preferred) or live marking.
+
+    Returns None when no lane place is live (backward compat — no lanes line).
+    Fail-open: never raises.
+    """
+    try:
+        verifying = ready = integrating = 0
+        if bindings:
+            for b in bindings:
+                if not isinstance(b, dict):
+                    continue
+                place = str(b.get("place", ""))
+                if place == "work_verifying":
+                    verifying += 1
+                elif place == "work_integration_ready":
+                    ready += 1
+                elif place == "work_integrating":
+                    integrating += 1
+        else:
+            verifying = int(live_marking.get("work_verifying", 0) or 0)
+            ready = int(live_marking.get("work_integration_ready", 0) or 0)
+            integrating = int(live_marking.get("work_integrating", 0) or 0)
+        if not (verifying or ready or integrating):
+            if not any(
+                k in live_marking
+                for k in ("work_verifying", "work_integration_ready", "work_integrating")
+            ):
+                return None
+        return {
+            "verification": {"used": verifying, "total": 1, "free": max(0, 1 - verifying)},
+            "integration": {
+                "used": integrating, "ready": ready, "total": 1,
+                "free": max(0, 1 - integrating),
+            },
+        }
+    except Exception:
+        return None
+
+
 def _subnet_mutation(n: str, m0: str) -> dict[str, Any]:
     """P7 deterministic lifecycle chain for feature N:
     start(pending + feature_ready + agent_attention → active + feature_ready),
@@ -2782,14 +3108,30 @@ def sync(base: Path, *, reasoning: str = "", session: str = "", direction: str =
         if direction == "net_to_md":
             slugs = {n: s for n, s in features.items()}
             # slug map is keyed by bare number in _scan_reality
+            # O1: whole-project menu inputs (fail-open; pure render stays in sync_md)
+            projects_menu = _menu_projects_from_work()
+            hygiene_menu = _menu_hygiene(projects_menu)
+            unscoped_menu = _menu_unscoped()
+            lanes_menu = _menu_lanes(
+                st.live_marking, list(getattr(st, "task_bindings", []) or [])
+            )
             rendered = sync_md.render_tasks_block(
                 st.net, st.live_marking, st.overlay,
                 rep["resources"], rep["conflicts"], st.revision, slugs,
+                projects=projects_menu, hygiene=hygiene_menu,
+                unscoped=unscoped_menu, lanes=lanes_menu,
             )
             if not dry_run:
                 _write_md_section(_work_md_path(), "## Tasks", rendered)
             record["md_rev"] = st.revision
+            record["menu"] = {
+                "projects": len(projects_menu),
+                "hygiene": len(hygiene_menu),
+                "unscoped": len(unscoped_menu),
+                "lanes": lanes_menu is not None,
+            }
             info["rendered"] = rendered
+            info["menu"] = record["menu"]
         else:
             work_text = _work_md_path().read_text(encoding="utf-8") \
                 if _work_md_path().is_file() else ""

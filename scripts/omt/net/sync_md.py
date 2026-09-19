@@ -53,6 +53,74 @@ def _start_num(name: str) -> tuple[int, str]:
     return (int(m.group(1)), name) if m else (10**9, name)
 
 
+def compose_menu_options(
+    projects: list[dict[str, str]] | dict[str, str] | None = None,
+    hygiene: list[dict[str, str] | str] | None = None,
+    unscoped: list[dict[str, str] | str] | None = None,
+) -> list[tuple[str, str]]:
+    """O1 whole-project selectable IDs (pure, deterministic, stdlib-only).
+
+    - projects: [{slug, state, features}] or {slug: state} — ID `proj:<slug>`.
+    - hygiene: [{class, key, detail}] or "class:key" strings — ID `drift:<class>:<key>`.
+    - unscoped: [{id, note}] or "001" strings — ID `unscoped:<id>`.
+    Sorted for determinism; O2 consumes these IDs for multi-select.
+    """
+    options: list[tuple[str, str]] = []
+    if isinstance(projects, dict):
+        items = sorted(projects.items())
+        for slug, state in items:
+            options.append((f"proj:{slug}", f"{slug} ({state})"))
+    elif projects:
+        for p in sorted(projects, key=lambda x: str(x.get("slug", x) if isinstance(x, dict) else x)):
+            if isinstance(p, dict):
+                slug = str(p.get("slug", "?"))
+                state = str(p.get("state", "?"))
+                options.append((f"proj:{slug}", f"{slug} ({state})"))
+            else:
+                options.append((f"proj:{p}", f"{p}"))
+    for h in sorted(hygiene or [], key=str):
+        if isinstance(h, dict):
+            cls = str(h.get("class", "?"))
+            key = str(h.get("key", h.get("feature", h.get("project", "?"))))
+            options.append((f"drift:{cls}:{key}", f"{cls} {key}"))
+        else:
+            s = str(h)
+            options.append((f"drift:{s}", s))
+    for u in sorted(unscoped or [], key=str):
+        if isinstance(u, dict):
+            uid = str(u.get("id", "?"))
+            note = str(u.get("note", "scope unset"))
+            options.append((f"unscoped:{uid}", f"{uid} ({note})"))
+        else:
+            s = str(u)
+            options.append((f"unscoped:{s}", f"{s} (scope unset)"))
+    return options
+
+
+def lanes_line(
+    lanes: dict[str, Any] | None,
+    conflicts: list[dict[str, Any]] | None = None,
+) -> str | None:
+    """O1 G3 slice: one-line verification/integration + deadlock hint (pure)."""
+    if not lanes:
+        return None
+    ver = lanes.get("verification", {})
+    integ = lanes.get("integration", {})
+    parts = []
+    if ver:
+        parts.append(f"verification {ver.get('used', 0)}/{ver.get('total', 1)} free {ver.get('free', 1)}")
+    if integ:
+        parts.append(f"integration {integ.get('used', 0)}/{integ.get('total', 1)} free {integ.get('free', 1)}")
+    deadlocks = lanes.get("deadlocks_complete")
+    if deadlocks is True:
+        parts.append("deadlocks_complete")
+    if conflicts:
+        blocked = sorted(c.get("transition", c.get("subnet", "")) for c in conflicts)
+        if blocked:
+            parts.append(f"blocked:{','.join(blocked)}")
+    return f"Lanes: {', '.join(parts)}" if parts else None
+
+
 def render_tasks_block(
     net: Any,
     live_marking: dict[str, int],
@@ -61,6 +129,10 @@ def render_tasks_block(
     conflicts: list[dict[str, Any]],
     revision: int,
     slugs: dict[str, str] | None = None,
+    projects: list[dict[str, str]] | dict[str, str] | None = None,
+    hygiene: list[dict[str, str] | str] | None = None,
+    unscoped: list[dict[str, str] | str] | None = None,
+    lanes: dict[str, Any] | None = None,
 ) -> str:
     """Deterministic Tasks block: rev-stamp + menu + per-subnet rows."""
 # TA: gotcha: net_to_md sync REPLACES the whole WORK.md region from the net_rev comment to '## Projects' — any hand-added task/DONE/pause row placed between 'Pool:' and '## Projects' is silently consumed on the next sync (feature_050's DONE row was lost this way 2026-09-06). Durable pointers (pause docs, program rows) go AFTER the Projects table, in their own section.
@@ -76,9 +148,16 @@ def render_tasks_block(
         key=_start_num,
     )
     blocked = sorted(c["transition"] for c in conflicts)
+    options = compose_menu_options(projects, hygiene, unscoped)
+    if enabled:
+        next_line = f"NEXT: {enabled[0]} (recommended)"
+    elif options:
+        next_line = f"NEXT: {options[0][0]} (recommended)"
+    else:
+        next_line = "NEXT: none"
     lines = [
         f"<!-- net_rev:{revision} -->",
-        f"NEXT: {enabled[0]} (recommended)" if enabled else "NEXT: none",
+        next_line,
         f"Other enabled: {', '.join(enabled[1:]) or 'none'}",
         f"Blocked: {', '.join(blocked) or 'none'}",
         _resources_line(resources),
@@ -93,6 +172,13 @@ def render_tasks_block(
             f"Pool: pending={counts['work_pending']} active={counts['work_active']} "
             f"done={counts['work_done']} (places {nplaces}/{POOL_CAP})"
         )
+    if options:
+        lines.append(
+            f"Options: {', '.join(oid for oid, _ in options)}"
+        )
+    lane_text = lanes_line(lanes, conflicts)
+    if lane_text:
+        lines.append(lane_text)
     lines.append("")
     for n in sorted(actual, key=int):
         slug = slugs.get(n, f"feature_{n}")
@@ -200,17 +286,30 @@ def menu_lines(
     conflicts: list[dict[str, Any]],
     revision: int,
     pool: dict[str, Any] | None = None,
+    projects: list[dict[str, str]] | dict[str, str] | None = None,
+    hygiene: list[dict[str, str] | str] | None = None,
+    unscoped: list[dict[str, str] | str] | None = None,
+    lanes: dict[str, Any] | None = None,
 ) -> list[str]:
     """D19 session-start menu: ordered starts + resources + rev stamp.
 
     feature_049: pool-aware — when pool counts are supplied (D20 pool nets),
     include the `Pool: pending/active/done (places N/CAP)` line so the
     STARTUP menu shows WIP without per-feature rows (which pool nets omit).
+    O1: optional whole-project options (projects/hygiene/unscoped) with stable
+    IDs; empty enabled + options → NEXT is first option (G2); lanes one-liner (G3).
     """
     ordered = sorted(enabled, key=_start_num)
     blocked = sorted(c.get("transition", c.get("subnet", "")) for c in conflicts)
+    options = compose_menu_options(projects, hygiene, unscoped)
+    if ordered:
+        next_line = f"NEXT: {ordered[0]} (recommended)"
+    elif options:
+        next_line = f"NEXT: {options[0][0]} (recommended)"
+    else:
+        next_line = "NEXT: none"
     lines = [
-        f"NEXT: {ordered[0]} (recommended)" if ordered else "NEXT: none",
+        next_line,
         f"Other enabled: {', '.join(ordered[1:]) or 'none'}",
         f"Blocked: {', '.join(blocked) or 'none'}",
         _resources_line(resources),
@@ -220,5 +319,10 @@ def menu_lines(
             f"Pool: pending={pool.get('pending', 0)} active={pool.get('active', 0)} "
             f"done={pool.get('done', 0)} (places {pool.get('places', 0)}/{pool.get('cap', POOL_CAP)})"
         )
+    if options:
+        lines.append(f"Options: {', '.join(oid for oid, _ in options)}")
+    lane_text = lanes_line(lanes, conflicts)
+    if lane_text:
+        lines.append(lane_text)
     lines.append(f"(net rev {revision})")
     return lines

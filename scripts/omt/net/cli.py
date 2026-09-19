@@ -349,6 +349,31 @@ def _fire(base: Path, transition: str, reasoning: str, session: str, expected_re
     return envelope, 0
 
 
+# feature_111.multi_select_directive_protocol (O2): thin envelope over
+# state.apply_selection. CLI-only in this slice (feature_084 precedent —
+# no omt_net plugin exposure); --valid-ids/--enabled carry the live O1 menu.
+def _apply_selection(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    valid = {v.strip() for v in (args.valid_ids or "").split(",") if v.strip()}
+    enabled = [e.strip() for e in (args.enabled or "").split(",") if e.strip()]
+    st, report = state.apply_selection(
+        base,
+        args.selection,
+        valid,
+        enabled,
+        reasoning=args.reasoning,
+        session=args.session,
+        expected_revision=getattr(args, "expected_revision", None),
+        command_id=getattr(args, "command_id", None) or None,
+    )
+    return {
+        "ok": True,
+        "op": "apply-selection",
+        "revision": st.revision,
+        "marking": dict(st.live_marking),
+        "report": report,
+    }, 0
+
+
 # feature_080.task_claim_generation (T5-2 2B): thin envelopes over the
 # claim/release/transfer/checkpoint transactions in state.py. The `task`
 # block reports the post-commit binding so workers learn their generation
@@ -910,6 +935,17 @@ def _build_parser() -> argparse.ArgumentParser:
     p_gate.add_argument("--generation", type=int, default=None, help="Managed scope: held generation (feature_081).")
     p_gate.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
 
+    p_apply = sub.add_parser(
+        "apply-selection", help="O2 batch apply over O1 menu IDs (M0 serial-atomic, feature_111)."
+    )
+    p_apply.add_argument("--selection", required=True, help='Pick text, e.g. \'pick {proj:rag_v2, unscoped:001} + unscoped:001:"spike"\'.')
+    p_apply.add_argument("--valid-ids", default="", help="Comma-separated live O1 Options IDs the pick is validated against.")
+    p_apply.add_argument("--enabled", default="", help="Comma-separated enabled pool transitions (pool: mute set).")
+    p_apply.add_argument("--reasoning", required=True)
+    p_apply.add_argument("--session", default="")
+    p_apply.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
+    p_apply.add_argument("--command-id", "--command_id", default="", help="Idempotency key (feature_079: same ID + same command replays, no double-apply).")
+
     for op in RESERVED_OPS:
         sub.add_parser(op, help="Reserved — future.")
 
@@ -1018,6 +1054,8 @@ def main(argv: list[str] | None = None) -> int:
             return _emit(*_mine(base, args, params))
         if op == "invariant":
             return _emit(*_invariant(base))
+        if op == "apply-selection":
+            return _emit(*_apply_selection(base, args))
         if op == "gate":
             from . import gate  # local import
             # feature_050 wrap-up: live wiring — drift mirrors _invariant

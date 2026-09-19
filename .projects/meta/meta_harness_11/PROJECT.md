@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_11 — Session Use-Case Closure (Whole-Project Menu → Multi-Pick → Concurrent Doing)
 
-> Status: **draft** · **v0.1 (2026-09-19)** — user-picked FULL O1–O6 (2026-09-19). Created by `project.py new --slug meta_harness_11`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_11`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **active** · **v0.1 (2026-09-19)** — user-picked FULL O1–O6 (2026-09-19). Created by `project.py new --slug meta_harness_11`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_11`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
@@ -8,7 +8,7 @@
 
 > One line: MH11 closes the session use-case gaps — selectable whole-project menu with atomic multi-pick apply, then concurrent dispatch.
 
-**Next:** Spawn O1 `whole-project menu composer` via `new_feature.py` (minor_feature) — pool counts + Projects + drift/hygiene + unscoped 001/002 as selectable IDs; keep D19 ordering + rev-stamp.
+**Next:** Close/ship O1 from Testing (user call), then spawn O2 `multi-select + directive protocol` via `new_feature.py` (minor_feature) — consumes O1 `proj:/drift:/unscoped:` IDs; keep D19 ordering + rev-stamp.
 
 ---
 
@@ -72,7 +72,7 @@ Milestones: **M0** (O1+O2+O3: selectable menu with atomic apply, still serial) �
 
 - [x] v0.1 (2026-09-19): created (`project.py new --slug meta_harness_11`, state: draft).
 - [x] v0.1 scope (2026-09-19, user-approved full): O1–O6 from gaps doc adopted; M0→M1→M2 order; F7/D1 reversals deferred to O4/O6 slices.
-- [ ] O1 spawned (next action — see Quick Start).
+- [x] O1 shipped to Testing (2026-09-19): `feature_110.whole_project_menu_composer` (minor_feature, Testing; 14 goldens, live menu rev 60 in WORK.md, trim+grow budget 9728, test report).
 
 ---
 
