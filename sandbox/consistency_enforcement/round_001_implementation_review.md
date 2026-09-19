@@ -1,35 +1,37 @@
-# AgentX implementation review — errors and bugs
+# AgentX implementation review — confirmed defects and repair criteria
 
-Reviewed and rechecked: 2026-09-18
+Last verified: **2026-09-19**. Status: **12 open finding groups; no application fixes applied.**
 
-Revision: `f66d268d468267222946f5ba961e92b8c6f27a83`
+Original review revision: `f66d268d468267222946f5ba961e92b8c6f27a83` (2026-09-18).
+
+Reverification revision: `5e62394abc4ba1054786e4b2ac9e89ce2c46f4ba`. The checkout contained unrelated harness changes. Comparing the two revisions shows no changes to `src/agentx/`, `tests/conftest.py`, `pyproject.toml`, or `uv.lock`; the application findings and source locations remain applicable. Test results below describe the working tree, not a clean checkout of that commit.
 
 Scope: the Python application under `src/agentx/`, its console integration, and relevant tests.
 
-The review identifies **12 confirmed finding groups: 5 high priority and 7 medium priority**. The most significant are two coding-tool sandbox escapes, stale policy conditions after updates, a broken new-session command, and missing RAG chunk uploads. Rechecking the analysis confirmed the original findings and exposed additional failure cases within AXR-03, AXR-04, and AXR-05. The corrections below expand the repair scope and distinguish observed failures from proposed regression checks.
+The review identifies **12 confirmed finding groups: 6 P1 and 6 P2**. The P1 findings cover two filesystem sandbox escapes, ineffective policy updates, broken session creation, missing RAG chunk uploads, and prompts routed to a previously selected provider. Finding IDs are stable; related defects are grouped under the same ID rather than counted as separate findings.
 
-All 12 findings were exercised again using temporary directories, temporary databases, or mocked external dependencies. The correction pass also used the installed DeepAgents `StateBackend` inside a local LangGraph execution. “Reproduced” refers to the stated local observation; live LLM providers and complete network-backed RAG conversations were not exercised. Application code and repository tests were not changed; the fixes in this document are implementation proposals.
+All 12 groups were reproduced with **20 passing observation probes** in the accompanying [review probe module](round_001_review_probes.py). Passing means the current defect was observed; these are **not acceptance tests for repaired behavior**. The probes use disposable files, local SQLite, fake providers/retrievers, and a real local graph for the DeepAgents backend checks. No live provider requests or complete RAG conversations were exercised. The production application and `tests/` were not edited.
 
-## Corrections to the original analysis
+## Evidence and changes in this revision
 
-- **AXR-03:** Cache invalidation alone is insufficient. Rejected additions can seed the cache, and replacement conflict checks compare a rule against its own previous version.
-- **AXR-04:** Fixing the undefined helper exposes a second failure: the replacement uses a timestamped directory, while the next startup opens `current`. The proposed fix now covers restart recovery and cached session consumers.
-- **AXR-05:** Supplying a backend alone is insufficient. Upload errors are counted as successes, chunk paths do not match the filesystem middleware's normalized paths, and repeated searches overwrite earlier chunk files.
-- **AXR-06 / AXR-09 / AXR-12:** The provider probe now checks the next request and error attribution; the session analysis acknowledges that built-in tools are refreshed; deletion-guard acceptance is kept separate from evidence of actual deletion.
-- **Validation:** The earlier full-suite result is historical evidence. Fresh verification is limited to AgentX application tests and disposable observation probes, with the normally excluded ReAct controller module explicitly selected.
+- **Repeatable evidence:** The original `/tmp` probe module and logs are no longer present. Their totals are retained below as historical reports, not fresh verification. The new probe module is stored beside this report and can be rerun from the repository root.
+- **AXR-03:** In addition to stale/rejected cache entries and replacement self-conflicts, an injected repository-save failure leaves a newly added rule active in memory. Transactional acceptance is therefore a reproduced requirement, not just a suggested precaution.
+- **AXR-05:** Retriever construction and raised upload exceptions also escape the result error contract. A backend-only repair must address error reporting, normalized paths, and chunk identity together.
+- **AXR-06:** Raised from P2 to P1 because provider selection determines where the next prompt is sent. The demonstrated request-routing mismatch can cross the user's intended local/cloud boundary; actual external disclosure was not tested.
+- **Evidence limits:** “Observed” refers to the local probes. AXR-04's cached-controller analysis is a source inspection, and its restart probe requires an in-memory helper patch. AXR-05's backend checks inject the missing backend to examine downstream behavior. AXR-12 exercises only the guard. Proposed corrections and regression checks describe future work.
 
 ## Findings at a glance
 
-Priority definitions: **P1** = address promptly because a safety boundary or core workflow fails; **P2** = correct a functional defect, recovery failure, or latent unsafe API.
+Priority definitions: **P1** = address promptly because a safety/privacy boundary or core workflow fails; **P2** = a functional, recovery, or latent API defect with narrower demonstrated reach. These are repair priorities, not CVSS scores. All entries remain open.
 
 | ID | Priority | Finding | Verification |
 |---|---|---|---|
 | AXR-01 | P1 | Coding edits can overwrite a file outside the sandbox through the temporary-file path | Reproduced with disposable files |
 | AXR-02 | P1 | Coding search reads outside-sandbox files through symlinks | Reproduced with a disposable marker file |
-| AXR-03 | P1 | Policy updates reuse stale conditions, and rejected additions can poison later attempts | Reproduced through `add_rule_safely`, including replacement self-conflict |
+| AXR-03 | P1 | Policy updates reuse stale conditions and publish state before acceptance/persistence completes | Reproduced through `add_rule_safely`, including self-conflict and injected save failure |
 | AXR-04 | P1 | `new` fails with an undefined helper; fixing that alone still breaks restart recovery | Original failure reproduced; downstream behavior isolated with a runtime-only helper patch |
-| AXR-05 | P1 | RAG omits the upload backend; upload reporting and file identity also need repair | Service-created tool with mocked graph construction, plus real local `StateBackend` graph |
-| AXR-06 | P2 | Changing model providers does not update an already-open chat | Reproduced through main/model controllers with fake LLMs |
+| AXR-05 | P1 | Default RAG tools omit the upload backend; errors and file identity also need repair | Service-created tool with mocked graph construction, plus real local `StateBackend` graph |
+| AXR-06 | P1 | Changing model providers leaves the next chat request on the old provider | Reproduced through main/model controllers with fake LLMs |
 | AXR-07 | P2 | The console chat entry path never starts a persisted conversation | Reproduced through main/chat controllers and real SQLite |
 | AXR-08 | P2 | Process-specific agent IDs prevent saved state from resuming after restart | Reproduced with simulated PIDs and real SQLite |
 | AXR-09 | P2 | `Agent.start_session` keeps the previous database and in-memory state | Reproduced with two temporary session directories |
@@ -49,7 +51,11 @@ The requested target passes `_resolve_safe_path`, but the edit is written to a p
 
 **Impact:** An ordinary edit of a valid sandbox file can overwrite a file outside that sandbox when the predictable temporary path has been prepared. This requires an existing malicious or accidental symlink; it does not require a race.
 
+**Boundary of the finding:** This is an application-level path-containment failure, not an escape from an operating-system container. The outside file must be writable by the AgentX process. AXR-02 similarly requires read permission. Neither probe establishes how a remote prompt alone could plant the symlink.
+
 **Proposed correction:** Create a fresh temporary file exclusively in the validated parent directory, write through its opened handle, and atomically replace the target. Do not reuse a predictable `.tmp` name. Preserve the intended file permissions and clean up failed writes.
+
+Exclusive temporary-file creation closes the demonstrated pre-existing-symlink attack. If other processes can rename or replace sandbox directories during an operation, path validation followed by a pathname-based write still has a race. Address that threat with directory-handle-relative operations and a defined symlink policy, or explicitly bound the sandbox guarantee to stable directory ancestry. That race was not exercised here.
 
 **Regression check:** Pre-create the old `.tmp` symlink and verify that the outside marker is unchanged, the final target is a regular file, and the edit succeeds safely or fails explicitly.
 
@@ -65,7 +71,7 @@ The search validates its starting directory, but each result from `rglob` is rea
 
 **Impact:** The search tool can expose the first five lines of a readable outside file to the coding agent. The tool reads the entire file before constructing that preview.
 
-**Proposed correction:** Resolve and validate every result before reading it, or exclude symlinks from searches. Apply a consistent policy to search, read, and listing paths.
+**Proposed correction:** Resolve and validate every result before reading it, and read the validated target rather than the original unchecked path; alternatively, exclude symlinks from searches. Apply a consistent policy to search, read, and listing paths. As in AXR-01, a resolve-then-open sequence alone does not prove containment against concurrent directory replacement. Bound preview reads instead of loading an entire file to return five lines.
 
 **Regression check:** Search must exclude or reject an outside symlink while still returning a regular in-sandbox file. If in-sandbox symlinks are supported, test them separately.
 
@@ -81,10 +87,11 @@ Compiled conditions are cached only by rule ID. Replacing a rule with the same I
 
 **Additional reproduced cases:**
 
-- Submit a previously unused rule ID with condition `true` and 11 action parameters. The complexity guard rejects it, but `_compiled` retains its condition. Retry that ID with condition `false` and an otherwise valid action: the accepted rule still executes using `true`.
+- Submit a previously unused rule ID with condition `true` and 11 action parameters. The complexity guard rejects it, but `_compiled` retains its condition. Retry that ID with condition `false` and an otherwise valid action: the accepted rule still matches using `true` and selects `EXECUTE_TOOL`.
 - Replace an existing `true` / `EXECUTE_TOOL` rule with the same ID and condition but a `PAUSE` action. `add_rule_safely` compares the old rule and replacement together, reports a conflict score of `1.0`, and rejects the replacement. A replacement must be checked against the other retained rules, not its own superseded version.
+- Inject an `OSError` from `PolicyRepository.save` while adding a new rule. The exception reaches the caller, but the rule is already in `self.rules` and still selects `EXECUTE_TOOL`. The probe uses a failing repository double; it demonstrates premature in-memory publication, not a partial SQLite commit.
 
-**Impact:** A user or reflection proposal can appear to restrict a policy while the previous permissive condition remains active. Invalid replacements bypass the intended fail-fast validation.
+**Impact:** A user or reflection proposal can appear to restrict a policy while the previous permissive condition remains active. Invalid replacements bypass fail-fast validation, and a failed save can leave live behavior inconsistent with persisted state.
 
 **Proposed correction:** Compile the candidate without mutating the live cache. Run conflict checks against the proposed final rule set, excluding the old version of the same ID, and apply the complexity guard before publishing anything. Persist the accepted replacement and update its rule and compiled condition together. Failed additions and replacements must leave accepted rules, compiled conditions, and persisted rules unchanged; apply the same rule to direct additions, repository reloads, and rollback.
 
@@ -106,11 +113,11 @@ Compiled conditions are cached only by rule ID. Replacing a rule with the same I
 
 Static wiring review also shows that `NewSessionCommand` replaces the session manager's current session without invalidating `MainController`'s cached agent controllers. Those controllers retain the configuration and persistence objects created for the previous session. Their rebind/reset behavior must be part of the repair; the original `NameError` currently prevents reaching this transition normally.
 
-**Proposed correction:** Qualify/import the helper, then perform one coherent session transition: back up the previous session and create a single replacement at the startup-selected location (`current`), or persist and honor an explicit active-session pointer. Rebuild or rebind session-scoped controllers and repositories after a successful transition. Define rollback when backup or replacement creation fails.
+**Proposed correction:** Qualify/import the helper, then perform one coherent session transition. Prefer retaining the existing startup contract: back up the previous session and create one replacement at `current`. An explicit persisted active-session pointer is an alternative if timestamped active directories are a product requirement; startup and every session consumer must then honor it. Rebuild or rebind session-scoped controllers and repositories only after storage creation succeeds. Stop on backup failure instead of continuing with an ambiguous active session, and define rollback if replacement creation fails. Coordinate this lifecycle with AXR-08 and AXR-09.
 
 **Regression check:** Starting from an existing current session, `new` must retain its history in the backup, accept history in the replacement, and reopen that replacement after restart. Previously opened agent screens must use the replacement's storage and sandbox. Inject backup/create failures and verify that the previous usable session remains accessible.
 
-## AXR-05 — RAG search never uploads its chunk files in the production tool path
+## AXR-05 — Default RAG search tools never upload their chunk files
 
 **Location:** [rag_v2_tools.py](../../src/agentx/model/rag_v2/rag_v2_tools.py), lines 139–142 and 193–217; [rag_v2_agent_service.py](../../src/agentx/model/rag_v2/rag_v2_agent_service.py), tool construction near lines 104–112 and backend construction near lines 128–145.
 
@@ -120,7 +127,7 @@ Static wiring review also shows that `NewSessionCommand` replaces the session ma
 
 **Observed:** The result contains one hit but reports `chunks_uploaded=0` and `error=None`.
 
-The correction pass exercised the default search tool obtained from `RagV2AgentService._tools`, using a fake LLM/backend and mocked graph construction/retrieval. Even when the service receives a backend, that backend's `upload_files` is never called. This validates the service-to-tool wiring defect without claiming a complete LLM conversation was tested.
+The reverification exercised the default search tool obtained from `RagV2AgentService._tools`, using a fake LLM/backend and mocked graph construction/retrieval. Even when the service receives a backend, that backend's `upload_files` is never called. This validates the service-to-tool wiring defect without claiming a complete LLM conversation was tested.
 
 **Additional failures that a backend-only fix would expose:**
 
@@ -128,13 +135,17 @@ The correction pass exercised the default search tool obtained from `RagV2AgentS
 - The application uploads `chunk_0.txt` as a relative key. In the installed, pinned DeepAgents `0.7.5`, filesystem middleware normalizes that read path to `/chunk_0.txt`, while `StateBackend` preserves the uploaded key exactly. A real local LangGraph probe confirmed that reading `chunk_0.txt` directly succeeds but reading the normalized `/chunk_0.txt` returns file-not-found.
 - Every search starts its filenames again at `chunk_0.txt`. Two sequential searches in the same graph replaced the first chunk's contents with the second search's contents. Once upload wiring is repaired, those names cannot safely identify earlier search results for later or parallel analysis.
 
+**Additional error-boundary failures:** Retriever construction (`build_retriever`) occurs before the retrieval `try` block, and `backend.upload_files` runs outside it. Injected exceptions in either location propagate instead of returning a `SearchDocumentsResult.error`. The factory failure is reachable through the bound public tool today; the upload failure requires injecting the missing backend. This does not establish how every graph or console caller handles those exceptions.
+
 The local backend checks used DeepAgents' installed `backends/state.py` (`upload_files`, `read`) and `middleware/filesystem.py` (path validation before reading). `StateBackend` requires a running graph context and publishes file updates there; directly invoking a backend-bound tool outside that context is not a valid positive integration test.
 
 **Impact:** The documented `chunk_0.txt` files are not created by retrieval. The chunk-analyst is instructed to read those files, so the retrieval → file upload → delegated analysis contract is broken. Returning hit content still permits some direct answers; this finding does not claim that every RAG question fails.
 
-**Proposed correction:** Bind the tools to the same backend/runtime used by the service and invoke them inside the graph. Use normalized absolute backend paths with a unique retrieval identifier, such as `/retrieval/<search_id>/chunk_0.txt`, and return those exact paths with citation metadata. Count only successful uploads and surface per-file failures and raised exceptions explicitly. Alternatively, deliberately use direct retrieval and remove the file-based delegation promise.
+**Proposed correction:** Bind the tools to the same backend/runtime used by the service and invoke them inside the graph. Use normalized absolute backend paths with a unique retrieval identifier, such as `/retrieval/<search_id>/chunk_0.txt`, and return those exact paths with citation metadata. These are virtual backend paths, not host filesystem destinations. `RagSearchHit` currently has no backend-path field, so changing filenames alone is insufficient: the result schema, analyst instructions, and citation mapping must agree. Count only successful uploads and report per-file failures, retriever-construction failures, and raised upload exceptions explicitly. Distinguish an empty successful retrieval from an offload failure.
 
-**Regression check:** Exercise the service-created search tool in a local graph and read each returned path through the analyst's actual filesystem tool. Verify two searches retain distinct readable files, failed uploads are not counted as successes, and citations still map to the right chunks. A test that injects a permissive fake backend into the private implementation does not cover the wiring, path normalization, or graph-state contract.
+The recommended repair preserves the documented retrieve → offload → delegate workflow. Direct retrieval is an alternative product decision: it requires removing the file-based delegation promise and updating prompts/tests, rather than calling the current broken path repaired.
+
+**Regression check:** Exercise the service-created search tool in a local graph and read each returned path through the analyst's actual filesystem tool. Verify sequential and parallel searches retain distinct readable files, failed uploads are not counted as successes, empty retrieval is represented correctly, and citations still map to the right chunks. Inject factory and upload exceptions as well as partial upload failures. A test that injects a permissive fake backend into the private implementation does not cover the wiring, path normalization, or graph-state contract. The current probes cover sequential overwrite; parallel search is an acceptance requirement, not an observed failure here.
 
 ## AXR-06 — Selecting a different provider leaves an existing chat on the old model
 
@@ -144,13 +155,13 @@ The chat controller constructs its LLM once. Model selection updates the shared 
 
 **Reproduction:** Open chat through `MainController` using a fake OpenRouter LLM. Select Ollama through `ModelsController`, then reopen chat.
 
-**Observed:** `selected='ollama'`, while `chat.llm.name='openrouter'`. The correction pass sent the next message and confirmed that only the fake OpenRouter LLM received it. Calling `_format_chat_error` for that stale LLM nevertheless labels the error as Ollama because the formatter consults the newly selected registry entry.
+**Observed:** `selected='ollama'`, while `chat.llm.name='openrouter'`. The probe sent the next message and confirmed that only the fake OpenRouter LLM received it. Calling `_format_chat_error` for that stale LLM nevertheless labels the error as Ollama because the formatter consults the newly selected registry entry.
 
 **Impact:** The selected-provider UI and the actual provider receiving future prompts can disagree for the rest of the process. Selecting a local provider does not necessarily move an existing conversation off its earlier cloud provider. The reproduction used fake LLMs and sent no external requests.
 
-**Proposed correction:** Resolve or refresh the LLM when the selected provider changes, with an explicit policy for preserving conversation history. Capture provider identity with the model used for each request so errors describe the actual provider. Audit the similar cached ReAct, coding, and RAG service lifecycles; those additional modes were not demonstrated by this chat probe.
+**Proposed correction:** Resolve or refresh the LLM when the selected provider changes, with an explicit policy for preserving conversation history. Bind each request to a model and its provider identity; use that identity in error messages. A request already running may finish with its captured provider, but the next request must honor the new selection. If creating the selected provider fails, surface that failure instead of silently continuing on the previous provider. Audit the similar cached ReAct, coding, and RAG service lifecycles; those additional modes were not demonstrated by this chat probe.
 
-**Regression check:** Open chat with provider A, select B, reopen the existing chat, and verify that the next request reaches only B. Error messages should identify the provider that actually handled the request.
+**Regression check:** Open chat with provider A, select B, reopen the existing chat, and verify that the next request reaches only B. Repeat without reopening chat. When constructing B fails, no subsequent prompt may reach A through a silent fallback. Error messages should identify the provider used or attempted for that request.
 
 ## AXR-07 — Console chat does not start a persisted conversation
 
@@ -174,15 +185,15 @@ The normal console entry creates and wires a `ChatController`, then enters the v
 
 Advanced Agent and Fast Agent receive IDs containing `os.getpid()`. Snapshot recovery looks up the latest snapshot for the new ID. A normal process restart changes that ID, even when the session directory and database are unchanged.
 
-**Reproduction:** Open Advanced Agent with a simulated PID of 101, submit a goal, and explicitly save a snapshot successfully. Construct a fresh main controller for the same session directory with a simulated PID of 102 and open the agent with its normal `resume=True` wiring. The correction pass repeated the same probe for Fast Agent.
+**Reproduction:** Open Advanced Agent with a simulated PID of 101, submit a goal, and explicitly save a snapshot successfully. Construct a fresh main controller for the same session directory with a simulated PID of 102 and open the agent with its normal `resume=True` wiring. The parameterized probe repeats this for Fast Agent.
 
 **Observed:** The first agent is `agent_101` with one goal. The second is `agent_102` with zero goals despite the saved snapshot.
 
 **Impact:** Saved state is not selected by the normal restart path when the PID changes. The rows and snapshot remain in the database; this is an identity/lookup failure, not demonstrated deletion. Reuse of the same controller within one process can mask the issue. Fast Agent uses the same identity pattern and reproduced the same failure. This probe does not establish automatic snapshot creation on exit.
 
-**Proposed correction:** Persist a stable agent ID per session and agent mode. Use process/run IDs only as separate execution metadata.
+**Proposed correction:** Persist a stable agent ID per session and agent mode. Use process/run IDs only as separate execution metadata. Define how existing `agent_<pid>` and `fast_agent_<pid>` snapshots are selected or migrated so upgrading does not strand old data. Do not choose a database-wide latest snapshot that could belong to the other mode. This repairs snapshot selection; separately verify when normal shutdown actually saves a snapshot before promising automatic restart recovery.
 
-**Regression check:** Save with one process identity and resume with another; verify that goals, policies, and volatile snapshot memory are restored to the intended stable agent.
+**Regression check:** Save with one process identity and resume with another; verify that goals, policies, and volatile snapshot memory are restored to the intended stable agent. Cover both modes in the same session database and an existing legacy-ID snapshot. Preserve saved rows during migration.
 
 ## AXR-09 — Starting a new agent session keeps the old storage and state
 
@@ -194,7 +205,7 @@ Advanced Agent and Fast Agent receive IDs containing `os.getpid()`. Snapshot rec
 
 **Observed:** `config.memory_config.persistent_path` becomes B; `agent._db.path` still points at `A/agent_session.db`; `old-goal` remains in the live tree; B contains no agent database.
 
-**Scope correction:** `_register_builtin_tools(config)` does run, and the probe confirmed that the filesystem tool's sandbox root changes to B. The defect is the mixture of refreshed configuration/tools with stale repositories and session state, rather than a failure to apply every configuration field.
+**Scope:** `_register_builtin_tools(config)` does run, and the probe confirmed that the filesystem tool's sandbox root changes to B. The defect is the mixture of refreshed configuration/tools with stale repositories and session state, rather than a failure to apply every configuration field.
 
 **Impact:** The public session API mixes old and new sessions and stores new-session data in the previous location. The reproduction used the API directly; this is distinct from the broken console `new` command in AXR-04.
 
@@ -208,6 +219,8 @@ Advanced Agent and Fast Agent receive IDs containing `os.getpid()`. Snapshot rec
 
 Any transition to `COMPLETED`, `FAILED`, or `ABANDONED` promotes a pending goal. The implementation does not check whether the changed goal was active or whether another active goal remains. The `completed_id` argument to `_promote_next` is unused.
 
+The single-active expectation comes from `GoalManager.add_goal` and the singular `active_goal()` consumer. `GoalConfig.max_active_goals` still exists with a default of 10; it does not make this accidental promotion a working concurrent scheduler. The repair should state the intended invariant and make configuration, insertion, transitions, and restoration agree.
+
 **Reproduction:** Add goals A, B, and C. A becomes active while B and C remain pending. Set B to `ABANDONED`.
 
 **Observed:** Both A and C are active. Repeating a terminal status update can similarly promote additional goals.
@@ -216,7 +229,7 @@ Any transition to `COMPLETED`, `FAILED`, or `ABANDONED` promotes a pending goal.
 
 **Proposed correction:** Promote only when the active slot becomes vacant, and make repeated terminal updates idempotent. Centralize active-goal enforcement across status changes and repository loading.
 
-**Regression check:** Abandoning a pending goal must leave A as the only active goal. Completing A should promote exactly one highest-priority pending goal.
+**Regression check:** Completing, failing, or abandoning a pending goal must leave A as the only active goal. Completing A should promote exactly one highest-priority pending goal. Repeating a terminal update must not promote another goal; explicit activation, rollback, and repository restoration must preserve the chosen invariant.
 
 ## AXR-11 — Validation exceptions escape safe execution and strand the agent
 
@@ -242,65 +255,82 @@ The guard compares lexical `Path` objects without normalizing `..` or resolving 
 
 **Reproduction:** Patch the working directory to a temporary path and call `is_directory_allowed_to_deletion` with that path plus `/local_sessions/../unrelated`.
 
-**Observed:** The guard returns `True`, although the normalized destination is outside `local_sessions`. The correction pass also confirmed acceptance of an allowlisted symlink pointing outside and rejection of a sibling-prefix path via `PermissionError`.
+**Observed:** The guard returns `True`, although the normalized destination is outside `local_sessions`. The probe also confirmed acceptance of an allowlisted symlink pointing outside and rejection of a sibling-prefix path via `PermissionError`.
 
 **Impact:** `dangerous_delete_directory` forwards the accepted original path to `shutil.rmtree`. When `local_sessions` and the parent-traversal destination exist, that path can address an unrelated directory. Only the predicate was exercised; deletion was not invoked. Acceptance of a top-level directory symlink is not proof of deletion through it: `shutil.rmtree` normally rejects such a symlink. No application call site for this deletion helper was found in `src/agentx`, so this remains a latent API defect rather than a demonstrated console operation.
 
-**Proposed correction:** Resolve the candidate and allowed roots, explicitly check containment, and use the validated canonical path for deletion. Define whether deleting the allowlisted root itself is permitted.
+**Proposed correction:** Establish trusted allowed roots, resolve the candidate, explicitly check containment, and use the validated canonical path for deletion. Decide whether allowed roots may themselves be symlinks and whether deleting an allowed root itself is permitted. Resolving a caller-controlled root is not sufficient to establish trust, and canonicalization alone does not prevent a concurrent rename race. Apply the directory-ancestry threat model from AXR-01 consistently.
 
 **Regression check:** Reject parent traversal, outside symlink targets, and sibling-prefix paths; accept an ordinary permitted child. Preserve or explicitly change the current rejection contract (`PermissionError`, rather than assuming a `False` return). Verify the guard independently before testing deletion with disposable directories.
 
 ## Validation and coverage gaps
 
-**Fresh application-focused verification (correction pass):**
+**Current reproduction evidence (2026-09-19):**
 
 ```text
-534 passed, 5 warnings in 10.56s
+20 passed, 4 warnings in 4.29s
 ```
 
-This comprises **516 existing AgentX application tests and 18 disposable observation probes**. The probes assert the faulty behavior described in this report; their passing result confirms reproduction, not that the defects have been fixed. The five warnings were dependency deprecations and the application's use of SQLite's deprecated default datetime adapter.
+The [probe module](round_001_review_probes.py) is a durable review artifact outside normal `tests/` collection. Its names map to finding IDs; AXR-06 and AXR-07 share a console-wiring probe, and parameterization covers both agent modes and both RAG exception sites. Run it separately because it sets harmless import-time configuration before importing the application. It disables dotenv loading, substitutes the model-cache path, mocks external dependencies, rejects socket connections during the probes, and confines writes to pytest temporary directories. The four warnings concern dependency deprecations and SQLite's default datetime adapter.
 
-The exact correction-pass command, run from the repository root, was:
+Run from the repository root:
 
 ```bash
-uv run pytest -q /tmp/test_agentx_review_verification.py \
-  tests/features/feature_007.agentx_intelligent_agent_behaviour \
-  tests/features/feature_013.ai_model_provider_selector \
-  tests/features/feature_015.agentx_security_and_quality_hardening \
-  tests/features/feature_018.react_screen/test_react_controller.py \
-  tests/features/feature_019.coding_agent_screen \
-  tests/features/feature_024.no_tui_full_features \
-  tests/features/feature_025.coding_context_window_optimization \
-  tests/features/feature_027.rag_v2 \
-  tests/features/feature_029.rag_v2_slash_commands \
-  tests/unit/model/test_chat_history.py
+uv run pytest -q sandbox/consistency_enforcement/round_001_review_probes.py
+# Optional: narrow the observation run to a finding, for example:
+uv run pytest -q sandbox/consistency_enforcement/round_001_review_probes.py -k axr03
 ```
 
-The `/tmp` probe module is a temporary review artifact, not a committed regression suite. It supplies harmless import-time model configuration, disables dotenv loading, and uses pytest temporary directories, real local SQLite, mocked providers/retrievers, and simulated PIDs. The RAG backend probe uses a real local graph. No live LLM, Ollama, Tavily, or remote vector-store calls were needed for the findings. The helper patch in AXR-04 exists only within its probe. No application or repository test source files were modified.
+These probes intentionally assert the faulty behavior. After a repair, the corresponding observation should stop passing; replace it with a regression test that asserts the desired behavior before closing the finding. Do not add the observation module to routine CI as a correctness gate. The “Regression check” in each finding is the acceptance contract; a passing existing test suite or observation probe does not satisfy it.
 
-**Historical baseline (original review, not rerun for this correction pass):**
+**Current existing-test baseline (2026-09-19):**
 
-```text
-uv run pytest -q
-1739 passed, 7 warnings in 145.86s (0:02:25)
+| Run | Result | Scope |
+|---|---|---|
+| Normal full suite | **1,801 passed**, 3 warnings in 155.40s | Working-tree application and harness tests under normal collection rules |
+| Explicit ReAct controller module | **16 passed** in 0.57s | Existing tests omitted by the directory-based collection hook |
+
+Exact commands, run separately from the observation module:
+
+```bash
+env PYTHON_DOTENV_DISABLED=1 LLAMA_CPP_MODELS_CACHE_PATH=/tmp uv run pytest -q
+env PYTHON_DOTENV_DISABLED=1 LLAMA_CPP_MODELS_CACHE_PATH=/tmp uv run pytest -q \
+  tests/features/feature_018.react_screen/test_react_controller.py
 ```
 
-The original output remains in `/tmp/agentx-implementation-review-pytest.log`; its result was checked against that log. Temporary logs are local session evidence, not durable repository artifacts. Neither that earlier result nor the fresh selected-test result establishes correctness outside the exercised paths.
+The environment assignments disable dotenv loading and supply a harmless model-cache path. The full-suite warnings are dependency deprecations. These green baselines coexist with the reproduced failures because the existing tests do not cover the defective paths listed below; neither baseline establishes that the findings are repaired.
+
+**Historical results reported on 2026-09-18:**
+
+| Run | Reported result | Evidence available in this revision |
+|---|---|---|
+| Original full suite, `uv run pytest -q` | 1,739 passed, 7 warnings, 145.86s | Narrative only; the original log is absent |
+| Selected application tests plus temporary probes | 534 passed, 5 warnings, 10.56s: 516 existing tests + 18 probes | Narrative only; the old probe module and log are absent |
+
+The missing files are `/tmp/test_agentx_review_verification.py`, `/tmp/agentx-review-verification.log`, and `/tmp/agentx-implementation-review-pytest.log`. These historical totals were not independently recoverable during this revision and are not used as its verification evidence. The new 20-case module replaces that dependency for reproducing the findings.
 
 Specific coverage gaps explain why passing tests do not resolve these defects:
 
-- RAG's upload test injects a backend into `_search_documents_impl` directly. Its fake returns filenames, does not validate paths, and does not model upload errors or graph state. That bypasses the production tool factory and backend contract responsible for AXR-05. See [test_rag_v2_retrieval_tool.py](../../tests/features/feature_027.rag_v2/test_rag_v2_retrieval_tool.py).
+- RAG's upload test injects a backend into `_search_documents_impl` directly. Its fake returns filenames, does not validate paths, and does not model upload errors or graph state. It also requires bare `chunk_0.txt` filenames, so that assertion must change with the corrected path contract. See [test_rag_v2_retrieval_tool.py](../../tests/features/feature_027.rag_v2/test_rag_v2_retrieval_tool.py).
 - Tests of registries, repositories, and controllers in isolation do not establish the console lifecycle behavior described in AXR-06 through AXR-08. The regressions should exercise main-controller wiring and reopen/restart transitions.
-- [tests/conftest.py](../../tests/conftest.py), lines 19–29, unconditionally ignores paths containing `react_controller` and files named `test_react_view.py`, despite the current ReAct implementation being present. Normal directory-based collection therefore omits the existing [ReAct controller test module](../../tests/features/feature_018.react_screen/test_react_controller.py). The fresh command explicitly selects that file, and its tests pass. Remove the stale blanket exclusion or replace it with a real availability check so routine runs exercise the module too.
+- [tests/conftest.py](../../tests/conftest.py), lines 19–29, unconditionally ignores paths containing `react_controller` and files named `test_react_view.py`, despite the current ReAct implementation being present. Normal directory-based collection therefore omits the existing [ReAct controller test module](../../tests/features/feature_018.react_screen/test_react_controller.py). Explicit file selection is needed until the stale blanket exclusion is removed or replaced with a real availability check. This is a validation gap tracked with the repair work, not a thirteenth application finding.
 - Sandbox tests need result-path and temporary-file checks in addition to direct target-path checks. Policy tests need replacement, self-conflict, failed-first-insertion, and rollback cases. Session tests must cross a process reconstruction boundary, and goal tests need terminal updates to non-active goals.
 
-This correction pass verifies the AgentX findings in this document; it is not an exhaustive application audit. Live provider compatibility, long-running concurrent streams, large-document embedding limits, and the studio/browser surface remain outside its coverage.
+This revision verifies the reported failures, not every proposed acceptance check. Live provider compatibility, complete retrieval-to-analyst conversations, concurrent directory replacement, parallel RAG searches, automatic snapshot creation on exit, large-document embedding limits, and the studio/browser surface remain outside its demonstrated coverage.
 
-## Proposed correction order
+## Repair sequence and completion criteria
 
-1. **Contain filesystem operations:** AXR-01 and AXR-02, followed by the latent deletion guard AXR-12. These corrections are suitable for a focused safety patch with disposable-file regressions.
-2. **Restore core workflows:** AXR-03, AXR-04, and AXR-05. Make policy acceptance transactional across validation/cache changes; repair session creation through restart; connect RAG retrieval to readable, uniquely named backend files with truthful upload results. Verify the complete rule-update, session-restart, and retrieval-to-analyst paths before closing these findings.
-3. **Repair session and provider lifecycles:** AXR-06 through AXR-09. Establish stable agent identity, conversation creation, provider refresh, and clean session initialization together with reopen/restart tests.
-4. **Harden state transitions and recovery:** AXR-10 and AXR-11, plus the stale test-collection exclusion. Verify that one failure cannot leave the application permanently busy or with multiple active goals.
+| Order | Work package | Findings | Completion boundary |
+|---|---|---|---|
+| 1 | Filesystem containment | AXR-01, AXR-02; AXR-12 can share the path policy | Outside markers remain unchanged/unreadable through tool paths; ordinary sandbox operations still work. The latent AXR-12 repair should not delay other P1 work. |
+| 2 | Provider dispatch | AXR-06 | After a selection change, the next request uses the selected provider or fails explicitly. Error attribution matches the request. |
+| 3 | Policy acceptance | AXR-03 | Candidate compilation, conflict checks, persistence, and publication have one success/failure contract; rejected changes leave accepted behavior intact. |
+| 4 | Session lifecycle | AXR-04, AXR-08, AXR-09 | Create, rebind, save, reconstruct, and resume agree on the active storage location and stable identity; legacy data remains recoverable. |
+| 5 | RAG file handoff | AXR-05 | Service-created retrieval produces uniquely identified files readable by the actual analyst tool, with accurate errors and citations. |
+| 6 | Conversation persistence and agent recovery | AXR-07, AXR-10, AXR-11 | A completed chat round survives reconstruction; goal transitions preserve the chosen active-goal limit; a failed turn does not leave later messages blocked. |
 
-These are proposed corrections, not applied fixes. This report completes the requested review artifact under the [application consistency workflow](../../.workflows/agentx/loops/consistency_enforcement.md); implementation work is a separate follow-up.
+Provider refresh and conversation creation share `ChatController`; coordinate their lifecycle changes without resetting history on every reopen. AXR-04/08/09 share session ownership and should use one explicit contract. Restore ReAct collection before relying on routine suite totals for repair coverage. Independent packages can be implemented separately; no finding is closed merely because an adjacent package is complete.
+
+For each finding, add a regression that asserts the desired public behavior, record the repaired revision and verification command/result, and change its status only after the stated acceptance checks pass. For injected downstream cases, verify the real repaired call path as well as the isolated component. Retain any untested acceptance requirement as an explicit open item.
+
+This revision delivers the improved report and repeatable observation probes. Application changes remain proposed under the [application consistency workflow](../../.workflows/agentx/loops/consistency_enforcement.md); improving this review document does not close or implement its findings.

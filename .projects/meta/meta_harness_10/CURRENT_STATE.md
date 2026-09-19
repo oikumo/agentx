@@ -5,6 +5,66 @@
 
 ---
 
+## 2026-09-19 (iter 18 — closeout hygiene: dangling GC + resume pointer fix)
+
+- Tombstoned 3 stale `feature_109` dangling phases (Analysis/Programming/Done) — slice D already Done 2026-09-19; active dangling 3→0 (210 expired auto-hidden remain).
+- WORK.md Paused `[~] B3b … Next C/D` → `[x] P2 CLOSED 2026-09-19` (C+D shipped, rev 60, suite 1801).
+- Re-verified: `check` 265/0 + `build` OK + suite **1801** green (no src/tests changes — docs + ledger tombstones only).
+- Working tree uncommitted — user commit pending.
+
+---
+
+## 2026-09-19 (iter 17 — P2 program CLOSED)
+
+- `project.py close meta_harness_10` → state `complete` → `sync` clean (WORK.md + META.md `complete`, 8 features 102–109) → `check` 265/0 + `build` OK + suite **1801** green → PROJECT.md Status CLOSED row landed.
+- Working tree uncommitted — user commit pending (same pattern as MH6 close).
+
+---
+
+## 2026-09-19 (iter 16 — P2 slice D SHIPPED: matrix/payback, tests-only)
+
+### Done
+
+- D proves the allow/deny contract with 13/13 goldens GREEN first run (`test_d_matrix.py`: V1 concurrent+receipt allows, V2 derived-reads stay non-firing OMISSION, V3 solo `command_id=None` unchanged, V4 reconciled retry replays no second bump, V5 ledger-evidence shaped rows accepted; I1 no-receipt `ERR_NET_NOT_ENABLED`, I2 stale-rev `ERR_NET_STALE_REV`, I3 drift `ERR_NET_DRIFT_CONFLICT`, I4 net-down `ERR_NET_DOWN`, I5 absent-breakglass never allows, I6 task-fence fail-closed, I7 lane-over-cap never silent, I8 resultless commit diagnoses `txn_unindexed_commit`). No `state.py` behavior change, no template/bundle change, no live-gate registration (rev stays 60).
+- Regressions: `test_net_transaction_authority` + `test_net_recovery_journal` 17/17 → `tests/scripts/omt/` 637 → e2e receipt refreshed → full suite **1801** green (1788 + 13 new; 1 flake `test_nav_reminder_deferred_after_nav_first` rerun green) → `check` 265/0 + `build` OK → `test_report.md` → `omt_complete` feature_109 → Done.
+- PROJECT.md Quick Start + Status D row landed. P2 re-entry (a–e): (b) one-template map partial via A/B3b, (c) crash reorder CLOSED via C, (d) matrix proven via D, (e) net-zero 10/12 holds (nothing to retire); (a) payback still needs wild sessions N≥10 — verdict stays keep-advisory.
+
+### Next
+
+- Close the P2 program: `project.py close meta_harness_10` → sync → final `check` → report done.
+
+---
+
+## 2026-09-19 (auto — feature_109.mh10_p2d_matrix_payback Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_109.mh10_p2d_matrix_payback/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-18 (auto — feature_108.mh10_p2c_crash_reorder Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_108.mh10_p2c_crash_reorder/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-18 (iter 15 — P2 slice C SHIPPED: crash reorder, record-before-clear)
+
+### Done
+
+- C closes the C1 window with ONE `state.py` round: success path now carries the commit `result` in the WAL marker (same txid) BEFORE `record_command`, and `clear_pending` runs LAST; `reconcile_transactions` on `live==to` backfills a missing index entry from the carried result (`recovered_committed_backfilled`) so the retry replays instead of double-firing. A command_id marker with no carried result and no index diagnoses fail-closed (`txn_unindexed_commit`) — never synthesized.
+- 6/6 new goldens (RED 4F/2P before, GREEN after) → `test_net_transaction_authority` + `test_net_recovery_journal` 17/17 → `tests/scripts/omt/` 637 → e2e receipt refreshed → full suite **1788** green → `check` 265/0 + `build` OK → `test_report.md`.
+- No template/bundle change (no migration; live rev stays 60).
+
+### Next
+
+- Slice D: matrix/payback. Or close the P2 program.
+
+---
+
 ## 2026-09-18 (auto — feature_107.mh10_p2b3b_lane_template_landing Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_107.mh10_p2b3b_lane_template_landing/test_report.md

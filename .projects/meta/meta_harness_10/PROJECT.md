@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_10 — Petri Net as Global State for MH Development
 
-> Status: **active** · **v0.3 (2026-09-18)** — staged hybrid (user-picked 2026-09-18): Phase 1 read-only global projection (MH9-compliant, advisory) with R1–R6 locked; Phase 2 enforced gate only on measured wins + C6 map + payback. Created by `project.py new --slug meta_harness_10`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_10`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v0.3 (2026-09-18)** — staged hybrid (user-picked 2026-09-18): Phase 1 read-only global projection (MH9-compliant, advisory) with R1–R6 locked; Phase 2 enforced gate only on measured wins + C6 map + payback. Created by `project.py new --slug meta_harness_10`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_10`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
@@ -8,7 +8,7 @@
 
 > One line: MH10 unifies projects/workflows/features/tasks under one Petri-backed global state view — advisory first (P1), enforced only if earned (P2).
 
-**Next:** P2 slice B3b SHIPPED 2026-09-18 (`omt_complete` feature_107 → Done; cap-safe lane template landing — retire-one + reuse-two + add-three = 15/15, 10 goldens, receipt 141/141, `check` 265/0 + `build` OK + suite 1782 green, live rev 58→60; C6 lane residual CLOSED). P1 advisory sidecar frozen. Remaining P2: C (crash reorder) → D (matrix/payback), or close.
+**Next:** P2 slices C+D SHIPPED 2026-09-18→19 (`feature_108`: record-before-clear + reconcile backfill — 6 goldens, suite 1788; `feature_109`: allow/deny matrix V1–V5/I1–I8 — 13 goldens, suite 1801; both `check` 265/0 + `build` OK, rev stays 60; C1 window CLOSED, deny contract proven). P1 advisory sidecar frozen. Remaining: close the P2 program (payback (a) needs wild sessions N≥10 — verdict stays keep-advisory until then).
 
 ---
 
@@ -83,7 +83,10 @@ Milestones: **M0** (P1: one global view + honest divergence log) → **M1** (P2 
 - [x] P2 slice B2 `feature_105.mh10_p2b2_template_fix_work_release` SHIPPED (2026-09-18: additive `ensure_pool_b2` migration — `worker_slots` + `work_release` + 5 arcs, 12→13 places; helper `slot_delta` adopts pool+slot and refunds attention so 2-concurrent both fire; `managed_ops` release row + ledger-evidence reader; 12 goldens; receipt 95/95; `check` 265/0 + `build` OK + suite 1763 green; live rev 57→58, WORK.md re-rendered).
 - [x] P2 slice B3 `feature_106.mh10_p2b3_lane_integration_rewire` SHIPPED (2026-09-18: evidence-carrying lane path — ONE `state.py` round (lane helper + 4 wirings + 7 ledger dicts) + ONE `managed_ops.py` round (6 lane rows + extended reader); 9 goldens; receipt 104/104; `check` 265/0 + `build` OK + suite 1772 green; C6 narrows to B3b template landing).
 - [x] P2 slice B3b `feature_107.mh10_p2b3b_lane_template_landing` SHIPPED (2026-09-18: retire `e2e_receipt`→archive_pool + reuse `tests_capacity`/`src_edit_capacity` as lane slots + 3 lane states + 6 transitions + 19 arcs = 15/15; slot-adopting `_fire_lane_move` + 4 call-site wirings; `managed_ops` lane rows `yes-B3b-template`; 10 goldens; receipt 141/141; `check` 265/0 + `build` OK + suite 1782 green; live rev 58→60 snapshot-guarded, WORK.md re-rendered; C6 lane residual CLOSED).
+- [x] P2 slice C `feature_108.mh10_p2c_crash_reorder` SHIPPED (2026-09-18: ONE `state.py` round — commit result rides in the WAL marker before `record_command`, `clear_pending` last; `reconcile` backfills missing index on `live==to` (`recovered_committed_backfilled`), resultless commits diagnose `txn_unindexed_commit`; 6 goldens RED-then-GREEN; `check` 265/0 + `build` OK + suite 1788 green; no template change, rev stays 60; C1 window CLOSED).
+- [x] P2 slice D `feature_109.mh10_p2d_matrix_payback` SHIPPED (2026-09-19: tests-only matrix — V1–V5 allow (concurrent+receipt, derived-reads non-firing, solo unchanged, reconciled retry replays, ledger-evidence shaped rows) + I1–I8 deny fail-closed (no-receipt, stale-rev, drift, net-down, absent-breakglass, task-fence, lane-over-cap, resultless-commit); 13/13 goldens GREEN first run (already implemented, matrix proves it); regressions 17/17 + 637 + e2e receipt refreshed + suite 1801 green (1 flake rerun green); `check` 265/0 + `build` OK; no template/bundle change, rev stays 60, net-zero 10/12 holds; residual: payback (a) needs wild sessions N≥10).
 - [x] CLOSED (2026-09-18, iter 9 closeout docs-only): `project.py status` = `complete`, `sync` clean, `check` 265/0 green; advisory sidecar `.sandbox/global_state/` frozen; P2 re-entry unchanged (needs full a–e bundle via new slice).
+- [x] CLOSED (2026-09-19, P2 C+D complete): `project.py close meta_harness_10` → state `complete`, `sync` clean (WORK.md + META.md `complete`, 8 features), `check` 265/0 + `build` OK + suite 1801 green; C1 CLOSED (C), deny matrix proven (D), net-zero 10/12 holds, rev 60; payback (a) stays future work (wild N≥10).
 
 ---
 

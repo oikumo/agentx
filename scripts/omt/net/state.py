@@ -680,6 +680,14 @@ def _transact(
     from → aborted; live rev == from+1 → committed; else fail-closed
     diagnosis). Clean refusals clear the marker before re-raising — the
     marker exists only while a transaction is incomplete (§15.2).
+
+    feature_108 (slice C — record-before-clear): the success path records
+    the `command_id` index BEFORE clearing the marker, and the commit
+    `result` rides in the marker (same txid) first, so `reconcile` on
+    live==to backfills a missing index entry (`recovered_committed_backfilled`)
+    and the retry replays. A command_id marker with no carried result and no
+    index entry diagnoses fail-closed (`txn_unindexed_commit`) — the result
+    is never synthesized.
     """
     # TA: why: why (feature_079): the lock must span load-through-commit —
     # the pre-lock fast check in cli.py stays a courtesy rejection only; the
@@ -743,9 +751,15 @@ def _transact(
                 # else: the bundle advanced despite the error (save landed,
                 # a later step failed) — LEAVE the marker for reconcile.
             raise
-        if pending is not None:
+        # TA: risk: slice-C record-before-clear: the commit result rides in
+        # the WAL marker (same txid) BEFORE record_command, so a crash
+        # between save/record/clear is backfillable by reconcile; clear runs
+        # LAST so W2 (clear-then-record gap) cannot recur.
+        result_doc = json.loads(json.dumps(info, ensure_ascii=False, default=str))
+        if pending is not None and command_id:
             try:
-                clear_pending_txn(root)
+                pending["result"] = result_doc
+                write_pending_txn(root, pending)
             except Exception:
                 pass
         if command_id:
@@ -754,8 +768,13 @@ def _transact(
                 command_id,
                 canonical,
                 st.revision,
-                json.loads(json.dumps(info, ensure_ascii=False, default=str)),
+                result_doc,
             )
+        if pending is not None:
+            try:
+                clear_pending_txn(root)
+            except Exception:
+                pass
         return st, info
 
 
@@ -3585,18 +3604,68 @@ def reconcile_transactions(base: Path, *, session: str = "") -> dict[str, Any]:
                 "revision": live_revision,
             }
         if live_revision == to_revision:
+            # TA: risk: slice-C backfill: a result-carrying marker with no
+            # index entry means save+result landed but record_command did not
+            # (W1) — backfill the index so the retry replays instead of
+            # double-firing. A command_id marker WITHOUT a result can never
+            # be synthesized (generation ownership) — fail closed instead.
+            outcome = "recovered_committed"
+            cmd_id = pending.get("command_id")
+            if isinstance(cmd_id, str) and cmd_id:
+                try:
+                    existing = lookup_command(root, cmd_id)
+                except Exception as exc:
+                    return {
+                        "status": "diagnosis",
+                        "code": getattr(exc, "code", "lock_unavailable"),
+                        "message": str(exc),
+                        "pending": pending,
+                    }
+                if existing is None:
+                    carried = pending.get("result")
+                    if isinstance(carried, dict):
+                        try:
+                            record_command(
+                                root,
+                                cmd_id,
+                                str(pending.get("canonical", "")),
+                                live_revision,
+                                carried,
+                            )
+                        except Exception as exc:
+                            return {
+                                "status": "diagnosis",
+                                "code": getattr(exc, "code", "lock_unavailable"),
+                                "message": str(exc),
+                                "pending": pending,
+                            }
+                        outcome = "recovered_committed_backfilled"
+                    else:
+                        return {
+                            "status": "diagnosis",
+                            "code": "txn_unindexed_commit",
+                            "message": (
+                                f"pending {pending.get('txid')!r} op {pending.get('op')!r} "
+                                f"from {from_revision}->{to_revision} vs live {live_revision} "
+                                "committed but the idempotency index is missing and the "
+                                "marker carries no result — fail-closed; inspect the bundle "
+                                "and journal before clearing (do not retry blindly)"
+                            ),
+                            "pending": pending,
+                            "revision": live_revision,
+                        }
             clear_pending_txn(root)
             append_ledger({
                 "kind": "net_reconcile",
                 "session": session,
-                "outcome": "recovered_committed",
+                "outcome": outcome,
                 "txid": pending.get("txid"),
                 "op": pending.get("op"),
                 "task_id": pending.get("task_id"),
                 "revision": live_revision,
             })
             return {
-                "status": "recovered_committed",
+                "status": outcome,
                 "txid": pending.get("txid"),
                 "op": pending.get("op"),
                 "task_id": pending.get("task_id"),
