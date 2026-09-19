@@ -654,6 +654,31 @@ def _require_revision(st: NetState, expected_revision: int | None) -> None:
         )
 
 
+def freshness_for_state(stamped_rev: int | None, live_rev: int | None) -> dict[str, object]:
+    """O5 menu-time freshness view (pure, fail-open, additive only)."""
+    try:
+        from .freshness import freshness_hint as _hint
+        from .freshness import is_fresh as _is_fresh
+    except Exception:  # fail-open: never break probe/fire on helper error
+        fresh = (stamped_rev is not None and live_rev is not None and stamped_rev == live_rev)
+        return {"stamped_rev": stamped_rev, "live_rev": live_rev, "fresh": fresh, "hint": ""}
+    fresh = bool(_is_fresh(stamped_rev, live_rev))
+    hint = "" if fresh else str(_hint(stamped_rev, live_rev))
+    return {"stamped_rev": stamped_rev, "live_rev": live_rev, "fresh": fresh, "hint": hint}
+
+
+def push_for_state(st: object, rendered: str = "", menu: dict | None = None) -> dict[str, object]:
+    """O5 re-render push record derived from live state (additive only)."""
+    try:
+        from .freshness import push_record as _push
+    except Exception:  # fail-open
+        rev = int(getattr(st, "revision", 0) or 0)
+        return {"net_revision": rev, "menu": dict(menu or {}), "tasks_block": str(rendered)}
+    rev = int(getattr(st, "revision", 0) or 0)
+    return dict(_push(rev, menu, rendered))
+
+
+
 def _transact(
     base: Path,
     *,
@@ -855,6 +880,7 @@ def apply_selection(
         parse_selection,
         plan_selection,
     )
+    from .claim_handles import describe_handles, handles_for_menu
 
     try:
         sel = parse_selection(selection_text)
@@ -875,6 +901,13 @@ def apply_selection(
         st = load(base)
         if expected_revision is not None:
             _require_revision(st, expected_revision)
+        try:
+            _handles = [
+                {"menu_id": h.menu_id, "task_id": h.task_id, "place": h.place, "owner": h.owner, "generation": h.generation}
+                for h in handles_for_menu(list(sel.ids), list(getattr(st, "task_bindings", []) or []))
+            ]
+        except Exception:
+            _handles = []
         return st, {
             "batch_id": batch_id,
             "summary": summary,
@@ -883,6 +916,8 @@ def apply_selection(
             "proposals": list(plan.proposals),
             "revision": st.revision,
             "mutated": False,
+            "handles": _handles,
+            "handles_summary": describe_handles(handles_for_menu(list(sel.ids), list(getattr(st, "task_bindings", []) or []))) if _handles else "claims 0/0, free 0",
         }
 
     def _apply() -> tuple[NetState, dict[str, Any]]:
@@ -905,6 +940,13 @@ def apply_selection(
             "directives": dict(sel.directives),
             "batch_id": batch_id,
         })
+        try:
+            _handles_m = [
+                {"menu_id": h.menu_id, "task_id": h.task_id, "place": h.place, "owner": h.owner, "generation": h.generation}
+                for h in handles_for_menu(list(sel.ids), list(getattr(st, "task_bindings", []) or []))
+            ]
+        except Exception:
+            _handles_m = []
         return st, {
             "batch_id": batch_id,
             "summary": summary,
@@ -914,6 +956,7 @@ def apply_selection(
             "revision": st.revision,
             "mutated": True,
             "transition": m["transition"],
+            "handles": _handles_m,
         }
 
     st, info = _transact(

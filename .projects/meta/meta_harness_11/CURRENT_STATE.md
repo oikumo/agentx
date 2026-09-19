@@ -5,6 +5,44 @@
 
 ---
 
+## 2026-09-19 (auto — feature_113.live_progress_projection Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_113.live_progress_projection/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-19 (auto — feature_112.identity_aware_pool Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_112.identity_aware_pool/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-19 (iter 5 — O3 identity-aware pool to Testing)
+
+### Done
+
+- O3 `feature_112.identity_aware_pool` (minor_feature, Analysis→Design→Programming→Testing): `claim_handles.py` pure map + `state.apply_selection` handles view + `cli._task_menu` additive `claims[]`; 12/12 new goldens `test_net_claim_o3.py` (canary-approved); targeted 58/58; full suite 1840 passed + 2 deselected; `check 265/0`; test report @ `6.testing/features/feature_112.identity_aware_pool/test_report.md`.
+- Receipt discipline: 1 new-module round + 1 state.py bash-transform round + 1 cli.py round, e2e refreshed per round; P10-clean derived view (sidecar SSOT, overlay untouched); `uv` only.
+
+### In progress / Blocked
+
+- O3 in Testing (needs user close/ship call); M0 closes when O3 ships (O1+O2 Done, O3 Testing).
+
+### Next
+
+- Close/ship O3 from Testing (user call), then M0 complete → spawn O4 `concurrent dispatch runtime` (needs F7 reversal decision) or O5 live view.
+
+### Notes / context
+
+- Live rev 60 still `drained_complete`, `menu.claims:[]` honest (no pending bindings); de-anonymization proven hermetically.
+- Non-interference held: no places/transitions added (Tier-3 excludes net); helpers fail-open.
+
+---
+
 ## 2026-09-19 (auto — feature_111.multi_select_directive_protocol Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_111.multi_select_directive_protocol/test_report.md

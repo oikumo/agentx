@@ -279,11 +279,20 @@ def _task_menu(
         _integrating = sum(1 for b in bindings if isinstance(b, dict) and b.get("place") == "work_integrating")
     except Exception:
         _verifying, _ready, _integrating = 0, 0, 0
+    try:
+        _claims = [
+            {"task_id": str(b.get("id")), "place": str(b.get("place")), "owner": str(b.get("owner", "none") or "none"), "generation": int(b.get("generation", 0) or 0)}
+            for b in bindings
+            if isinstance(b, dict) and b.get("id")
+        ]
+    except Exception:
+        _claims = []
     return {
         "next": nxt,
         "other_enabled": other,
         "blocked": blocked,
         "resources": resources,
+        "claims": _claims,
         "parallel": _parallel,
         "capacity": {
             "workers_used": _used,
@@ -335,17 +344,34 @@ def _probe(base: Path, max_states: int) -> tuple[dict[str, Any], int]:
     }
     envelope["observation"] = _task_observation(st, validation, enabled_list)
     envelope["menu"] = _task_menu(st, bindings, enabled_list)
+    try:  # O5 live projection (additive only, fail-open)
+        from .freshness import projection_lines as _proj_lines
+        _menu_counts = {"claims": len(envelope["menu"].get("claims", []) or [])}
+        envelope["push"] = state.push_for_state(st, "", _menu_counts)
+        envelope["freshness"] = state.freshness_for_state(st.revision, st.revision)
+        try:
+            _lanes = {"verification": envelope["menu"].get("verification"), "integration": envelope["menu"].get("integration")}
+            envelope["projection"] = _proj_lines(st.revision, dict(st.live_marking), list(envelope["enabled"]), _lanes, "")
+        except Exception:
+            envelope["projection"] = []
+    except Exception:
+        pass
     return envelope, 0
 
 
 def _fire(base: Path, transition: str, reasoning: str, session: str, expected_revision: int | None = None, command_id: str | None = None) -> tuple[dict[str, Any], int]:
     st = state.fire(base, transition, reasoning=reasoning, session=session, expected_revision=expected_revision, command_id=command_id)
-    envelope = {
+    envelope: dict[str, Any] = {
         "ok": True,
         "op": "fire",
         "revision": st.revision,
         "marking": st.live_marking,
     }
+    try:  # O5 push (additive only, fail-open)
+        envelope["push"] = state.push_for_state(st, "", {})
+        envelope["freshness"] = state.freshness_for_state(expected_revision if expected_revision is not None else st.revision, st.revision)
+    except Exception:
+        pass
     return envelope, 0
 
 
@@ -365,13 +391,19 @@ def _apply_selection(base: Path, args: argparse.Namespace) -> tuple[dict[str, An
         expected_revision=getattr(args, "expected_revision", None),
         command_id=getattr(args, "command_id", None) or None,
     )
-    return {
+    _env: dict[str, Any] = {
         "ok": True,
         "op": "apply-selection",
         "revision": st.revision,
         "marking": dict(st.live_marking),
         "report": report,
-    }, 0
+    }
+    try:  # O5 push (additive only, fail-open)
+        _env["push"] = state.push_for_state(st, "", {})
+        _env["freshness"] = state.freshness_for_state(getattr(args, "expected_revision", None) if getattr(args, "expected_revision", None) is not None else st.revision, st.revision)
+    except Exception:
+        pass
+    return _env, 0
 
 
 # feature_080.task_claim_generation (T5-2 2B): thin envelopes over the
@@ -387,7 +419,7 @@ def _task_envelope(op: str, st: Any, task_id: str) -> dict[str, Any]:
         ),
         {},
     )
-    return {
+    _env: dict[str, Any] = {
         "ok": True,
         "op": op,
         "revision": st.revision,
@@ -400,6 +432,12 @@ def _task_envelope(op: str, st: Any, task_id: str) -> dict[str, Any]:
             "workspace": b.get("workspace"),
         },
     }
+    try:  # O5 push (additive only, fail-open)
+        _env["push"] = state.push_for_state(st, "", {})
+        _env["freshness"] = {"stamped_rev": None, "live_rev": st.revision, "fresh": True, "hint": ""}
+    except Exception:
+        pass
+    return _env
 
 
 def _claim(base: Path, args: argparse.Namespace) -> tuple[dict[str, Any], int]:

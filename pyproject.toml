@@ -52,6 +52,11 @@ packages = ["src/agentx"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+# Fast local default: deselect the 2 live opencode LLM smoke tests (~400s of the
+# ~494s suite — they drive the REAL binary + real LLM round-trips and hang on
+# the 240s timeout when the runtime is slow). Opt back in explicitly with
+# `-m opencode_live` (CI / scheduled full-suite runs).
+addopts = "-m 'not opencode_live'"
 markers = [
     "opencode_live: slow tests that drive the REAL opencode binary (skipped when binary absent)",
 ]
