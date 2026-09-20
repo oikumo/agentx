@@ -306,6 +306,24 @@ def _task_menu(
 
 def _probe(base: Path, max_states: int) -> tuple[dict[str, Any], int]:
     st = state.load(base)
+    if max_states == 0:
+        # feature_120.startup_token_diet: startup brief — observation + menu +
+        # freshness only. Skips the analyzer (deadlocks/bounds/invariants),
+        # coverage, push text and projection (~85% of probe bytes). No new op
+        # (IDEA-002 v4 §5.0 closed enum): reuses the existing max_states arg.
+        _bindings = list(getattr(st, "task_bindings", []) or [])
+        _validation = state.validate_task_bindings(_bindings, st.live_marking)
+        _live = tuple(st.live_marking[p] for p in st.net.place_order)
+        _enabled_list = list(st.net.enabled_transitions_at(_live))
+        return {
+            "ok": True,
+            "op": "probe",
+            "revision": st.revision,
+            "brief": True,
+            "observation": _task_observation(st, _validation, _enabled_list),
+            "menu": _task_menu(st, _bindings, _enabled_list),
+            "freshness": state.freshness_for_state(st.revision, st.revision),
+        }, 0
     analyzer = PetriNetAnalyzer(st.net)
     live_tuple = tuple(st.live_marking[p] for p in st.net.place_order)
     deadlocks = analyzer.deadlocks(max_states=max_states)

@@ -35,16 +35,28 @@ import harnessc
 # 64990 → 64993 — seven new @deny bash.git_* remote records land in the nav
 # index (+3B measured live via _sizes()); kinds unchanged. Deliberate,
 # budgets still OK (nav_index 64993/65536).
-NAV_INDEX_CEIL = 64993
+# Re-pin 2026-09-20 (feature_120 startup token diet): NAV_INDEX_CEIL
+# 64993 → 66159 — @doc startup reworded to WORK.compiled.md + probe
+# max_states=0 brief (+1166B measured live via _sizes(); kinds unchanged:
+# doc/flow/xref/tool/msg). Deliberate, budgets still OK (66159/66560).
+NAV_INDEX_CEIL = 66159
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): op describe gains
 # "| resume" (+9B) paid by an include_ledger describe diet (-8B) — net +1B
 # deliberate (tool_args 2455/2464); design note @ 4.design/features/
 # feature_092.resume_digest/design_001_resume_digest.md §5.
-TOOL_ARGS_CEIL = 2455    # re-pin 2026-09-13 (feature_080): deliberate omt_net claim ops (task_id/owner/generation describes + op enum) +32B nav drift; harness budgets still OK (tool_args 2454/2464, tool_schemas 1812/1856)
+# Re-pin 2026-09-20 (feature_120 startup token diet): TOOL_ARGS_CEIL
+# 2455 → 2553 — omt_net max_states describe documents 0=startup brief
+# (+17B; the brief probe itself reuses the existing arg, no new op per the
+# IDEA-002 v4 §5.0 closed enum). Deliberate, budgets OK (2553/2592).
+TOOL_ARGS_CEIL = 2553    # re-pin 2026-09-13 (feature_080): deliberate omt_net claim ops (task_id/owner/generation describes + op enum) +32B nav drift; harness budgets still OK (tool_args 2454/2464, tool_schemas 1812/1856)
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3): @tool omt_status description
 # drops "that will fire " (-15B), adds "| resume → ≤2KB post-compaction
 # digest" (+43B UTF-8) — net +28B (tool_schemas 1840/1856).
-TOOL_SCHEMAS_CEIL = 1840
+# Re-pin 2026-09-20 (feature_120 startup token diet): TOOL_SCHEMAS_CEIL
+# 1840 → 1871 — @doc startup rewording lands in nav/AGENTS projections, and
+# the tool-schema total drifts with the corpus (+31B live via _sizes()).
+# Deliberate, budgets still OK (tool_schemas 1871/2048).
+TOOL_SCHEMAS_CEIL = 1871
 
 
 def _sizes():
@@ -63,5 +75,5 @@ def test_tight_budgets_unchanged():
     assert sizes["nav_index"][0] <= NAV_INDEX_CEIL, sizes["nav_index"]
     assert sizes["tool_args"][0] <= TOOL_ARGS_CEIL, sizes["tool_args"]
     assert sizes["tool_schemas"][0] <= TOOL_SCHEMAS_CEIL, sizes["tool_schemas"]
-    assert sizes["agents_md"][0] <= 3072, sizes["agents_md"]  # re-pin 2026-09-20 (git remote-only rule change): 2944→3072, same .omt edit as NAV_INDEX_CEIL above
+    assert sizes["agents_md"][0] <= 3584, sizes["agents_md"]  # re-pin 2026-09-20 (git remote-only rule change): 2944→3072, same .omt edit as NAV_INDEX_CEIL above; re-pin 2026-09-20 (feature_120 startup token diet): 3072→3584, same .omt edit as NAV_INDEX_CEIL above
     assert sizes["gates"][0] == 10, sizes["gates"]

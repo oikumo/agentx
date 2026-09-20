@@ -129,16 +129,18 @@ def test_diet_ties_break_lexicographically(monkeypatch) -> None:
 
 
 def test_live_check_emits_diet_warnings(capsys) -> None:
-    """LIVE PIN (2026-09-20, re-pin git remote-only rule change):
-    tool_args 2455/2464 (9B) and tool_schemas 1840/1856 (16B) sit inside
-    the 64B zone; agents_md 2995/3072 (77B), nav_index 64993/65536 (543B)
-    and ir_json 20756/21504 (748B) stay silent. Re-pin deliberately whenever
-    these budgets move (feature_059 pin discipline)."""
+    """LIVE PIN (2026-09-20, re-pin feature_120 startup token diet):
+    tool_args 2553/2592 (39B) sits inside the 64B zone (omt_net
+    max_states describe +17B documents the 0=startup-brief probe);
+    tool_schemas 1871/2048 (177B), agents_md 3244/3584 (340B), nav_index
+    66159/66560 (401B) and ir_json 21181/21504 (323B) stay silent.
+    Re-pin deliberately whenever these budgets move (feature_059 pin
+    discipline)."""
     assert harnessc.main(["harnessc.py", "check"]) == 0
     err = capsys.readouterr().err
-    assert "budget-diet: tool_args 2455/2464B — 9B headroom (≤64B)" in err
+    assert "budget-diet: tool_args 2553/2592B — 39B headroom (≤64B)" in err
     assert "diet: longest @tool" in err, "composable hint names a real @tool"
     assert "budget-diet: agents_md" not in err
-    assert "budget-diet: tool_schemas 1840/1856B — 16B headroom (≤64B)" in err
+    assert "budget-diet: tool_schemas" not in err
     assert "budget-diet: nav_index" not in err
     assert "budget-diet: ir_json" not in err

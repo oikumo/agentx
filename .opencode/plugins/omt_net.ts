@@ -42,7 +42,7 @@ function createNetTool() {
       transition: tool.schema.string().optional().describe("fire: transition name"),
       reasoning: tool.schema.string().optional().describe("fire/splice: why (audit, D4)"),
       session: tool.schema.string().optional().describe("session id (default: context)"),
-      max_states: tool.schema.number().optional().describe("probe: analyzer exploration cap (default 1000)"),
+      max_states: tool.schema.number().optional().describe("probe: analyzer exploration cap (default 1000; 0=startup brief)"),
       mode: tool.schema.string().optional().describe("splice: add|remove|disable|undo|repair"),
       mutation: tool.schema.string().optional().describe("splice: JSON mutation string (add_places/add_transitions/add_arcs | remove_places/remove_transitions/token_policy/reroute)"),
       subnet: tool.schema.string().optional().describe("splice disable: subnet key, e.g. feature_039"),
