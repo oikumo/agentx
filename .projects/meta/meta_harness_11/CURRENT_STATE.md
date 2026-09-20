@@ -5,6 +5,159 @@
 
 ---
 
+## 2026-09-20 (pilots: O6c template validated, 2 fixture runs)
+
+### run p1 — fixture_bugfix — 2026-09-20
+
+- rev: live HEAD · mode: fixture (hermetic) · workers: 1 · lanes: n/a
+- serial: wall n/a · tokens 646 · harness_calls 2 · tool_calls 10 · verify 0.042s · success true · regressions 0 · blocks_tp 2 · missed 0
+- dispatch: n/a (template validation, not same-pair comparison)
+- payback: n/a · green: held (no live change)
+- evidence: `uv run scripts/omt/bench/cli.py run --task fixture_bugfix --mode fixture` transcript above
+
+### run p2 — fixture_nophase — 2026-09-20
+
+- rev: live HEAD · mode: fixture (hermetic) · workers: 1 · lanes: n/a
+- serial: wall n/a · tokens 559 · harness_calls 2 · tool_calls 7 · verify 0.022s · success true · regressions 0 · blocks_tp 2 · missed 0
+- dispatch: n/a (template validation)
+- payback: n/a · green: held
+- evidence: `uv run scripts/omt/bench/cli.py run --task fixture_nophase --mode fixture` transcript above
+
+### Outcome
+
+- Template columns map 1:1 (wall/tokens/io/verify/success/check/build/suite/payback; `tokens_est=io_bytes//4` confirmed 2586→646, 2238→559).
+- Same-pair serial-vs-dispatch N≥10 still pending real sidecars (deferred: tree dirty 115+116, `check` red work_md 9758>9728). Threshold decision O6a/O6b/defer pending wild.
+
+---
+
+## 2026-09-20 (auto — feature_116.mh11_o6c_wild_payback_measurement Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_116.mh11_o6c_wild_payback_measurement/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+### Close (continue — O6c design Done, user-approved)
+
+- `omt_complete{advance_to:Done}` green — O6c metric + template + thresholds Done; no `src/`/`tests/` edits (docs-only).
+- Evidence held at close: Analysis 001 + Design 001 + impl notes (template dry-run vs rev 60 / suite 1880) + test report (check red pre-existing work_md 9758>9728 noted, drift 0, suite baseline held).
+- PROJECT.md unchanged (Next = pilots/wild N≥10 → O6a/O6b/defer, or WORK.md NEXT `proj:agentx_concurrent_development`).
+- Non-interference held: no places/transitions; no ledger kinds; `src/agentx/` untouched; `uv` only. Tree still dirty (115 + 116 WIP, user commit).
+
+---
+
+
+## 2026-09-20 (resume: MH11 O6c spawned as feature_116)
+
+### Done
+
+- Spawned `feature_116.mh11_o6c_wild_payback_measurement` (`minor_feature`, linked to `meta_harness_11`); declared `omt_phase{Analysis}`.
+- Filled FEATURE.md Summary/Scope/task-type + PLAN.md Objective (payback metric + N≥10 protocol, O6a/O6b/defer threshold, D1 locked).
+- Wrote Analysis 001 (`analysis_001_payback_metric.md`) + Design 001 (`design_001_metric_template.md`) + impl notes (docs-only Programming); test report; `omt_complete{advance_to:Testing}` green.
+
+### In progress / Blocked
+
+- feature_116 in Testing (needs user close/ship call). `harnessc check` red pre-existing (work_md 9758>9728 from feature_115 WIP row, no new surface edit; grow deferred to 115 commit).
+
+### Next
+
+- User close/ship feature_116 → run 2 pilots then N≥10 wild → threshold decision O6a/O6b/defer; or WORK.md NEXT.
+
+### Notes / context
+
+- Non-interference: docs only so far; `src/agentx/` untouched (D1); `uv` only; feature_115 WIP still uncommitted (user commit).
+
+---
+
+## 2026-09-20 (resume: MH11 O6c measure-first scoping approved)
+
+### Done
+
+- Resumed MH11 at O5-follow-up SHIPPED (feature_115 Done 01:31, suite 1880 + 2 deselected, `check 265/0`, tree dirty WIP uncommitted) via `meta_harness_project` loop (root → subject → loop file; approval gates honored).
+- User picked O6 bridge scope → refined to O6c measure-first (wild sessions N≥10 payback before bridge) over O6a contract-only / O6b full prototype; approved scoping draft (no `src/`/`tests/` edits).
+- O6c scope drafted here: reproducer + oracle + budget (D3 gate) for payback measurement; D1 still locked (`src/agentx/` untouched), F7 lane-only locked (fan-out ≤2).
+
+### Reproducer (G15/G16 gap)
+
+- G15: harness WIP-pool (rev 60 `drained_complete`, pool 0/0/7) vs agentx adaptive net (feature_001 scope unset, D1 forbids `src/agentx/`) — selection like "do rag_v2 + studio fix concurrently" has no net spanning harness + execution state.
+- G16: no metric proves M0/M1 concurrency pays back — feature_093 + feature_098 exist, but wild-session payback N≥10 residual open (WORK.md Paused + PROJECT.md O6). Suite 1880 + `check 265/0` is the green baseline before measurement.
+
+### Oracle (what passes)
+
+- Payback metric defined before N runs: wall-time + agent tokens + `check`/`build`/suite cost per wild session vs serial baseline; honest-cost method (feature_098) reused; ledger `net_*` + CURRENT_STATE logs as evidence.
+- Wild protocol: N≥10 sidecar/worktree sessions, disjoint files, harness green throughout (`check 0` + `build` OK + suite + KNOWN empty; net-zero holds; Tier-3 excludes net); each run logs reproducer/oracle/budget + outcome.
+- Decision threshold pre-registered: payback → O6a (contract-only, read-only D1 exception) or O6b (full prototype, D1 reversal + `major_feature` TDD); no payback → defer O6, take WORK.md NEXT `proj:agentx_concurrent_development`.
+
+### Budget
+
+- Scoping: 0 receipt rounds (this doc only, non-gated; `uv` only; no places/transitions; no ledger kinds).
+- Measurement (when spawned): sidecars/worktrees only, slice reverts on violation, never the harness; spawn via `new_feature.py` only with new decisions + evidence.
+
+### Next
+
+- Spawn measurement slice via `new_feature.py "<name>" --type <tt> --project meta_harness_11` with D5 (O6c threshold) decision + evidence; or run wild sessions ad-hoc and log here.
+- Then O6a/O6b revisit (needs D1 decision) or WORK.md NEXT `proj:agentx_concurrent_development`. Tree still dirty (feature_115 WIP) — commit is user call.
+
+### Notes / context
+
+- Non-interference held: no `src/`/`tests/` edits in this resume; `src/agentx/` untouched (D1); `uv` only.
+- Resume entry point: `PROJECT.md` §New Session Quick Start → this entry → §Next.
+
+---
+
+## 2026-09-20 (auto — feature_115.live_progress_full_push_join_view Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_115.live_progress_full_push_join_view/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-20 (feature_115 Programming → Testing)
+
+### Done
+
+- Implemented O5a+b per Design 001 (receipt-disciplined): `freshness.batch_projection_lines` pure + `state._render_push_text`/`join_projection_for_state` + dispatch-join threading + `cli.py` 4-site bash-transform (probe/fire/apply-selection/task envelopes).
+- Goldens `tests/scripts/omt/test_net_followup_o5.py` 8/8 (canary-approved via `omt_skip{scope:tests}`); targeted 78/78; full suite **1880 passed** + 2 deselected; `check 265/0`; live probe rev 60 shows full `push.tasks_block` (`fresh:true`).
+- Wrote impl notes + test report; `omt_complete{advance_to:Testing}` green.
+
+### In progress / Blocked
+
+- feature_115 in Testing (needs user close/ship call).
+
+### Next
+
+- User close/ship feature_115 → MH11 O5-follow-up Done; then O6 (needs D1 revisit) or WORK.md NEXT `proj:agentx_concurrent_development`.
+
+### Notes / context
+
+- Non-interference held: no places/transitions added; no new ledger kinds; `src/agentx/` untouched; live rev 60; `uv` only.
+
+---
+
+## 2026-09-20 (resume: MH11 O5-follow-up spawned as feature_115)
+
+### Done
+
+- Resumed MH11 at M1 SHIPPED (O4 Done, suite 1872, `check 265/0`, F7 lane-only locked) via `meta_harness_project` loop (root → subject → loop file; approval gates honored).
+- User picked O5-follow-up then O5a+b combined (full-text push + join progress view) over O6/WORK.md-NEXT/verify-only.
+- Spawned `feature_115.live_progress_full_push_join_view` (`minor_feature`, linked to `meta_harness_11`); declared `omt_phase{Analysis}`.
+- Wrote Analysis 001 (`analysis_001_full_push_join.md`): reproducer (`push.tasks_block==""` at `cli.py:356/377/408/442` + text-only `projection_lines` vs `plan_to_dict`) + oracle (D19 round-tripping push text D4 proposal-only; deterministic batch/join view) + budget (3 receipt rounds, canary-gated goldens, work_md budget watch).
+- Locked PROJECT.md D4 (proposal-only + read-only; no F7/D1 reversal); think-gate + KB consults recorded (no KB hits).
+- Filled FEATURE.md Summary/Scope/task-type + PLAN.md Objective.
+
+### In progress / Blocked
+
+- feature_115 in Analysis (needs Design approval before Programming; tests/ canary required for new goldens).
+
+### Next
+
+- `omt_phase{minor_feature, Design}` → push-text threading points + batch projection shape + golden list → Programming (receipt-disciplined) → `omt_complete{advance_to:Testing}` + test report.
+
+### Notes / context
+
+- Non-interference: no places/transitions added; no `src/` edits yet (docs only); `src/agentx/` untouched (D1); `uv` only.
+
+---
+
 ## 2026-09-20 (auto — feature_114.concurrent_dispatch_runtime Done)
 
 - shipped: major_feature · test report @ 6.testing/features/feature_114.concurrent_dispatch_runtime/test_report.md

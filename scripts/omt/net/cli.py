@@ -345,19 +345,29 @@ def _probe(base: Path, max_states: int) -> tuple[dict[str, Any], int]:
     envelope["observation"] = _task_observation(st, validation, enabled_list)
     envelope["menu"] = _task_menu(st, bindings, enabled_list)
     try:  # O4 dispatch plan preview (feature_114, additive only, fail-open [])
-        envelope["plan"] = list(
-            state.plan_dispatch_view(base).get("plan", []) or []
-        )
+        _plan_view = state.plan_dispatch_view(base)
+        envelope["plan"] = list(_plan_view.get("plan", []) or [])
     except Exception:
+        _plan_view = {}
         envelope["plan"] = []
-    try:  # O5 live projection (additive only, fail-open)
+    try:  # O5 live projection (additive only, fail-open) + O5b join view
         from .freshness import projection_lines as _proj_lines
         _menu_counts = {"claims": len(envelope["menu"].get("claims", []) or [])}
-        envelope["push"] = state.push_for_state(st, "", _menu_counts)
+        envelope["push"] = state.push_for_state(
+            st, state._render_push_text(st), _menu_counts
+        )
         envelope["freshness"] = state.freshness_for_state(st.revision, st.revision)
         try:
             _lanes = {"verification": envelope["menu"].get("verification"), "integration": envelope["menu"].get("integration")}
-            envelope["projection"] = _proj_lines(st.revision, dict(st.live_marking), list(envelope["enabled"]), _lanes, "")
+            envelope["projection"] = _proj_lines(st.revision, dict(st.live_marking), list(envelope["enabled"]), _lanes, "") + state.join_projection_for_state(
+                st,
+                {
+                    "tasks": envelope["plan"],
+                    "wip": _plan_view.get("wip"),
+                    "revision": _plan_view.get("revision", st.revision),
+                    "batch_id": _plan_view.get("batch_id"),
+                },
+            )
         except Exception:
             envelope["projection"] = []
     except Exception:
@@ -374,7 +384,9 @@ def _fire(base: Path, transition: str, reasoning: str, session: str, expected_re
         "marking": st.live_marking,
     }
     try:  # O5 push (additive only, fail-open)
-        envelope["push"] = state.push_for_state(st, "", {})
+        envelope["push"] = state.push_for_state(
+            st, state._render_push_text(st), {}
+        )
         envelope["freshness"] = state.freshness_for_state(expected_revision if expected_revision is not None else st.revision, st.revision)
     except Exception:
         pass
@@ -405,7 +417,9 @@ def _apply_selection(base: Path, args: argparse.Namespace) -> tuple[dict[str, An
         "report": report,
     }
     try:  # O5 push (additive only, fail-open)
-        _env["push"] = state.push_for_state(st, "", {})
+        _env["push"] = state.push_for_state(
+            st, state._render_push_text(st), {}
+        )
         _env["freshness"] = state.freshness_for_state(getattr(args, "expected_revision", None) if getattr(args, "expected_revision", None) is not None else st.revision, st.revision)
     except Exception:
         pass
@@ -439,7 +453,9 @@ def _task_envelope(op: str, st: Any, task_id: str) -> dict[str, Any]:
         },
     }
     try:  # O5 push (additive only, fail-open)
-        _env["push"] = state.push_for_state(st, "", {})
+        _env["push"] = state.push_for_state(
+            st, state._render_push_text(st), {}
+        )
         _env["freshness"] = {"stamped_rev": None, "live_rev": st.revision, "fresh": True, "hint": ""}
     except Exception:
         pass

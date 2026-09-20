@@ -75,6 +75,7 @@ Milestones: **M0** (O1+O2+O3: selectable menu with atomic apply, still serial) �
 - [x] O1 shipped to Testing (2026-09-19): `feature_110.whole_project_menu_composer` (minor_feature, Testing; 14 goldens, live menu rev 60 in WORK.md, trim+grow budget 9728, test report).
 - [x] M0 COMPLETE (2026-09-19, user-approved close): O1 (110) + O2 (111) + O3 (112) Done + O5-slice (113) Done; suites 1817→1830→1840→1847; `check 265/0`; tree clean. O4/O6 unspawned (need F7/D1 decisions).
 - [x] M1 SHIPPED (2026-09-20, user-approved close): O4 `feature_114.concurrent_dispatch_runtime` Done (major_feature, TDD GREEN; 23 canonical + 2 pointer goldens, targeted 56/56, suite 1872 + 2 deselected, `check 265/0`, test report); F7 lane-only reversal locked (fan-out ≤2, `src/` serialism unchanged). O6 unspawned (needs D1 revisit).
+- [x] O5-follow-up SHIPPED (2026-09-20, user-approved close): `feature_115.live_progress_full_push_join_view` Done (minor_feature; 8 goldens, targeted 78/78, suite 1880 + 2 deselected, `check 265/0`, test report; D4 proposal-only + Tier-3 held). Next = O6 (needs D1 revisit) or WORK.md NEXT `proj:agentx_concurrent_development`.
 
 ---
 
@@ -83,6 +84,7 @@ Milestones: **M0** (O1+O2+O3: selectable menu with atomic apply, still serial) �
 - **D1 — mh11 is the session use-case home (2026-09-19):** mh10 CLOSED complete (rev 60); use-case work lands here. Inherits D4 locks (net solo-only, Tier-3 excludes net, KNOWN empty, net-zero 10/12, stage + `uv` only + `src/` needs `omt_phase`; this doc non-gated).
 - **D2 — full O1–O6, M0 first (2026-09-19, user-picked):** all improvements in scope, but M1 (concurrency) only after M0 (selectable atomic menu) green; F7 serial vs dispatch and D1 harness↔product boundary revisited only inside O4/O6 slices with approval.
 - **D3 — gaps doc is proposal baseline, not authority (2026-09-19):** `.sandbox/meta_harness_session_usecase_gaps.md` G1–G16/O1–O6 are inputs; each O slice needs reproducer + oracle + resource budget before estimate.
+- **D4 — O5-follow-up stays proposal-only + read-only (2026-09-20, feature_115):** full-text `push.tasks_block` is a dry-run `sync net_to_md` compose the caller still applies (no auto-commit); batch/join projection is pure read-only over `plan_to_dict` (no daemon/socket/TS import). No F7 reversal (no new fan-out) and no D1 revisit (`src/agentx/` untouched).
 
 ---
 

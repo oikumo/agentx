@@ -12,6 +12,7 @@ __all__ = [
     "freshness_hint",
     "push_record",
     "projection_lines",
+    "batch_projection_lines",
 ]
 
 
@@ -74,3 +75,87 @@ def projection_lines(
     if claims_summary:
         lines.append(str(claims_summary))
     return lines
+
+
+_LANE_ORDER = {"verification": 0, "integration": 1, "general": 2}
+
+
+def batch_projection_lines(
+    plan: dict[str, Any] | None,
+    lanes: dict[str, Any] | None = None,
+    conflicts: list[dict[str, Any]] | None = None,
+) -> list[str]:
+    """O5b join/batch progress view (pure, deterministic, read-only).
+
+    Input is the `dispatch_runtime.plan_to_dict` shape
+    (`{tasks:[{claim,task_id,lane,worktree,lease}], wip:{pending,active,cap},
+    revision, batch_id, summary}`). Renders one batch line plus one line
+    per task in planner order (verification, integration, general by
+    `task_id` code-point) plus an optional deadlocks/blocked tail.
+    Malformed/empty plans render `[]` (fail-open — never break probe).
+    """
+    try:
+        p: dict[str, Any] = plan if isinstance(plan, dict) else {}
+        tasks = p.get("tasks") or []
+        if not isinstance(tasks, list) or not tasks:
+            return []
+        norm: list[dict[str, str]] = []
+        for t in tasks:
+            if not isinstance(t, dict):
+                return []
+            task_id = str(t.get("task_id", "") or "")
+            if not task_id:
+                return []
+            lane = str(t.get("lane", "") or "")
+            if lane not in _LANE_ORDER:
+                lane = "general"
+            norm.append(
+                {
+                    "task_id": task_id,
+                    "lane": lane,
+                    "worktree": str(t.get("worktree", "") or ""),
+                    "lease": str(t.get("lease", "") or ""),
+                }
+            )
+        ordered = sorted(
+            norm, key=lambda t: (_LANE_ORDER[t["lane"]], t["task_id"])
+        )
+        v = sum(1 for t in ordered if t["lane"] == "verification")
+        i = sum(1 for t in ordered if t["lane"] == "integration")
+        g = len(ordered) - v - i
+        wip_raw = p.get("wip")
+        wip: dict[str, Any] = wip_raw if isinstance(wip_raw, dict) else {}
+        try:
+            wip_part = (
+                f"{int(wip.get('pending', 0))}/"
+                f"{int(wip.get('active', 0))}/"
+                f"{int(wip.get('cap', 15))}"
+            )
+        except (TypeError, ValueError):
+            wip_part = "0/0/15"
+        lines = [
+            f"batch {p.get('batch_id', '?')} rev "
+            f"{p.get('revision', '?')} lanes {v}/{i}/{g} "
+            f"wip {wip_part}",
+        ]
+        for t in ordered:
+            lines.append(
+                f"task {t['task_id']} [{t['lane']}] "
+                f"{t['worktree']} {t['lease']}".rstrip()
+            )
+        tail: list[str] = []
+        if isinstance(lanes, dict) and lanes.get("deadlocks_complete") is True:
+            tail.append("deadlocks_complete")
+        blocked: list[str] = []
+        for c in conflicts or []:
+            if isinstance(c, dict):
+                name = str(c.get("transition", c.get("subnet", "")) or "")
+                if name:
+                    blocked.append(name)
+        if blocked:
+            tail.append(f"blocked:{','.join(sorted(blocked))}")
+        if tail:
+            lines.append(" ".join(tail))
+        return lines
+    except Exception:
+        return []

@@ -678,6 +678,69 @@ def push_for_state(st: object, rendered: str = "", menu: dict | None = None) -> 
     return dict(_push(rev, menu, rendered))
 
 
+def _render_push_text(st: NetState) -> str:
+    """O5a full-text push composer (dry-run only, fail-open).
+
+    Reuses the `sync net_to_md` render path in-memory: D19 Tasks text at
+    the live revision with O1 menu inputs (pool counts + projects +
+    hygiene + unscoped + lanes). Never writes WORK.md and never touches
+    the ledger (D4 proposal-only) — the caller still applies via
+    `sync net_to_md`. Per-subnet rows fall back to `feature_N` slugs
+    (no reality scan on the mutate path); pool nets (live) have no such
+    rows, so their text matches `sync` exactly. Returns "" on any error.
+    """
+    try:
+        from . import sync_md  # noqa: PLC0415 (lazy — keeps import graph flat)
+        marking = dict(getattr(st, "live_marking", None) or {})
+        overlay = getattr(st, "overlay", None) or {}
+        rev = int(getattr(st, "revision", 0) or 0)
+        rep = resource_report(st)
+        bindings = list(getattr(st, "task_bindings", None) or [])
+        projects_menu = _menu_projects_from_work()
+        return str(
+            sync_md.render_tasks_block(
+                getattr(st, "net", None),
+                marking,
+                overlay,
+                rep.get("resources", []),
+                rep.get("conflicts", []),
+                rev,
+                {},
+                projects=projects_menu,
+                hygiene=_menu_hygiene(projects_menu),
+                unscoped=_menu_unscoped(),
+                lanes=_menu_lanes(marking, bindings),
+            )
+        )
+    except Exception:
+        return ""
+
+
+def join_projection_for_state(
+    st: NetState, plan: dict[str, Any] | None = None
+) -> list[str]:
+    """O5b join/batch progress view over a dispatch plan (fail-open []).
+
+    Pure read-only projection of `dispatch_runtime.plan_to_dict` output
+    with live lanes + conflicts tail. Never raises — probe envelopes
+    stay intact when no plan is active.
+    """
+    try:
+        from .freshness import batch_projection_lines  # noqa: PLC0415 (lazy)
+        marking = dict(getattr(st, "live_marking", None) or {})
+        bindings = list(getattr(st, "task_bindings", None) or [])
+        rep = resource_report(st)
+        return list(
+            batch_projection_lines(
+                plan,
+                _menu_lanes(marking, bindings),
+                rep.get("conflicts", []),
+            )
+        )
+    except Exception:
+        return []
+
+
 
 def _transact(
     base: Path,
@@ -1254,7 +1317,9 @@ def dispatch_claims(
                 }
             )
         try:
-            push = push_for_state(st, "", {})
+            push = push_for_state(
+                st, _render_push_text(st), {"claims": len(claimed_info)}
+            )
         except Exception:
             push = {}
         try:
@@ -1274,8 +1339,42 @@ def dispatch_claims(
                     "total": INTEGRATION_SLOT_CAPACITY,
                 },
             }
+            _plan_by_id = {
+                str(t.get("task_id", "")): t
+                for t in plan_tasks
+                if isinstance(t, dict)
+            }
             proj = projection_lines(
                 st.revision, dict(st.live_marking), [], lanes_view, ""
+            ) + join_projection_for_state(
+                st,
+                {
+                    "tasks": [
+                        {
+                            "claim": str(
+                                _plan_by_id.get(info["task_id"], {}).get(
+                                    "claim", ""
+                                )
+                            ),
+                            "task_id": info["task_id"],
+                            "lane": info["lane"],
+                            "worktree": info["worktree"],
+                            "lease": info["lease"],
+                        }
+                        for info in claimed_info
+                    ],
+                    "revision": st.revision,
+                    "batch_id": batch_id,
+                    "wip": {
+                        "pending": int(
+                            st.live_marking.get("work_pending", 0) or 0
+                        ),
+                        "active": int(
+                            st.live_marking.get("work_active", 0) or 0
+                        ),
+                        "cap": MAX_PLACES,
+                    },
+                },
             )
         except Exception:
             proj = []
