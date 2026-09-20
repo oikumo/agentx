@@ -7,6 +7,7 @@
 
 | project | state | features | created | last event |
 |---|---|---|---|---|
+| agentx_1_0_0 | draft | — | 2026-09-20 | 2026-09-20 |
 | agentx_concurrent_development | active | feature_119.ledger_backed_fix_preview | 2026-09-12 | 2026-09-12 |
 | feature_kb_akb | active | feature_kb_akb | 2026-08-22 | 2026-08-22 |
 | meta_harness_10 | complete | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release, feature_106.mh10_p2b3_lane_integration_rewire, feature_107.mh10_p2b3b_lane_template_landing, feature_108.mh10_p2c_crash_reorder, feature_109.mh10_p2d_matrix_payback | 2026-09-18 | 2026-09-19 |
