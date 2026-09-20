@@ -971,8 +971,373 @@ def apply_selection(
 
 
 # ---------------------------------------------------------------------------
-# Task claim + generation fencing (feature_080 T5-2 2B — NEXT_STEP §6, mh8 D9)
+# O4 concurrent dispatch runtime (feature_114 — plan preview + atomic join;
+# F7-revoked-lane, design_001 §1: fan-out ≤2 under worker_slots=2 + lane
+# leases; src/ edit serialism unchanged; no new places/transitions — the
+# join is marking-only over the existing pool template).
 # ---------------------------------------------------------------------------
+
+
+def plan_dispatch_view(
+    base: Path,
+    *,
+    expected_revision: int | None = None,
+    claims: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """O4 read-only dispatch plan preview (feature_114, fail-open).
+
+    Resolves dispatchable claims (caller-supplied, else pending
+    bindings), reads live capacities from the marking, and composes the
+    pure `plan_dispatch` plan at the live revision. No writes, no
+    leases. Planner refusals return `{"plan": [], "refused": <code>}`
+    (probe preview stays fail-open); `stale_revision` refuses pre-write
+    with the O5 fresh-menu hint. Deviation from operation_spec_001: the
+    state layer raises SpliceError (not dispatch_runtime.PlanRefused)
+    so the CLI error envelope stays uniform with every other op — the
+    stable CODE is the contract, the carrier type is state convention.
+    """
+    try:
+        from .dispatch_runtime import (
+            PlanRefused,
+            describe_plan,
+            plan_dispatch,
+            plan_to_dict,
+        )
+    except Exception:  # fail-open: helper failure never breaks probe
+        return {"plan": [], "reason": "unavailable"}
+    st = load(base)
+    if expected_revision is not None and expected_revision != st.revision:
+        try:
+            from .freshness import freshness_hint
+
+            hint = str(freshness_hint(expected_revision, st.revision))
+        except Exception:
+            hint = (
+                f"D19 stale menu: expected rev {expected_revision} != live rev "
+                f"{st.revision} — re-render (sync net_to_md) before dispatching"
+            )
+        raise SpliceError("stale_revision", hint)
+    try:
+        active = _active_task_count(st)
+        if claims is None:
+            claims = [
+                {
+                    "claim": str(b.get("id")),
+                    "task_id": str(b.get("id")),
+                    "lane": str(b.get("lane", "") or ""),
+                }
+                for b in (st.task_bindings or [])
+                if isinstance(b, dict) and b.get("place") == "work_pending"
+            ]
+        live = dict(st.live_marking)
+        try:
+            enabled = list(
+                st.net.enabled_transitions_at(
+                    tuple(st.live_marking[p] for p in st.net.place_order)
+                )
+            )
+        except Exception:
+            enabled = []
+        try:
+            parallel = list(eligible_parallel_tasks(st, limit=2))
+        except Exception:
+            parallel = []
+        v_used = _lane_task_count(st, "work_verifying")
+        i_used = _lane_task_count(st, "work_integrating")
+        plan = plan_dispatch(
+            claims=list(claims or []),
+            enabled=enabled,
+            parallel=parallel,
+            worker_slots={
+                "used": active,
+                "cap": WORKER_SLOTS_CAPACITY,
+                "free": max(0, WORKER_SLOTS_CAPACITY - active),
+            },
+            verification={
+                "used": v_used,
+                "cap": TEST_SLOTS_CAPACITY,
+                "free": max(0, TEST_SLOTS_CAPACITY - v_used),
+            },
+            integration={
+                "used": i_used,
+                "cap": INTEGRATION_SLOT_CAPACITY,
+                "free": max(0, INTEGRATION_SLOT_CAPACITY - i_used),
+            },
+            work_pending=int(live.get("work_pending", 0) or 0),
+            work_active=int(live.get("work_active", 0) or 0),
+            revision=st.revision,
+        )
+    except PlanRefused as exc:
+        return {
+            "plan": [],
+            "refused": exc.code,
+            "detail": exc.detail,
+            "revision": st.revision,
+            "summary": "",
+        }
+    doc = plan_to_dict(plan)
+    return {
+        "plan": doc["tasks"],
+        "wip": doc["wip"],
+        "revision": st.revision,
+        "batch_id": doc["batch_id"],
+        "summary": doc["summary"],
+    }
+
+
+def dispatch_claims(
+    base: Path,
+    *,
+    plan: dict[str, Any],
+    reasoning: str = "",
+    session: str = "",
+    expected_revision: int | None = None,
+    command_id: str | None = None,
+) -> tuple[NetState, dict[str, Any]]:
+    """O4 atomic dispatch join (feature_114, F7-revoked-lane).
+
+    ONE `_transact`: validate EVERY plan task at the live revision
+    (zero partial marks — any refusal writes nothing), then per-task
+    claim (work_pending→work_active, gen-fenced, workspace stamped with
+    the plan worktree handle, worker_slots taken), then the join
+    (work_active→work_done per task, slots restored) — ONE revision bump
+    R→R+1, ONE save. O5 progress envelopes (push/freshness/projection)
+    ride the single join `net_fire` record's `progress[]`; per-claim
+    `net_claim` records carry `batch_id`. No new ledger kind, no new
+    places/transitions (Tier-3 excludes net). Deviation from design §3.1
+    "per-task progress fires": the N envelope records collapse into the
+    join record — N ledger fire records would misrepresent N marking
+    changes that never happened (the join is ONE commit).
+    """
+    # O4 preview-compat (feature_114 operation_spec_001 §dispatch_claims):
+    # `plan` arrives straight from plan_dispatch_view, which carries the
+    # task list under "plan" (probe-facing); plan_to_dict-shaped callers
+    # use "tasks". Accept both — the stable task-dict shape is the
+    # contract, not the key name.
+    _plan = plan or {}
+    plan_tasks = [
+        t for t in (_plan.get("tasks") or _plan.get("plan") or [])
+        if isinstance(t, dict)
+    ]
+    batch_id = str((plan or {}).get("batch_id") or uuid.uuid4().hex[:12])
+    plan_rev = (plan or {}).get("revision")
+    payload = {
+        "batch_id": batch_id,
+        "tasks": plan_tasks,
+        "reasoning": reasoning,
+        "session": session,
+    }
+
+    def _apply() -> tuple[NetState, dict[str, Any]]:
+        st = load(base)
+        if plan_rev is not None and int(plan_rev) != st.revision:
+            raise SpliceError(
+                "stale_revision",
+                f"D19 stale plan: composed at rev {int(plan_rev)} != live rev "
+                f"{st.revision} — re-render (sync net_to_md) and re-plan",
+            )
+        # 1) validate ALL tasks pre-write (zero partial marks)
+        idxs: list[int] = []
+        batch_scopes: list[object] = []
+        active_bs = [
+            x
+            for x in (st.task_bindings or [])
+            if isinstance(x, dict) and x.get("place") == "work_active"
+        ]
+        for t in plan_tasks:
+            tid = str(t.get("task_id", ""))
+            idx = _binding_index(st, tid)  # task_not_found
+            b = st.task_bindings[idx]
+            if b.get("place") != "work_pending":
+                raise SpliceError(
+                    "task_not_pending",
+                    f"task {tid!r} is in {b.get('place')!r}, not work_pending "
+                    f"(rev {st.revision}) — already claimed or finished",
+                )
+            scope = b.get("scope", [])
+            if any(scopes_overlap(scope, s) for s in batch_scopes):
+                raise SpliceError(
+                    "scope_conflict",
+                    f"task {tid!r} scope overlaps another claim in batch "
+                    f"{batch_id!r} (rev {st.revision}) — pick disjoint scopes",
+                )
+            _blocker = _scope_conflict_with_active(active_bs, scope)
+            if _blocker is not None:
+                raise SpliceError(
+                    "scope_conflict",
+                    f"task {tid!r} scope overlaps active task "
+                    f"{_blocker!r} (rev {st.revision}) — pick a disjoint scope",
+                )
+            idxs.append(idx)
+            batch_scopes.append(scope)
+        active_now = _active_task_count(st)
+        if active_now + len(plan_tasks) > WORKER_SLOTS_CAPACITY:
+            raise SpliceError(
+                "worker_capacity_exhausted",
+                f"worker_slots={WORKER_SLOTS_CAPACITY} full ({active_now} active, "
+                f"batch of {len(plan_tasks)}) — re-render for a fresh menu "
+                f"(rev {st.revision})",
+            )
+        if "worker_slots" in st.live_marking and st.live_marking.get(
+            "worker_slots", 0
+        ) < len(plan_tasks):
+            raise SpliceError(
+                "worker_capacity_exhausted",
+                f"no worker_slots token for batch {batch_id!r} of "
+                f"{len(plan_tasks)} (rev {st.revision}) — workers busy",
+            )
+        pending_n = int(st.live_marking.get("work_pending", 0) or 0)
+        if pending_n + active_now + len(plan_tasks) > MAX_PLACES:
+            raise SpliceError(
+                "wip_cap_exceeded",
+                f"pending {pending_n} + active {active_now} + batch "
+                f"{len(plan_tasks)} > {MAX_PLACES} pool places "
+                f"(rev {st.revision})",
+            )
+        # 2) per-task claim (marking move + binding update; ONE save below)
+        claimed_info: list[dict[str, Any]] = []
+        for t, idx in zip(plan_tasks, idxs):
+            tid = str(t.get("task_id", ""))
+            b = st.task_bindings[idx]
+            generation = int(b.get("generation", 0) or 0) + 1
+            _fire_pool_move(
+                st, "work_start", "work_pending", "work_active", slot_delta=-1
+            )
+            ws = dict(_workspace.build_workspace(base, tid, generation))
+            ws["worktree"] = str(t.get("worktree") or ws.get("id") or tid)
+            claimed = dict(b)
+            claimed.update(
+                {
+                    "place": "work_active",
+                    "owner": session or "dispatch",
+                    "generation": generation,
+                    "workspace": ws,
+                }
+            )
+            st.task_bindings[idx] = claimed
+            claimed_info.append(
+                {
+                    "task_id": tid,
+                    "lane": str(t.get("lane") or "general"),
+                    "worktree": str(ws.get("worktree") or ""),
+                    "lease": str(t.get("lease") or ""),
+                    "generation": generation,
+                    "owner": claimed["owner"],
+                }
+            )
+        # 3) join: work_complete per task (worker slots restored)
+        for _t, idx in zip(plan_tasks, idxs):
+            _fire_pool_move(
+                st, "work_complete", "work_active", "work_done", slot_delta=+1
+            )
+            done = dict(st.task_bindings[idx])
+            done["place"] = "work_done"
+            st.task_bindings[idx] = done
+        # 4) single revision bump + save
+        st.revision += 1
+        st.updated_at = _utc_now()
+        save(base, st)
+        # 5) ledger: per-claim net_claim (batch_id) + ONE join net_fire with
+        #    O5 progress envelopes (push/freshness/projection per task)
+        for info in claimed_info:
+            append_ledger(
+                {
+                    "kind": "net_claim",
+                    "session": session,
+                    "task_id": info["task_id"],
+                    "owner": info["owner"],
+                    "generation": info["generation"],
+                    "workspace": f"{info['task_id']}-g{info['generation']}",
+                    "batch_id": batch_id,
+                    "transition": "work_start",
+                    "revision": st.revision,
+                }
+            )
+        try:
+            push = push_for_state(st, "", {})
+        except Exception:
+            push = {}
+        try:
+            fresh = freshness_for_state(expected_revision, st.revision)
+        except Exception:
+            fresh = {}
+        try:
+            from .freshness import projection_lines
+
+            lanes_view = {
+                "verification": {
+                    "used": _lane_task_count(st, "work_verifying"),
+                    "total": TEST_SLOTS_CAPACITY,
+                },
+                "integration": {
+                    "used": _lane_task_count(st, "work_integrating"),
+                    "total": INTEGRATION_SLOT_CAPACITY,
+                },
+            }
+            proj = projection_lines(
+                st.revision, dict(st.live_marking), [], lanes_view, ""
+            )
+        except Exception:
+            proj = []
+        progress = [
+            {
+                "task_id": info["task_id"],
+                "lane": info["lane"],
+                "worktree": info["worktree"],
+                "lease": info["lease"],
+                "push": dict(push),
+                "freshness": dict(fresh),
+                "projection": list(proj),
+            }
+            for info in claimed_info
+        ]
+        v_n = sum(1 for t in plan_tasks if str(t.get("lane")) == "verification")
+        i_n = sum(1 for t in plan_tasks if str(t.get("lane")) == "integration")
+        g_n = len(plan_tasks) - v_n - i_n
+        summary = (
+            f"dispatch {len(plan_tasks)} tasks rev {st.revision} "
+            f"batch {batch_id} lanes {v_n}/{i_n}/{g_n}"
+        )
+        append_ledger(
+            {
+                "kind": "net_fire",
+                "session": session,
+                "transition": "work_complete",
+                "revision": st.revision,
+                "reasoning": f"{reasoning} [{summary}]"
+                if reasoning
+                else summary,
+                "dispatch_plan": plan_tasks,
+                "batch_id": batch_id,
+                "progress": progress,
+                "push": dict(push),
+                "freshness": dict(fresh),
+            }
+        )
+        report = {
+            "batch_id": batch_id,
+            "tasks": claimed_info,
+            "revision": st.revision,
+            "lanes": {"verification": v_n, "integration": i_n, "general": g_n},
+            "wip": {
+                "pending": int(st.live_marking.get("work_pending", 0) or 0),
+                "active": int(st.live_marking.get("work_active", 0) or 0),
+                "cap": MAX_PLACES,
+            },
+            "summary": summary,
+            "progress": progress,
+        }
+        return st, report
+
+    st, info = _transact(
+        base,
+        op="dispatch",
+        payload=payload,
+        expected_revision=expected_revision,
+        command_id=command_id,
+        apply=_apply,
+    )
+    return st, info
 # Slice-1 (feature_064) left bindings observation-only: `generation` recorded,
 # never enforced; atomic claims deferred here. Every op below runs inside the
 # T5-1 `_transact` authority (lock + expected_revision + command_id), so the

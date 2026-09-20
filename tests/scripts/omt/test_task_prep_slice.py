@@ -8,6 +8,7 @@ consultation/approval fabricated; T4-1 evaluator reused for g.net note.
 """
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -39,7 +40,15 @@ def _probe(inp: dict, tmp_path: Path) -> dict:
         encoding="utf-8",
     )
     out = subprocess.run([BUN, str(probe)], capture_output=True, text=True,
-                         timeout=60, cwd=str(REPO_ROOT))
+                         timeout=60, cwd=str(REPO_ROOT),
+                         env={**os.environ,
+                              # feature_051 isolation (omt_shared TA gotcha:
+                              # keep probes' env explicit) — a live scope=all
+                              # omt_skip in the repo ledger would clear
+                              # g.protect via cross-session fallback and flip
+                              # the README blocker. Tmp empty ledger → no
+                              # unlocks; probe session owns no records anyway.
+                              "OMT_LEDGER_PATH": str(tmp_path / "ledger.jsonl")})
     assert out.returncode == 0, f"bun probe failed:\n{out.stderr}\n---"
     return json.loads(out.stdout.strip().splitlines()[-1])
 

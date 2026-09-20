@@ -61,6 +61,18 @@ def _two_token_bundle(base: Path, state) -> None:
     state.save(base, st)
 
 
+@pytest.fixture(autouse=True)
+def _hermetic_env(tmp_path, monkeypatch):
+    """feature_051 isolation: gate-touching tests (v1, i1–i5) must never read
+    the LIVE ledger — an active scope=all omt_skip (break-glass, 8h window)
+    flips check_edit_allowed to allow/break_glass and clears g.protect.
+    Seed the hermetic env for EVERY test; the bundle fixture re-seeds the
+    same paths (no conflict)."""
+    monkeypatch.setenv("OMT_NET_DIR", str(tmp_path))
+    monkeypatch.setenv("OMT_LEDGER_PATH", str(tmp_path / "ledger.jsonl"))
+    monkeypatch.setenv("OMT_COORDINATION_ROOT", str(tmp_path / "coord"))
+
+
 @pytest.fixture()
 def bundle(tmp_path, monkeypatch):
     state = _state()

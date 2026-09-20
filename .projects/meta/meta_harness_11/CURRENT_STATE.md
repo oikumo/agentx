@@ -5,6 +5,96 @@
 
 ---
 
+## 2026-09-20 (auto — feature_114.concurrent_dispatch_runtime Done)
+
+- shipped: major_feature · test report @ 6.testing/features/feature_114.concurrent_dispatch_runtime/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+### Close (iter 9 — O4 Done, user-approved)
+
+- `omt_tdd done` + `omt_complete{advance_to:Done}` green — O4 Done; TDD closed.
+- Evidence held at close: 23 canonical + 2 pointer goldens (25/25 + e2e 1/1), targeted 56/56, suite 1872 + 2 deselected, `check 265/0`, `omt_tdd sync` clean.
+- PROJECT.md updated: M1 SHIPPED (O4 Done, F7 lane-only reversal locked); Next = O5-follow-up / O6 (D1 revisit) or WORK.md NEXT `proj:agentx_concurrent_development`.
+- Non-interference held throughout: no places/transitions added; `src/agentx/` untouched; `uv` only.
+
+---
+
+
+## 2026-09-20 (iter 8 — resume: O4 test report → Testing)
+
+### Done
+
+- Wrote feature_114 test report @ `6.testing/features/feature_114.concurrent_dispatch_runtime/test_report.md` (23/23 canonical goldens breakdown + 56 targeted + full suite + `check 265/0` + e2e + TDD sync clean + contract-fix + hermetic-hardening notes).
+- Scaffolded + filled `5.implementation/features/feature_114.concurrent_dispatch_runtime/impl_notes.md` (`new_feature.py implementation`; dispatch_runtime/state/cli/test sites).
+- Canary-approved (user) §12 pointer `tests/features/feature_114.concurrent_dispatch_runtime/test_dispatch_o4.py` 2/2 smoke (empty-refuses + single-claim composes; `omt_skip{scope:tests, purpose:canary}`); canonical 23 remain at `tests/scripts/omt/test_net_dispatch_o4.py` (combined 25/25 + e2e 1/1).
+- `omt_complete{advance_to:Testing}` green — O4 in Testing (needs user close/ship call).
+- Verified 2026-09-20: full suite **1872 passed** + 2 deselected; `check 265/0`; `omt_tdd sync` clean.
+
+### In progress / Blocked
+
+- O4 in Testing (major_feature needs user close/ship call).
+
+### Next
+
+- User close/ship O4 → O5-follow-up / O6 (need F7/D1 decisions) or WORK.md NEXT `proj:agentx_concurrent_development` per iter 6.
+
+### Notes / context
+
+- Non-interference held: no places/transitions added (Tier-3 excludes net); helpers fail-open; `src/agentx/` untouched (D1); `uv` only.
+- CLI `dispatch --expected-revision` commit subcommand deferred (probe `plan[]` preview only); O2 bound lifted only in dispatch lane with atomic join.
+
+---
+
+## 2026-09-20 (iter 7 — resume: O4 goldens + 6-failure triage)
+
+### Done
+
+- Closed stranded RED `test_net_dispatch_o4.py::TestPlanEmpty::test_empty_refuses` green (cycle 1; implementation predates tests per prior session's user-directed override skip).
+- Triaged 6 pre-existing suite failures (5× feature_109 P2D deny-matrix i1–i5 + 1× feature_073 task_prep blocker): single root cause — prior session's `scope=all` override skip (21:49Z, 8h window) alive in the live ledger; the goldens read it (test-isolation violation). Fixed tests-only: hermetic `OMT_LEDGER_PATH` seeding (d_matrix autouse fixture + task_prep bun subprocess env). Suite 1848 green.
+- O4 goldens `tests/scripts/omt/test_net_dispatch_o4.py`: 23/23 — planner (compose/refusals/determinism/shape) + preview (bind-resolution/fail-open/stale) + join (one-revision commit, ledger batch carrier, stale/unknown/not-pending/scope/slots-token refusals all atomic).
+- Contract fix (src, code-hat + think-consulted): `dispatch_claims` accepts the preview shape (`plan.get("tasks") or plan.get("plan")`) per operation_spec_001 §dispatch_claims ("plan from preview"); probe `plan[]` contract untouched.
+- Verified 2026-09-20: 23 O4 goldens green; full suite **1870 passed** + 2 deselected; `check 265/0`; `omt_tdd sync` clean.
+
+### In progress / Blocked
+
+- O4 in Programming (test report + `omt_complete{advance_to:Testing}` pending; needs user close/ship call). TDD ledger: cycle 1 closed; remaining goldens pin existing implementation directly (directed scope).
+- Live `scope=all` skip expires ~05:49Z (by design; ledger untouched).
+
+### Next
+
+- Write feature_114 test report @ `6.testing/features/feature_114.concurrent_dispatch_runtime/test_report.md` → `omt_complete{advance_to:Testing}` → user close/ship call. Then O5-follow-up / O6 or WORK.md NEXT per iter 6.
+
+### Notes / context
+
+- Non-interference held: no places/transitions added (Tier-3 excludes net); helpers fail-open; `src/agentx/` untouched (D1); `uv` only.
+- Receipt discipline: 1 edit per file per e2e receipt (state.py contract fix ×1, d_matrix ×1, task_prep ×2 with refresh, dispatch_o4 goldens ×3 rounds with refresh); `uv` only.
+
+---
+
+## 2026-09-19 (iter 6 — M0 COMPLETE, user-approved close)
+
+### Done
+
+- M0 closed: O1 `feature_110.whole_project_menu_composer` + O2 `feature_111.multi_select_directive_protocol` + O3 `feature_112.identity_aware_pool` all Done (reports: 14/43 + 12/54 + 12/58 goldens/targeted; suites 1817→1830→1840; `check 265/0` each).
+- O5 slice `feature_113.live_progress_projection` Done (7 goldens `test_net_fresh_o5.py`, targeted 62/62, suite 1847 + 2 deselected, `check 265/0`; live probe rev 60 `fresh:true`, `push {net_revision:60}` honest).
+- Verified 2026-09-19: all 4 test reports on disk under `.meta/software_development_process/6.testing/features/feature_{110,111,112,113}*/test_report.md`; tree clean; `check 265/0`; budgets OK (work_md 9623/9728).
+
+### In progress / Blocked
+
+- _(nothing — M0 complete, O4/O6 unspawned per user pick)_
+
+### Next
+
+- O4 `concurrent dispatch runtime` (major_feature, needs F7 reversal decision + reproducer/oracle/budget) or O5-follow-up (full text push, slider/join) or O6 bridge (needs D1 revisit) — spawn via `new_feature.py` only with new decisions + evidence.
+- Or leave MH11 active and do WORK.md NEXT `proj:agentx_concurrent_development`.
+
+### Notes / context
+
+- Non-interference held throughout M0: no places/transitions added (Tier-3 excludes net); helpers fail-open; `src/agentx/` untouched (D1); `uv` only.
+- Residuals: O2 multi-mutate → `multi_mutate_deferred_o4`; O3 live `menu.claims:[]` honest (no pending bindings); O5 `push.tasks_block` empty (caller-applied per D4), text-only projection.
+
+---
+
 ## 2026-09-19 (auto — feature_113.live_progress_projection Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_113.live_progress_projection/test_report.md

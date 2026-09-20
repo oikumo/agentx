@@ -8,7 +8,7 @@
 
 > One line: MH11 closes the session use-case gaps — selectable whole-project menu with atomic multi-pick apply, then concurrent dispatch.
 
-**Next:** Close/ship O1 from Testing (user call), then spawn O2 `multi-select + directive protocol` via `new_feature.py` (minor_feature) — consumes O1 `proj:/drift:/unscoped:` IDs; keep D19 ordering + rev-stamp.
+**Next:** M1 (O4+O5) shipped except follow-ups — O5-follow-up (full text push, slider/join) or O6 bridge (needs D1 revisit) via `new_feature.py` only with new decisions + evidence; or WORK.md NEXT `proj:agentx_concurrent_development`.
 
 ---
 
@@ -73,6 +73,8 @@ Milestones: **M0** (O1+O2+O3: selectable menu with atomic apply, still serial) �
 - [x] v0.1 (2026-09-19): created (`project.py new --slug meta_harness_11`, state: draft).
 - [x] v0.1 scope (2026-09-19, user-approved full): O1–O6 from gaps doc adopted; M0→M1→M2 order; F7/D1 reversals deferred to O4/O6 slices.
 - [x] O1 shipped to Testing (2026-09-19): `feature_110.whole_project_menu_composer` (minor_feature, Testing; 14 goldens, live menu rev 60 in WORK.md, trim+grow budget 9728, test report).
+- [x] M0 COMPLETE (2026-09-19, user-approved close): O1 (110) + O2 (111) + O3 (112) Done + O5-slice (113) Done; suites 1817→1830→1840→1847; `check 265/0`; tree clean. O4/O6 unspawned (need F7/D1 decisions).
+- [x] M1 SHIPPED (2026-09-20, user-approved close): O4 `feature_114.concurrent_dispatch_runtime` Done (major_feature, TDD GREEN; 23 canonical + 2 pointer goldens, targeted 56/56, suite 1872 + 2 deselected, `check 265/0`, test report); F7 lane-only reversal locked (fan-out ≤2, `src/` serialism unchanged). O6 unspawned (needs D1 revisit).
 
 ---
 

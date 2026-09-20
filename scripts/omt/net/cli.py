@@ -344,6 +344,12 @@ def _probe(base: Path, max_states: int) -> tuple[dict[str, Any], int]:
     }
     envelope["observation"] = _task_observation(st, validation, enabled_list)
     envelope["menu"] = _task_menu(st, bindings, enabled_list)
+    try:  # O4 dispatch plan preview (feature_114, additive only, fail-open [])
+        envelope["plan"] = list(
+            state.plan_dispatch_view(base).get("plan", []) or []
+        )
+    except Exception:
+        envelope["plan"] = []
     try:  # O5 live projection (additive only, fail-open)
         from .freshness import projection_lines as _proj_lines
         _menu_counts = {"claims": len(envelope["menu"].get("claims", []) or [])}
