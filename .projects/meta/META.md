@@ -7,7 +7,7 @@
 
 | project | state | features | created | last event |
 |---|---|---|---|---|
-| agentx_concurrent_development | draft | — | 2026-09-12 | 2026-09-12 |
+| agentx_concurrent_development | active | feature_119.ledger_backed_fix_preview | 2026-09-12 | 2026-09-12 |
 | feature_kb_akb | draft | — | 2026-08-22 | 2026-08-22 |
 | meta_harness_10 | complete | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release, feature_106.mh10_p2b3_lane_integration_rewire, feature_107.mh10_p2b3b_lane_template_landing, feature_108.mh10_p2c_crash_reorder, feature_109.mh10_p2d_matrix_payback | 2026-09-18 | 2026-09-19 |
 | meta_harness_11 | complete | feature_110.whole_project_menu_composer, feature_111.multi_select_directive_protocol, feature_112.identity_aware_pool, feature_113.live_progress_projection, feature_114.concurrent_dispatch_runtime, feature_115.live_progress_full_push_join_view, feature_116.mh11_o6c_wild_payback_measurement, feature_117.dispatch_lane_exploitation_for_harness_verifies, feature_118.mh11_worktree_lifecycle | 2026-09-19 | 2026-09-20 |

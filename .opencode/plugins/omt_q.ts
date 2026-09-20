@@ -1217,10 +1217,67 @@ function foldSkipAudit(records: any[], feature?: string): {
     },
   })
 
+  const omt_fix_preview = tool({
+    description: "fix_preview(filter?) -> rev-pinned drift-fix DSL diff (read-only, never applies)",
+    args: {
+      filter: tool.schema.string().optional(),
+    },
+    async execute(args, context) {
+      // feature_119: ledger-backed preview — live foldProjectDrift() +
+      // WORK.md stamped net_rev (fail-open). Read-only: emits exact cmds
+      // with expected_revision; never mutates (apply = project.py link/sync
+      // after the approval gate).
+      const as_of_commit = headSha()
+      const filter = (args?.filter ?? "").toLowerCase()
+      let rev = "unknown"
+      try {
+        const m = readFileSync(join(repoRoot(), "WORK.md"), "utf8").match(/<!-- net_rev:(\d+) -->/)
+        if (m) rev = m[1]
+      } catch { /* fail-open: WORK.md unreadable under probe root */ }
+      let drift: any[] = []
+      try {
+        drift = foldProjectDrift()
+      } catch {
+        drift = []
+      }
+      const lines: string[] = [`preview rev:${rev} (${drift.length} drift records)`]
+      const linkGroups = new Map<string, { feature: string; project: string; n: number }>()
+      const skips: string[] = []
+      for (const r of drift) {
+        const cls = String(r?.class ?? "unknown")
+        if (cls === "unlinked-project-backed" && r.feature && r.project) {
+          const k = `${r.feature} -> ${r.project}`
+          const g = linkGroups.get(k) ?? { feature: String(r.feature), project: String(r.project), n: 0 }
+          g.n += 1
+          linkGroups.set(k, g)
+        } else if (cls === "aging-draft") {
+          skips.push(`- [aging-draft] SKIP ${r.project ?? "?"} (${r.detail ?? "draft, no linked features"} \u2014 scope or archive, human pick)`)
+        } else if (cls === "iteration-log") {
+          skips.push(`- [iteration-log] SKIP ${r.project ?? "?"} (${r.detail ?? "log behind"} \u2014 needs log entry, human pick)`)
+        } else {
+          skips.push(`- [${cls}] SKIP ${r.feature ?? r.project ?? "?"} (${r.detail ?? "no auto-fix"} \u2014 human pick)`)
+        }
+      }
+      const applies: string[] = []
+      for (const g of linkGroups.values()) {
+        lines.push(`- [unlinked-project-backed] link ${g.feature} -> ${g.project} (ledger +1, clears ${g.n} drift)`)
+        applies.push(`uv run scripts/omt/project.py link ${g.feature} ${g.project} --origin inferred (expected_revision:${rev})`)
+      }
+      lines.push(...skips)
+      if (drift.length === 0) lines.push("- clean (0 drift records)")
+      lines.push(applies.length ? `apply (expected_revision:${rev}):` : "apply: nothing linkable \u2014 all records need human judgment")
+      for (const c of applies) lines.push(`  ${c}`)
+      const out = filter
+        ? lines.filter((l) => l.toLowerCase().includes(filter) || l.startsWith("preview") || l.startsWith("apply"))
+        : lines
+      return JSON.stringify({ as_of_commit, op: "fix_preview", filter: args?.filter ?? null, preview: out })
+    },
+  })
+
   const omt_q = tool({
     description: irToolDescription(
       "omt_q",
-      "TA: Interrogative layer — read-only. op=state(feature?,session?,as_of?,verbose?) | plan(path,tool?,session?,as_of?) | drift(as_of?) | audit(as_of?) | graph(symbol,depth?,as_of?). state ≤2KB; verbose=full. Returns JSON envelope with as_of_commit=HEAD-sha.",
+      "TA: Interrogative layer — read-only. op=state|plan|drift|audit|graph|fix_preview(filter?) (preview=rev-pinned DSL diff, never applies). state ≤2KB; verbose=full. Returns JSON envelope with as_of_commit=HEAD-sha.",
     ),
     // NOTE: the literal "TA:" appears in the description above — that's
     // intentional: omt_q is in @var.harness_paths (so editing this file trips
@@ -1228,7 +1285,7 @@ function foldSkipAudit(records: any[], feature?: string): {
     // very file is the v1.3 thesis demonstration (the interrogative tool
     // predicts the receipt+think gates on itself).
     args: {
-      op: tool.schema.string().describe("state|plan|drift|audit|graph"),
+      op: tool.schema.string().describe("state|plan|drift|audit|graph|fix_preview"),
       feature: tool.schema.string().optional(),
       session: tool.schema.string().optional(),
       path: tool.schema.string().optional(),
@@ -1240,6 +1297,8 @@ function foldSkipAudit(records: any[], feature?: string): {
         .describe("graph: kb.ir.json record id (e.g. doc.mvcpp)"),
       depth: tool.schema.number().optional()
         .describe("graph: BFS depth 1..3 (default 1)"),
+      filter: tool.schema.string().optional()
+        .describe("fix_preview: drift class filter (e.g. unlinked, aging, iteration-log)"),
     },
     async execute(args, context) {
       switch (args?.op ?? "") {
@@ -1248,8 +1307,9 @@ function foldSkipAudit(records: any[], feature?: string): {
         case "drift": return omt_drift.execute(args, context)
         case "audit": return omt_audit.execute(args, context)
         case "graph": return omt_graph.execute(args, context)
+        case "fix_preview": return omt_fix_preview.execute(args, context)
         default:
-          return "⛔ omt_q: unknown op — want state|plan|drift|audit|graph"
+          return "⛔ omt_q: unknown op — want state|plan|drift|audit|graph|fix_preview"
       }
     },
   })

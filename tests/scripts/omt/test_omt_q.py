@@ -904,5 +904,141 @@ class TestOpGraphTransitiveRisk:
             f"op:hql must stay unknown (grammar parked): {proc.stdout}")
 
 
+# ---------------------------------------------------------------------------
+# fix_preview: feature_119.ledger_backed_fix_preview goldens (6)
+# Read-only rev-pinned drift-fix DSL diff over live foldProjectDrift() +
+# WORK.md stamped net_rev. Hermetic fixtures (tmp root) except the last
+# shape-only live smoke.
+# ---------------------------------------------------------------------------
+
+_FIX_WORK = "# WORK\n\n<!-- net_rev:60 -->\nNEXT: none\n"
+
+_FIX_DRAFT_HOME = "> Status: **draft**\n"
+
+
+def _fix_ledger_unlinked(ts):
+    return [
+        {"ts": ts, "kind": "phase", "task_type": "minor_feature",
+         "phase": "Programming", "feature": "feature_119.ledger_backed_fix_preview",
+         "design_doc": ".projects/meta/proj_x/PROJECT.md", "session": "ses_fx"},
+    ]
+
+
+def _fix_ledger_aging(ts):
+    return [
+        {"ts": ts, "kind": "project", "op": "create",
+         "project": "proj_old", "session": "ses_fx"},
+    ]
+
+
+class TestOpFixPreview:
+    """fix_preview maps live drift to link/SKIP lines pinned to the stamped rev."""
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_fix_preview_maps_unlinked_to_link_with_rev_pin(self, tmp_path):
+        base = datetime.now(timezone.utc) - timedelta(hours=1)
+        _write_ledger(tmp_path, _fix_ledger_unlinked(base.isoformat()))
+        out = _q_probe(
+            json.dumps({"op": "fix_preview"}),
+            session="ses_fx1", tmp_path=tmp_path,
+            extra_files={"WORK.md": _FIX_WORK},
+        )
+        assert out["op"] == "fix_preview", f"op missing: {out}"
+        preview = out["preview"]
+        assert preview[0] == "preview rev:60 (1 drift records)", (
+            f"rev pin wrong: {preview}")
+        assert any(
+            "link feature_119.ledger_backed_fix_preview -> proj_x" in line
+            and "clears 1 drift" in line for line in preview), (
+            f"unlinked must map to link line: {preview}")
+        assert any(
+            "project.py link feature_119.ledger_backed_fix_preview proj_x" in line
+            and "expected_revision:60" in line for line in preview), (
+            f"apply must carry rev-pinned link cmd: {preview}")
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_fix_preview_maps_aging_to_skip(self, tmp_path):
+        old = (datetime.now(timezone.utc) - timedelta(days=28)).isoformat()
+        _write_ledger(tmp_path, _fix_ledger_aging(old))
+        out = _q_probe(
+            json.dumps({"op": "fix_preview"}),
+            session="ses_fx2", tmp_path=tmp_path,
+            extra_files={
+                "WORK.md": _FIX_WORK,
+                ".projects/meta/proj_old/PROJECT.md": _FIX_DRAFT_HOME,
+            },
+        )
+        preview = out["preview"]
+        assert any(
+            "[aging-draft] SKIP proj_old" in line for line in preview), (
+            f"aging draft must map to SKIP: {preview}")
+        assert any(
+            line.startswith("apply: nothing linkable") for line in preview), (
+            f"no linkable records must say so: {preview}")
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_fix_preview_filter_narrows_to_class(self, tmp_path):
+        base = datetime.now(timezone.utc) - timedelta(hours=1)
+        old = (datetime.now(timezone.utc) - timedelta(days=28)).isoformat()
+        _write_ledger(tmp_path,
+                      _fix_ledger_unlinked(base.isoformat())
+                      + _fix_ledger_aging(old))
+        out = _q_probe(
+            json.dumps({"op": "fix_preview", "filter": "aging"}),
+            session="ses_fx3", tmp_path=tmp_path,
+            extra_files={
+                "WORK.md": _FIX_WORK,
+                ".projects/meta/proj_old/PROJECT.md": _FIX_DRAFT_HOME,
+            },
+        )
+        preview = out["preview"]
+        assert preview[0].startswith("preview rev:60"), f"framing kept: {preview}"
+        assert any("[aging-draft]" in line for line in preview), (
+            f"filter must keep matching class: {preview}")
+        assert not any("[unlinked-project-backed]" in line for line in preview), (
+            f"filter must drop other classes: {preview}")
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_fix_preview_clean_repo_reports_clean(self, tmp_path):
+        _write_ledger(tmp_path, [])
+        out = _q_probe(
+            json.dumps({"op": "fix_preview"}),
+            session="ses_fx4", tmp_path=tmp_path,
+            extra_files={"WORK.md": _FIX_WORK},
+        )
+        assert out["preview"][:2] == [
+            "preview rev:60 (0 drift records)",
+            "- clean (0 drift records)",
+        ], f"clean repo must report clean: {out['preview']}"
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_fix_preview_is_read_only(self, tmp_path):
+        base = datetime.now(timezone.utc) - timedelta(hours=1)
+        _write_ledger(tmp_path, _fix_ledger_unlinked(base.isoformat()))
+        ledger_path = tmp_path / ".meta" / ".omt" / "ledger.jsonl"
+        before = ledger_path.read_bytes()
+        _q_probe(
+            json.dumps({"op": "fix_preview"}),
+            session="ses_fx5", tmp_path=tmp_path,
+            extra_files={"WORK.md": _FIX_WORK},
+        )
+        assert ledger_path.read_bytes() == before, (
+            "fix_preview must not mutate the ledger (read-only contract)")
+
+    @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
+    def test_fix_preview_live_shape_smoke(self, tmp_path):
+        out = _q_probe(
+            json.dumps({"op": "fix_preview"}),
+            session="ses_fx6", tmp_path=tmp_path, use_real_root=True,
+        )
+        assert out["op"] == "fix_preview"
+        assert re.fullmatch(r"[0-9a-f]{40}", out["as_of_commit"]), (
+            f"live as_of_commit must be HEAD sha: {out}")
+        assert isinstance(out["preview"], list), (
+            f"preview must be a list: {out}")
+        assert out["preview"][0].startswith("preview rev:"), (
+            f"preview must open with rev pin: {out['preview']}")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
