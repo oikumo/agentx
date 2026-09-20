@@ -6,10 +6,10 @@
     "ir_json": 21504,
     "meta_harness_md": 2048,
     "meta_md": 6144,
-    "nav_index": 65536,
+    "nav_index": 66560,
     "nav_tip": 512,
     "tool_args": 2464,
-    "tool_schemas": 1856,
+    "tool_schemas": 1920,
     "work_md": 9728,
     "work_scratchpad": 3072
   },
@@ -179,7 +179,7 @@
       "paths": "",
       "requires": "",
       "skip_ok": false,
-      "text": "net permission-to-act (feature_050 Alt A; feature_053 C1: engages only when net_marking(active>1) \u2014 solo sessions skip to phase-gate only, impl-owned check); calls omt_net{op:gate} \u2014 fail-closed unless omt_skip{scope:\"all\"} expiry+audit",
+      "text": "net permission-to-act (feature_050 Alt A; feature_053 C1: engages only when net_marking(active>1) \u2014 solo sessions skip to phase-gate only, impl-owned check); calls omt_net{op:gate} \u2014 fail-closed unless omt_skip{scope:\"all\"} expiry+audit; git-plane: probe carries worktrees/branches/dirty, invariant triple-checks net\u2194ledger\u2194git",
       "tools": "edit|write|patch|multiedit",
       "when": "path_in(@var.net_paths)"
     },
@@ -493,6 +493,11 @@
     }
   ],
   "state": {
+    "git_plane": {
+      "mode": "rewrite",
+      "path": ".sandbox/bench",
+      "truth": "git worktree list + branch --show-current + status --porcelain (live; local-only)"
+    },
     "ledger": {
       "cap": 65536,
       "mode": "rotate",
@@ -532,7 +537,7 @@
     },
     "omt_net": {
       "args": "op,transition?,reasoning?,session?,max_states?,mode?,mutation?,subnet?,feature?,direction?,dry_run?,work_md?,path?,expected_revision?,task_id?,owner?,generation?",
-      "description": "Concurrency net \u2014 SSOT (IDEA-002 v4 \u00a75.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net\u2194ledger drift) | synthesize(template\u2192splice proposal, D4) | mine(ledger\u2192net draft, D4) | gate(path,session?) | claim(task,owner?,gen-fenced).",
+      "description": "Concurrency net + git-plane derived view \u2014 SSOT (IDEA-002 v4 \u00a75.0 closed enum, no new op). op=probe(marking+enabled+advice+git_plane) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net\u2194ledger\u2194git drift) | synthesize(template\u2192splice proposal, D4) | mine(ledger\u2192net draft, D4) | gate(path,session?) | claim(task,owner?,gen-fenced,branch=prefix+task_id).",
       "perm": "allow",
       "tags": "CMD_NET"
     },
@@ -580,6 +585,8 @@
     "e2e_test": "tests/scripts/omt/test_omt_harness_e2e.py",
     "edit_tools": "edit|write|patch|multiedit",
     "enforcer_lib": ".opencode/lib/enforcer/",
+    "git_branch_prefix": "feat/",
+    "git_worktree_root": ".sandbox/bench",
     "harness_paths": "AGENTS.md,opencode.jsonc,.meta/META_HARNESS.omt,.meta/software_development_process/omt_agent_guide.md,.opencode/plugins/omt_,.opencode/lib/omt_,.opencode/lib/enforcer/,scripts/omt/,.meta/templates/,.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/,tests/scripts/omt/",
     "harnessc": "uv run scripts/omt/harnessc.py",
     "ir_path": ".meta/.omt/harness.ir.json",

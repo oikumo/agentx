@@ -42,6 +42,9 @@
 @var projects_archive : .projects/archive
 @var project_resume_threshold_bytes : 16384
 @var work_done_max : 10
+# G1 (improvement003/git-plane): sidecar execution plane — wild pilots d1-d3 used .sandbox/bench/* worktrees; claim->branch mapping lives here (vars, not prose)
+@var git_worktree_root : .sandbox/bench
+@var git_branch_prefix : feat/
 # F1 (feature_052.opencode_version_canary): audited live-binary line — session start warns + canary suite fails when `opencode --version` falls outside; re-baseline deliberately (live smoke + full suite on the new binary, then bump here + rebuild)
 @var opencode_version_range : >=1.18.29,<1.19
 # A2 (feature_056.skip_taxonomy_phase_hygiene): weekly uncategorized-bypass alarm — check warns past this, never blocks
@@ -117,7 +120,7 @@
 @pred receipt_fresh : receipt_fresh() — e2e receipt timestamp >= target mtime
 @pred fsm_allows : fsm_allows(@fsm.tdd,path) — current TDD hat allows the path
 @pred risk_high : risk_high() — target file carries a TA: risk: thought (drops cross-session window)
-@pred net_marking : net_marking(active>1) — live concurrency probe (wraps omt_net{op:probe} marking); true when 2+ works active (work_active>1 or 2+ f{N}_active holders); solo → g.net skips, phase-gate only (feature_053 C1)
+@pred net_marking : net_marking(active>1) — live concurrency probe (wraps omt_net{op:probe} marking); true when 2+ works active (work_active>1 or 2+ f{N}_active holders); solo → g.net skips, phase-gate only (feature_053 C1); git-plane derived view: probe adds worktrees/branches/dirty/head, claim reserves branch prefix+task_id, fire needs expected_revision, invariant triple-checks net↔ledger↔git (local-only, remote stays denied)
 
 # ============================================================
 # GATE — the enforcer concerns as data (guard order pinned; LOGIC stays TS in HDL-1)
@@ -126,7 +129,7 @@
 @gate g.protect on=before tools=@var.edit_tools when=path_in(@protect.*) msg=@msg.protect_file hard=true skip_ok=true order=10 : NEVER paths; .env* hard (no skip), README/uv.lock/LICENSE via scope=all
 @gate g.receipt on=before tools=@var.edit_tools when=path_in(@var.harness_paths) requires=receipt_fresh() msg=@msg.receipt_stale hard=true skip_ok=false order=20 : second-edit guard on the harness surface (git-dirty + mtime vs receipt)
 @gate g.tests on=before tools=@var.edit_tools when=path_in(tests/) requires=ledger_has(skip,tests_approved=true,@var.unlock_window_ms) msg=@msg.tests_canary hard=true skip_ok=true order=30 : canary approval; TDD hat decides when tdd_mode active; C2: own test dir auto-approved in RED
-@gate g.net on=before tools=@var.edit_tools when=path_in(@var.net_paths) msg=@msg.net_required hard=true skip_ok=false order=35 : net permission-to-act (feature_050 Alt A; feature_053 C1: engages only when net_marking(active>1) — solo sessions skip to phase-gate only, impl-owned check); calls omt_net{op:gate} — fail-closed unless omt_skip{scope:"all"} expiry+audit
+@gate g.net on=before tools=@var.edit_tools when=path_in(@var.net_paths) msg=@msg.net_required hard=true skip_ok=false order=35 : net permission-to-act (feature_050 Alt A; feature_053 C1: engages only when net_marking(active>1) — solo sessions skip to phase-gate only, impl-owned check); calls omt_net{op:gate} — fail-closed unless omt_skip{scope:"all"} expiry+audit; git-plane: probe carries worktrees/branches/dirty, invariant triple-checks net↔ledger↔git
 @gate g.phase on=before tools=@var.edit_tools when=path_in(src/) requires=ledger_has(phase|skip) msg=@msg.no_phase hard=true skip_ok=true order=40 : declared phase; design artifact also required for major_feature/new_screen
 @gate g.think on=before tools=@var.edit_tools when=file_has("TA:") requires=ledger_has(think_consult) msg=@msg.think_gate hard=true skip_ok=false order=50 : consult via omt_think{op:list,path} — NOT skip-bypassable; risk: thoughts drop the cross-session window
 @gate g.tdd_after on=after tools=@var.edit_tools when=path_in(src/) requires=fsm_allows(@fsm.tdd,path) msg=@msg.tdd_revert hard=false skip_ok=false order=70 : REFACTOR auto-revert when tests break + advisories
@@ -167,6 +170,7 @@
 @state ledger path=@var.ledger_path mode=rotate cap=@var.ledger_cap_bytes window=@var.unlock_window_ms truth="ledger.jsonl hot + latest ledger-YYYYMM.jsonl archive" : audit log {ts,kind:phase|skip|complete|think_consult,...}; skip.purpose=canary|emergency|break_glass|override (scope=tests defaults canary, else override); phase/skip records EXPIRE past the window (expired records neither unlock nor shadow — re-declare to resume); phase='abandoned' tombstones retired work (omt_phase{phase:'abandoned',feature}); 8h unlock window
 @state thoughts path=@var.thoughts_path mode=append truth="grep TA:" : append-only sidecar (add/verify/remove-tombstone; latest-wins fold; verdicts join on normalized text F28); inline TA: is the source of truth — the index is NEVER rewritten (R6 S1)
 @state receipt path=@var.receipt_path mode=rewrite truth="json passed_at + mtime" : harness e2e receipt; refreshed by @var.e2e_cmd
+@state git_plane path=@var.git_worktree_root mode=rewrite truth="git worktree list + branch --show-current + status --porcelain (live; local-only)" : derived view read by probe (no new engine; sidecars only, main protected; slice reverts via worktree remove --force + branch -D)
 
 # ============================================================
 # INJECT — conversation-resident injections (ONE per trigger — R6 S6; budgets = the F32 ×N-turn control knob)
@@ -274,13 +278,16 @@
 @budget work_scratchpad max=3072 : WORK.md Agent Scratchpad section bytes (T2: CURRENT/RECURRING only; shrunk 6144→3072 in improvement002/OPT-B after gotcha relocation to @doc gotcha.*)
 @budget nav_tip max=512 : session-bootstrap nav-tip bytes (C5, conversation-resident, re-paid per turn F32)
 @budget digest_cap max=1024 : TA digest hard cap (C4, conversation-resident, re-paid per turn F32)
-@budget tool_schemas max=1856 : sum of @tool one-line descriptions (C11, rides the system prompt every turn F33; OPT-A diet 1484→1174, OPT-H consolidation 18→7 ≈760; feature_026: +1 tool omt_q pushed 1024→1085→1280; feature_039/meta_harness_concurrent: +1 tool omt_net pushed 1280→1536; feature_040: omt_net splice/sync args live pushed 1536→1792; feature_080: omt_net claim ops (task_id/owner/generation args + claim hint) pushed 1780→1839)
+@budget tool_schemas max=1920 : sum of @tool one-line descriptions (improvement003/git-plane +64 deliberate: omt_net derived-view text) (C11, rides the system prompt every turn F33; OPT-A diet 1484→1174, OPT-H consolidation 18→7 ≈760; feature_026: +1 tool omt_q pushed 1024→1085→1280; feature_039/meta_harness_concurrent: +1 tool omt_net pushed 1280→1536; feature_040: omt_net splice/sync args live pushed 1536→1792; feature_080: omt_net claim ops (task_id/owner/generation args + claim hint) pushed 1780→1839)
 @budget tool_args max=2464 : live TS arg describe() bytes, irToolDescription-region only (feature_kb_akb: +1 tool pushed budget 1536→1792; feature_039/meta_harness_concurrent: +1 tool omt_net pushed 1792→2048; feature_040: omt_net splice args (mode/mutation/subnet/feature) pushed 2048→2304; feature_078: omt_q graph args (symbol/depth) pushed 2304→2367; feature_080: omt_net claim task_id/owner/generation describes + op enum pushed 2367→2456)
 @budget gates max=12 : gate count cap (10 now) — net-zero: a new gate needs a retirement/merge; candidates from skip-frequency; ceremony meter alarms bug_fix>3 (B1+B2)
-@budget nav_index max=65536 : nav.index.jsonl bytes — on-demand nav answers (improvement006/OPT-D: the largest projection was unchecked; feature_089: +2 GOTCHA_ records pushed 63931→64956, budget 64000→65536)
+@budget nav_index max=66560 : nav.index.jsonl bytes (improvement003/git-plane +1024 deliberate: GIT_PLANE doc + git_clean pred) — on-demand nav answers (improvement006/OPT-D: the largest projection was unchecked; feature_089: +2 GOTCHA_ records pushed 63931→64956, budget 64000→65536)
 @budget ir_json max=21504 : harness.ir.json bytes — plugin-internal (improvement006/OPT-D: previously unchecked)
 @budget meta_harness_md max=2048 : .meta/META_HARNESS.md stub bytes — on-demand (improvement007/OPT-B: state-note rotation 5526→1366; only the latest note inline, older → git history)
 @budget meta_md max=6144 : .meta/META.md bytes — on-demand (improvement007/OPT-B: stale READ-FIRST directive → omt_nav routing + dir-tree slim 6754→5002)
+
+# G1 (improvement003/git-plane): local git lifecycle lives in sidecars only; remote stays denied; net stays SSOT, git is derived view
+@doc git.plane tags="GIT_PLANE" : local git (branch/worktree/status/log/diff/stash/commit) allowed in @var.git_worktree_root sidecars only (branch @var.git_branch_prefix+task_id, gen-fenced claim); remote (push/pull/fetch/ls-remote/remote/clone/submodule) stays denied; main mutated only via user commit/join; probe exposes git_plane {worktrees,branches,dirty,head}, claim reserves branch, fire needs expected_revision+git_clean, invariant triple-drifts net↔ledger↔git
 
 # ============================================================
 # TOOL — registry (perms → jsonc block; one-line schema text → IR; CMD_ tags)
@@ -294,7 +301,7 @@
 @tool omt_think perm=allow args="op,path?,thought?,line?,after?,symbol?,category?,query?,top?" tags="CMD_THINK" : TA: thought-tags. op=add(path,thought,line?,after?,symbol?,category?) | list(path?,category?,query?) | remove(path,line) | verify(path,line) | suggest(path,top?) | review(stale>90d).
 @tool omt_kb_nav perm=allow args="op,query?,file?,tag_type?,include_context?,xref?,workflow?" tags="CMD_KB_NAV" : App Knowledge Base nav. op=nav(query,file?,tag_type?,include_context?) | list_sections(file?) | cross_ref(xref) | quick_ref(workflow?).
 @tool omt_q perm=allow args="op,feature?,session?,path?,tool?,as_of?,verbose?,symbol?,depth?" tags="CMD_Q" : TA: Interrogative layer — read-only. op=state(feature?,session?,as_of?,verbose?) | plan(path,tool?,session?,as_of?) | drift(as_of?) | audit(as_of?) | graph(symbol,depth?,as_of?). state ≤2KB; verbose=full. Returns JSON envelope with as_of_commit=HEAD-sha.
-@tool omt_net perm=allow args="op,transition?,reasoning?,session?,max_states?,mode?,mutation?,subnet?,feature?,direction?,dry_run?,work_md?,path?,expected_revision?,task_id?,owner?,generation?" tags="CMD_NET" : Concurrency net — SSOT (IDEA-002 v4 §5.0 closed enum). op=probe(marking+enabled+advice) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net↔ledger drift) | synthesize(template→splice proposal, D4) | mine(ledger→net draft, D4) | gate(path,session?) | claim(task,owner?,gen-fenced).
+@tool omt_net perm=allow args="op,transition?,reasoning?,session?,max_states?,mode?,mutation?,subnet?,feature?,direction?,dry_run?,work_md?,path?,expected_revision?,task_id?,owner?,generation?" tags="CMD_NET" : Concurrency net + git-plane derived view — SSOT (IDEA-002 v4 §5.0 closed enum, no new op). op=probe(marking+enabled+advice+git_plane) | fire(transition,reasoning,session?) | splice(mode,mutation?,subnet?,reasoning) | sync(bootstrap+proposal, D4) | invariant(invariants+net↔ledger↔git drift) | synthesize(template→splice proposal, D4) | mine(ledger→net draft, D4) | gate(path,session?) | claim(task,owner?,gen-fenced,branch=prefix+task_id).
 
 # ============================================================
 # FLOW — QUICK_ workflows (start_*/tdd_* derived from @fsm/@phase/@hat — hand copies = duplicate-id error)
