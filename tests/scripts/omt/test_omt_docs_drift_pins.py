@@ -12,8 +12,8 @@ is pinned mechanically here so it cannot recur:
     rewriting them falsifies history); .sandbox/ holds planning docs/audit records.
 2. opencode.jsonc's `plugin` array carries NO local omt_* plugin names (F14:
    the array is npm-only; local plugins auto-load from .opencode/plugins/).
-3. Startup contract (R7 T1/F30): .agents_prompts/build.md carries the
-   WORK.md-only startup sentence (R8: the AGENTS.md leg is now pinned by
+3. Startup contract (AGENTS format, user-directed 2026-09-20): .agents_prompts/build.md carries the
+   WORK.md + probe + GLOBAL+TASKS+SUGGESTED NEXT startup sentence (R8: the AGENTS.md leg is now pinned by
    `harnessc check --verify-projections` — the .omt single-sources it).
 4. Tool-set sync (R8 form): plugin-registered tools == IR `tools` keys (F35).
    The AGENTS.md table, opencode.jsonc perm keys and CMD_ entries are
@@ -116,22 +116,23 @@ def test_plugin_array_has_no_local_plugins() -> None:
         f"auto-load from .opencode/plugins/ — remove: {local}")
 
 
-# --- 3. startup contract (R7 T1/F30; R8: build.md leg only) -----------------
+# --- 3. startup contract (AGENTS format, user-directed 2026-09-20; reverses R7 T1/F30 WORK.md-only) -----------------
 
 STARTUP_SENTENCE = (
-    "Read `WORK.md` (only) at session start; summarize current state in ≤ 15 "
-    "lines (in-progress / blocked / next). All other docs on demand via "
-    "`omt_nav` (op=nav|list_sections|cross_ref|quick_ref)."
+    "1x `omt_net` probe at session start; render `GLOBAL`"
 )
 
 
 def test_build_prompt_carries_startup_contract() -> None:
     text = BUILD_PROMPT.read_text(encoding="utf-8")
     assert STARTUP_SENTENCE in text, (
-        ".agents_prompts/build.md lost the WORK.md-only startup sentence "
-        "(R7 T1/F30 — drift here re-inflates every session by ~10-11k tok. "
-        "R8: the AGENTS.md leg is pinned by `harnessc check "
+        ".agents_prompts/build.md lost the AGENTS startup sentence "
+        "(WORK.md + probe + GLOBAL+TASKS+SUGGESTED NEXT — user-directed "
+        "2026-09-20. R8: the AGENTS.md leg is pinned by `harnessc check "
         "--verify-projections`; the .omt single-sources it)")
+    assert "`TASKS` menu" in text and "`SUGGESTED NEXT`" in text, (
+        ".agents_prompts/build.md startup must carry TASKS menu + "
+        "SUGGESTED NEXT (AGENTS format)")
 
 
 # --- 4. tool-set sync (R8: plugin-registered ↔ IR `tools` keys) --------------

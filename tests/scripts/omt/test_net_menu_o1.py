@@ -94,6 +94,21 @@ class TestComposeMenuOptions:
             "unscoped:001",
         ]
 
+    def test_completed_and_draft_projects_excluded(self) -> None:
+        sync_md = _sync_md()
+        opts = sync_md.compose_menu_options(
+            projects=[
+                {"slug": "done_proj", "state": "complete", "features": "f"},
+                {"slug": "draft_proj", "state": "draft", "features": ""},
+                {"slug": "live_proj", "state": "active", "features": "f"},
+            ],
+        )
+        assert [oid for oid, _ in opts] == ["proj:live_proj"]
+        opts_dict = sync_md.compose_menu_options(
+            {"done_proj": "complete", "live_proj": "active"}
+        )
+        assert [oid for oid, _ in opts_dict] == ["proj:live_proj"]
+
 
 class TestLanesLine:
     def test_verification_integration_deadlock_blocked(self) -> None:

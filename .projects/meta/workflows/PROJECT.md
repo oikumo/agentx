@@ -1,6 +1,6 @@
 # PROJECT: workflows
 
-> Status: **draft** · draft v1 — purpose only. Scope, vision, architecture, and tasks pending.
+> Status: **active** · draft v1 — purpose only. Scope, vision, architecture, and tasks pending.
 
 ---
 

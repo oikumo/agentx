@@ -1,6 +1,6 @@
 # PROJECT: feature_kb_akb — Application Knowledge Base (v2)
 
-> Status: **draft** · machine header added by the feature_030 backfill (2026-08-22); the **v2 (2026-08-02)** note below is the version history.
+> Status: **active** · machine header added by the feature_030 backfill (2026-08-22); the **v2 (2026-08-02)** note below is the version history.
 
 ---
 

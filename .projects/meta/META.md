@@ -8,7 +8,7 @@
 | project | state | features | created | last event |
 |---|---|---|---|---|
 | agentx_concurrent_development | active | feature_119.ledger_backed_fix_preview | 2026-09-12 | 2026-09-12 |
-| feature_kb_akb | draft | — | 2026-08-22 | 2026-08-22 |
+| feature_kb_akb | active | feature_kb_akb | 2026-08-22 | 2026-08-22 |
 | meta_harness_10 | complete | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release, feature_106.mh10_p2b3_lane_integration_rewire, feature_107.mh10_p2b3b_lane_template_landing, feature_108.mh10_p2c_crash_reorder, feature_109.mh10_p2d_matrix_payback | 2026-09-18 | 2026-09-19 |
 | meta_harness_11 | complete | feature_110.whole_project_menu_composer, feature_111.multi_select_directive_protocol, feature_112.identity_aware_pool, feature_113.live_progress_projection, feature_114.concurrent_dispatch_runtime, feature_115.live_progress_full_push_join_view, feature_116.mh11_o6c_wild_payback_measurement, feature_117.dispatch_lane_exploitation_for_harness_verifies, feature_118.mh11_worktree_lifecycle | 2026-09-19 | 2026-09-20 |
 | meta_harness_2 | complete | feature_020.meta_harness_navigation, feature_021.meta_harness_think_anywhere, feature_022.meta_harness_think_anywhere_v2, feature_023.meta_harness_improvement, feature_026.omt_q_interrogative_first_ops | 2026-08-22 | 2026-09-12 |
@@ -25,4 +25,4 @@
 | petri_net_studio | active | feature_032.petri_net_format, feature_033.petri_net_io, feature_034.studio_v1_editor, feature_035.studio_v2_analysis, feature_036.studio_v3_graph | 2026-08-23 | 2026-08-23 |
 | project_lifecycle | active | feature_030.project_lifecycle | 2026-08-22 | 2026-08-22 |
 | rag_v2 | active | feature_027.rag_v2, feature_029.rag_v2_slash_commands | 2026-08-22 | 2026-08-22 |
-| workflows | draft | — | 2026-08-22 | 2026-08-22 |
+| workflows | active | meta.workflows_definition_layer | 2026-08-22 | 2026-08-22 |

@@ -28,14 +28,14 @@ Other enabled: none
 Blocked: none
 Resources: 4/4 free
 Pool: pending=0 active=0 done=7 (places 15/15)
-Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:meta_harness_10, proj:meta_harness_11, proj:meta_harness_2, proj:meta_harness_3, proj:meta_harness_4, proj:meta_harness_5, proj:meta_harness_6, proj:meta_harness_7, proj:meta_harness_8, proj:meta_harness_9, proj:meta_harness_concurrent, proj:net_enforced_harness, proj:petri_net_library, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, drift:aging-draft:feature_kb_akb, drift:aging-draft:workflows, drift:iteration-log:meta_harness_2, drift:iteration-log:meta_harness_3, drift:iteration-log:meta_harness_5, drift:iteration-log:meta_harness_concurrent, drift:iteration-log:net_enforced_harness, drift:unlinked-project-backed:feature_kb_akb, drift:unlinked-project-backed:meta.workflows_definition_layer, unscoped:001, unscoped:002
+Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, drift:iteration-log:meta_harness_2, drift:iteration-log:meta_harness_3, drift:iteration-log:meta_harness_5, drift:iteration-log:meta_harness_concurrent, drift:iteration-log:net_enforced_harness, unscoped:001, unscoped:002
 Lanes: verification 0/1 free 1, integration 0/1 free 1
 ## Projects (synced by `uv run scripts/omt/project.py sync` — do not hand-edit)
 
 | project | state | features |
 |---|---|---|
 | agentx_concurrent_development | active | feature_119.ledger_backed_fix_preview |
-| feature_kb_akb | draft | — |
+| feature_kb_akb | active | feature_kb_akb |
 | meta_harness_10 | complete | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release, feature_106.mh10_p2b3_lane_integration_rewire, feature_107.mh10_p2b3b_lane_template_landing, feature_108.mh10_p2c_crash_reorder, feature_109.mh10_p2d_matrix_payback |
 | meta_harness_11 | complete | feature_110.whole_project_menu_composer, feature_111.multi_select_directive_protocol, feature_112.identity_aware_pool, feature_113.live_progress_projection, feature_114.concurrent_dispatch_runtime, feature_115.live_progress_full_push_join_view, feature_116.mh11_o6c_wild_payback_measurement, feature_117.dispatch_lane_exploitation_for_harness_verifies, feature_118.mh11_worktree_lifecycle |
 | meta_harness_2 | complete | feature_020.meta_harness_navigation, feature_021.meta_harness_think_anywhere, feature_022.meta_harness_think_anywhere_v2, feature_023.meta_harness_improvement, feature_026.omt_q_interrogative_first_ops |
@@ -52,7 +52,7 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 | petri_net_studio | active | feature_032.petri_net_format, feature_033.petri_net_io, feature_034.studio_v1_editor, feature_035.studio_v2_analysis, feature_036.studio_v3_graph |
 | project_lifecycle | active | feature_030.project_lifecycle |
 | rag_v2 | active | feature_027.rag_v2, feature_029.rag_v2_slash_commands |
-| workflows | draft | — |
+| workflows | active | meta.workflows_definition_layer |
 
 ---
 

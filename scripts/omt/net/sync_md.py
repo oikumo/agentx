@@ -61,6 +61,8 @@ def compose_menu_options(
     """O1 whole-project selectable IDs (pure, deterministic, stdlib-only).
 
     - projects: [{slug, state, features}] or {slug: state} — ID `proj:<slug>`.
+      Active-only: non-active states (complete/draft/disabled) are excluded —
+      completed projects can never be part of Options.
     - hygiene: [{class, key, detail}] or "class:key" strings — ID `drift:<class>:<key>`.
     - unscoped: [{id, note}] or "001" strings — ID `unscoped:<id>`.
     Sorted for determinism; O2 consumes these IDs for multi-select.
@@ -69,12 +71,16 @@ def compose_menu_options(
     if isinstance(projects, dict):
         items = sorted(projects.items())
         for slug, state in items:
+            if str(state) != "active":
+                continue
             options.append((f"proj:{slug}", f"{slug} ({state})"))
     elif projects:
         for p in sorted(projects, key=lambda x: str(x.get("slug", x) if isinstance(x, dict) else x)):
             if isinstance(p, dict):
                 slug = str(p.get("slug", "?"))
                 state = str(p.get("state", "?"))
+                if state != "active":
+                    continue
                 options.append((f"proj:{slug}", f"{slug} ({state})"))
             else:
                 options.append((f"proj:{p}", f"{p}"))
