@@ -3,6 +3,47 @@
 > Session-by-session log + resume point. Companion to `PROJECT.md` (canonical).
 > Newest entry on top. One `## <date>` block per session.
 
+## 2026-09-20 (close-out: 117 shipped, 118 Done confirmed, O6 deferred)
+
+### Done
+
+- Implemented `feature_117.dispatch_lane_exploitation_for_harness_verifies`
+  (minor_feature, user-approved implement-now): Analysis 001 (gap: O4 lane
+  idle, d2 51% banked) + Design 001 (pure `verify_dispatch.py`: batch
+  composer + claims map + report join, 8-golden list, F7-hold) +
+  `scripts/omt/net/verify_dispatch.py` (stdlib-only, no net I/O) + 8
+  goldens `tests/scripts/omt/test_net_verify_dispatch_117.py` 8/8
+  (canary `omt_skip{scope:tests}`) + impl notes + test report;
+  `omt_complete` Programming→Testing→Done green. Neighbors 68/68;
+  `check 274/0`; suite 1899 + 2 deselected (2 pre-existing
+  improvement003 budget-pin failures, same pair as 118 baseline — no new
+  failures). F7 lane-only, D1 locked, no new places/ledger kinds.
+- Confirmed `feature_118.mh11_worktree_lifecycle` Done
+  (`omt_complete{advance_to:Done}` green no-op — already Done; 11 goldens
+  + 2 pointer smokes, suite 1887 baseline, `check 274/0`).
+- Deferred O6a/O6b with evidence (user-approved, D5 in PROJECT.md):
+  d1–d3 median wall 11.0% / tokens 0.0% structural (N=3) below O6a
+  ≥15%/10% and O6b ≥25%/15% bars; tokens 0% structural forces defer
+  under AND-threshold; D1 (`src/agentx/`) stays locked, F7 lane-only
+  held. 117 banks the harness-internal saving instead (d2 51%).
+  Revisit only with new decision + N≥10 dispatch median or wall-only
+  threshold revision.
+
+### In progress / Blocked
+
+- _(nothing — 110–118 all Done; O6 deferred by decision)_
+
+### Next
+
+- `uv run scripts/omt/project.py close meta_harness_11` → sync WORK.md
+  (`project.py sync`) → final `check`/`build`/suite → WORK.md NEXT
+  `proj:agentx_concurrent_development`.
+- Residuals carried (not blockers): 2 improvement003 budget-pin failures
+  (pin-sync follow-up); CLI `dispatch --expected-revision` commit + `join
+  --dry-run` still deferred (O4 precedent); single-claim path 081-only.
+
+---
+
 ## 2026-09-20 (feature_118 B worktree lifecycle to Testing)
 
 ### Done
@@ -31,6 +72,14 @@
   NEXT proj:agentx_concurrent_development.
 
 ---
+
+## 2026-09-20 (auto — feature_117.dispatch_lane_exploitation_for_harness_verifies Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_117.dispatch_lane_exploitation_for_harness_verifies/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
 
 ## 2026-09-20 (auto — feature_118.mh11_worktree_lifecycle Done)
 

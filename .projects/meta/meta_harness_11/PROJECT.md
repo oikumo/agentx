@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_11 — Session Use-Case Closure (Whole-Project Menu → Multi-Pick → Concurrent Doing)
 
-> Status: **active** · **v0.1 (2026-09-19)** — user-picked FULL O1–O6 (2026-09-19). Created by `project.py new --slug meta_harness_11`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_11`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v0.1 (2026-09-19)** — user-picked FULL O1–O6 (2026-09-19). Created by `project.py new --slug meta_harness_11`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_11`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
@@ -8,7 +8,7 @@
 
 > One line: MH11 closes the session use-case gaps — selectable whole-project menu with atomic multi-pick apply, then concurrent dispatch.
 
-**Next:** M1 (O4+O5) shipped except follow-ups — O5-follow-up (full text push, slider/join) or O6 bridge (needs D1 revisit) via `new_feature.py` only with new decisions + evidence; or WORK.md NEXT `proj:agentx_concurrent_development`.
+**Next:** MH11 COMPLETE (closed 2026-09-20) — 117 + 118 Done, O6a/O6b DEFERRED (D5: tokens 0% structural + wall median 11% below 15%/10% bars, D1 stays locked); take WORK.md NEXT `proj:agentx_concurrent_development`.
 
 ---
 
@@ -76,6 +76,9 @@ Milestones: **M0** (O1+O2+O3: selectable menu with atomic apply, still serial) �
 - [x] M0 COMPLETE (2026-09-19, user-approved close): O1 (110) + O2 (111) + O3 (112) Done + O5-slice (113) Done; suites 1817→1830→1840→1847; `check 265/0`; tree clean. O4/O6 unspawned (need F7/D1 decisions).
 - [x] M1 SHIPPED (2026-09-20, user-approved close): O4 `feature_114.concurrent_dispatch_runtime` Done (major_feature, TDD GREEN; 23 canonical + 2 pointer goldens, targeted 56/56, suite 1872 + 2 deselected, `check 265/0`, test report); F7 lane-only reversal locked (fan-out ≤2, `src/` serialism unchanged). O6 unspawned (needs D1 revisit).
 - [x] O5-follow-up SHIPPED (2026-09-20, user-approved close): `feature_115.live_progress_full_push_join_view` Done (minor_feature; 8 goldens, targeted 78/78, suite 1880 + 2 deselected, `check 265/0`, test report; D4 proposal-only + Tier-3 held). Next = O6 (needs D1 revisit) or WORK.md NEXT `proj:agentx_concurrent_development`.
+- [x] 117 SHIPPED (2026-09-20, user-approved implement-now): `feature_117.dispatch_lane_exploitation_for_harness_verifies` Done (minor_feature; pure `verify_dispatch.py` batch composer + report join, 8 goldens `test_net_verify_dispatch_117.py`, neighbors 68/68, suite 1899 + 2 deselected with 2 pre-existing improvement003 budget-pin failures, `check 274/0`, test report; F7 lane-only, D1 locked, no new places/ledger kinds).
+- [x] 118 Done CONFIRMED (2026-09-20): `feature_118.mh11_worktree_lifecycle` Done (major_feature, TDD closed; 11 goldens + 2 pointer smokes, suite 1887 baseline, `check 274/0`; `omt_complete{advance_to:Done}` green — already Done, no-op confirmed).
+- [x] O6a/O6b DEFERRED (2026-09-20, user-approved defer-with-evidence, D5): harness↔agentx bridge not spawned — dispatch median N=3 wall 11.0% / tokens 0.0% structural below pre-registered bars (O6a ≥15%/10%, O6b ≥25%/15%); tokens 0% forces defer under AND-threshold; D1 (`src/agentx/` out-of-scope) stays locked. Revisit only with new decision + N≥10 dispatch median or wall-only threshold revision. MH11 closes as M0+M1+verify-exploitation complete, bridge deferred.
 
 ---
 
@@ -85,6 +88,7 @@ Milestones: **M0** (O1+O2+O3: selectable menu with atomic apply, still serial) �
 - **D2 — full O1–O6, M0 first (2026-09-19, user-picked):** all improvements in scope, but M1 (concurrency) only after M0 (selectable atomic menu) green; F7 serial vs dispatch and D1 harness↔product boundary revisited only inside O4/O6 slices with approval.
 - **D3 — gaps doc is proposal baseline, not authority (2026-09-19):** `.sandbox/meta_harness_session_usecase_gaps.md` G1–G16/O1–O6 are inputs; each O slice needs reproducer + oracle + resource budget before estimate.
 - **D4 — O5-follow-up stays proposal-only + read-only (2026-09-20, feature_115):** full-text `push.tasks_block` is a dry-run `sync net_to_md` compose the caller still applies (no auto-commit); batch/join projection is pure read-only over `plan_to_dict` (no daemon/socket/TS import). No F7 reversal (no new fan-out) and no D1 revisit (`src/agentx/` untouched).
+- **D5 — O6a/O6b deferred, D1 stays locked (2026-09-20, user-approved):** dispatch pilots d1–d3 median wall 11.0% / tokens 0.0% structural (N=3; serial N=10 baselines green) below pre-registered bars (O6a ≥15%/10%, O6b ≥25%/15%); tokens 0% is structural (same work, parallelism saves wall never tokens) so the AND-threshold forces defer regardless of wall. D1 (`src/agentx/` out-of-scope) NOT revisited; F7 lane-only (fan-out ≤2) NOT reversed. 117 banks the harness-internal wall saving instead (d2 51% reference, pure composer, no live mutation). Revisit O6 only with new decision + evidence (N≥10 dispatch median or wall-only threshold revision).
 
 ---
 
