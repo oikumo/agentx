@@ -1139,6 +1139,28 @@ def plan_dispatch_view(
             "summary": "",
         }
     doc = plan_to_dict(plan)
+    try:
+        from .worktree_lifecycle import resolve_lane as _preview_lane
+        _gen_by_id = {
+            str(b.get("id", "")): int(b.get("generation", 0) or 0)
+            for b in (st.task_bindings or [])
+            if isinstance(b, dict) and b.get("id")
+        }
+        for _t in doc.get("tasks", []):
+            if not isinstance(_t, dict):
+                continue
+            _tid = str(_t.get("task_id", "") or "")
+            if not _tid:
+                continue
+            try:
+                _t["sidecar"] = _preview_lane(
+                    task_id=_tid,
+                    generation=_gen_by_id.get(_tid, 0) + 1,
+                )
+            except Exception:
+                pass
+    except Exception:
+        pass
     return {
         "plan": doc["tasks"],
         "wip": doc["wip"],
@@ -1268,6 +1290,12 @@ def dispatch_claims(
             )
             ws = dict(_workspace.build_workspace(base, tid, generation))
             ws["worktree"] = str(t.get("worktree") or ws.get("id") or tid)
+            try:
+                from .worktree_lifecycle import resolve_lane as _claim_lane
+                ws["sidecar"] = _claim_lane(task_id=tid,
+                                            generation=generation)
+            except Exception:
+                pass
             claimed = dict(b)
             claimed.update(
                 {
@@ -1286,6 +1314,7 @@ def dispatch_claims(
                     "lease": str(t.get("lease") or ""),
                     "generation": generation,
                     "owner": claimed["owner"],
+                    "sidecar": dict(ws.get("sidecar") or {}),
                 }
             )
         # 3) join: work_complete per task (worker slots restored)
@@ -1311,6 +1340,12 @@ def dispatch_claims(
                     "owner": info["owner"],
                     "generation": info["generation"],
                     "workspace": f"{info['task_id']}-g{info['generation']}",
+                    "sidecar": {
+                        "branch": str((info.get("sidecar") or {}).get(
+                            "branch", "")),
+                        "path": str((info.get("sidecar") or {}).get(
+                            "path", "")),
+                    },
                     "batch_id": batch_id,
                     "transition": "work_start",
                     "revision": st.revision,

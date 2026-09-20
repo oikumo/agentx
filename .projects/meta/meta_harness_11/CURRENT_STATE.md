@@ -3,6 +3,42 @@
 > Session-by-session log + resume point. Companion to `PROJECT.md` (canonical).
 > Newest entry on top. One `## <date>` block per session.
 
+## 2026-09-20 (feature_118 B worktree lifecycle to Testing)
+
+### Done
+- Improvement003 shipped+committed (9935963): git-plane derived view in .omt
+  (vars/state/doc/gate/tool, budgets +64/+1024, TS seed 376B->450B);
+  check 274/0, build OK.
+- Spawned feature_118.mh11_worktree_lifecycle (major_feature, linked here);
+  user locked D1 --no-ff, D2 fan-out <=2 held, D3 reuse .sandbox/bench.
+- Implemented worktree_lifecycle.py (resolve_lane/compose_join/gate_complete/
+  status_checks) + state.py threading (preview sidecar derive, dispatch
+  stamps nested sidecar key, ledger sidecar branch/path) - additive only,
+  081 lane byte-identical.
+- TDD two cycles, 11 goldens + 2 pointer smokes green; neighbors green
+  (dispatch/isolation/claim/cli); full suite 1887 + 2 pre-existing baseline
+  failures (improvement003 budget pins); harnessc 34/34; e2e green.
+- omt_complete advanced 118 to Testing (needs user close/ship call).
+
+### In progress / Blocked
+- 118 in Testing (major_feature close/ship is user call). Tree dirty, uncommitted.
+- Residuals: 2 baseline budget-pin failures (improvement003 pin sync
+  follow-up); CLI join --dry-run deferred (O4 precedent); single-claim path
+  still 081-only (gate_complete enforced on dispatch path).
+
+### Next
+- User close/ship 118 -> commit -> O6 defer-or-measure decision or WORK.md
+  NEXT proj:agentx_concurrent_development.
+
+---
+
+## 2026-09-20 (auto — feature_118.mh11_worktree_lifecycle Done)
+
+- shipped: major_feature · test report @ 6.testing/features/feature_118.mh11_worktree_lifecycle/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
 ---
 
 ## 2026-09-20 (wild: N=10 serial baselines green, dispatch pending)
