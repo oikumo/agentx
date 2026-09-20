@@ -5,6 +5,73 @@
 
 ---
 
+## 2026-09-20 (wild: N=10 serial baselines green, dispatch pending)
+
+### dispatch pilot d3 — major+concurrent_conflict — 2026-09-20
+
+- rev: live HEAD · mode: sidecar worktrees · workers: 2 vs 1 · files disjoint (MAJOR_SRC/TEST/DESIGN vs net bundle; separate task dirs) · live untouched
+- serial: wall 105.979s (major slow pole; verify 1.147s+0.0s) · tokens 4859 (860+3999) · success 2/2 · regressions 0
+- dispatch (parallel): wall 102.847s (max; major 102.847s, conc 7.423s; batch 103s) · tokens 4859 (same) · verify max 1.13s · success 2/2 · regressions 0
+- payback: wall 3.0% (1-102.847/105.979; long-pole Amdahl — conc hides under major) · tokens 0.0% · green: held (check 265/0)
+- evidence: `/tmp/s3_major.json` `/tmp/s3_conc.json` `/tmp/p3_major.json` `/tmp/p3_conc.json`
+
+### dispatch median N=3 + threshold reading — 2026-09-20
+
+- pairs: d1 wall 11.0%/tok 0% · d2 wall 51.0%/tok 0% · d3 wall 3.0%/tok 0% → median wall 11.0% · median tokens 0.0% · success 6/6 · regressions 0 · green held throughout (check 265/0, no live change, worktrees cleaned up)
+- threshold (D5 pre-registered): O6a needs wall ≥15% AND tok ≥10%; O6b ≥25%/15%; below either bar → defer. N=3 median (11%/0%) is below both bars; tokens 0% structural across all pairs (same work, same transcript io — parallelism saves wall, never tokens).
+- caveat: N=3, not N≥10 median; wall highly variable (3–51%, long-pole + setup + contention). Tokens structural 0% alone forces defer under current AND-threshold regardless of wall — threshold may need revisit (wall-only for enablement?) with new decision + evidence, or defer O6 → WORK.md NEXT.
+- residuals: probe-wall via `time` (setup included both arms, fair relative); major 100s+ pole unexplained (setup/uv-sync vs probe — needs driver split timing); suite 1880 baseline held (not re-run per pair; live untouched).
+
+### dispatch pilot d2 — cross_layer+harness_repair — 2026-09-20
+
+- rev: live HEAD · mode: sidecar worktrees · workers: 2 vs 1 · files disjoint (MODEL+UI+CHAT_TEST vs HARNESS_C+BUDGET+E2E) · live untouched
+- serial: wall 21.752s · tokens 27036 (7483+19553) · verify 5.347s+10.075s=15.422s · success 2/2 · regressions 0
+- dispatch (parallel): wall 10.667s (max; cross 10.007s, harness 10.667s; batch 10s) · tokens 27036 (same) · verify max 7.465s (payback 51.6%) · success 2/2 · regressions 0
+- payback: wall 51.0% (1-10.667/21.752) · tokens 0.0% · green: held (check 265/0)
+- evidence: `/tmp/s2_cross.json` `/tmp/s2_harness.json` `/tmp/p2_cross.json` `/tmp/p2_harness.json`
+
+### dispatch pilot d1 — bugfix+resume (serial vs parallel fan-out 2) — 2026-09-20
+
+- rev: live HEAD · mode: sidecar worktrees (`.sandbox/bench/bugfix-*`, `resume-*`, pinned, cleaned up) · workers: 2 (parallel) vs 1 (serial) · lanes: n/a · files disjoint (MODEL_FILE+CHAT_TEST vs bench_resume ledger) · F7 lane-only (fan-out ≤2) · live untouched
+- serial: wall 14.587s · tokens 5028 (4697+331) · verify 6.23s+0.0s · success 2/2 · regressions 0
+- dispatch (parallel): wall 12.984s (max; resume 2.376s, bugfix 12.984s; batch 1789869187→1789869200 = 13s) · tokens 5028 (same work) · verify max 9.075s (bugfix contention +2.8s vs serial 6.23s) · success 2/2 · regressions 0
+- payback: wall 11.0% (1-12.984/14.587) · tokens 0.0% (same work) · verify -45.7% (contention) · green: held (live check 265/0, no live change)
+- evidence: `/tmp/serial_bugfix.json` `/tmp/serial_resume.json` `/tmp/par_bugfix.json` `/tmp/par_resume.json` (transcripts); batch wall via `date +%s` start/end + `time` per trial
+- reading: single pair (N=1, not median); wall 11% < 15% O6a bar, tokens 0% < 10% bar → points toward defer per pre-registered threshold (tokens structural: same work, no saving; wall eaten by pytest contention on shared CPU). Needs median over N≥10 pairs to decide; driver probe-wall timing still `time`-based (setup included in both arms, fair for relative).
+- Next: 2–3 more pairs for median signal (e.g. cross_layer+harness_repair, major+concurrent_conflict) or defer O6 → WORK.md NEXT.
+
+### trim (green restore for wild)
+
+- `WORK.md` 9758B > 9728B (budget red from 115+116 row sync +30B) → rotated oldest Paused `meta_harness_6 program execution` (2026-09-06) to `WORK_ARCHIVE.md` per CONV_WORK_ROTATE (user-picked trim-to-fit over budget-grow).
+- After: `WORK.md` 9440B/9728B (288B headroom); `harnessc check` OK 265/0. Live baseline: rev 60 `drained_complete`, suite 1880 + 2 deselected (feature_115 Done holds; no live change in worktrees).
+
+### runs w1–w10 — serial baselines (real worktrees + fixture hermetic, live untouched)
+
+- rev: live HEAD (worktrees pinned per run, cleaned up) · mode: real (6 unique + 2 repeats) + fixture (2) · workers: 1 · lanes: n/a (serial)
+- w1 bugfix real: tokens 4697 · io 18789 · harness 2 · tool 11 · verify 7.085s (repeat 8.287s, tokens stable) · success true · regressions 0 · blocks_tp 2 · missed 0
+- w2 resume real: tokens 331 · io 1326 (+288 orient) · harness 1 · tool 7 · verify 0.0s (repeat identical, deterministic) · success true · regressions 0 · blocks_tp 2 · missed 0
+- w3 cross_layer real: tokens 7483 · io 29934 · harness 2 · tool 12 · verify 6.181s · success true · regressions 0 · blocks_tp 2 · missed 0
+- w4 harness_repair real: tokens 19553 · io 78212 · harness 2 · tool 12 · verify 7.168s · success true · regressions 0 · blocks_tp 2 · missed 0
+- w5 major real: tokens 860 · io 3440 · harness 6 · tool 13 · verify 1.178s · success true · regressions 0 · blocks_tp 2 · missed 0
+- w6 concurrent_conflict real: tokens 3999 · io 15996 · harness 8 · tool 11 · verify 0.0s · success true · regressions 0 · blocks_tp 3 · missed 0
+- w7 fixture_bugfix: tokens 646 · io 2586 · harness 2 · tool 10 · verify 0.036s · success true · regressions 0 · blocks_tp 2 · missed 0 (matches p1)
+- w8 fixture_nophase: tokens 559 · io 2238 · harness 2 · tool 7 · verify 0.029s · success true · regressions 0 · blocks_tp 2 · missed 0 (matches p2)
+- w9 bugfix repeat real: tokens 4697 (stable) · verify 8.287s · success true · regressions 0
+- w10 resume repeat real: tokens 331 (stable) · verify 0.0s · success true · regressions 0
+- serial median (N=10 fresh): tokens 2429.5 · verify 0.607s · success 10/10 · regressions 0 · green held (live check 265/0, no live change)
+- dispatch: n/a (serial baselines only; same-pair serial-vs-dispatch comparison pending — needs O4 dispatch-lane fan-out ≤2 with explicit approval + driver probe-wall timing; `tokens_est=io_bytes//4` confirmed across all runs)
+- payback: n/a · green: held
+- evidence: `uv run scripts/omt/bench/cli.py run --task <id> --mode <real|fixture>` transcripts above (10/10 green)
+
+### Outcome
+
+- Serial baseline N=10 complete (6 real unique + 2 real repeats + 2 fixture; all green, tokens stable on repeats, fixture matches p1/p2).
+- Dispatch comparison still pending (1 pair minimum: e.g. bugfix+resume disjoint — serial tokens 5028 vs dispatch parallel; wall payback expected ~30-40%, tokens payback ~0% (same work) — threshold needs wall ≥15% AND tokens ≥10% so tokens may force defer; needs real dispatch measurement).
+- Threshold decision O6a (≥15%/10%) / O6b (≥25%/15%) / defer pending dispatch runs. Next = 1 pilot dispatch pair (explicit worktree fan-out approval) or WORK.md NEXT `proj:agentx_concurrent_development`.
+- Residuals: driver wall timing (probe-only wall not yet metered; wall n/a, verify used as proxy); suite 1880 baseline held (not re-run per run; live untouched).
+
+---
+
 ## 2026-09-20 (pilots: O6c template validated, 2 fixture runs)
 
 ### run p1 — fixture_bugfix — 2026-09-20

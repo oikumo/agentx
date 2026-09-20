@@ -206,8 +206,14 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     assert '"python3 *": "deny"' in config
     assert '"pip *": "deny"' in config
     assert '"pytest *": "deny"' in config
-    assert '"git commit *": "deny"' in config
     assert '"git push *": "deny"' in config
+    assert '"git pull *": "deny"' in config
+    assert '"git fetch *": "deny"' in config
+    assert '"git ls-remote *": "deny"' in config
+    assert '"git remote *": "deny"' in config
+    assert '"git clone *": "deny"' in config
+    assert '"git submodule *": "deny"' in config
+    assert '"git commit *": "deny"' not in config
     checks.append("opencode config enforces uv and denies risky actions")
 
     # 5. The guide contract and plugin gate agree on adaptive rigor.

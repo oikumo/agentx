@@ -1,9 +1,9 @@
 {
   "budgets": {
-    "agents_md": 2944,
+    "agents_md": 3072,
     "digest_cap": 1024,
     "gates": 12,
-    "ir_json": 20480,
+    "ir_json": 21504,
     "meta_harness_md": 2048,
     "meta_md": 6144,
     "nav_index": 65536,
@@ -15,14 +15,44 @@
   },
   "deny": [
     {
-      "id": "bash.git_commit",
-      "match": "git commit *",
+      "id": "bash.git_push",
+      "match": "git push *",
       "msg": "deny_git",
       "scope": "bash"
     },
     {
-      "id": "bash.git_push",
-      "match": "git push *",
+      "id": "bash.git_pull",
+      "match": "git pull *",
+      "msg": "deny_git",
+      "scope": "bash"
+    },
+    {
+      "id": "bash.git_fetch",
+      "match": "git fetch *",
+      "msg": "deny_git",
+      "scope": "bash"
+    },
+    {
+      "id": "bash.git_lsremote",
+      "match": "git ls-remote *",
+      "msg": "deny_git",
+      "scope": "bash"
+    },
+    {
+      "id": "bash.git_remote",
+      "match": "git remote *",
+      "msg": "deny_git",
+      "scope": "bash"
+    },
+    {
+      "id": "bash.git_clone",
+      "match": "git clone *",
+      "msg": "deny_git",
+      "scope": "bash"
+    },
+    {
+      "id": "bash.git_submodule",
+      "match": "git submodule *",
       "msg": "deny_git",
       "scope": "bash"
     },
@@ -294,7 +324,7 @@
     "deny_git": {
       "see": "@doc.rule.r1",
       "sev": "block",
-      "text": "git commit/push is NEVER without an explicit user request (Core Directive #1)"
+      "text": "git remote access is NEVER allowed (push/pull/fetch/ls-remote/remote/clone/submodule) \u2014 local git only"
     },
     "deny_uv": {
       "see": "",

@@ -31,7 +31,11 @@ import harnessc
 # tool's nav record too; design §5 "nav_index unchanged" missed that nav
 # records carry @tool description text (+34B measured via _sizes(); kinds
 # unchanged). Deliberate, budgets still OK (nav_index 64990/65536).
-NAV_INDEX_CEIL = 64990
+# Re-pin 2026-09-20 (git remote-only rule change): NAV_INDEX_CEIL
+# 64990 → 64993 — seven new @deny bash.git_* remote records land in the nav
+# index (+3B measured live via _sizes()); kinds unchanged. Deliberate,
+# budgets still OK (nav_index 64993/65536).
+NAV_INDEX_CEIL = 64993
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): op describe gains
 # "| resume" (+9B) paid by an include_ledger describe diet (-8B) — net +1B
 # deliberate (tool_args 2455/2464); design note @ 4.design/features/
@@ -59,5 +63,5 @@ def test_tight_budgets_unchanged():
     assert sizes["nav_index"][0] <= NAV_INDEX_CEIL, sizes["nav_index"]
     assert sizes["tool_args"][0] <= TOOL_ARGS_CEIL, sizes["tool_args"]
     assert sizes["tool_schemas"][0] <= TOOL_SCHEMAS_CEIL, sizes["tool_schemas"]
-    assert sizes["agents_md"][0] <= 2944, sizes["agents_md"]
+    assert sizes["agents_md"][0] <= 3072, sizes["agents_md"]  # re-pin 2026-09-20 (git remote-only rule change): 2944→3072, same .omt edit as NAV_INDEX_CEIL above
     assert sizes["gates"][0] == 10, sizes["gates"]

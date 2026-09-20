@@ -9,7 +9,7 @@
 **ENF:** mechanical via .opencode/plugins/omt_enforcer.ts + lib/enforcer ×7 + opencode.jsonc; reference = .meta/META_HARNESS.omt (query: omt_nav)
 
 ## NEVER (blocked by gate)
-- bash deny: `git commit *` `git push *` `python *` `python3 *` `pip *` `pip3 *` `pytest *`
+- bash deny: `git push *` `git pull *` `git fetch *` `git ls-remote *` `git remote *` `git clone *` `git submodule *` `python *` `python3 *` `pip *` `pip3 *` `pytest *`
 - read deny: `*.env` `*.env.*`; toplevel deny: `webfetch`
 - protected: `.env` `.env.*` (hard — no override) · `README.md` `uv.lock` `LICENSE` (`omt_skip{scope:"all"}` only)
 - edit gates: harness-surface 2nd edit w/o fresh e2e receipt · `tests/` w/o canary approval · net permission denied — fire(work_start) required · `src/` w/o `omt_phase` · TA:-carrying files w/o `omt_think_list` consult · `src/` w/o `omt_kb_nav` KB consult

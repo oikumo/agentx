@@ -54,8 +54,13 @@
 # ============================================================
 # DENY — NEVER command rules (→ opencode.jsonc generated blocks)
 # ============================================================
-@deny bash.git_commit scope=bash match="git commit *" msg=@msg.deny_git : NEVER commit without explicit user request (Core Directive #1)
-@deny bash.git_push scope=bash match="git push *" msg=@msg.deny_git : NEVER push without explicit user request
+@deny bash.git_push scope=bash match="git push *" msg=@msg.deny_git : NEVER push — remote access denied (local git allowed)
+@deny bash.git_pull scope=bash match="git pull *" msg=@msg.deny_git : NEVER pull — remote access denied (local git allowed)
+@deny bash.git_fetch scope=bash match="git fetch *" msg=@msg.deny_git : NEVER fetch — remote access denied (local git allowed)
+@deny bash.git_lsremote scope=bash match="git ls-remote *" msg=@msg.deny_git : NEVER ls-remote — remote access denied (local git allowed)
+@deny bash.git_remote scope=bash match="git remote *" msg=@msg.deny_git : NEVER remote — remote access denied (local git allowed)
+@deny bash.git_clone scope=bash match="git clone *" msg=@msg.deny_git : NEVER clone — remote access denied (local git allowed)
+@deny bash.git_submodule scope=bash match="git submodule *" msg=@msg.deny_git : NEVER submodule — may access remote (local git otherwise allowed)
 @deny bash.python scope=bash match="python *" msg=@msg.deny_uv : Python runs through uv only
 @deny bash.python3 scope=bash match="python3 *" msg=@msg.deny_uv : Python runs through uv only
 @deny bash.pip scope=bash match="pip *" msg=@msg.deny_uv : pip via uv only
@@ -131,7 +136,7 @@
 # ============================================================
 # MSG — block/warn text (ERR_/WRN_ + enforcer literals; TS renders in HDL-1)
 # ============================================================
-@msg deny_git sev=block see=@doc.rule.r1 : git commit/push is NEVER without an explicit user request (Core Directive #1)
+@msg deny_git sev=block see=@doc.rule.r1 : git remote access is NEVER allowed (push/pull/fetch/ls-remote/remote/clone/submodule) — local git only
 @msg deny_uv sev=block : Python must run through uv — never bare python/pip/pytest
 @msg deny_env sev=block : .env files are denied (secrets)
 @msg deny_webfetch sev=block : webfetch is denied in this repo
@@ -264,7 +269,7 @@
 # ============================================================
 # BUDGET — compile-enforced token budgets (R7 T5/T8 → build errors; F32/F33)
 # ============================================================
-@budget agents_md max=2944 : GENERATED AGENTS.md bytes — rides the system prompt EVERY turn (F33; improvement004/OPT-A: §12/TDD/NAV/THINK/QuickRef tables → nav pointers, 5120→2560; 2026-08-08: 2560→2816 to add .projects/ component line mirroring .workflows/)
+@budget agents_md max=3072 : GENERATED AGENTS.md bytes — rides the system prompt EVERY turn (F33; improvement004/OPT-A: §12/TDD/NAV/THINK/QuickRef tables → nav pointers, 5120→2560; 2026-08-08: 2560→2816 to add .projects/ component line mirroring .workflows/)
 @budget work_md max=9728 : WORK.md bytes — read at every session startup (feature_kb_akb: +1 task entry pushed 4096→5120; feature_038/meta_harness_5: +1 active feature row pushed 5120→5632; feature_039/meta_harness_concurrent: session pause line + project-link row pushed 5632→6144; feature_041/meta_harness_concurrent: paused task row pushed 6144→7168 — two deliberate +512 steps at once, DONE-row replacement needs the headroom; feature_045/meta_harness_concurrent: DONE-row detail pushed 7168→7680; feature_048/meta_harness_concurrent: WIP-pool active row + duplicate-link project row pushed 7680→8192; feature_105/meta_harness_10: P2 pause pointer + 105 link row pushed 8214→8704; feature_110/meta_harness_11: O1 whole-project menu Options+Lanes lines pushed 8704→9728)
 @budget work_scratchpad max=3072 : WORK.md Agent Scratchpad section bytes (T2: CURRENT/RECURRING only; shrunk 6144→3072 in improvement002/OPT-B after gotcha relocation to @doc gotcha.*)
 @budget nav_tip max=512 : session-bootstrap nav-tip bytes (C5, conversation-resident, re-paid per turn F32)
@@ -273,7 +278,7 @@
 @budget tool_args max=2464 : live TS arg describe() bytes, irToolDescription-region only (feature_kb_akb: +1 tool pushed budget 1536→1792; feature_039/meta_harness_concurrent: +1 tool omt_net pushed 1792→2048; feature_040: omt_net splice args (mode/mutation/subnet/feature) pushed 2048→2304; feature_078: omt_q graph args (symbol/depth) pushed 2304→2367; feature_080: omt_net claim task_id/owner/generation describes + op enum pushed 2367→2456)
 @budget gates max=12 : gate count cap (10 now) — net-zero: a new gate needs a retirement/merge; candidates from skip-frequency; ceremony meter alarms bug_fix>3 (B1+B2)
 @budget nav_index max=65536 : nav.index.jsonl bytes — on-demand nav answers (improvement006/OPT-D: the largest projection was unchecked; feature_089: +2 GOTCHA_ records pushed 63931→64956, budget 64000→65536)
-@budget ir_json max=20480 : harness.ir.json bytes — plugin-internal (improvement006/OPT-D: previously unchecked)
+@budget ir_json max=21504 : harness.ir.json bytes — plugin-internal (improvement006/OPT-D: previously unchecked)
 @budget meta_harness_md max=2048 : .meta/META_HARNESS.md stub bytes — on-demand (improvement007/OPT-B: state-note rotation 5526→1366; only the latest note inline, older → git history)
 @budget meta_md max=6144 : .meta/META.md bytes — on-demand (improvement007/OPT-B: stale READ-FIRST directive → omt_nav routing + dir-tree slim 6754→5002)
 
