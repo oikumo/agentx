@@ -2,7 +2,7 @@
 
 > GENERATED from .meta/META_HARNESS.omt — DO NOT EDIT; edit the source, then `uv run scripts/omt/harnessc.py build`.
 
-> **STARTUP:** Read WORK.md + 1x omt_net probe at session start; render GLOBAL (<=8 lines: net observation/rev, Pool p/a/d, Lanes, Projects active/complete/draft, drift counts, STALE if WORK.md NEXT != probe next) + TASKS menu (NEXT/Other/Blocked/Resources order) as question-tool selectable list with stable Options: IDs (no invented IDs in TASKS, D19) + SUGGESTED NEXT (advisory D19-exempt <=5 lines: drift-priority unlinked > aging > iter-log + pool state + <=2 IDEA: items, never auto-applied). Rest on demand via omt_nav.
+> **STARTUP:** Read WORK.md + 1x omt_net probe at session start; render GLOBAL (<=8 lines: net observation/rev, Pool p/a/d, Lanes, Projects active/complete/draft, drift counts, STALE if WORK.md NEXT != probe next) + TASKS menu (NEXT/Other/Blocked/Resources order) as letter-shortcut list (A/B/C... mapped 1:1 to stable Options: IDs, no invented IDs in TASKS, D19; user replies with single letter, never question-tool) + SUGGESTED NEXT (advisory D19-exempt <=5 lines: drift-priority unlinked > aging > iter-log + pool state + <=2 IDEA: items, never auto-applied). Rest on demand via omt_nav.
 > **RUNTIME:** `uv` only (no bare `python`/`pip`/`pytest`). `src/` edits → `omt_phase` first.
 
 ## Enforcement
