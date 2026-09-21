@@ -28,7 +28,7 @@ Other enabled: none
 Blocked: none
 Resources: 4/4 free
 Pool: pending=0 active=0 done=7 (places 15/15)
-Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, drift:iteration-log:meta_harness_2, drift:iteration-log:meta_harness_3, drift:iteration-log:meta_harness_5, drift:iteration-log:meta_harness_concurrent, drift:iteration-log:net_enforced_harness, unscoped:001, unscoped:002
+Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, drift:iteration-log:feature_kb_akb, drift:iteration-log:meta_harness_2, drift:iteration-log:meta_harness_3, drift:iteration-log:meta_harness_5, drift:iteration-log:meta_harness_concurrent, drift:iteration-log:net_enforced_harness, drift:iteration-log:workflows, unscoped:001, unscoped:002
 Lanes: verification 0/1 free 1, integration 0/1 free 1
 ## Projects (synced by `uv run scripts/omt/project.py sync` — do not hand-edit)
 

@@ -175,14 +175,14 @@
 # ============================================================
 # INJECT — conversation-resident injections (ONE per trigger — R6 S6; budgets = the F32 ×N-turn control knob)
 # ============================================================
-@inject session_bootstrap on=first_tool_result budget=2048 : ONE emission per session (GLOBAL ≤8 + TASKS menu + SUGGESTED ≤5; nav tip ≤512B deferred when nav-first R7 T3; TA digest ≤1024B — counts + per-file + stale ⚠️ + pointer, full via omt_think{op:list})
+@inject session_bootstrap on=first_tool_result budget=2048 : ONE emission per session (INTRO 1 para + GLOBAL ≤8 + TASKS menu + SUGGESTED ≤5; nav tip ≤512B deferred when nav-first R7 T3; TA digest ≤1024B — counts + per-file + stale ⚠️ + pointer, full via omt_think{op:list})
 @inject file_thoughts on=file_read budget=1024 : first read of a TA:-carrying file per session appends the file's thoughts (feature_022 D1 point-of-use; awareness ≠ consult — no think_consult record)
 @inject kb_bootstrap on=first_tool_result budget=256 : AKB tip — omt_kb_nav{op:nav, query} before src/ edits (g.kb blocks); CLASS_/CONTRACT_/DEP_/LAYER_ tags, tag_type:TIER_CODE, list_sections file:<substr> (feature_kb_akb)
 
 # ============================================================
 # DOC — harness knowledge corpus (nav-indexed; app-doc tags are scraped at build)
 # ============================================================
-@doc startup tags="STARTUP" : Read WORK.compiled.md (header; WORK.md on demand) + 1x omt_net probe at session start with max_states=0 (brief: observation+menu+freshness); render GLOBAL (<=8: observation/rev, Pool p/a/d, Lanes, Projects a/c/d, drift, STALE if NEXT != probe next) + TASKS letter menu (NEXT/Other/Blocked/Resources; A/B/C... = stable Options IDs 1:1, no invented IDs, D19; reply single letter, never question-tool) + SUGGESTED NEXT (advisory D19-exempt <=5: drift unlinked > aging > iter-log + pool + <=2 IDEA:, never auto-applied). Rest via omt_nav.
+@doc startup tags="STARTUP" : Read WORK.compiled.md (header; WORK.md on demand) + 1x omt_net probe at session start with max_states=0 (brief: observation+menu+freshness); render INTRO (1 paragraph: what this menu is + where data comes from + reply single letter) + GLOBAL (<=8: observation/rev, Pool p/a/d, Lanes, Projects a/c/d, drift, STALE if NEXT != probe next) + TASKS letter menu (grouped Projects/Drifts/New, active+not-started only; labels without proj:/drift:/unscoped: prefixes, A/B/C... = stable Options IDs 1:1, no invented IDs, D19; NEXT/Other/Blocked/Resources order; reply single letter, never question-tool) + SUGGESTED NEXT (advisory D19-exempt <=5: drift unlinked > aging > iter-log + pool + <=2 IDEA:, shortcut S = accept, never auto-applied). Rest via omt_nav.
 @doc runtime tags="RUNTIME" : `uv` only (no bare `python`/`pip`/`pytest`). `src/` edits → `omt_phase` first.
 @doc enforcement tags="ENF" : mechanical via .opencode/plugins/omt_enforcer.ts + lib/enforcer ×7 + opencode.jsonc; reference = .meta/META_HARNESS.omt (query: omt_nav)
 @doc rule.r1 tags="RULE_R1" : src/ edit REQUIRES omt_phase{task_type,phase,scope} — task_type: bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs; phase: Analysis|Design|Programming|Testing; scope: one-sentence done definition

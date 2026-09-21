@@ -295,7 +295,7 @@
       "budget": 2048,
       "id": "session_bootstrap",
       "on": "first_tool_result",
-      "text": "ONE emission per session (GLOBAL \u22648 + TASKS menu + SUGGESTED \u22645; nav tip \u2264512B deferred when nav-first R7 T3; TA digest \u22641024B \u2014 counts + per-file + stale \u26a0\ufe0f + pointer, full via omt_think{op:list})"
+      "text": "ONE emission per session (INTRO 1 para + GLOBAL \u22648 + TASKS menu + SUGGESTED \u22645; nav tip \u2264512B deferred when nav-first R7 T3; TA digest \u22641024B \u2014 counts + per-file + stale \u26a0\ufe0f + pointer, full via omt_think{op:list})"
     },
     {
       "budget": 1024,

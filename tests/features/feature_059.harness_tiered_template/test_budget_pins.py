@@ -39,7 +39,11 @@ import harnessc
 # 64993 → 66159 — @doc startup reworded to WORK.compiled.md + probe
 # max_states=0 brief (+1166B measured live via _sizes(); kinds unchanged:
 # doc/flow/xref/tool/msg). Deliberate, budgets still OK (66159/66560).
-NAV_INDEX_CEIL = 66159
+# Re-pin 2026-09-21 (startup menu rework): NAV_INDEX_CEIL 66159 → 66375 —
+# @doc startup reworded to INTRO + grouped TASKS + SUGGESTED shortcut S
+# (+216B measured live via _sizes(); kinds unchanged: doc/flow/xref/tool/msg).
+# Deliberate, budgets still OK (66375/66560).
+NAV_INDEX_CEIL = 66375
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): op describe gains
 # "| resume" (+9B) paid by an include_ledger describe diet (-8B) — net +1B
 # deliberate (tool_args 2455/2464); design note @ 4.design/features/

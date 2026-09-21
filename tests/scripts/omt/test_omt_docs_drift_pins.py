@@ -119,7 +119,7 @@ def test_plugin_array_has_no_local_plugins() -> None:
 # --- 3. startup contract (AGENTS format, user-directed 2026-09-20; reverses R7 T1/F30 WORK.md-only) -----------------
 
 STARTUP_SENTENCE = (
-    "1x `omt_net` probe at session start; render `GLOBAL`"
+    "1x `omt_net` probe at session start with `max_states=0`"
 )
 
 
@@ -127,12 +127,18 @@ def test_build_prompt_carries_startup_contract() -> None:
     text = BUILD_PROMPT.read_text(encoding="utf-8")
     assert STARTUP_SENTENCE in text, (
         ".agents_prompts/build.md lost the AGENTS startup sentence "
-        "(WORK.md + probe + GLOBAL+TASKS+SUGGESTED NEXT — user-directed "
-        "2026-09-20. R8: the AGENTS.md leg is pinned by `harnessc check "
+        "(WORK.md + probe + INTRO+GLOBAL+TASKS+SUGGESTED NEXT — user-directed "
+        "2026-09-20, menu rework: INTRO paragraph + grouped TASKS + SUGGESTED "
+        "shortcut S. R8: the AGENTS.md leg is pinned by `harnessc check "
         "--verify-projections`; the .omt single-sources it)")
+    assert "render INTRO" in text and "`GLOBAL`" in text, (
+        ".agents_prompts/build.md startup must carry INTRO paragraph + "
+        "GLOBAL (AGENTS format)")
     assert "`TASKS` menu" in text and "`SUGGESTED NEXT`" in text, (
         ".agents_prompts/build.md startup must carry TASKS menu + "
         "SUGGESTED NEXT (AGENTS format)")
+    assert "shortcut S = accept" in text, (
+        ".agents_prompts/build.md SUGGESTED NEXT must carry the S shortcut")
 
 
 # --- 4. tool-set sync (R8: plugin-registered ↔ IR `tools` keys) --------------
