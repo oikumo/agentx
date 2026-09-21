@@ -73,12 +73,22 @@ class TestRagSearchTool(TestCase):
             "search_documents must call backend.upload_files() with the retrieved chunks "
             "(retrieve-offload-delegate D5 — offload step)"
         )
-        # The uploaded chunk filenames must be deterministic (chunk_0.txt, chunk_1.txt, …)
-        # so the chunk-analyst's task(description="summarize chunk_0.txt") resolves.
+        # AXR-05 (agentx_1_0_0): uploaded paths are unique absolute backend
+        # paths (/retrieval/<search_id>/chunk_<i>.txt) so the deepagents
+        # filesystem middleware (validate_path) passes them through
+        # UNCHANGED and sequential/parallel searches never overwrite each
+        # other. (feature_027's original bare chunk_0.txt names were
+        # unreadable through the middleware and collided across searches —
+        # reconciled with the corrected path contract per round_001 AXR-05.)
         first_upload = uploads[0]
         names = [name for name, _ in first_upload]
-        assert "chunk_0.txt" in names and "chunk_1.txt" in names, (
-            "chunk filenames must be deterministic: chunk_0.txt, chunk_1.txt, …"
+        assert len(names) == 2 and all(
+            name.startswith("/retrieval/") and name.endswith((".txt",))
+            and f"/chunk_{i}.txt" in name
+            for i, name in enumerate(names)
+        ), f"chunk paths must be /retrieval/<search_id>/chunk_<i>.txt, got: {names}"
+        assert len({name.split("/")[2] for name in names}) == 1, (
+            "one search_id groups one retrieval's paths"
         )
         assert getattr(result, "chunks_uploaded", 0) == 2
 
@@ -118,9 +128,13 @@ class TestRagSearchTool(TestCase):
         assert isinstance(md_hit, hit_cls) and isinstance(pdf_hit, hit_cls)
         assert md_hit.source_path == "doc0.md" and md_hit.line == 42
         assert pdf_hit.source_path == "doc1.pdf" and pdf_hit.page == 7
+        # AXR-05: each hit carries its exact backend path, aligned with the
+        # uploaded file and the citation order (chunk_0 ↔ first hit).
+        assert md_hit.backend_path == f"/retrieval/{result.search_id}/chunk_0.txt"
+        assert pdf_hit.backend_path == f"/retrieval/{result.search_id}/chunk_1.txt"
         # Pointer-and-preview: chunks_uploaded tracks the backend offload.
         assert result.chunks_uploaded == 2
-        assert result.error is None
+        assert result.error is None and result.upload_errors == []
 
 
 # ── chunk-analyst SubAgent dict spec ──────────────────────────────────────────

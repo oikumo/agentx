@@ -100,7 +100,7 @@
 ### GoalConfig
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| maxActiveGoals | int | Yes | 10 | Concurrent active goals |
+| maxActiveGoals | int | Yes | 10 | Reserved cap on concurrent active goals — the scheduler enforces single-active per op-spec §1.3 (AXR-10 repair, round_007); values >1 are reserved for a future concurrent-goal design, not exploited today |
 | defaultPriority | int | Yes | 50 | Base priority (0-100) |
 | autoDecompose | bool | Yes | true | Auto-decompose composite goals |
 | maxDepth | int | Yes | 5 | Max decomposition depth |

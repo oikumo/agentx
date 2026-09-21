@@ -77,7 +77,7 @@
 | Persistent entries per agent | 100,000 | TTL + importance-based archival |
 | Reflection log entries | 10,000 | Rolling window (configurable) |
 | Policy rules per agent | 1,000 | Hard limit (configurable) |
-| Active goals per session | 10 | GoalConfig.maxActiveGoals |
+| Active goals per session | 1 (enforced) | GoalManager single-active invariant per op-spec §1.3 (AXR-10 repair, round_007); GoalConfig.maxActiveGoals retained as a reserved cap, not a concurrency bound |
 | Goal tree depth | 5 | GoalConfig.maxDepth |
 
 ### S2: Concurrent Operations

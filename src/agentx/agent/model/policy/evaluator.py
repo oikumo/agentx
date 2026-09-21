@@ -66,11 +66,16 @@ class PolicyEngine(IPolicyStorePartner):
     # ----------------------------------------------------------- IPolicyStorePartner
 
     def add_rule(self, rule: PolicyRule) -> None:
-        # fail-fast: compile at load time
-        self._compile(rule)
-        self.rules[rule.id] = rule
+        # AXR-03 single contract: validate (fresh compile, no cache touch)
+        # -> persist -> publish rule + compiled together. A compile or save
+        # failure raises before anything is published, so the previously
+        # accepted ruleset stays intact (same guarantee as add_rule_safely's
+        # False path, and the path revert_rule/rollback relies on).
+        compiled = self._compile_fresh(rule)
         if self._repository is not None:
             self._repository.save(self._agent_id, rule)
+        self.rules[rule.id] = rule
+        self._compiled[rule.id] = compiled
 
     def remove_rule(self, rule_id: str) -> None:
         self.rules.pop(rule_id, None)
@@ -87,14 +92,23 @@ class PolicyEngine(IPolicyStorePartner):
         """Load rules from the repository (N3). Returns the loaded rules.
 
         Does not re-save (mirrors ``GoalManager.load_from_repository``).
+        Each rule is fresh-compiled and published atomically; a rule that
+        no longer compiles is skipped (logged) without touching accepted state.
         """
         if self._repository is None:
             return []
         loaded = self._repository.load_by_agent(self._agent_id)
+        kept: list[PolicyRule] = []
         for rule in loaded:
-            self._compile(rule)
+            try:
+                compiled = self._compile_fresh(rule)
+            except ConditionCompileError as exc:
+                _log.warning("persisted rule %s skipped: %s", rule.id, exc)
+                continue
             self.rules[rule.id] = rule
-        return loaded
+            self._compiled[rule.id] = compiled
+            kept.append(rule)
+        return kept
 
     def resolve_conflicts(self) -> dict[str, Any]:
         # L1 (feature_015): previously a stub returning {}.  Now surfaces
@@ -128,21 +142,35 @@ class PolicyEngine(IPolicyStorePartner):
     # ----------------------------------------------------------- safe add (§11.3)
 
     def add_rule_safely(self, rule: PolicyRule) -> bool:
-        """Add a rule via the safe path: compile + conflict check + complexity guard."""
+        """Add a rule via the safe path: compile + guard + conflict + save + publish.
+
+        AXR-03: the candidate is fresh-compiled without touching the live
+        cache; the complexity guard runs before anything is published; the
+        conflict check runs against the proposed FINAL set (the superseded
+        same-ID version excluded, so a legitimate replacement never
+        self-conflicts); persistence precedes publication. Any rejection or
+        save failure leaves accepted rules, compiled conditions, and
+        persisted rules unchanged. A save failure still raises (caller-visible)
+        but publishes nothing.
+        """
         try:
-            self._compile(rule)
+            compiled = self._compile_fresh(rule)
         except ConditionCompileError as exc:
             _log.warning("rule %s rejected: %s", rule.id, exc)
             return False
-        conflicts = self._resolver.detect(list(self.rules.values()) + [rule])
+        if len(rule.action.parameters) > 10:
+            _log.warning("rule %s rejected: too complex (>10 params)", rule.id)
+            return False
+        final_set = [r for r in self.rules.values() if r.id != rule.id] + [rule]
+        conflicts = self._resolver.detect(final_set)
         for (aid, bid), score in conflicts.items():
             if rule.id in (aid, bid) and score > 0.8:
                 _log.warning("rule %s rejected: conflict score %.2f", rule.id, score)
                 return False
-        if len(rule.action.parameters) > 10:
-            _log.warning("rule %s rejected: too complex (>10 params)", rule.id)
-            return False
-        self.add_rule(rule)
+        if self._repository is not None:
+            self._repository.save(self._agent_id, rule)
+        self.rules[rule.id] = rule
+        self._compiled[rule.id] = compiled
         return True
 
     def revert_rule(self, rule_id: str, previous: PolicyRule | None = None) -> None:
@@ -186,11 +214,21 @@ class PolicyEngine(IPolicyStorePartner):
 
     # ----------------------------------------------------------- internals
 
+    def _compile_fresh(self, rule: PolicyRule) -> CompiledCondition:
+        """Compile a candidate without reading or mutating the live cache.
+
+        AXR-03: validation must never reuse a stale same-ID entry — the
+        compiled result is returned to the caller, which publishes it together
+        with the rule only after all guards and persistence succeed.
+        """
+        cc = CompiledCondition(expression=rule.condition_expr)
+        cc.compile()  # fail-fast; raises ConditionCompileError
+        return cc
+
     def _compile(self, rule: PolicyRule) -> CompiledCondition:
         cc = self._compiled.get(rule.id)
-        if cc is None:
-            cc = CompiledCondition(expression=rule.condition_expr)
-            cc.compile()  # fail-fast
+        if cc is None or cc.expression != rule.condition_expr:
+            cc = self._compile_fresh(rule)
             self._compiled[rule.id] = cc
         return cc
 
@@ -202,3 +240,4 @@ class PolicyEngine(IPolicyStorePartner):
             except ConditionCompileError:
                 return False
         return cc.evaluate(context)
+# TA: AXR-03 contract: _compile_fresh validates without touching cache; add_rule/add_rule_safely save-then-publish atomically; safe path guards complexity first and conflicts vs final set excluding same-ID; load skips uncompilable persisted rules; _compile recompiles on expression drift (pkg3 agentx_1_0_0).

@@ -131,6 +131,10 @@ class NewSessionCommand(Command):
         try:
             session_controller = self.controller.get_session_manager()
             new_session = session_controller.create_new_session()
+            # AXR-04: cached agent controllers belong to the replaced
+            # session — drop them so reopened screens rebuild against the
+            # new session's storage + sandbox.
+            self.controller.invalidate_session_scoped_controllers()
             self.controller.print_message(f"New session created: {new_session.name}")
 
         except Exception as e:

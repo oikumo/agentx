@@ -141,6 +141,24 @@ class SessionDatabase:
             return None
         return _row_to_snapshot(row)
 
+    def load_latest_snapshot_agent_id_by_prefix(
+        self, prefix: str, exclude: str
+    ) -> str | None:
+        """AXR-08: latest legacy agent_id in a mode family (prefix like
+        ``agent\\_%``), excluding the stable id. None when the family has no
+        snapshots. Deterministic per-mode selection: the two mode prefixes
+        never overlap, so the result is unambiguous.
+        """
+        with sqlite3.connect(self.path) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                TableSessionSnapshots.SELECT_LATEST_AGENT_ID_BY_PREFIX,
+                (prefix, exclude),
+            ).fetchone()
+        if row is None:
+            return None
+        return row["agent_id"]
+
 
 # ---------------------------------------------------------------------------
 # Row → dataclass helpers

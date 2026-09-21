@@ -95,6 +95,18 @@ def save_to_output(text: str):
 
 
 def is_directory_allowed_to_deletion(directory_path: str) -> bool:
+    """AXR-12: canonical containment guard (shared path policy with AXR-01/02).
+
+    Resolve + normalize the candidate and every trusted allowed root, then
+    require explicit containment. Lexical prefix checks without resolve()
+    accept `<allow>/../outside` and outside symlink targets. The validated
+    canonical path is what callers must delete (see dangerous_delete_directory).
+    Contract preserved: disallowed -> PermissionError (not False).
+    Policy: deleting an allowed root itself is permitted (relative_to allows
+    equality); allowed roots are resolved as configured (caller trust).
+    Residual: resolve-then-check does not cover concurrent rename races;
+    bound = stable directory ancestry (same bound as AXR-01/02).
+    """
     from agentx.utils.constants import DIRECTORIES_DELETION_ALLOWED
 
     if not DIRECTORIES_DELETION_ALLOWED:
@@ -102,27 +114,39 @@ def is_directory_allowed_to_deletion(directory_path: str) -> bool:
             f"trying to delete a directory but filter is empty, Directory: {directory_path}"
         )
 
-    current_directory: Path = Path.cwd()
-    candidate_directory_path: Path = Path(directory_path)
+    current_directory: Path = Path.cwd().resolve()
+    raw = Path(directory_path)
+    if not raw.is_absolute():
+        raw = current_directory / raw
+    try:
+        candidate = raw.resolve()
+    except Exception:
+        raise PermissionError(
+            f"trying to delete a directory when is out of current directory. Directory: {directory_path}"
+        )
 
     try:
-        candidate_directory_path.is_relative_to(current_directory)
-    except Exception as e:
-        print(e)
+        candidate.relative_to(current_directory)
+    except ValueError:
         raise PermissionError(
             f"trying to delete a directory when is out of current directory. Directory: {directory_path}"
         )
 
     allowed_directories = []
     for directory_allowed in DIRECTORIES_DELETION_ALLOWED:
-        allowed_directory = current_directory / directory_allowed
-        allowed_directories.append(allowed_directory)
+        allowed_raw = Path(directory_allowed)
+        if not allowed_raw.is_absolute():
+            allowed_raw = current_directory / allowed_raw
+        try:
+            allowed_directories.append(allowed_raw.resolve())
+        except Exception:
+            continue
 
     for allowed_directory in allowed_directories:
         try:
-            candidate_directory_path.relative_to(allowed_directory)
+            candidate.relative_to(allowed_directory)
             return True
-        except Exception:
+        except ValueError:
             pass
 
     raise PermissionError(
@@ -140,11 +164,24 @@ def dangerous_delete_directory(directory_path: str) -> bool:
     if not is_directory_allowed_to_deletion(directory_path):
         return False
 
-    if not os.path.isdir(directory_path):
+    # Delete the validated canonical path, not the lexical caller input, so
+    # `<allow>/../outside` or a symlink form cannot address another target
+    # between guard and removal (same stable-ancestry bound as guard).
+    current_directory: Path = Path.cwd().resolve()
+    raw = Path(directory_path)
+    if not raw.is_absolute():
+        raw = current_directory / raw
+    try:
+        canonical = str(raw.resolve())
+    except Exception:
+        return False
+
+    if not os.path.isdir(canonical):
         print(f"Directory not found or is not a directory: {directory_path}")
         return False
 
-    shutil.rmtree(directory_path)
+    shutil.rmtree(canonical)
     print(f"Permanently deleted directory: {directory_path}")
 
     return True
+# TA: AXR-12 guard: resolve+normalize candidate and allowed roots, explicit relative_to containment, PermissionError contract kept; deletion uses validated canonical path; concurrent-rename bound = stable ancestry (pkg1 agentx_1_0_0).

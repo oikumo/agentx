@@ -204,6 +204,15 @@ sequenceDiagram
     AS-->>CC: BaseChatModel
 ```
 
+> **Lifecycle contract (AXR-06 repair, round_003):** the diagram above shows
+> one resolution, but consumers must treat it as *re-resolve on every
+> selection change*, not a construction-time cache. `ChatController` keeps a
+> `_llm_provider_id` snapshot and rebuilds lazily at message time plus
+> best-effort on chat reopen (history + conversation ID untouched, D5); each
+> request captures its own `(llm, provider)` identity and errors name the
+> used/attempted provider (never the registry's newer selection); a rebuild
+> failure fails that request explicitly — no silent fallback to the old LLM.
+
 ## Persistence design
 
 - **Format:** JSON, single key `{"selected": "<provider_id>"}`.

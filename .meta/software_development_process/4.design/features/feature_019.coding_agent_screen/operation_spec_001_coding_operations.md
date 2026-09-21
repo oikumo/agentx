@@ -247,10 +247,22 @@ def file_edit(path: str, old_str: str, new_str: str) -> FileEditResult:
             return FileEditResult(path, False, error="old_str matches multiple locations; be more specific")
         
         new_content = content.replace(old_str, new_str, 1)
-        # Atomic write
-        temp = target.with_suffix(target.suffix + ".tmp")
-        temp.write_text(new_content, encoding="utf-8")
-        temp.replace(target)
+        # Atomic write (AXR-01 repair, round_002 — never a predictable
+        # `<file>.tmp` name: a pre-planted symlink must not divert the
+        # write). Exclusive temp via mkstemp(O_EXCL) in the validated
+        # parent + os.replace; preserve permission bits; clean up on fail.
+        fd, tmp_name = tempfile.mkstemp(dir=str(target.parent))
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                fh.write(new_content)
+            os.chmod(tmp_name, target.stat().st_mode & 0o7777)
+            os.replace(tmp_name, target)
+        except Exception:
+            try:
+                os.unlink(tmp_name)
+            except OSError:
+                pass
+            raise
         
         # Generate unified diff
         import difflib

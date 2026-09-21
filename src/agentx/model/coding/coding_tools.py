@@ -9,6 +9,7 @@ from __future__ import annotations
 import fnmatch
 import os
 import difflib
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -119,23 +120,38 @@ def _file_search_impl(pattern: str, path: str = ".") -> FileSearchResult:
         return FileSearchResult([], 0, False, error="Not a directory")
 
     matches = []
+    sandbox_root = get_sandbox_root()
     try:
         for file_path in target.rglob(pattern):
             if not file_path.is_file():
                 continue
 
             try:
-                content = file_path.read_text(encoding="utf-8")
-                lines = content.splitlines()
-
-                # Return first match (line 1) with context
-                # For file search, we just indicate the file matches
-                if lines:
-                    rel_path = file_path.relative_to(get_sandbox_root())
+                # AXR-02: resolve + validate every result before reading.
+                # rglob yields the lexical link path; is_file/read_text would
+                # follow an outside symlink. Resolve to the real target,
+                # require containment, and read the validated target.
+                resolved = file_path.resolve()
+                try:
+                    resolved.relative_to(sandbox_root)
+                except ValueError:
+                    continue  # outside-sandbox symlink target: exclude
+                if not resolved.is_file():
+                    continue
+                # Bound preview reads: only first 5 lines, never whole file.
+                with resolved.open("r", encoding="utf-8") as f:
+                    preview = []
+                    for _ in range(5):
+                        line = f.readline()
+                        if not line:
+                            break
+                        preview.append(line.rstrip("\n"))
+                if preview:
+                    rel_path = file_path.relative_to(sandbox_root)
                     matches.append(FileMatch(
                         path=str(rel_path),
                         line=1,
-                        context="\n".join(lines[:5])  # First 5 lines as context
+                        context="\n".join(preview)  # First 5 lines as context
                     ))
 
                     if len(matches) >= 100:
@@ -228,10 +244,30 @@ def _file_edit_impl(path: str, old_str: str, new_str: str) -> FileEditResult:
 
         new_content = content.replace(old_str, new_str, 1)
 
-        # Atomic write via temp file
-        temp = target.with_suffix(target.suffix + ".tmp")
-        temp.write_text(new_content, encoding="utf-8")
-        temp.replace(target)
+        # AXR-01: exclusive temp file in the validated parent dir + atomic
+        # replace. Never reuse predictable "<file>.tmp" (pre-planted symlink
+        # would be followed by write_text/replace and overwrite outside).
+        # mkstemp uses O_EXCL so an attacker-planted name cannot be reused.
+        try:
+            orig_mode = target.stat().st_mode
+        except Exception:
+            orig_mode = None
+        fd, tmp_name = tempfile.mkstemp(dir=str(target.parent))
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            if orig_mode is not None:
+                try:
+                    os.chmod(tmp_name, orig_mode & 0o7777)
+                except Exception:
+                    pass
+            os.replace(tmp_name, target)
+        except Exception:
+            try:
+                os.unlink(tmp_name)
+            except Exception:
+                pass
+            raise
 
         # Generate unified diff
         diff_lines = list(difflib.unified_diff(
@@ -451,3 +487,4 @@ __all__ = [
 
 # Registry of @tool decorated functions for langchain
 CODING_TOOLS = [file_search, file_read, file_edit, file_list, file_create]
+# TA: AXR-01/02 containment: edits use mkstemp O_EXCL in validated parent (never predictable .tmp); search resolves+validates every rglob result and reads validated target with 5-line preview cap (pkg1 agentx_1_0_0).

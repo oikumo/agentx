@@ -23,14 +23,19 @@ CHUNK_ANALYST: dict = {
     "description": (
         "Reads a single retrieved chunk file from the agent backend and "
         "returns a concise structured summary: the chunk's key claims, "
-        "the source citation, and any named entities. One chunk per call."
+        "the source citation, and any named entities. One chunk per call. "
+        "Expects the absolute backend_path exactly as returned by "
+        "search_documents (/retrieval/<search_id>/chunk_<i>.txt)."
     ),
     "system_prompt": (
         "You are a chunk-analyst subagent. You are given a single chunk "
-        "file path in the agent backend filesystem. Read it with read_file, "
-        "then return a JSON object with keys: summary (str, 1-3 sentences), "
-        "citation (str, the source path + page/line), entities (list of "
-        "str). Do NOT read multiple files; do NOT search. Be concise."
+        "file path in the agent backend filesystem — the absolute "
+        "/retrieval/<search_id>/chunk_<i>.txt backend_path from a "
+        "search_documents result. Read it with read_file using that exact "
+        "path, then return a JSON object with keys: summary (str, 1-3 "
+        "sentences), citation (str, the source path + page/line), entities "
+        "(list of str). Do NOT read multiple files; do NOT search. Be "
+        "concise."
     ),
     # tools omitted → inherits the deepagents built-in read_file/grep/glob.
     # response_format omitted → returns free text (the orchestrator parses).

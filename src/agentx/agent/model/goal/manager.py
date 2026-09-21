@@ -43,6 +43,12 @@ class GoalManager(IGoalManager):
     # ----------------------------------------------------------- IGoalManager
 
     def add_goal(self, goal: Goal) -> str:
+        # AXR-10 (pkg6): a pre-ACTIVE goal cannot enter the tree next to an
+        # existing active one — operation spec §1.3 says insertions land as
+        # PENDING unless no active goal exists. (Previously the incoming
+        # ACTIVE goal counted itself, bypassing the single-active branch.)
+        if goal.status == GoalStatus.ACTIVE and self.active_goal() is not None:
+            goal.status = GoalStatus.PENDING
         self._tree.add(goal)
         # Single-active model: activate only when no goal is currently active.
         # (m4: the previous ``len(active) < max_active_goals`` clause was dead
@@ -80,13 +86,22 @@ class GoalManager(IGoalManager):
                 # crashing the entire goal manager.
                 _log.warning("invalid goal status: %s", status)
                 return
+        was_active = goal.status == GoalStatus.ACTIVE
         goal.status = status
         goal.updated_at = datetime.now(timezone.utc)
         if self._repository is not None:
             self._repository.save(self._agent_id, goal)
-        # promote next pending goal if this one completed/failed/abandoned
+        # AXR-10 (pkg6): promote only when the ACTIVE slot is actually
+        # vacated. Terminating a PENDING (or already-terminal) goal must not
+        # create a second active goal, and repeated terminal updates are
+        # idempotent — a goal that was not active never triggers promotion.
         if status in {GoalStatus.COMPLETED, GoalStatus.FAILED, GoalStatus.ABANDONED}:
-            self._promote_next(goal_id)
+            if was_active:
+                self._promote_next(goal_id)
+        elif status == GoalStatus.ACTIVE:
+            # Focus switch: the requested goal becomes THE active goal; a
+            # previous active is demoted to PENDING (not lost).
+            self._enforce_single_active(prefer=goal_id)
 
     # ----------------------------------------------------------- helpers
 
@@ -94,6 +109,15 @@ class GoalManager(IGoalManager):
         # H1 (feature_015): promote the highest-priority pending goal, not
         # the first-inserted one.  The class docstring promises "priority-
         # based activation" — dict iteration order was being used instead.
+        # AXR-10 (pkg6): defense-in-depth — promotion is vacancy-gated at the
+        # update_status call site; this guard keeps the single-active
+        # invariant even if a new caller forgets the gate.
+        if self.active_goal() is not None:
+            _log.debug(
+                "promotion skipped: active goal exists (completed_id=%s)",
+                completed_id,
+            )
+            return
         pending = [g for g in self._tree.nodes.values() if g.status == GoalStatus.PENDING]
         if not pending:
             return
@@ -102,6 +126,45 @@ class GoalManager(IGoalManager):
         goal.updated_at = datetime.now(timezone.utc)
         if self._repository is not None:
             self._repository.save(self._agent_id, goal)
+
+    # ------------------------------------------- AXR-10 (pkg6) enforcement
+
+    def _active_ids(self) -> list[str]:
+        return [g.id for g in self._tree.nodes.values() if g.status == GoalStatus.ACTIVE]
+
+    def _enforce_single_active(self, prefer: str | None = None, save: bool = True) -> None:
+        """Single-active-goal choke point (AXR-10, pkg6).
+
+        Demotes surplus ACTIVE goals to PENDING so exactly one remains:
+        keeps ``prefer`` when it is active, else the first active in tree
+        order. Demotions are timestamped and (with ``save=True``) persisted,
+        so historical double-ACTIVE rows written by the pre-fix promotion
+        bug converge instead of re-corrupting on every load/restart.
+
+        ``GoalConfig.max_active_goals`` is deliberately NOT honored as a
+        concurrency bound: the singular ``active_goal()`` consumer and the
+        first-active completion in ``Agent.act`` implement a single-active
+        scheduler (operation spec §1.3); concurrent goals are a separate
+        design change, so the field remains a reserved cap.
+        """
+        actives = self._active_ids()
+        if len(actives) <= 1:
+            return
+        keep = prefer if prefer in actives else actives[0]
+        now = datetime.now(timezone.utc)
+        for gid in actives:
+            if gid == keep:
+                continue
+            surplus = self._tree.nodes[gid]
+            surplus.status = GoalStatus.PENDING
+            surplus.updated_at = now
+            if save and self._repository is not None:
+                self._repository.save(self._agent_id, surplus)
+        _log.warning(
+            "single-active-goal invariant repaired: kept %s, demoted %s",
+            keep,
+            [g for g in actives if g != keep],
+        )
 
     def create_goal(
         self,
@@ -173,6 +236,10 @@ class GoalManager(IGoalManager):
                 if promoted is not None and promoted.status == GoalStatus.ACTIVE:
                     promoted.status = GoalStatus.PENDING
                     promoted.updated_at = datetime.now(timezone.utc)
+            # AXR-10 (pkg6): restoring an ACTIVE old_status while a different
+            # goal became active in the interim must not leave two actives —
+            # the restored goal is the intended active one.
+            self._enforce_single_active(prefer=goal_id if goal is not None else None)
         except (ValueError, KeyError):
             pass
 
@@ -185,3 +252,9 @@ class GoalManager(IGoalManager):
         # sets root to the first-inserted goal).
         if root_id and root_id in self._tree.nodes:
             self._tree.root = root_id
+        # AXR-10 (pkg6): historical double-ACTIVE rows (written by the
+        # pre-fix promotion bug) must not re-corrupt the tree on every
+        # restart — enforce the invariant and persist the demotions so
+        # restored data converges.
+        self._enforce_single_active()
+# TA: AXR-10 invariant: _enforce_single_active is the single-active choke point (update_status focus-switch, add_goal pre-ACTIVE demotion, revert_adjustment, load_from_repository heal+persist); promotion is vacancy-gated (was_active AND no active), repeated terminal updates idempotent; max_active_goals deliberately NOT a concurrency bound — singular active_goal()/act() consumers implement spec §1.3; load enforcement persists demotions so historical double-ACTIVE rows converge (pkg6 agentx_1_0_0).

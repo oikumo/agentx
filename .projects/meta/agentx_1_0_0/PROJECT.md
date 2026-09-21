@@ -1,6 +1,6 @@
 # PROJECT: agentx_1_0_0 — AgentX 1.0.0 (consistency hardening release)
 
-> Status: **draft** · draft · v1.0 declared (2026-09-20) — definition locked from `sandbox/consistency_enforcement/round_001_implementation_review.md` (12 open groups, verified 2026-09-19 at `fdabeee`, re-verified on HEAD `52795dd`: 20/20 probes pass, `src/agentx/` diff empty). No application fixes applied yet. Iterate freely (non-gated); spawn fix features with `new_feature.py "<name>" --type <tt> --project agentx_1_0_0`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **active** · v1.0 RELEASED (2026-09-20) — definition locked from `sandbox/consistency_enforcement/round_001_implementation_review.md` (12 open groups, verified 2026-09-19 at `fdabeee`, re-verified on HEAD `52795dd`: 20/20 probes pass, `src/agentx/` diff empty). All 12 round_001 groups repaired across packages 1–6 with per-finding regression proof (48 durable tests); 20/20 observation probes retired (D4); full suite green (1972 passed); ReAct collection restored; docs reconciled. Session log in CURRENT_STATE.md (newest on top).
 
 ---
 
@@ -60,14 +60,14 @@
 ## Status
 
 - [x] Definition declared (v1.0 — scope = round_001's 12 groups + 6-package order + acceptance above)
-- [ ] Package 1 — filesystem containment (feature dir + phase + fix + regressions)
-- [ ] Package 2 — provider dispatch
-- [ ] Package 3 — policy acceptance
-- [ ] Package 4 — session lifecycle
-- [ ] Package 5 — RAG file handoff
-- [ ] Package 6 — conversation + recovery
-- [ ] Release gate — all regression checks green, probes retired, suite green, ReAct collection restored
-- [ ] First linked feature (header flips draft → active mechanically)
+- [x] Package 1 — filesystem containment (feature dir + phase + fix + regressions)
+- [x] Package 2 — provider dispatch
+- [x] Package 3 — policy acceptance
+- [x] Package 4 — session lifecycle
+- [x] Package 5 — RAG file handoff
+- [x] Package 6 — conversation + recovery (fix + durable regressions landed; closed)
+- [x] Release gate — all regression checks green, probes retired, suite green, ReAct collection restored
+- [x] First linked feature (header flips draft → active mechanically)
 
 ---
 

@@ -7,6 +7,7 @@ the abstraction, not the concrete registry.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
@@ -24,6 +25,8 @@ from agentx.agent.model.tools.spec import (
     ValidationResult,
 )
 from agentx.agent.types import ActuatorCommand, ActuatorResult, EnvironmentChange, ChangeType
+
+_log = logging.getLogger(__name__)
 
 
 class ToolRegistry(IToolRegistryPartner):
@@ -152,15 +155,26 @@ class ToolRegistry(IToolRegistryPartner):
             return ActuatorResult(
                 success=False, error=f"tool disabled: {command.actuator_id}"
             )
-        vr = actuator.validate(command)
-        if not vr.valid:
-            return ActuatorResult(
-                success=False, error="; ".join(vr.errors) or "validation failed"
-            )
+        # AXR-11 (pkg6): validation runs INSIDE the tool exception boundary.
+        # A raising validator (or one that mishandles malformed arguments)
+        # must surface as an unsuccessful ActuatorResult with an actionable
+        # error — never escape execute_safely and strand the agent cycle.
+        # The warning log keeps validator programming errors visible even
+        # though they no longer propagate.
         start = datetime.now(timezone.utc)
         try:
+            vr = actuator.validate(command)
+            if not vr.valid:
+                return ActuatorResult(
+                    success=False, error="; ".join(vr.errors) or "validation failed"
+                )
             result = actuator.act(command)
         except Exception as exc:  # noqa: BLE001 — non-fatal per design §11.1
+            _log.warning(
+                "tool %s raised during validation/execution: %s",
+                command.actuator_id,
+                exc,
+            )
             elapsed = (datetime.now(timezone.utc) - start).total_seconds()
             return ActuatorResult(
                 success=False,
@@ -210,3 +224,4 @@ class ToolRegistry(IToolRegistryPartner):
             raise ToolSchemaError("schema.type must be a non-empty string")
         if schema.type == "object" and schema.properties is None:
             raise ToolSchemaError("object schema requires properties")
+# TA: AXR-11 boundary: actuator.validate now runs INSIDE the try in execute_safely — raising validators return unsuccessful ActuatorResult (actionable error names tool+exc) instead of escaping and stranding the agent cycle; _log.warning keeps validator bugs visible; no caller depended on validate raising (grep-verified pkg6 agentx_1_0_0).

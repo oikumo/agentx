@@ -139,11 +139,12 @@ def rag_ingest_status(repository_path: str) -> dict
 ## `chunk-analyst` SubAgent (dispatched via built-in `task`)
 
 ```python
-# dispatched by the orchestrator via:
-task({"subagentType": "chunk-analyst", "description": "Summarize chunk_0.txt"})
+# dispatched by the orchestrator via (AXR-05 repair, round_006 — the
+# description names the returned backend_path, never a bare filename):
+task({"subagentType": "chunk-analyst", "description": "Summarize /retrieval/<search_id>/chunk_0.txt"})
 ```
 
-**Pre:** a chunk file (`chunk_0.txt`, …) exists in the agent backend (uploaded by a prior `rag_search` call this turn).
+**Pre:** the chunk files named by the `rag_search` result's `RagSearchHit.backend_path` values (`/retrieval/<search_id>/chunk_<i>.txt`, absolute — minted per invocation, so sequential/parallel searches never collide) exist in the agent backend (uploaded by a prior `rag_search` call this turn).
 **Post:** the chunk-analyst subagent runs with `CHUNK_ANALYST["system_prompt"]` as its system prompt, reads the named chunk file via the built-in `read_file`, and returns a structured summary (free text — the orchestrator parses). One chunk per call; the orchestrator dispatches one `task()` per chunk in parallel (context quarantine per deepagents design).
 **Exc:** the deepagents `task()` propagates subagent exceptions back to the orchestrator as tool-call errors; the orchestrator's own `on_tool_result` handler surfaces them (or the `on_error` path if the orchestrator run fails).
 

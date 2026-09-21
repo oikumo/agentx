@@ -19,6 +19,7 @@ threads to the synthesizer.
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass, field
 from typing import Any, Callable, List, Optional
 
@@ -39,14 +40,34 @@ class RagSearchHit:
     source_path: Optional[str] = None
     page: Optional[int] = None       # for PDF sources
     line: Optional[int] = None       # for MD sources
+    # AXR-05 (agentx_1_0_0): the chunk's exact backend path. Absolute
+    # (/retrieval/<search_id>/chunk_<i>.txt) so the deepagents filesystem
+    # middleware (validate_path) passes it through UNCHANGED — the analyst's
+    # read_file resolves to the same key StateBackend stored. The result
+    # schema, the analyst prompt, and the citation mapping all reference this.
+    backend_path: Optional[str] = None
 
 
 @dataclass
 class SearchDocumentsResult:
-    """Result of the search_documents tool (see module header for the offload note)."""
+    """Result of the search_documents tool (see module header for the offload note).
+
+    AXR-05 contract (agentx_1_0_0):
+
+    * ``search_id`` groups this retrieval's backend paths.
+    * ``chunks_uploaded`` counts ONLY successful uploads (a response with an
+      ``error`` is not a success).
+    * ``upload_errors`` lists per-file upload failures ("path: error"); empty
+      when the offload fully succeeded or no backend/files were involved.
+    * ``error`` is reserved for hard failures (retriever construction,
+      retrieval, or the upload call raising). ``error=None`` + empty
+      ``hits`` = a successful empty retrieval — distinct from offload failure.
+    """
 
     hits: List[RagSearchHit]
-    chunks_uploaded: int             # how many chunk files landed in backend
+    chunks_uploaded: int             # successful uploads only
+    search_id: str = ""
+    upload_errors: List[str] = field(default_factory=list)
     truncated: bool = False
     error: Optional[str] = None
 
@@ -59,9 +80,11 @@ def search_documents(query: str, repository_path: str, k: int = 5) -> SearchDocu
     """Search the active RAG repository for chunks matching the query.
 
     Writes retrieved chunks to the agent backend filesystem via
-    ``backend.upload_files()`` so the chunk-analyst subagent can read/grep
-    them in parallel. Returns a pointer-and-preview result; the full chunks
-    live in the backend (retrieve-offload-delegate pattern, D5).
+    ``backend.upload_files()`` under unique absolute paths
+    (``/retrieval/<search_id>/chunk_<i>.txt``) so the chunk-analyst subagent
+    can read them in parallel — pass the ``backend_path`` values from the
+    result to the analyst. Returns a pointer-and-preview result; the full
+    chunks live in the backend (retrieve-offload-delegate pattern, D5).
 
     Args:
         query: The similarity-search query string.
@@ -89,21 +112,45 @@ def _search_documents_impl(
 
     The retriever yields tuples:
         (chunk_id, content, score, source_path, page, line)
-    which this impl maps to ``RagSearchHit`` records + deterministic
-    ``chunk_{i}.txt`` backend files (so the chunk-analyst's
-    ``task(description="summarize chunk_0.txt")`` references a stable path).
+    which this impl maps to ``RagSearchHit`` records + unique absolute
+    backend paths (``/retrieval/<search_id>/chunk_<i>.txt`` — AXR-05:
+    predictable per-search keys would collide across sequential/parallel
+    searches, and relative keys were unreadable through the deepagents
+    filesystem middleware).
+
+    AXR-05 error contract: retriever-construction failures, retrieval
+    failures, and upload exceptions return ``error`` (never raise); per-file
+    upload failures land in ``upload_errors`` and are NOT counted in
+    ``chunks_uploaded``; an empty successful retrieval is ``error=None``.
     """
+    search_id = uuid.uuid4().hex[:12]
+
     if _retriever is None:
         # Production path — build a real retriever against the repository's
         # ChromaDB store. Built lazily so the ``@tool`` import stays light.
+        # AXR-05: construction failures are structured errors, not raises —
+        # they are reachable through the bound public tool.
         from agentx.model.rag_v2.query.rag_v2_retriever import build_retriever
 
-        _retriever = build_retriever(repository_path)
+        try:
+            _retriever = build_retriever(repository_path)
+        except Exception as exc:
+            return SearchDocumentsResult(
+                hits=[],
+                chunks_uploaded=0,
+                search_id=search_id,
+                error=f"retriever construction failed: {exc}",
+            )
 
     try:
         rows = list(_retriever(query, k))
     except Exception as exc:  # pragma: no cover — defensive; retriever contract
-        return SearchDocumentsResult(hits=[], chunks_uploaded=0, error=str(exc))
+        return SearchDocumentsResult(
+            hits=[],
+            chunks_uploaded=0,
+            search_id=search_id,
+            error=f"retrieval failed: {exc}",
+        )
 
     hits: List[RagSearchHit] = []
     files: list[tuple[str, bytes]] = []
@@ -124,6 +171,9 @@ def _search_documents_impl(
             source = row[3] if len(row) > 3 else None
             page = row[4] if len(row) > 4 else None
             line = row[5] if len(row) > 5 else None
+        # AXR-05: unique absolute path per search + index — sequential and
+        # parallel searches can never overwrite each other's chunks.
+        backend_path = f"/retrieval/{search_id}/chunk_{i}.txt"
         hits.append(
             RagSearchHit(
                 chunk_id=str(cid),
@@ -132,18 +182,46 @@ def _search_documents_impl(
                 source_path=source,
                 page=page,
                 line=line,
+                backend_path=backend_path,
             )
         )
-        files.append((f"chunk_{i}.txt", str(content).encode("utf-8")))
+        files.append((backend_path, str(content).encode("utf-8")))
 
     chunks_uploaded = 0
+    upload_errors: List[str] = []
     if backend is not None and files:
-        uploaded = backend.upload_files(files)
-        chunks_uploaded = len(uploaded) if isinstance(uploaded, (list, tuple)) else len(files)
+        try:
+            uploaded = backend.upload_files(files)
+        except Exception as exc:
+            # Raised upload exceptions are a hard offload failure: hits keep
+            # their content (direct answers still possible) but no chunk is
+            # readable by the analyst — say so explicitly, never raise.
+            return SearchDocumentsResult(
+                hits=hits,
+                chunks_uploaded=0,
+                search_id=search_id,
+                upload_errors=[f"upload raised: {exc}"],
+                error=f"chunk upload failed: {exc}",
+            )
+        if isinstance(uploaded, (list, tuple)):
+            # Count only responses without an error; a bare string response
+            # (legacy fake shape) counts as a success for that file.
+            for (path, _content), response in zip(files, uploaded):
+                response_error = getattr(response, "error", None)
+                if response_error:
+                    upload_errors.append(f"{path}: {response_error}")
+                else:
+                    chunks_uploaded += 1
+        else:
+            # Legacy tolerance: a non-list return cannot report per-file
+            # failures — treat every file as uploaded (previous behavior).
+            chunks_uploaded = len(files)
 
     return SearchDocumentsResult(
         hits=hits,
         chunks_uploaded=chunks_uploaded,
+        search_id=search_id,
+        upload_errors=upload_errors,
         truncated=False,
         error=None,
     )
@@ -190,7 +268,10 @@ RAG_V2_TOOLS = [search_documents, ingestion_status]
 # the model cannot hallucinate what it cannot supply.
 
 
-def build_rag_v2_tools(repository_path: str) -> List[BaseTool]:
+def build_rag_v2_tools(
+    repository_path: str,
+    backend: Any | None = None,
+) -> List[BaseTool]:
     """Build the v2 tool surface bound to one repository's working directory.
 
     The returned tools close over ``repository_path``; their schemas expose
@@ -198,23 +279,31 @@ def build_rag_v2_tools(repository_path: str) -> List[BaseTool]:
     ``RagV2AgentService`` uses this factory for its default tools; the
     module-level ``RAG_V2_TOOLS`` (unbound) stays for tests + direct impl
     injection.
+
+    AXR-05 (agentx_1_0_0): ``backend`` binds the SAME backend runtime the
+    service hands to ``create_deep_agent`` — the service previously built a
+    backend for the graph but never connected it to these tools, so the
+    documented chunk offload never happened (``chunks_uploaded=0``). ``None``
+    keeps the historical no-offload behaviour for direct/fallback callers.
     """
 
     @tool("search_documents")
     def search_documents_bound(query: str, k: int = 5) -> SearchDocumentsResult:
         """Search the active RAG repository for chunks matching the query.
 
-        Writes retrieved chunks to the agent backend filesystem via
-        ``backend.upload_files()`` so the chunk-analyst subagent can read/grep
-        them in parallel. Returns a pointer-and-preview result; the full
-        chunks live in the backend (retrieve-offload-delegate pattern, D5).
+        Writes retrieved chunks to the agent backend filesystem under unique
+        absolute paths (``/retrieval/<search_id>/chunk_<i>.txt``) so the
+        chunk-analyst subagent can read them in parallel. Pass the
+        ``backend_path`` values from the result to the analyst — never invent
+        file names. Returns a pointer-and-preview result; the full chunks
+        live in the backend (retrieve-offload-delegate pattern, D5).
         The searched repository is fixed server-side (the active one).
 
         Args:
             query: The similarity-search query string.
             k: Top-k chunks to retrieve (default 5).
         """
-        return _search_documents_impl(query, repository_path, k)
+        return _search_documents_impl(query, repository_path, k, backend=backend)
 
     @tool("ingestion_status")
     def ingestion_status_bound() -> dict:
@@ -226,3 +315,4 @@ def build_rag_v2_tools(repository_path: str) -> List[BaseTool]:
         return _ingestion_status_impl(repository_path)
 
     return [search_documents_bound, ingestion_status_bound]
+# TA: AXR-05 contract: /retrieval/<search_id>/chunk_i.txt absolute keys (middleware validate_path passes them unchanged; sequential/parallel searches never collide); upload exceptions and retriever-construction failures return structured error; per-file upload failures land in upload_errors and are not counted in chunks_uploaded; empty success distinct from offload failure (pkg5 agentx_1_0_0).

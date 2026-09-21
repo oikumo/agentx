@@ -145,18 +145,79 @@ class Agent(IAgentModelPartner):
         return self.config.sandbox_root
 
     def start_session(self, config: AgentConfig) -> str:
-        """Initialize a new Agent from AgentConfig (operation spec §1.1)."""
+        """Initialize a new Agent from AgentConfig (operation spec §1.1).
+
+        AXR-09 (agentx_1_0_0): build FRESH persistence + subsystems from the
+        new config and swap them in as one block only after the entire
+        construction succeeds — a failure raises before any swap so the
+        previous session stays fully usable (no partial identity/storage
+        switch). Storage, subsystems, goals, and tools all belong to the new
+        session; only the AI service (non-serialisable runtime object) and
+        the lifecycle state carry over.
+        """
+        from pathlib import Path as _Path
+
+        persistent_path = str(_Path(config.memory_config.persistent_path).expanduser())
+        db_path = f"{persistent_path}/agent_session.db"
+        db = SessionDatabase(db_path)
+        mem_repo = MemoryRepository(db_path)
+        pol_repo = PolicyRepository(db_path)
+        goal_repo = GoalRepository(db_path)
+        refl_repo = ReflectionRepository(db_path)
+
+        tool_registry = ToolRegistry()
+        memory = MemoryManager(
+            volatile_capacity=config.memory_config.volatile_capacity,
+            repository=mem_repo,
+            agent_id=config.id,
+        )
+        policy_engine = PolicyEngine(repository=pol_repo, agent_id=config.id)
+        goal_manager = GoalManager(
+            config=config.goal_config,
+            repository=goal_repo,
+            agent_id=config.id,
+        )
+        safety = DefaultSafetyEvaluator()
+        router = ProposalRouter(
+            policy=policy_engine,
+            memory=memory,
+            goals=goal_manager,
+            tools=tool_registry,
+        )
+        reflection_engine = ReflectionEngine(
+            safety_evaluator=safety,
+            router=router,
+        )
+        environment_model = EnvironmentModel()
+
+        # Register built-in tools into the NEW registry before the swap; on
+        # failure restore the old registry so the previous session remains
+        # fully usable (nothing else on self has been touched yet).
+        old_registry = self.tool_registry
+        self.tool_registry = tool_registry
+        try:
+            self._register_builtin_tools(config)
+        except Exception:
+            self.tool_registry = old_registry
+            raise
+
+        # --- swap in as one block (construction above cannot half-apply) ---
         self.id = config.id
         self.config = config
         self.state = AgentState.PERCEIVING
-        # H2 (feature_015): propagate the new id to all subsystems so
-        # repository saves use the correct agent_id.  Previously the
-        # subsystems retained the original __init__ id, splitting data
-        # across two agent identities.
-        self.policy_engine._agent_id = config.id
-        self.memory._agent_id = config.id
-        self.goal_manager._agent_id = config.id
-        self._register_builtin_tools(config)
+        self._db = db
+        self._mem_repo = mem_repo
+        self._pol_repo = pol_repo
+        self._goal_repo = goal_repo
+        self._refl_repo = refl_repo
+        self.memory = memory
+        self.policy_engine = policy_engine
+        self.goal_manager = goal_manager
+        self._safety = safety
+        self._router = router
+        self.reflection_engine = reflection_engine
+        self.environment_model = environment_model
+
         self._persist_agent_row()
         return self.id
 
@@ -253,39 +314,52 @@ class Agent(IAgentModelPartner):
 
     def run_cycle(self) -> CycleResult:
         """Execute one perceive → decide → act → reflect cycle (operation spec §1.4)."""
-        perception = self.perceive()
-        decision = self.decide()
-        # N2: build the command ONCE so the executed action and the traced
-        # action share the same correlation_id.
-        command = _decision_to_command(decision)
-        action_result = self.act(command) if command is not None else None
-        reflection = None
-        # N11: skip reflection entirely when no AI service is wired, so the
-        # reflection log is not polluted with "(reflection disabled)" entries
-        # every cycle. The engine still degrades gracefully if the AI call
-        # itself fails at runtime.
-        if self.config.reflection_config.enabled and self.reflection_engine.has_ai_service():
-            self.state = AgentState.REFLECTING
-            ctx = self._build_context()
-            trace = DecisionTrace(
-                agent_id=self.id,
+        # AXR-11 (pkg6): a failed turn must not strand the agent in a busy
+        # state. An exception anywhere in the cycle (decide, act, reflection
+        # persistence) otherwise leaves state != PERCEIVING, so every later
+        # send_message is rejected as busy with no recovery path. The
+        # finally releases the busy state while still re-raising so genuine
+        # errors stay visible; intentional lifecycle transitions
+        # (PAUSED/TERMINATED) are never overwritten.
+        try:
+            perception = self.perceive()
+            decision = self.decide()
+            # N2: build the command ONCE so the executed action and the traced
+            # action share the same correlation_id.
+            command = _decision_to_command(decision)
+            action_result = self.act(command) if command is not None else None
+            reflection = None
+            # N11: skip reflection entirely when no AI service is wired, so the
+            # reflection log is not polluted with "(reflection disabled)" entries
+            # every cycle. The engine still degrades gracefully if the AI call
+            # itself fails at runtime.
+            if self.config.reflection_config.enabled and self.reflection_engine.has_ai_service():
+                self.state = AgentState.REFLECTING
+                ctx = self._build_context()
+                trace = DecisionTrace(
+                    agent_id=self.id,
+                    perception=perception,
+                    decision=decision,
+                    action=command,
+                    result=action_result,
+                    goal_context=self.goal_manager.active_goal(),
+                )
+                reflection = self.reflection_engine.reflect(trace, ctx)
+                self._refl_repo.save(
+                    self.id, reflection.id, trace, reflection.critique, reflection.proposals
+                )
+            self.state = AgentState.PERCEIVING
+            return CycleResult(
                 perception=perception,
                 decision=decision,
-                action=command,
-                result=action_result,
-                goal_context=self.goal_manager.active_goal(),
+                action_result=action_result,
+                reflection=reflection,
             )
-            reflection = self.reflection_engine.reflect(trace, ctx)
-            self._refl_repo.save(
-                self.id, reflection.id, trace, reflection.critique, reflection.proposals
-            )
-        self.state = AgentState.PERCEIVING
-        return CycleResult(
-            perception=perception,
-            decision=decision,
-            action_result=action_result,
-            reflection=reflection,
-        )
+        finally:
+            # Recovery: release the busy state unless the agent moved into
+            # an intentional lifecycle state during the cycle.
+            if self.state not in (AgentState.PAUSED, AgentState.TERMINATED):
+                self.state = AgentState.PERCEIVING
 
     def update_policy(self, rule: PolicyRule) -> bool:
         """Add or replace a policy rule via the safe path (operation spec §1.5)."""
@@ -348,8 +422,39 @@ class Agent(IAgentModelPartner):
         return self._db.load_snapshot(snapshot_id)
 
     def load_latest_snapshot(self) -> SessionSnapshot | None:
-        """Read the most recent snapshot for this agent (C5/I1: resume on open)."""
+        """Read the most recent snapshot for this agent (C5/I1: resume on open).
+
+        AXR-08 (agentx_1_0_0): when the stable per-session per-mode id has no
+        snapshots of its own, look for legacy PID-derived snapshots of the
+        same mode family (``<stable_id>_<pid>``) and RETAIN the latest
+        legacy agent_id as this agent's identity, so the association between
+        the identity, its repository rows, and its snapshots survives a
+        process restart. Mode families never overlap (``agent\\_%`` vs
+        ``fast_agent\\_%``), keeping the selection unambiguous per mode.
+        """
+        snapshot = self._db.load_latest_snapshot(self.id)
+        if snapshot is not None:
+            return snapshot
+        legacy_id = self._db.load_latest_snapshot_agent_id_by_prefix(
+            f"{self.id}\\_%", exclude=self.id
+        )
+        if legacy_id is None or legacy_id == self.id:
+            return None
+        self._adopt_identity(legacy_id)
         return self._db.load_latest_snapshot(self.id)
+
+    def _adopt_identity(self, new_id: str) -> None:
+        """AXR-08: keep a selected legacy per-mode id as the stable identity.
+
+        Must run BEFORE any repository load/resume so all subsystems query
+        with the adopted id (mirrors the H2 propagation in start_session).
+        """
+        self.id = new_id
+        if self.config is not None:
+            self.config.id = new_id
+        self.policy_engine._agent_id = new_id
+        self.memory._agent_id = new_id
+        self.goal_manager._agent_id = new_id
 
     # ----------------------------------------------------------- query helpers (N6)
 
@@ -801,3 +906,5 @@ def _from_iso_str(value: Any) -> datetime:
         return datetime.fromisoformat(str(value))
     except (ValueError, TypeError):
         return datetime.now(timezone.utc)
+# TA: AXR-08/09 lifecycle: load_latest_snapshot adopts latest per-mode legacy agent_<pid> id as stable identity before resume; start_session rebuilds db/repos/subsystems/tools and swaps atomically, failure pre-swap leaves old session usable (pkg4 agentx_1_0_0).
+# TA: AXR-11 cycle recovery: run_cycle try/finally restores PERCEIVING on any exception (decide/act/reflect persistence) so send_message's busy gate (state != PERCEIVING) is never stranded; exceptions still re-raise; PAUSED/TERMINATED intentionally preserved (never blanket-overwritten); registry fix means validator failures don't even reach here (pkg6 agentx_1_0_0).

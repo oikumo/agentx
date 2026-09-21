@@ -57,6 +57,10 @@ DEFAULT_RAG_V2_SYSTEM_PROMPT = (
     "retrieve matching chunks from the active repository, then dispatch the "
     "chunk-analyst subagent via task({subagentType: 'chunk-analyst', "
     "description: ...}) to summarize individual files in parallel. "
+    "search_documents returns each hit with its backend_path "
+    "(/retrieval/<search_id>/chunk_<i>.txt) — pass those EXACT paths to the "
+    "chunk-analyst and cite them; never invent or reuse file names from "
+    "earlier searches. "
     "Synthesize a final answer with citations to the source chunks. "
     "Always prefer grounding answers in retrieved chunks before responding."
 )
@@ -99,6 +103,15 @@ class RagV2AgentService:
 
         self._llm = llm
         self._repository_path = repository_path
+        # AXR-05 (agentx_1_0_0): the backend must exist BEFORE the default
+        # tools are built — build_rag_v2_tools binds it into the search tool
+        # so retrieval actually offloads chunks into the same backend runtime
+        # the graph's chunk-analyst reads from (the service previously built
+        # a backend for the graph but never connected it to the tools).
+        if _DEEPAGENTS_AVAILABLE:
+            self._backend = backend if backend is not None else StateBackend()  # type: ignore[operator]
+        else:
+            self._backend = None
         # feature_027 fix: bind the default tools to THIS repository. The old
         # module-level RAG_V2_TOOLS take repository_path as a model-supplied
         # argument — the LLM does not know the real path and hallucinates one
@@ -106,7 +119,9 @@ class RagV2AgentService:
         # build_rag_v2_tools closes over the path so the tool schemas expose
         # no repository_path at all.
         self._tools: List[BaseTool] = (
-            list(tools) if tools is not None else build_rag_v2_tools(repository_path)
+            list(tools)
+            if tools is not None
+            else build_rag_v2_tools(repository_path, backend=self._backend)
         )
         self._system_prompt: str = system_prompt or (
             DEFAULT_RAG_V2_SYSTEM_PROMPT
@@ -125,7 +140,6 @@ class RagV2AgentService:
         self._subagents: list[dict] = list(subagents) if subagents is not None else [CHUNK_ANALYST]
 
         if _DEEPAGENTS_AVAILABLE:
-            self._backend = backend if backend is not None else StateBackend()  # type: ignore[operator]
             self._agent = create_deep_agent(  # type: ignore[operator]
                 model=self._llm,
                 tools=self._tools,
@@ -299,3 +313,4 @@ def _dispatch_stream_delta(
             on_answer(content)
         elif kind in ("reasoning", "thinking") and content and on_reasoning is not None:
             on_reasoning(content)
+# TA: AXR-05 wiring: backend constructed BEFORE default tools and passed to build_rag_v2_tools so search_documents offloads into the same StateBackend runtime the chunk-analyst reads; prompt names the returned backend_path values (pkg5 agentx_1_0_0).

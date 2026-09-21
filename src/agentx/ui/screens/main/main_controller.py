@@ -90,10 +90,32 @@ class MainController(IMainViewPartner):
     def get_session_manager(self):
         return self.session_controller
 
+    def invalidate_session_scoped_controllers(self) -> None:
+        """AXR-04: drop cached agent controllers bound to the OLD session.
+
+        Called after a successful session transition (console ``new``).
+        Previously opened Advanced/Fast Agent screens retained the previous
+        session's config, persistence (agent_session.db), and sandbox; the
+        next open rebuilds them against the replacement session (C5 cache
+        starts empty again). Chat history is session-independent
+        (AXR-07 scope) and is deliberately untouched.
+        """
+        self._agent_controller = None
+        self._agent_view = None
+        self._fast_agent_controller = None
+        self._fast_agent_view = None
+
     def show_chat(self):
 # TA: gotcha: BUG (feature_024 console parity): show_chat/show_rag must NOT call view.show() — the TUI path uses them as setup callbacks then pushes a screen; the console (no-TUI) path relies on AIChat/RagShowCommand calling view.show() afterwards to enter the REPL (feature_024 parity pattern). The OLD fallback `if self._provider: ... else: chat_controller.show()` violated parity (console never entered the REPL).
         # C5: reuse an already-wired controller (no fresh chat on every open).
+        # AXR-06: best-effort provider refresh on reopen — history and
+        # conversation ID untouched (D5); the enforcing refresh happens at
+        # message time in ChatController._ensure_llm_current.
         if self._chat_controller is not None:
+            try:
+                self._chat_controller.refresh_provider()
+            except Exception:
+                pass
             return
         chat_controller = ChatController()
         if self._provider is not None:
@@ -174,8 +196,11 @@ class MainController(IMainViewPartner):
         except Exception:
             pass
 
-        import os
-        agent_id = f"agent_{os.getpid()}"
+        # AXR-08 (agentx_1_0_0): stable per-session per-mode id — the PID is
+        # execution metadata only and must not key identity (restart must
+        # find this session's snapshots). Each session has its own
+        # agent_session.db, so per-session uniqueness holds.
+        agent_id = "agent"
         config = AgentConfig(
             id=agent_id,
             name="AgentX Agent",
@@ -217,8 +242,9 @@ class MainController(IMainViewPartner):
         except Exception:
             pass
 
-        import os
-        agent_id = f"fast_agent_{os.getpid()}"
+        # AXR-08 (agentx_1_0_0): stable per-session per-mode id (same rule as
+        # show_agent); PID never keys identity.
+        agent_id = "fast_agent"
         config = AgentConfig(
             id=agent_id,
             name="AgentX Fast Agent",
@@ -365,3 +391,4 @@ class MainController(IMainViewPartner):
         except Exception as e:
             self.view.print_response_error(f"Command execution failed")
             print(e)
+# TA: AXR-08: agent/fast_agent use stable per-session per-mode ids (no PID); AXR-04: invalidate_session_scoped_controllers drops cached agent controllers after console `new` so reopened screens rebuild on the replacement session (pkg4 agentx_1_0_0).

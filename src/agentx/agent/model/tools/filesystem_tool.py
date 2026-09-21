@@ -82,6 +82,14 @@ class FileSystemTool(ISensor, IActuator):
         path = command.parameters.get("path")
         if not path:
             return ValidationResult(valid=False, errors=["missing 'path' parameter"])
+        # AXR-11 (pkg6): type-check BEFORE the Path join — a malformed policy
+        # action (e.g. path=123) must yield an actionable validation error,
+        # not a TypeError that escapes the tool boundary.
+        if not isinstance(path, (str, Path)):
+            return ValidationResult(
+                valid=False,
+                errors=[f"'path' must be a string or Path, got {type(path).__name__}"],
+            )
         target = (self._root / path).resolve()
         # C1 (feature_015): use is_relative_to for true path-containment.
         # str().startswith() is a string-prefix check — a sibling directory
@@ -128,3 +136,4 @@ class FileSystemTool(ISensor, IActuator):
             return ActuatorResult(success=True, output={"path": path, "action": action}, side_effects=side_effects)
         except OSError as exc:
             return ActuatorResult(success=False, error=str(exc))
+# TA: AXR-11 type check: validate rejects non-str/Path path before the Path join (path=123 from a malformed policy rule used to raise TypeError: PosixPath / int); registry boundary is the backstop, this gives the actionable validation error (pkg6 agentx_1_0_0).

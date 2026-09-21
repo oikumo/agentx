@@ -74,6 +74,14 @@ class TableSessionSnapshots:
         f"SELECT * FROM {TABLE_NAME} WHERE agent_id = ? "
         f"ORDER BY timestamp DESC LIMIT 1"
     )
+    # AXR-08 (agentx_1_0_0): latest legacy snapshot within a mode family.
+    # Pattern uses ESCAPE so '_' is literal: 'agent\_%' matches agent_<pid>
+    # but never fast_agent_<pid>; fast_agent\_% matches fast_agent_<pid> only.
+    SELECT_LATEST_AGENT_ID_BY_PREFIX = (
+        f"SELECT agent_id FROM {TABLE_NAME} "
+        f"WHERE agent_id LIKE ? ESCAPE '\\' AND agent_id != ? "
+        f"ORDER BY timestamp DESC LIMIT 1"
+    )
     SELECT_BY_ID = f"SELECT * FROM {TABLE_NAME} WHERE snapshot_id = ?"
     # M14 (feature_015): delete old snapshots beyond the retention limit.
     DELETE_OLD_BY_AGENT = (
