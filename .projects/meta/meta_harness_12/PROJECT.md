@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_12 — Meta-Harness Toolbox (Evolutionary Live Tool System)
 
-> Status: **draft** · **v0.1 (2026-09-21)** — created by `project.py new --slug meta_harness_12` from `.sandbox/meta_harness_toolbox_idea.md` (proposal, 2026-09-21). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_12`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v0.1 (2026-09-21)** — created by `project.py new --slug meta_harness_12` from `.sandbox/meta_harness_toolbox_idea.md` (proposal, 2026-09-21). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_12`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
@@ -8,7 +8,7 @@
 
 > One line: toolbox/ turns ad-hoc `uv run scripts/omt/*.py` into a named, categorized, sqlite-queryable, approval-gated growing tool layer (bash→python, 5 seed tools first).
 
-**Next:** PAUSED 2026-09-21 — next session: apply F fix (Vision/Adaptive/Size&risk) → execute approved T1 → propose T2. Resume via `.sandbox/pause_2026-09-21_mh12.md`.
+**Next:** CLOSED 2026-09-21 — T1–T4 shipped, project complete. Follow-up only with fresh-review evidence (O4/O6 = major).
 
 ---
 
@@ -33,6 +33,21 @@
 
 ---
 
+## Vision (F fix 2026-09-21 — why this is a big adaptive change, not 4 small minors)
+
+**Toolbox = the harness learns new ops without new gates.** Today every recurring one-liner is re-invented per session (grep history, ledger slices, budget checks, JSON splits, pause notes). T1–T4 do not add 4 utilities; they add a **closed adaptive loop** that compounds: session-start awareness → ≤2-call `query → run` → encounter-`propose` → approve-`promote` → metered `run` + `prune`. Each slice is small (minor) so review stays cheap; the system is big because after T3 the agent can extend its own operational surface safely.
+
+## Adaptive loop (the power)
+
+`encounter (2× use or 1× general-use) → propose (sqlite staged + .sandbox draft) → user pick → promote (scaffold + pytest + index.json + kind:toolbox_promote ledger) → run (usage_log + stats) → prune (>90d/uses==0 → deprecated_by) → fresh-review (must show an eliminated re-invention class with uses/successes evidence, else no follow-up tool).`
+
+## Size & risk (why slices stay minor)
+
+- **Size:** T1 read-only (index+query), T2 metering, T3 gated growth, T4 docs/tiers. One approval per slice; rollback = delete `toolbox/` + revert 1-liner (index rebuilds from `index.json`).
+- **Risk:** advisory-only (D2, 12 gates unchanged), uv-only + deny list (D3), ≥2-uses gate anti-bloat (D4), evidence-required follow-ups (D5). No `src/agentx/`, no network, no auto-run.
+
+---
+
 ## Scope & success criteria
 
 **Scope:** T1 index+query → T2 run+metering → T3 propose/promote/prune → T4 docs+tiers (each `minor`, one approval per slice; Later O4/O6 concurrent/agentx bridge = `major`, only after T1–T3 + G12/F7 decision).
@@ -53,8 +68,13 @@
 
 - [x] v0.1 (2026-09-21): created (`project.py new --slug meta_harness_12`, state: draft) from toolbox idea doc; this PROJECT.md drafted (non-gated iterate).
 - [x] Scoping pick (step 4→5, 2026-09-21): V assumed on "continue project" (no explicit letter; recommended full T1→T4: 5 rehomed seeds, checked-in sqlite + `index.json`, keep `text.*`, stats at T4). W/X/Y remain available on re-pick.
-- [ ] Plan approval (step 6 — awaiting user): T1 plan below.
-- [ ] T1 execution (step 7, one approval per slice).
+- [x] F fix (2026-09-21 iter 4): Vision / Adaptive-loop / Size-&-risk added (§Vision) — answers "big adaptive, not 4 minors".
+- [x] T1 executed (2026-09-21 iter 4, feature_120, minor): layout+schema+5 seeds+query/list/show/sync --check+pytest green (acceptance in CURRENT_STATE iter 4).
+- [x] T2 approved (2026-09-21 iter 5); build deferred to next session.
+- [x] T2 executed (2026-09-21 iter 6, feature_121, minor): metered run + stats + lint + pytest green (acceptance in CURRENT_STATE iter 6).
+- [x] T3 executed (2026-09-21 iter 7, feature_122, minor): propose/approve/reject/promote/prune + pilot git.recent_log + pytest green (acceptance in CURRENT_STATE iter 7).
+- [x] T4 executed (2026-09-21 iter 8, feature_121, minor): tiers (`--tier 1|2|3` on query/list/stats + `tiers` map, T1 core-5 / T2-3 full) + docs (`docs --gen/--check`: categories.md, tools.md, STARTUP_SNIPPET.txt ≤120B, ONBOARDING.md) + pytest green (acceptance in CURRENT_STATE iter 8).
+- [ ] Close project (or O4/O6 bridge decision — major, only after fresh-review evidence).
 
 ---
 

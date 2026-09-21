@@ -1,0 +1,60 @@
+{
+  "rev": "20",
+  "updated_at": "2026-09-21T13:00:52Z",
+  "tools": [
+    {
+      "id": "git.recent_log",
+      "name": "recent_log",
+      "category": "git",
+      "bash_entry": "toolbox/git/recent_log/run.sh",
+      "python_impl": "toolbox/git/recent_log/main.py",
+      "description": "recent log",
+      "tags": "git,recent_log,promoted"
+    },
+    {
+      "id": "git.status_summary",
+      "name": "status_summary",
+      "category": "git",
+      "bash_entry": "toolbox/git/status_summary/run.sh",
+      "python_impl": "toolbox/git/status_summary/main.py",
+      "description": "git porcelain status + branch summary",
+      "tags": "git,status,dirty,porcelain"
+    },
+    {
+      "id": "harness.budget_check",
+      "name": "budget_check",
+      "category": "harness",
+      "bash_entry": "toolbox/harness/budget_check/run.sh",
+      "python_impl": "toolbox/harness/budget_check/main.py",
+      "description": "wrap harnessc check budgets green",
+      "tags": "harness,budget,check,limits"
+    },
+    {
+      "id": "ledger.window_slice",
+      "name": "window_slice",
+      "category": "ledger",
+      "bash_entry": "toolbox/ledger/window_slice/run.sh",
+      "python_impl": "toolbox/ledger/window_slice/main.py",
+      "description": "slice last N ledger.jsonl lines with optional kind filter",
+      "tags": "ledger,slice,tail,history"
+    },
+    {
+      "id": "session.pause_note_append",
+      "name": "pause_note_append",
+      "category": "session",
+      "bash_entry": "toolbox/session/pause_note_append/run.sh",
+      "python_impl": "toolbox/session/pause_note_append/main.py",
+      "description": "stage a pause note entry (dry-run default)",
+      "tags": "session,pause,note,resume"
+    },
+    {
+      "id": "text.json_split",
+      "name": "json_split",
+      "category": "text",
+      "bash_entry": "toolbox/text/json_split/run.sh",
+      "python_impl": "toolbox/text/json_split/main.py",
+      "description": "split JSON-array or bullet/newline prose behaviors",
+      "tags": "json,split,tdd,behaviors,prose"
+    }
+  ]
+}
