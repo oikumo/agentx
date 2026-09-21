@@ -9,7 +9,7 @@
 
 ### Done
 
-- Release declared (user-approved): PROJECT.md header draft → active, release-gate + first-linked-feature boxes checked.
+- Release declared (user-approved): PROJECT.md header draft → active, release-gate + first-linked-feature boxes checked. Committed as `f8afb7c` (44 files, +3214/−417).
 - Release evidence: 6/6 packages executed + proven + closed; 48 durable regression tests (5+4+6+9+8+16); 20/20 observation probes fail as desired, retired per D4 (sandbox-only review artifacts); full suite 1972 passed, 0 failed; ReAct collection restored (exclusion removed, 2 stale-API modules deleted); docs reconciled (7 edits, feature_007/013/019/027).
 - Residuals carried forward (out of 1.0.0 scope per D1): AXR-11 `send_message` still re-raises cycle exceptions (busy released, REPL loop dies — separate product decision); `max_active_goals` default stays 10 as reserved cap; C-extras deferred (centralized `ensure_conversation`, `_refl_repo.save`/`persist()` guards, all-validator type checks, `ActionType.PAUSE` implementation); new defects found post-release become 1.0.1 candidates.
 
