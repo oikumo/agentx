@@ -141,7 +141,7 @@ Every multi-step workflow stops mid-flow at its **proposed-alternatives step** (
 - MAY write the proposal itself (the alternatives doc) to `.sandbox/` in step 3 — that is a sandbox artifact describing the proposed alternatives, not an applied change;
 - executes the chosen alternative only after the user's go-ahead, and records the result back in the same `.sandbox/` file in a later step.
 
-This invariant is **non-negotiable**: an approval-gated workflow that skips the gate is a bug, not a shortcut.
+This invariant is **non-negotiable**: an approval-gated workflow that skips the gate is a bug, not a shortcut. Carve-out (free-commit, 2026-09-21): once the user has picked an alternative, the mechanical `git add` + `git commit` of that picked alternative is ask-free (local-only, no push); the decision of *what* to do still needs the pick.
 
 ### 4.4 OMT gate stance (how the harness relates to a triggered workflow)
 

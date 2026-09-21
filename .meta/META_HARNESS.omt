@@ -287,8 +287,8 @@
 @budget meta_harness_md max=2048 : .meta/META_HARNESS.md stub bytes — on-demand (improvement007/OPT-B: state-note rotation 5526→1366; only the latest note inline, older → git history)
 @budget meta_md max=6144 : .meta/META.md bytes — on-demand (improvement007/OPT-B: stale READ-FIRST directive → omt_nav routing + dir-tree slim 6754→5002)
 
-# G1 (improvement003/git-plane): local git lifecycle lives in sidecars only; remote stays denied; net stays SSOT, git is derived view
-@doc git.plane tags="GIT_PLANE" : local git (branch/worktree/status/log/diff/stash/commit) allowed in @var.git_worktree_root sidecars only (branch @var.git_branch_prefix+task_id, gen-fenced claim); remote (push/pull/fetch/ls-remote/remote/clone/submodule) stays denied; main mutated only via user commit/join; probe exposes git_plane {worktrees,branches,dirty,head}, claim reserves branch, fire needs expected_revision+git_clean, invariant triple-drifts net↔ledger↔git
+# G1 (improvement003/git-plane; free-commit 2026-09-21): local git ask-free repo-wide, sidecars stay the multi-agent default; remote stays denied; net stays SSOT, git is derived view
+@doc git.plane tags="GIT_PLANE" : local git (branch/worktree/status/log/diff/stash/commit) ask-free repo-wide (push/pull/fetch/ls-remote/remote/clone/submodule denied); commits <type>(<scope>): <subject> + Co-authored-by: agentx-harness, atomic, no --force/--amend, green-first, ledger kind:commit; sidecars (@var.git_worktree_root, branch @var.git_branch_prefix+task_id, gen-fenced claim) stay multi-agent default; probe exposes git_plane {worktrees,branches,dirty,head}, claim reserves branch, fire needs expected_revision+git_clean, invariant triple-drifts net↔ledger↔git
 
 # ============================================================
 # TOOL — registry (perms → jsonc block; one-line schema text → IR; CMD_ tags)
