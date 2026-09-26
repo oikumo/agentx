@@ -5,6 +5,60 @@
 
 ---
 
+## 2026-09-26 (Tier-2 gate re-convene — promotion CLOSED with measured negative; project close)
+
+### Done
+
+- Tier-2 gate re-convene (sandbox only, no src/net/toolbox change by this review) — decided on feature_130's measured discharge; **user decision at the fork: record + close (option D)** — driver-artifact diagnosis/re-capture (options A/B) and coverage refinements (C) explicitly not pursued.
+- Re-ran the evidence for the record: `--ledger` 8/8 `REAL_TOKENS_OK 96ba44edc7968ca0` (measured 18/135, verdict `shrink-tier0-or-keep-planner`) + unledgered baseline `40e6ab74b10b038a` + S0 7/7 (`6e355d7189e13fb5`) + S1 12/12 + S2 7/7 + S3 7/7 (`d476df80d71d829a`) + tier0 PASS + tier1 PASS + reason tests 14.
+
+### Verdict
+
+- **Tier-2 promotion CLOSED**: gate item (1) discharged **negative** (kernel 1,321,729 vs harness 381,919 measured medians → −246%, ≥15% rule missed) → §15.1 kill line fired ("threshold miss — shrink to Tier 0 rather than promoting to Tier 2"); D6 (fair comparison decides) also ranks planner (486,045) below harness — no arm beat the harness discipline on real reuse-sensitive cases.
+- **Terminal deliverables** (regression-green, byte-stable): Tier-0 `reason_table.ts` (zero harness cost) + Tier-1 `reason_check.ts` advisory pilot (closed enum, one allow line) + sandbox kernel suite (S0–S3 + held-out + real-token runner/harvester/measured ledger).
+- Gate items (2)–(4) (budgets w/ harness-surface cost, `omt_reason.ts` surface, user-selected implementation) **closed as moot** — no positive measured case to promote; the negative result is a legitimate experimental outcome (the decision rule decided, as designed).
+- Advisory boundary intact end-to-end: no grant/lease/net/ledger writes at any point; certs never minted authority.
+
+### Next
+
+- Project **CLOSED (complete)** via `project.py close`; reopen via `project.py reopen harness_reason` **only with new evidence** (e.g. a driver-artifact diagnosis showing the kernel-arm cost was a measurement artifact, per-rep captures, or a new measured positive case) per the locked decisions ("do not re-litigate without new evidence").
+- Tier-0/1 stay as shipped (features 127/128); no pending harness-surface work from this project.
+
+---
+
+## 2026-09-26 (feature_130 — real-token discharge Done, item (1) discharged with a NEGATIVE measured reading)
+
+### Done
+
+- Implemented `harvest_ledger.py` (stdlib, read-only sqlite): label grammar on first user-message text part, exactly-6/one-per-label/fail-loudly (`harvest_label_conflict`, no partial write), token mapping `prompt = tokens_input + cache_read` / `completion = tokens_output + reasoning`, provenance-rich ledger.
+- Two live-verified design corrections (in ledger provenance + TA: thought): `session_input` table is EMPTY → fallback label path (reproduces known sample); session time columns are epoch **milliseconds** → `latency_ms = t_updated - t_created` (design ×1000 would inflate 1000×).
+- Negative test first: empty window → `HARVEST_FAIL harvest_label_conflict`, exit 1, no ledger written.
+- Capture window `since_ms = 1790459237218` → spawned 6 labeled `general` subagents (batch 1: H1 × harness/planner/kernel; batch 2: H3 rotated kernel/planner/harness), same task text verbatim, same model (z-ai/glm-5.3 nvidia max), arm-method block the only difference; all 6 delivered, all 6 repo-untouched.
+- **HARVEST_OK 6/6** → `stage_real_tokens_ledger.json` (6 rows + provenance; loads as "7 rows", provenance never matched by runner).
+- **`--ledger` 8/8 PASS ×2, `REAL_TOKENS_OK 96ba44edc7968ca0` byte-stable; measured 18/135; unledgered baseline `40e6ab74b10b038a` preserved** (runner unchanged).
+- Regression green: S0 7/7 (`6e355d7189e13fb5`) + S1 12/12 + S2 7/7 + S3 7/7 (`d476df80d71d829a`) + tier0 PASS + tier1 PASS + reason tests 14.
+- Test report: `6.testing/features/feature_130.real_token_discharge/test_report.md`.
+
+### Verdict
+
+- Tier-2 gate item (1) **discharged — threshold MISSED on real H1/H3 medians**: harness 381,919 · planner 486,045 · kernel **1,321,729** (kernel H1 session ~1.30M prompt tokens — the sandbox-driver calling pattern re-reads large contexts per op call) → reduction vs harness **−2.461** → `meets_15pct_rule: false` → runner verdict **`shrink-tier0-or-keep-planner`** (decision rule, not prediction).
+- Honest caveats held: one capture per (arm,case) × R=3 replay; `proxy: mixed` (T-cases + H2 unmeasured); kernel = sandbox scripts (Tier-0/1 reality); all three H3 arms independently chose `stage0_ir.json` (two bumped ir_version, one resolved d3 — task left the mutation choice open, disclosed).
+- Boundary: git status shows only project-home sync + `.meta/.../feature_130*` + `.sandbox/harness_reason/` (4 files) — no src/tests/net/toolbox change from this feature or any capture session.
+
+### Next
+
+- Re-convene the Tier-2 gate to record the negative measured reading and decide: close Tier-2 (shrink to Tier-0/1 per §15.1 kill line + D6 "fair comparison decides" — promotion lacks a positive measured case) or archive the project if Tier-0/1 is deemed terminal. Gate items (2)–(4) stay open in form but no longer have a supporting measured case.
+
+---
+
+## 2026-09-26 (auto — feature_130.real_token_discharge Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_130.real_token_discharge/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-26 (feature_129 — real-token measurement mechanics Done, gate item 1 ready-not-discharged)
 
 ### Done

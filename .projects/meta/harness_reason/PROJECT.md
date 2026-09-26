@@ -1,6 +1,6 @@
 # PROJECT: harness_reason — Category Theory Reasoning Engine (harness.reason)
 
-> Status: **active** · **v0.1 (2026-09-26)** — created by `project.py new --slug harness_reason` from `.sandbox/category_theory_meta_harness.md` (specification, 2026-09-26, 1197 lines). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project harness_reason`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v0.1 (2026-09-26)** — created by `project.py new --slug harness_reason` from `.sandbox/category_theory_meta_harness.md` (specification, 2026-09-26, 1197 lines). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project harness_reason`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 
@@ -8,7 +8,7 @@
 
 > One line: typed interaction language + small categorical kernel + harness adapters as `harness.reason` — agent writes a program, interpreter checks it, kernel evaluates pure fragments, router calls existing adapters in `W` order, every run returns a digest-bound certificate or a named unknown.
 
-**Next:** Stage 0 contract extraction — draft 6–10 versioned generator contracts (inputs/outputs/effects/validator_ref/unknown_if) pointing to authoritative sources + JSON IR for the §2 example and §3 three-row tables, then run probes 1–7 in sandbox. No engine, source, test, policy, net, or toolbox-registration change.
+**Next:** CLOSED (complete) 2026-09-26 — Tier-2 gate re-convene recorded the measured negative (feature_130: kernel 1,321,729 vs harness 381,919 measured medians → −246%, ≥15% rule missed → `shrink-tier0-or-keep-planner`); §15.1 kill line fired → Tier-0/1 are the terminal deliverables; promotion closed. Reopen only with new evidence per the locked decisions (driver-artifact diagnosis, per-rep captures, or a new measured positive case).
 
 ---
 
@@ -66,8 +66,9 @@
 - [x] Held-out real tasks — Done via feature_126 (8/8).
 - [x] Tier 0 renderer (optional first, zero harness cost — readable UC8/probe output) — Done via feature_127 (22/22).
 - [x] Tier 1 pilot tool (only after S0–S1 gates; `plan` withheld to stage 2) — Done via feature_128 (13/13 + 14/14).
-- [x] Real-token measurement mechanics (Tier-2 gate item 1) — Done via feature_129 (8/8, digest `40e6ab74b10b038a`): span seam + ledger mode + threshold-on-measured-tokens; **not yet discharged** — no host exporter wired, first honest report `inconclusive_host_usage_unavailable`; discharge by hand-capturing H1/H3 ledger or wiring `_read_host_total`.
-- [ ] Tier 2 promotion (only after §15 gates + toolbox review) — HOLD per 2026-09-26 gate review; no promotion on synthetic costs.
+- [x] Real-token measurement mechanics (Tier-2 gate item 1) — Done via feature_129 (8/8, digest `40e6ab74b10b038a`): span seam + ledger mode + threshold-on-measured-tokens.
+- [x] Real-token discharge of gate item (1) — Done via feature_130 (6 labeled real sessions → `harvest_ledger.py` → `stage_real_tokens_ledger.json` → `--ledger` 8/8 ×2, `REAL_TOKENS_OK 96ba44edc7968ca0`): **threshold MISSED on measured medians** — harness 381,919 · planner 486,045 · kernel 1,321,729 → −246% vs harness → `shrink-tier0-or-keep-planner` (decision rule, not prediction).
+- [x] Tier-2 gate re-convene + promotion decision — CLOSED 2026-09-26: gate item (1) discharged **negative** via feature_130 (measured medians harness 381,919 · planner 486,045 · kernel 1,321,729 → −246%, ≥15% rule missed); §15.1 kill line fired ("threshold miss — shrink to Tier 0 rather than promoting") + D6 (no arm beat harness on real reuse-sensitive cases) → promotion CLOSED, items (2)–(4) moot; Tier-0/1 terminal per D5. Project closed complete; reopen only with new evidence.
 
 ---
 
