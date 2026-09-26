@@ -2,7 +2,7 @@
 
 > GENERATED from .meta/META_HARNESS.omt — DO NOT EDIT; edit the source, then `uv run scripts/omt/harnessc.py build`.
 
-> **STARTUP:** Read WORK.compiled.md (header; WORK.md on demand) + 1x omt_net probe at session start with max_states=0 (brief: observation+menu+freshness); render INTRO (1 paragraph: what this menu is + where data comes from + reply single letter) + GLOBAL (<=8: observation/rev, Pool p/a/d, Lanes, Projects a/c/d, drift, STALE if NEXT != probe next) + TASKS letter menu (grouped Projects/Drifts/New, active+not-started only; labels without proj:/drift:/unscoped: prefixes, A/B/C... = stable Options IDs 1:1, no invented IDs, D19; NEXT/Other/Blocked/Resources order; reply single letter, never question-tool) + SUGGESTED NEXT (advisory D19-exempt <=5: drift unlinked > aging > iter-log + pool + <=2 IDEA:, shortcut S = accept, never auto-applied). Rest via omt_nav.
+> **STARTUP:** At session start read WORK.compiled.md header (WORK.md on demand) + one omt_net probe (live status/menu/freshness). Show INTRO (1 para: this is your task picker, where data came from, reply with a letter) + GLOBAL (<=8 plain lines: status/rev, Pool Pending/Active/Done, free lanes/workers, Projects active/complete/draft, drift count, STALE means file NEXT differs from live probe and probe wins) + TASKS A/B/C (groups Projects/Drifts/New, hide proj:/drift:/unscoped: in labels but keep 1:1 ID map with no invented IDs, order NEXT then Other/Blocked/Resources, picking a letter selects that task, never question-tool) + SUGGESTED (<=5 advisory lines: drift-first + pool state + up to 2 ideas, S=accept, never auto-applied). Rest via omt_nav.
 > **RUNTIME:** `uv` only (no bare `python`/`pip`/`pytest`). `src/` edits → `omt_phase` first.
 
 ## Enforcement
