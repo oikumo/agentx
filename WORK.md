@@ -37,7 +37,7 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 | agentx_1_0_0 | draft | — |
 | agentx_concurrent_development | active | feature_119.ledger_backed_fix_preview |
 | feature_kb_akb | active | feature_kb_akb |
-| harness_reason | active | feature_122.harness_reason_stage_0_contract_extraction |
+| harness_reason | active | feature_122.harness_reason_stage_0_contract_extraction, feature_123.harness_reason_stage_1_checker, feature_124.harness_reason_stage_2_composition, feature_125.harness_reason_stage_3_paired_experiment, feature_126.harness_reason_held_out_real_tasks, feature_127.harness_reason_tier_0_renderer, feature_128.harness_reason_tier_1_advisory_pilot |
 | meta_harness_10 | complete | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release, feature_106.mh10_p2b3_lane_integration_rewire, feature_107.mh10_p2b3b_lane_template_landing, feature_108.mh10_p2c_crash_reorder, feature_109.mh10_p2d_matrix_payback |
 | meta_harness_11 | complete | feature_110.whole_project_menu_composer, feature_111.multi_select_directive_protocol, feature_112.identity_aware_pool, feature_113.live_progress_projection, feature_114.concurrent_dispatch_runtime, feature_115.live_progress_full_push_join_view, feature_116.mh11_o6c_wild_payback_measurement, feature_117.dispatch_lane_exploitation_for_harness_verifies, feature_118.mh11_worktree_lifecycle |
 | meta_harness_12 | complete | feature_120.toolbox_t1_index_query, feature_121.toolbox_t4_docs_tiers |

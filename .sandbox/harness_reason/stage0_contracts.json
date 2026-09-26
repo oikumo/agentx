@@ -1,0 +1,144 @@
+{
+  "catalog": "harness_reason_stage0",
+  "version": 1,
+  "source_spec": ".sandbox/category_theory_meta_harness.md (2026-09-26, 1197 lines; Part A/C normative)",
+  "rule": "Every contract points to an authoritative source; unsupported behavior stays unknown; no engine/src/net/toolbox registration by this file.",
+  "generators": [
+    {
+      "id": "evidence.accept_existing_test_result",
+      "version": 1,
+      "inputs": [
+        "Artifact[path,h_artifact]",
+        "Result[test,result_id,pass]",
+        "Receipt[receipt_id,test,h_receipt,env,validator,result_id]",
+        "ObservationContext[context_id,manifest_digest]"
+      ],
+      "outputs": [
+        "Artifact[path,h_artifact]",
+        "Evidence[h_artifact,validator,env,receipt_id,context_id]"
+      ],
+      "requires": [
+        "receipt.producer_verified",
+        "h_receipt == h_artifact",
+        "receipt.environment_applicable_to_imported_context",
+        "receipt.result_is_accepted"
+      ],
+      "effects": "pure_after_authoritative_snapshot_import",
+      "validator_ref": "existing_test_receipt_adapter/v1 (PROPOSED — not registered; agreement gate vs features 075/085)",
+      "unknown_if": ["missing_binding", "unsupported_receipt_version", "missing_validator", "env_inapplicable"],
+      "authority": "proposal §11.4 example + features 075/085 receipt/dependency checks (authoritative stale verdict); toolbox baseline §8/§10.3",
+      "covers": {
+        "acceptance_14_1": ["receipt names old digest -> stale + exact mismatch", "fabricated passed:true -> require trusted producer", "timeout/fail preserved"],
+        "probes_15_8": [3]
+      }
+    },
+    {
+      "id": "context.import_snapshot_manifest",
+      "version": 1,
+      "inputs": ["TaskInputs[paths]", "PolicyVersion", "CatalogVersion", "NetRevision", "LedgerPosition"],
+      "outputs": ["ObservationContext[context_id,manifest_digest]"],
+      "requires": ["manifest.covers_all_relevant_inputs", "epochs_consistent"],
+      "effects": "pure_after_authoritative_snapshot_import",
+      "validator_ref": "snapshot_manifest_adapter/v1 (PROPOSED — manifest per §11.5; re-import, never replay permission/applicability from cache)",
+      "unknown_if": ["snapshot_inconsistent", "hidden_dependency", "protected_input_excluded"],
+      "authority": "proposal §11.5 + .meta/META_HARNESS.omt + ledger windows + omt_net probe rev + WORK.compiled.md header",
+      "covers": {
+        "acceptance_14_1": ["context changes during collection -> snapshot_inconsistent", "relevant dirty/policy/generation/validator change -> stale + re-import", "unrelated input change preserves immutable derivations"],
+        "probes_15_8": [5]
+      }
+    },
+    {
+      "id": "query.aligned_equalizer",
+      "version": 1,
+      "inputs": ["Model[HarnessObs]", "ComputePremises[refresh*]"],
+      "outputs": ["Aligned[]", "Mismatched[witness]", "Unresolved[reason]"],
+      "requires": ["recorded(d) == current(source(d)) computed with Maybe semantics (§4)"],
+      "effects": "pure_no_W (query never validates, never touches adapters)",
+      "validator_ref": "kernel_equalizer/v1 (PURE — feasible now; finite joins + equality filters)",
+      "unknown_if": ["missing_source", "missing_version", "missing_binding"],
+      "authority": "proposal §§1.3, 2, 4 (equalizer; just==just -> aligned/mismatched; anything-unknown -> unresolved)",
+      "covers": {
+        "acceptance_14_1": ["stale receipt preserved as Mismatched witness", "search bound/validator absent -> unknown (handled downstream)"],
+        "probes_15_8": [3]
+      }
+    },
+    {
+      "id": "mapping.preserves_check",
+      "version": 1,
+      "inputs": ["Mapping[F: AbstractStale -> Obs]", "Equation[stale_eq]"],
+      "outputs": ["PreservationEvidence[eq,check,digest] | PreservationFailure[eq,location]"],
+      "requires": ["total_on_sorts_and_arrows", "each preserves eq carries finite_table_check"],
+      "effects": "pure_no_W (elaborator rejects partial/ill-typed mapping with location)",
+      "validator_ref": "finite_table_check/v1 (PURE — per-equation finite check)",
+      "unknown_if": ["mapping_partial", "equation_ill_scoped"],
+      "authority": "proposal §§2, 3, 15.3 (mapping accepted only with per-equation evidence; never inferred from names)",
+      "covers": {
+        "acceptance_14_1": ["hypothesis where evidence required -> reject + name missing validator/premise"],
+        "probes_15_8": [7]
+      }
+    },
+    {
+      "id": "concretize.realize_forget",
+      "version": 1,
+      "inputs": ["AbstractRow[(s,v_rec,v_cur)]", "CatalogVocabs[Permission=[allow,deny],Coverage=[full,partial]]"],
+      "outputs": ["Realizations[detailed rows, bounded]", "DistinguishingInfo[perm?,cover?,recorded?]"],
+      "requires": ["unit eta_M checked (row reappears; forgotten=[perm,cover])", "counit eps_N checked (Forget(Realize(N)) recovers at most N)"],
+      "effects": "pure_no_W (bounded enumeration; concretization returns possibilities + distinguishing info, never invented facts)",
+      "validator_ref": "realize_enumerator/v1 (PURE — bounded by catalog vocabs + unknown where adapter cannot establish value)",
+      "unknown_if": ["permission_gated_realization", "concretization_explosion", "unknown_recorded_cell"],
+      "authority": "proposal §3 worked adjunction Forget ⊣ Realize (three-row d1/d2/d3; triangle identities by enumeration)",
+      "covers": {
+        "acceptance_14_1": ["search bound/validator absent -> specific unknown, not impossible"],
+        "probes_15_8": [7]
+      }
+    },
+    {
+      "id": "compare.two_programs_under_contract",
+      "version": 1,
+      "inputs": ["Program[A]", "Program[B]", "ObservationContract[completion-relevant-v1 | files-only-v1]"],
+      "outputs": ["different_under_declared_model{witness} | contract_relative_equal{contract} | unknown[reason]"],
+      "requires": ["contract named in certificate", "surrounding-context restriction noted", "law IDs cited (§11.7 allow-list only)"],
+      "effects": "pure_no_W",
+      "validator_ref": "contract_compare/v1 (PURE — identity/regroup/wire-perm/macro-expand/domain-eq with side conditions only)",
+      "unknown_if": ["missing_contract (never default-permit)", "law_outside_allow_list"],
+      "authority": "proposal §§11.7, 12.2 (edit;test=(h1,h1) accepted vs test;edit=(h1,h0) not accepted; files-only permits what completion rejects)",
+      "covers": {
+        "acceptance_14_1": ["plan moves test before edit -> reject under completion-relevant", "two consumers share immutable evidence ref -> allow with per-consumer obligations"],
+        "probes_15_8": [2]
+      }
+    },
+    {
+      "id": "macro.verify_candidate_expand",
+      "version": 1,
+      "inputs": ["MacroDigest[verify_candidate]", "Bindings[task,artifact,acceptance,validator]"],
+      "outputs": ["ReplayedCertificate[defining,digest]", "FreshObligations[artifact,acceptance,validator] | Refusal[location,reason]"],
+      "requires": ["exact defining-diagram match", "fresh binds per instantiation (no h2-with-h1 evidence)", "no grant/lease/test-success carryover"],
+      "effects": "pure_no_W (expansion is structural; fresh validations are new compute with fresh W)",
+      "validator_ref": "macro_expander/v1 (PURE — digest + boundary comparison)",
+      "unknown_if": ["validator_substitution_without_equivalence", "authority_carryover_attempt (type error at elaboration)"],
+      "authority": "proposal §§11.7, 12.3 (reuse across ≥2 contexts; similar-steps substitution refused)",
+      "covers": {
+        "acceptance_14_1": ["approved macro same bindings -> replay + preserve effects/boundaries", "unrelated input change -> preserve unaffected derivations"],
+        "probes_15_8": [6]
+      }
+    },
+    {
+      "id": "next.discrepancy_model",
+      "version": 1,
+      "inputs": ["CompiledNEXT[field,rev]", "LiveNext[field,rev]", "Observations[O1,O2,O3]", "Hypotheses[H1,H2,H3]"],
+      "outputs": ["RefusedComparison[distinct_types]", "MissingPremise[semantic contract of each NEXT field + complete inputs]"],
+      "requires": ["cite both NEXT contracts", "keep O1-O3 separate from H1-H3", "no Observation->Defect without rule+premises"],
+      "effects": "pure_no_W (model only; never diagnoses bug, never authorizes menu repair, never claims H1/H2/H3)",
+      "validator_ref": "none_required (TYPING DISCIPLINE — ill-typedness handling only)",
+      "unknown_if": ["missing_next_semantic_contract"],
+      "authority": "proposal §§8, 12.1 + WORK.compiled.md header + live omt_net probe (rev 60 drained_complete observed 2026-09-26)",
+      "covers": {
+        "acceptance_14_1": ["hypothesis where evidence required -> name missing premise (this probe IS that case)"],
+        "probes_15_8": [1]
+      },
+      "pass_is": "cites both NEXT contracts + refuses equality until explicit alignment + reports missing premise",
+      "pass_is_not": "bug diagnosis, menu repair authorization, or H1/H2/H3 claim"
+    }
+  ],
+  "kill_line": "If any op above cannot point to its authority, or predicates outrun validators (everything unknown), stop per §15.1; shrink to Tier 0 rather than widening the enum."
+}

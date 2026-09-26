@@ -97,6 +97,7 @@
     "list *": "allow",
     "lsp": "allow",
     "skill": "allow",
+    "reason_check": "allow",
     // harnessc:begin perm
       "webfetch": "deny",
       "omt_phase": "allow",

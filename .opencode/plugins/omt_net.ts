@@ -19,10 +19,10 @@ const OPS = ["probe", "fire", "invariant", "splice", "sync", "synthesize", "mine
 // Per-op argv whitelist mirroring the cli.py subparser declarations
 // (cross-source pinned @ tests/scripts/omt/test_omt_net_plugin_args.py).
 const OP_ARGS: Record<string, readonly string[]> = {
-  probe: ["max_states", "expected_revision"],
+  probe: ["expected_revision"],
   fire: ["transition", "reasoning", "session", "expected_revision"],
   splice: ["mode", "mutation", "subnet", "reasoning", "session", "feature", "expected_revision"],
-  sync: ["reasoning", "session", "direction", "dry_run", "work_md", "expected_revision"],
+  sync: ["reasoning", "session", "direction", "work_md", "expected_revision"],
   invariant: ["expected_revision"],
   synthesize: ["mutation", "reasoning", "session", "feature", "expected_revision"],
   mine: ["mutation", "reasoning", "session", "feature", "expected_revision"],

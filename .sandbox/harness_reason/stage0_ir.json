@@ -1,0 +1,109 @@
+{
+  "ir_version": 1,
+  "program": "harness_reason_stage0_example",
+  "source_sections": ["§2 interaction language", "§3 Forget ⊣ Realize", "§4 Maybe + IO_Fail"],
+  "schemas": [
+    {
+      "name": "Obs",
+      "sorts": ["DerivedArtifact", "SourceArtifact", "Version"],
+      "arrows": [
+        {"name": "source", "from": "DerivedArtifact", "to": "SourceArtifact"},
+        {"name": "recorded", "from": "DerivedArtifact", "to": "Version"},
+        {"name": "current", "from": "SourceArtifact", "to": "Version"}
+      ],
+      "equations": []
+    },
+    {
+      "name": "D",
+      "sorts": ["DerivedArtifact", "SourceArtifact", "Version", "Permission", "Coverage"],
+      "arrows": [
+        {"name": "source", "from": "DerivedArtifact", "to": "SourceArtifact"},
+        {"name": "recorded", "from": "DerivedArtifact", "to": "Version"},
+        {"name": "current", "from": "SourceArtifact", "to": "Version"},
+        {"name": "perm", "from": "DerivedArtifact", "to": "Permission"},
+        {"name": "cover", "from": "DerivedArtifact", "to": "Coverage"}
+      ],
+      "equations": []
+    },
+    {
+      "name": "A",
+      "sorts": ["DerivedArtifact", "SourceArtifact", "Version"],
+      "arrows": [
+        {"name": "source", "from": "DerivedArtifact", "to": "SourceArtifact"},
+        {"name": "recorded", "from": "DerivedArtifact", "to": "Version"},
+        {"name": "current", "from": "SourceArtifact", "to": "Version"}
+      ],
+      "equations": []
+    }
+  ],
+  "models": [
+    {
+      "name": "HarnessObs",
+      "schema": "Obs",
+      "note": "§2 example tables; Maybe cells per §4: just(v) | nothing | unknown(reason)",
+      "tables": {
+        "DerivedArtifact": ["d1", "d2", "d3"],
+        "SourceArtifact": ["s1", "s2"],
+        "Version": ["v1", "v2", "v3"],
+        "rows": [
+          {"d": "d1", "source": {"just": "s1"}, "recorded": {"just": "v3"}, "current_of_source": {"just": "v3"}, "verdict": "aligned"},
+          {"d": "d2", "source": {"just": "s1"}, "recorded": {"just": "v2"}, "current_of_source": {"just": "v3"}, "verdict": "mismatched"},
+          {"d": "d3", "source": {"just": "s2"}, "recorded": {"unknown": "missing_binding"}, "current_of_source": {"just": "v1"}, "verdict": "unresolved"}
+        ]
+      }
+    },
+    {
+      "name": "DetailedD",
+      "schema": "D",
+      "note": "§3 three-row adjunction tables (symbolic digests; perm/cover may be unknown)",
+      "tables": {
+        "rows": [
+          {"d": "d1", "source": "s1", "recorded": "v3", "current_s": "v3", "perm": "allow", "cover": "full", "note": "aligned"},
+          {"d": "d2", "source": "s1", "recorded": "v2", "current_s": "v3", "perm": "allow", "cover": "partial", "note": "stale"},
+          {"d": "d3", "source": "s2", "recorded": "unknown", "current_s": "v1", "perm": "unknown", "cover": "unknown", "note": "unresolved"}
+        ],
+        "catalog_vocabs": {"Permission": ["allow", "deny"], "Coverage": ["full", "partial"]},
+        "forget_projection": "Forget drops perm/cover columns -> A view: d1=(s1,v3,v3) d2=(s1,v2,v3) d3=(s2,unknown,v1)",
+        "unit_check": "eta_M: every D row embeds in Realize(Forget(M)); extra fiber rows are exactly perm x cover combos; forgotten=[perm,cover]",
+        "counit_check": "eps_N: Forget(Realize((s1,v3,v3))) == {(s1,v3,v3)}; inventing a version fails the run"
+      }
+    }
+  ],
+  "mappings": [
+    {
+      "name": "F",
+      "from": "AbstractStale",
+      "to": "Obs",
+      "sort_map": {"AbstractStale.Derived": "Obs.DerivedArtifact"},
+      "arrow_map": {"AbstractStale.rec": "Obs.recorded"},
+      "preserves": [{"eq": "stale_eq: rec == cur o src", "by": "finite_table_check"}],
+      "totality": "total on sorts+arrows; elaborator rejects partial mapping with location"
+    }
+  ],
+  "queries": [
+    {
+      "name": "aligned",
+      "on": "HarnessObs",
+      "needs": ["refresh"],
+      "kind": "equalizer recorded vs current o source -> Aligned, Mismatched, Unresolved",
+      "expected": {"Aligned": ["d1"], "Mismatched": ["d2"], "Unresolved": ["d3"]}
+    },
+    {
+      "name": "concretize_C",
+      "via": "Realize",
+      "cases": [
+        {"abstract": "(s1,v2,v3)", "realizations_vary": "perm/cover only", "distinguishing_info": "version agreement already decides staleness; permission does not rescue"},
+        {"abstract": "(s2,unknown,v1)", "distinguishing_info": "requires recorded first; permission/coverage premature"}
+      ]
+    }
+  ],
+  "computes": [
+    {
+      "name": "refresh",
+      "in": "IO_Fail",
+      "steps": ["import context manifest", "validate each d in Mismatched via existing_test_receipt_adapter/v1", "return witnesses + unknowns"],
+      "semantics": "§4 ten-line: bind short-circuits fail, propagates unknown, W-linear, no fail->ok, recovery is a new compute with fresh W"
+    }
+  ],
+  "round_trip_probe7": "serialize this file -> re-elaborate -> re-evaluate -> replay certificate from digests alone; byte-stable for immutable inputs"
+}

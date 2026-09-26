@@ -849,7 +849,7 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="op", required=True)
 
     p_probe = sub.add_parser("probe", help="Observe marking + enabled + analyzer advice.")
-    p_probe.add_argument("--max-states", type=int, default=DEFAULT_MAX_STATES)
+    p_probe.add_argument("--max-states", "--max_states", type=int, default=DEFAULT_MAX_STATES)
     p_probe.add_argument("--expected-revision", "--expected_revision", type=int, default=None, help="Stale-rev guard.")
 
     p_fire = sub.add_parser("fire", help="Fire an enabled transition (marking-only).")
