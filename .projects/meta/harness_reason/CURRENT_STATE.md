@@ -5,6 +5,48 @@
 
 ---
 
+## 2026-09-26 (gate review — Tier-2 promotion HOLD, fixtures sound)
+
+### Done
+
+- Tier-2 promotion gate review (sandbox only, no src/net/toolbox change by this review).
+- Re-ran: S0 probes 7/7 (digest `6e355d7189e13fb5` stable) + S1 checker 12/12 + S2 composer 7/7 (rewrite `cfcc014071b10849`) + S3 experiment 7/7 (`d476df80d71d829a`) + held-out 8/8 (`b2083b0c4dd6d610` + S0–S3 regression green) + Tier-0 PASS + Tier-1 demo PASS + `tests/scripts/reason/` 14 passed.
+- Tier-2 surface audit: no `omt_reason.ts` (only `reason_check.ts`/`reason_table.ts`), no `@tool omt_reason` row in `.meta/META_HARNESS.omt`, no harnessc build, no e2e receipt, no `toolbox/harness/reason/` proposal (only `budget_check`); Tier-1 stays one `reason_check: allow` line outside harnessc blocks.
+- Budgets: per-call §5 summaries ≤2KB + detail_ref hold (demo budget PASS); IR 4.9KB + contracts 9.1KB sandbox-side only; always-loaded 39B headroom still favors on-demand discovery — Tier-2 full harness-surface cost not yet accounted.
+
+### Verdict
+
+- HOLD promotion (repeat of S3 gate): fixtures sound, repeated utility demonstrated via byte-stable digests, no §15.1 kill criterion fired; S3 threshold still proxy bytes (33.2% reduction, `proxy:true`, `keep-kernel-candidate` decision rule, not prediction) — no real-token measurement, no toolbox review, no user-selected Tier-2 implementation yet.
+- Promote only via existing toolbox review with: (1) real-token paired measurement, (2) passing budgets with explicit harness-surface cost (39B headroom), (3) `omt_reason.ts` + `@tool` row + harnessc build + e2e receipt + enforcer passthrough wired/tested, (4) user-selected implementation.
+
+### Next
+
+- Real-token held-out measurement or toolbox `harness/reason/` proposal draft; then re-convene gate. Or close/archive if Tier-0/1 deemed terminal.
+
+---
+
+## 2026-09-26 (hygiene — PROJECT.md status sync + manifest regen)
+
+### Done
+
+- Updated `PROJECT.md ## Status`: marked S0/S1/S2/S3/held-out/Tier-0/Tier-1 Done (features 122–128); Tier-2 stays HOLD per gate review.
+- Ran `project.py sync` → manifest regenerated (`.projects/meta/META.md`).
+- No src/net/toolbox/ledger change — project-home only.
+
+### Next
+
+- Tier-2 promotion gate (toolbox review + §15 gates) or close/archive if Tier-0/1 deemed terminal.
+
+---
+
+## 2026-09-26 (auto — feature_128.harness_reason_tier_1_advisory_pilot Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_128.harness_reason_tier_1_advisory_pilot/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-26 (auto — feature_127.harness_reason_tier_0_renderer Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_127.harness_reason_tier_0_renderer/test_report.md

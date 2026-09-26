@@ -58,11 +58,15 @@
 ## Status
 
 - [x] v0.1 (2026-09-26): created (`project.py new --slug harness_reason`, state: draft) from category-theory idea doc; this PROJECT.md drafted (non-gated iterate).
-- [ ] Stage 0 contract extraction (6–10 ops + JSON IR + §3 tables + probes 1–7 in sandbox).
-- [ ] First linked feature (header flips draft → active mechanically).
-- [ ] Tier 0 renderer (optional first, zero harness cost — readable UC8/probe output).
-- [ ] Tier 1 pilot tool (only after S0–S1 gates; `plan` withheld to stage 2).
-- [ ] Tier 2 promotion (only after §15 gates + toolbox review).
+- [x] Stage 0 contract extraction (6–10 ops + JSON IR + §3 tables + probes 1–7 in sandbox) — Done via feature_122 (7/7 digest `6e355d71`).
+- [x] First linked feature (header flips draft → active mechanically) — Done via feature_122 link.
+- [x] Stage 1 checker (12/12 §14.1 agreement) — Done via feature_123.
+- [x] Stage 2 composition (two-context reuse + U1–U5 witnesses) — Done via feature_124.
+- [x] Stage 3 paired experiment (135-row report + threshold rule) — Done via feature_125; gate review conditional-go fixtures, hold promotion.
+- [x] Held-out real tasks — Done via feature_126 (8/8).
+- [x] Tier 0 renderer (optional first, zero harness cost — readable UC8/probe output) — Done via feature_127 (22/22).
+- [x] Tier 1 pilot tool (only after S0–S1 gates; `plan` withheld to stage 2) — Done via feature_128 (13/13 + 14/14).
+- [ ] Tier 2 promotion (only after §15 gates + toolbox review) — HOLD per 2026-09-26 gate review; no promotion on synthetic costs.
 
 ---
 
