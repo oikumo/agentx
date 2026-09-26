@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-12 (auto — status active → complete, commit 18dec0b)
+
+- PROJECT.md header flips `Status: active → complete` (commit `18dec0b [WIP] Project META HARNESS 8`); no scope/content change.
+- feature_050.net_as_gate DONE 2026-09-06; Phase B (feature_051) deferred by user.
+- Log continuity restored here (drift `iteration-log` cleared).
+
+---
+
 ## 2026-09-06 (auto — feature_050.net_as_gate Done)
 
 - shipped: major_feature · test report @ 6.testing/features/feature_050.net_as_gate/test_report.md

@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-12 (auto — status active → complete, commit 18dec0b)
+
+- PROJECT.md header flips `Status: active → complete` (commit `18dec0b [WIP] Project META HARNESS 8`); no scope/content change.
+- feature_038.tdd_toolchain_aware DONE 2026-08-29/30; backlog has no open entries — new work needs a fresh `_idea.md` review.
+- Log continuity restored here (drift `iteration-log` cleared).
+
+---
+
 ## 2026-08-30 (auto — feature_038.tdd_toolchain_aware Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_038.tdd_toolchain_aware/test_report.md

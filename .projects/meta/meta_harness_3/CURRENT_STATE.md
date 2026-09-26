@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-12 (auto — status active → complete, commit 18dec0b)
+
+- PROJECT.md header flips `Status: active → complete` (commit `18dec0b [WIP] Project META HARNESS 8`); no scope/content change.
+- Phase-A shipped as feature_028 (DONE 2026-08-16); Phase-B/C remain pending as separate features.
+- Log continuity restored here (drift `iteration-log` cleared).
+
+---
+
 ## 2026-08-22 (auto — project.py log)
 
 - backfill baseline: linked feature_028.feature_scoped_gating (DONE = Phase-A); Phase-B/C pending as future features; log continuity starts here

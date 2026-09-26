@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-12 (auto — status active → complete, commit 18dec0b)
+
+- PROJECT.md header flips `Status: active → complete` (commit `18dec0b [WIP] Project META HARNESS 8`); no scope/content change.
+- Core 4/4 (039/040/041/045) + 048/049 DONE 2026-09-05; optionals 042/043/044 logged DONE 2026-09-05.
+- Log continuity restored here (drift `iteration-log` cleared).
+
+---
+
 ## 2026-09-05 (auto — feature_044.mined_behavioral_net Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_044.mined_behavioral_net/test_report.md
