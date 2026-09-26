@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-20 (auto — status draft → active, commit c4f7334)
+
+- PROJECT.md header flips `Status: draft → active` (commit `c4f7334 [WIP] startup AGENTS format + active-only menu + drift links`); no scope/content change.
+- Linked as active alongside `feature_kb_akb`; WORK.md synced rev60 (active-only menu).
+- Log continuity restored here (drift `iteration-log` cleared).
+
+---
+
 ## 2026-08-22 (auto — backfill baseline)
 
 - Stub created by the feature_030 project-lifecycle backfill (structure check: canonical pair). PROJECT.md is the catalog's design doc; the catalog itself lives at `.workflows/` (root manifest `.workflows/META.md`).

@@ -2,6 +2,12 @@
 
 > **DONE 2026-08-08 (session 12)**. AKB unified index live (437 records) + g.kb consult-gate WIRED (silent gap closed). Feature advanced to Done phase. This file retained for archive/reference; for new work consult `PROJECT.md` v2.1 + `test_report.md` under `.meta/software_development_process/6.testing/features/feature_kb_akb.application_knowledge_base/`.
 
+## 2026-09-20 (auto — status draft → active, commit c4f7334)
+
+- PROJECT.md header flips `Status: draft → active` (commit `c4f7334 [WIP] startup AGENTS format + active-only menu + drift links`); v2.1 content unchanged (439 records live, g.kb wired, feature DONE 2026-08-08).
+- Linked as active alongside `meta.workflows_definition_layer`; WORK.md synced rev60 (active-only menu).
+- Log continuity restored here (drift `iteration-log` cleared).
+
 ## Status: ✅ DONE (session 12, 2026-08-08) — incl. g.kb consult-gate wiring follow-up
 
 ## Session 12 follow-up (2026-08-08) — g.kb consult-gate WIRED; feature re-advanced to Done

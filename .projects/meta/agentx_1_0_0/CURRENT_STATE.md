@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-21 (auto — status active → draft, commit 11a85fc)
+
+- PROJECT.md header flips `Status: active → draft` (commit `11a85fc startup menu rework`); v1.0.0 release content unchanged (6/6 packages, 48 regressions, 1972 green).
+- Reason: active-only startup menu — non-active projects drop out of Options; release stays shipped, not in progress.
+- Log continuity restored here (drift `iteration-log` cleared).
+
+---
+
 ## 2026-09-20 (iter 11 — v1.0.0 RELEASED)
 
 ### Done
