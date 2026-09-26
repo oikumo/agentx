@@ -66,6 +66,7 @@
 - [x] Held-out real tasks — Done via feature_126 (8/8).
 - [x] Tier 0 renderer (optional first, zero harness cost — readable UC8/probe output) — Done via feature_127 (22/22).
 - [x] Tier 1 pilot tool (only after S0–S1 gates; `plan` withheld to stage 2) — Done via feature_128 (13/13 + 14/14).
+- [x] Real-token measurement mechanics (Tier-2 gate item 1) — Done via feature_129 (8/8, digest `40e6ab74b10b038a`): span seam + ledger mode + threshold-on-measured-tokens; **not yet discharged** — no host exporter wired, first honest report `inconclusive_host_usage_unavailable`; discharge by hand-capturing H1/H3 ledger or wiring `_read_host_total`.
 - [ ] Tier 2 promotion (only after §15 gates + toolbox review) — HOLD per 2026-09-26 gate review; no promotion on synthetic costs.
 
 ---

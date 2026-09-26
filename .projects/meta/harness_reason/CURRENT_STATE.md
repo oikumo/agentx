@@ -5,6 +5,39 @@
 
 ---
 
+## 2026-09-26 (feature_129 — real-token measurement mechanics Done, gate item 1 ready-not-discharged)
+
+### Done
+
+- Picked **A (span wrapper)** at the approval gate (of 3 alternatives in `stage_real_tokens_analysis.md`: A span wrapper / B manual ledger / C calibrated proxy).
+- Wrote `stage_real_tokens_analysis.md` (problem, what stays identical from S3, measured-token ledger spec, 3 alternatives, threshold reading on measured medians).
+- Wrote `stage_real_tokens_design.md` (closed ops delta: `open_span`/`close_span`, single `_read_host_total` seam, runtime mode detection, V8 span discipline, report envelope delta, named failures).
+- Implemented `run_real_tokens.py` (stdlib only): replays S3 verdicts verbatim (same H `f7e6b89317420fbd`, R=3 rotation) with span-attributed costs; `--ledger` mode converts hand-captured live rows to `measured: true, source: "ledger"`.
+- **8/8 PASS** `REAL_TOKENS_OK 40e6ab74b10b038a` byte-stable across runs; first honest report: `host_usage_mode: unavailable`, 0/135 measured, verdict `inconclusive_host_usage_unavailable`.
+- Fixed during testing: wall-clock `latency_ms` broke cross-run digest stability → unmeasured spans now carry `latency_ms: null` (no fake precision).
+- Ledger mechanics smoke-tested with synthetic numbers (18/135 measured, threshold evaluated) — smoke file **deleted**, synthetic numbers never recorded as measured.
+- Regression: S0 7/7 (`6e355d71`) + S1 12/12 + S2 7/7 + S3 7/7 (`d476df80d71d829a` unchanged) + tier0 PASS + tier1 PASS + reason tests 14 passed.
+- Test report: `6.testing/features/feature_129.harness_reason_real_token_measurement/test_report.md`.
+
+### Verdict
+
+- Tier-2 gate item (1) is **mechanically ready, not discharged**: seam + attribution + threshold-on-measured-tokens exist and replay byte-stable; no host exporter is wired in this environment, so the report honestly reads inconclusive.
+- Discharge path: hand-capture real H1/H3 sessions per arm into `stage_real_tokens_ledger.json` and re-run with `--ledger` (or wire a live exporter through `_read_host_total`). Ledger caveat: keyed `arm:case` (one capture replayed across reps); per-rep keys are a future refinement.
+
+### Next
+
+- Capture real H1/H3 tokens per arm (hand ledger or exporter) → re-run `--ledger` → threshold reading on measured medians; then re-convene Tier-2 gate with items (2)–(4) still open (budgets w/ harness-surface cost, `omt_reason.ts` surface, user-selected implementation). Or close/archive if Tier-0/1 deemed terminal.
+
+---
+
+## 2026-09-26 (auto — feature_129.harness_reason_real_token_measurement Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_129.harness_reason_real_token_measurement/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-09-26 (gate review — Tier-2 promotion HOLD, fixtures sound)
 
 ### Done
