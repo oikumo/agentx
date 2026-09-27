@@ -3,14 +3,14 @@
     "agents_md": 3584,
     "digest_cap": 1024,
     "gates": 12,
-    "ir_json": 21504,
+    "ir_json": 22016,
     "meta_harness_md": 2048,
     "meta_md": 6144,
-    "nav_index": 66560,
+    "nav_index": 67072,
     "nav_tip": 512,
-    "tool_args": 2592,
+    "tool_args": 2848,
     "tool_schemas": 2048,
-    "work_md": 9728,
+    "work_md": 10240,
     "work_scratchpad": 3072
   },
   "deny": [
@@ -552,6 +552,12 @@
       "description": "TA: Interrogative layer \u2014 read-only. op=state|plan|drift|audit|graph|fix_preview(filter?) (preview=rev-pinned DSL diff, never applies). state \u22642KB; verbose=full. Returns JSON envelope with as_of_commit=HEAD-sha.",
       "perm": "allow",
       "tags": "CMD_Q"
+    },
+    "omt_session": {
+      "args": "op,db?,directory?,session_ids?,time_from?,time_to?,limit?,query_json?,cursor?,session_id?,message_id?,part_id?,page?,per_page?,top_n?,ids_json?,basis?,sub?,manifest?,run?,dest?,selection_json?,expected_revision?",
+      "description": "Session inspector + labeled experiments \u2014 SSOT (9 ops, run gated). op=sessions|capture|query|inspect|trace|profile|compare|experiment|export.",
+      "perm": "allow",
+      "tags": "CMD_SESSION"
     },
     "omt_skip": {
       "args": "reason,scope?,purpose?",

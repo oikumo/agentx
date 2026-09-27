@@ -127,7 +127,9 @@ def test_cluster_partition_covers_all_exactly_once() -> None:
 def test_no_new_tool_doc_msg_records() -> None:
     omt = OMT.read_text(encoding="utf-8")
     tools = re.findall(r"^@tool ", omt, re.M)
-    assert len(tools) == 10, "no new @tool records (review rides omt_think)"
+    # Re-pin 2026-09-27 (feature_131 S5): +1 @tool omt_session is the Tier-2
+    # deliverable (review still rides omt_think — no review tool added).
+    assert len(tools) == 11, "no new @tool records (review rides omt_think)"
 
 
 # --- bun probes (REAL plugin, hermetic tmp root) -------------------------------

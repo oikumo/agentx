@@ -1,4 +1,4 @@
-"""inspect.py — deep drill-down with addressable pages (feature_131 S2).
+"""detail.py — deep drill-down (renamed from inspect.py; op string inspect unchanged) with addressable pages (feature_131 S2).
 
 Retrieve exact session/message/part/call with full selected content.
 Large bodies return pages + total_chars; overflow never silently truncated.

@@ -1,12 +1,12 @@
 # PROJECT: meta_harness_13 — OpenCode Session Inspector & Labeled Experiments (Tier 2)
 
-> Status: **active** · **v0.1 (2026-09-26)** — created mechanically with `project.py new --slug meta_harness_13`. This is the canonical project proposal; implementation is pending approval. Session history and the resume point live in `CURRENT_STATE.md`.
+> Status: **complete** · **closed 2026-09-27** (created 2026-09-26, v0.1 proposal → implemented via feature_131–134). Session history and resume point live in `CURRENT_STATE.md`. Reopening the live-pilot question requires a new explicit decision (D7).
 
 ## New Session Quick Start
 
 **Objective:** Give the META HARNESS a powerful Tier-2 tool to investigate real OpenCode sessions and run reproducible experiments using labeled message logs. Inspect history, recorded reasoning, tool activity, and token usage with evidence down to individual messages and parts.
 
-**Next:** Review the proposed implementation plan below, then allocate the feature through `new_feature.py` after approval. The project is created; no inspector implementation, experiment execution, or Tier-2 promotion has occurred.
+**Next:** Project closed. Shipped surface: `omt_session` (9-op Tier-2, features 131/S5–S6), guarded launch path (132 `run_gate`), dispatcher wiring (133), fake-executor trial launcher core (134). The live 12-trial pilot was **not** executed — see D7 before planning any live run.
 
 **User requirements:** create `meta_harness_13`; build on the developed Harness Reason session-capture work; target Tier 2; make inspection powerful; treat labeled logs for running experiments as a core feature.
 
@@ -187,9 +187,10 @@ Out of scope for this project: reconstructing unrecorded reasoning; a general th
 - [x] Project home and lifecycle record created as `meta_harness_13`.
 - [x] Reviewed Harness Reason capture evidence, its closed promotion outcome, project workflow, and current toolbox discovery/budget results.
 - [x] Defined deep inspection and labeled experiments as joint core requirements, with concrete contracts, alternatives, implementation milestones, and acceptance criteria.
-- [ ] Implementation route/plan approved.
-- [ ] First feature allocated and linked; design/TDD implementation begins.
-- [ ] Real-session/experiment acceptance, Tier-2 integration, and release complete.
+- [x] Implementation route/plan approved (Option A; feature_131 allocated and linked 2026-09-27).
+- [x] First feature allocated and linked; design/TDD implementation begins → **feature_131 shipped Done** (S1–S6: adapter/normalize/labels/hierarchy/usage/query/inspect/trace/profile/compare/exporter/manifest/evaluate + Tier-2 `omt_session` registration; AC1–AC5/AC9–AC12 live-verified on the 242k-record corpus; test report Addendum S6).
+- [x] Real-session acceptance, Tier-2 integration, and release complete — **with the AC6 live-pilot qualification in D7**: real-session inspection acceptance, Tier-2 integration (build/budgets/e2e pins, 276/0), and release shipped; the 12-trial pilot exists as `dry_run` (executed:false) plus a complete guarded launch path (132 `run_gate` → 133 dispatcher wiring → 134 fake-executor launcher core). **No live trial was ever launched** — `executed:true` requires a future explicit `p` decision with claims + budgets + isolation (design_001 §4).
+- [x] Project closed 2026-09-27 (`project.py close meta_harness_13` + sync + WORK regeneration); closure round also cleared the `work_md` budget drift (deliberate 9728→10240, same `.omt` edit + pin sync + build — 276/0).
 
 ## Decisions log
 
@@ -199,6 +200,7 @@ Out of scope for this project: reconstructing unrecorded reasoning; a general th
 - **D4 — Separate inspection from execution:** read-only log access is the default; explicitly invoked experiment runs retain the existing execution authority and isolation rules.
 - **D5 — Preserve lineage:** reuse features 129/130 capture lessons; keep Harness Reason's negative result and closed general promotion decision intact.
 - **D6 — Creation scope:** this session creates the project proposal. Implementation, new real trials, and Tier-2 registration await the project's implementation decision.
+- **D7 — Closure without live pilot (2026-09-27):** the user closed the project with the 12-trial pilot un-executed. Shipped: full inspection Tier-2 surface (AC1–AC5, AC9–AC12 verified live), label protocol, manifest/dry_run/validate/replay, and a proven-but-fake launch path (gate → dispatcher → launcher core, `executed:false` everywhere). AC6's "12 independent real captures" therefore remains **unmet by this project**; any live run is a new, separately approved decision (explicit `p` + 12 held claims + budgets + per-trial isolation per design_001 §4). No promotion claim, token-saving promise, or AC6 result may be cited from the un-executed pilot.
 
 ## References
 

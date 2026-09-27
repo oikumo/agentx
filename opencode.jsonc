@@ -109,7 +109,8 @@
       "omt_think": "allow",
       "omt_kb_nav": "allow",
       "omt_q": "allow",
-      "omt_net": "allow"
+      "omt_net": "allow",
+      "omt_session": "allow"
     // harnessc:end perm
   }
 }

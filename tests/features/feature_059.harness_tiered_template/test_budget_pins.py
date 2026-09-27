@@ -47,7 +47,11 @@ import harnessc
 # @var root_allowlist +toolbox (deliberate hygiene for T1 layout); the +106B
 # is line-number drift of later nav records, kinds unchanged
 # (doc/flow/xref/tool/msg). Deliberate, budgets still OK (66481/66560).
-NAV_INDEX_CEIL = 66481
+# Re-pin 2026-09-27 (feature_131 S5 Tier-2 omt_session): NAV_INDEX_CEIL
+# 66481 → 66744 — the +1 @tool omt_session row is the feature's deliverable
+# (kinds unchanged: doc/flow/xref/tool/msg); @budget nav_index deliberately
+# grown 66560→67072 in the same .omt edit. Deliberate, budgets OK (66744/67072).
+NAV_INDEX_CEIL = 66744
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): op describe gains
 # "| resume" (+9B) paid by an include_ledger describe diet (-8B) — net +1B
 # deliberate (tool_args 2455/2464); design note @ 4.design/features/
@@ -56,7 +60,11 @@ NAV_INDEX_CEIL = 66481
 # 2455 → 2553 — omt_net max_states describe documents 0=startup brief
 # (+17B; the brief probe itself reuses the existing arg, no new op per the
 # IDEA-002 v4 §5.0 closed enum). Deliberate, budgets OK (2553/2592).
-TOOL_ARGS_CEIL = 2553    # re-pin 2026-09-13 (feature_080): deliberate omt_net claim ops (task_id/owner/generation describes + op enum) +32B nav drift; harness budgets still OK (tool_args 2454/2464, tool_schemas 1812/1856)
+# Re-pin 2026-09-27 (feature_131 S5 Tier-2 omt_session): TOOL_ARGS_CEIL
+# 2553 → 2749 — 23 short arg describes for the new tool (+196B measured live
+# via _sizes()); @budget tool_args deliberately grown 2592→2848 in the same
+# .omt edit. Deliberate, budgets OK (2749/2848).
+TOOL_ARGS_CEIL = 2749    # re-pin 2026-09-13 (feature_080): deliberate omt_net claim ops (task_id/owner/generation describes + op enum) +32B nav drift; harness budgets still OK (tool_args 2454/2464, tool_schemas 1812/1856)
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3): @tool omt_status description
 # drops "that will fire " (-15B), adds "| resume → ≤2KB post-compaction
 # digest" (+43B UTF-8) — net +28B (tool_schemas 1840/1856).
@@ -64,7 +72,10 @@ TOOL_ARGS_CEIL = 2553    # re-pin 2026-09-13 (feature_080): deliberate omt_net c
 # 1840 → 1871 — @doc startup rewording lands in nav/AGENTS projections, and
 # the tool-schema total drifts with the corpus (+31B live via _sizes()).
 # Deliberate, budgets still OK (tool_schemas 1871/2048).
-TOOL_SCHEMAS_CEIL = 1871
+# Re-pin 2026-09-27 (feature_131 S5 Tier-2 omt_session): TOOL_SCHEMAS_CEIL
+# 1871 → 2014 — the +1 @tool description is the feature's deliverable (+143B
+# live via _sizes()). Deliberate, budgets still OK (tool_schemas 2014/2048).
+TOOL_SCHEMAS_CEIL = 2014
 
 
 def _sizes():

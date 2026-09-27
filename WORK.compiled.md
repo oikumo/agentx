@@ -4,7 +4,7 @@ NEXT: proj:agentx_concurrent_development (recommended)
 Other: none | Blocked: none | Resources: 4/4 free
 Pool: pending=0 active=0 done=7 (places 15/15)
 Lanes: verification 0/1 free 1, integration 0/1 free 1
-Projects: 6 active / 15 complete / 1 draft
+Projects: 6 active / 16 complete / 1 draft
 Active: agentx_concurrent_development, feature_kb_akb, petri_net_studio, project_lifecycle, rag_v2, workflows
 Options(9): proj:7 drift:0 unscoped:2
 OptionIDs: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:harness_reason, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, unscoped:001, unscoped:002
