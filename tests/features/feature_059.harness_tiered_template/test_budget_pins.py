@@ -51,7 +51,14 @@ import harnessc
 # 66481 → 66744 — the +1 @tool omt_session row is the feature's deliverable
 # (kinds unchanged: doc/flow/xref/tool/msg); @budget nav_index deliberately
 # grown 66560→67072 in the same .omt edit. Deliberate, budgets OK (66744/67072).
-NAV_INDEX_CEIL = 66744
+# Re-pin 2026-09-27 (session_analysis_promotion, docs follow-up post-MH13):
+# NAV_INDEX_CEIL 66744 → 67475 — the +1 @doc comp.session record + RUNTIME
+# self-inspection pointer are the deliverable (kinds unchanged:
+# doc/flow/xref/tool/msg; comp.session leading path = the omt_session.ts
+# plugin only — tier-init trees ship plugins, not the session_inspect core,
+# comp.tdd prose precedent); @budget nav_index deliberately grown
+# 67072→67584 in the same .omt edit. Deliberate, budgets still OK (67475/67584).
+NAV_INDEX_CEIL = 67475
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): op describe gains
 # "| resume" (+9B) paid by an include_ledger describe diet (-8B) — net +1B
 # deliberate (tool_args 2455/2464); design note @ 4.design/features/
