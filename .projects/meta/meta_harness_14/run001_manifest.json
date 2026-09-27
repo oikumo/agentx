@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "experiment": "mh14_session_start_token_cost",
+  "run": "run001",
+  "hypothesis": "Direct plain-text render of the session-start menu in the probe reply (no startup_table roundtrip) cuts cumulative input tokens over the first 5 assistant messages by >=30% with an identical letter->OptionID menu map and zero enforcer/gate regressions.",
+  "cases": [
+    "fresh_session_menu",
+    "known_task_resume"
+  ],
+  "variants": [
+    "control_current_agents_start",
+    "lean_start_v1"
+  ],
+  "reps": 2,
+  "budgets": {
+    "first_5_messages_input_tokens": "measure, no cap",
+    "startup_table_calls": "0 in lean trials (fidelity check)"
+  },
+  "decision_rule": "adopt lean_start_v1 iff measured >=30% cumulative input-token reduction over first 5 assistant messages AND identical OptionID map AND zero gate regressions; else keep control"
+}
