@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_13 — OpenCode Session Inspector & Labeled Experiments (Tier 2)
 
-> Status: **draft** · **v0.1 (2026-09-26)** — created mechanically with `project.py new --slug meta_harness_13`. This is the canonical project proposal; implementation is pending approval. Session history and the resume point live in `CURRENT_STATE.md`.
+> Status: **active** · **v0.1 (2026-09-26)** — created mechanically with `project.py new --slug meta_harness_13`. This is the canonical project proposal; implementation is pending approval. Session history and the resume point live in `CURRENT_STATE.md`.
 
 ## New Session Quick Start
 

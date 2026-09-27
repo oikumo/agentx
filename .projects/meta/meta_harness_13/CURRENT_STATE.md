@@ -5,6 +5,65 @@
 
 ---
 
+## 2026-09-27 (auto — feature_131.opencode_session_inspection_and_experiments Done)
+
+- shipped: major_feature · test report @ 6.testing/features/feature_131.opencode_session_inspection_and_experiments/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-09-27 (iter 2 — S2 slice closed; S3–S6 pending)
+
+### Done
+
+- S2 (query/inspect/trace/cli) TDD closed: testlist 5 → red/green per node → sync closed orphaned `test_inspect_trace.py` RED (rename to `test_slice2_inspect_trace.py`) via same-node alias → refactor → done, validate-exit ok, no stranded REDs.
+- Slice suite: `tests/scripts/session_inspect/ -q` → 32 passed, 2 skipped (live gated); bridge `tests/features/feature_131.../test_slice1_bridge.py` → 3 passed.
+- Artifacts: `omt_complete` Programming verified (S2); full TDD `done` green (suite+feature+refactor+naming ok).
+- Legacy alias `tests/scripts/session_inspect/test_inspect_trace.py` kept as thin same-node close-out; canonical tests are `test_slice2_*.py`.
+
+### In progress / Blocked
+
+- Feature in Programming (S2 verified) — NOT Done. S3 (profile/compare/exporter) → S4 (manifest/collect/evaluate run-gated) → S5 Tier-2 + 39-byte budget → S6 acceptance remain.
+- Live-DB reasoning-bearing reconciliation (A2) still needs `MH13_LIVE_DB=1` verification in S3.
+
+### Next
+
+- Declare Testing for S2 verification (test report S2 addendum + regression), then Programming for S3 per design_001 §Slice plan S3.
+- Resume entry point: this entry → PROJECT.md §Implementation plan M2–M3 → design_001 §Slice plan S3.
+
+### Notes / context
+
+- `feature_129/130` scripts untouched; fixtures synthetic only; adapter read-only `mode=ro`.
+- TDD same-node lint (GOTCHA_TDD_NODE): rename-induced orphan REDs must be closed with same-path GREEN (sync), never by deleting the path.
+
+---
+
+## 2026-09-27 (iter 1 — S1 slice closed; S2–S6 pending)
+
+### Done
+
+- S1 (schema/adapter/normalize/labels/hierarchy/usage/collect) TDD closed: testlist 18 → 12 cycles → refactor → done, validate-exit ok, no stranded REDs.
+- Slice suite: `tests/scripts/session_inspect/ -q` → 25 passed, 2 skipped (live gated); bridge `tests/features/feature_131.../test_slice1_bridge.py` → 3 passed (Programming→Testing gate).
+- Artifacts: `5.implementation/.../impl_notes.md` + `6.testing/.../test_report.md`; `omt_complete` Programming→Testing; full regression `uv run pytest -q` → 2031 passed, 2 skipped, 2 deselected in 95.41s; `harnessc check` 275 records 0 errors.
+- Project flipped draft→active (ledger project_link), feature_131 linked.
+
+### In progress / Blocked
+
+- Feature stays in Testing (S1 verified) — NOT Done. S2 (query/inspect/trace/cli) → S3 → S4 → S5 Tier-2 + 39-byte budget → S6 acceptance remain.
+- Live-DB reasoning-bearing reconciliation (A2) still needs `MH13_LIVE_DB=1` verification in S2.
+
+### Next
+
+- Declare Programming for S2 (Testing→Programming allowed), add design addendum for query/inspect/trace/cli, TDD testlist → red → green → refactor → done per module.
+
+### Notes / context
+
+- Resume entry point: this entry → PROJECT.md §Implementation plan M2 → design_001 §Slice plan S2.
+- `feature_129/130` scripts untouched; fixtures synthetic only; adapter read-only `mode=ro`.
+
+---
+
 ## 2026-09-26 (iter 0 — project created; inspection and experiments scoped)
 
 ### Done
