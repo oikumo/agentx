@@ -12,7 +12,7 @@
 
 import { tool } from "@opencode-ai/plugin"
 import { execFileSync } from "node:child_process"
-import { initOmtShared, repoRoot, irToolDescription } from "../lib/omt_shared"
+import { initOmtShared, repoRoot, irToolDescription, argvValue } from "../lib/omt_shared"
 
 const OPS = ["probe", "fire", "invariant", "splice", "sync", "synthesize", "mine", "gate", "claim", "release", "transfer", "checkpoint"]
 
@@ -74,10 +74,10 @@ function createNetTool() {
         let v: any = (args as any)?.[k]
         if (k === "session" && (v === undefined || v === null || v === "")) v = context?.sessionID
         if (v !== undefined && v !== null && v !== "")
-          // Array guard: opencode SDK coerces JSON-array-looking strings fed to a
-          // tool.schema.string() arg into actual JS arrays; String(v) collapses
-          // to "a,b". Re-serialize arrays back to valid JSON (feature_027 fix).
-          argv.push(`--${k}`, Array.isArray(v) ? JSON.stringify(v) : String(v))
+          // feature_027 + feature_136: the SDK coerces JSON-looking strings fed
+          // to a tool.schema.string() arg into actual JS arrays/objects;
+          // argvValue re-serializes them back to valid JSON (mutation et al.).
+          argv.push(`--${k}`, argvValue(v))
       }
       if (op === "probe" && args?.max_states !== undefined && args?.max_states !== null)
         argv.push("--max-states", String(args.max_states))

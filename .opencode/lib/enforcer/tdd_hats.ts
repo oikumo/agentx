@@ -11,7 +11,7 @@
 import { tool } from "@opencode-ai/plugin"
 import { writeFileSync } from "node:fs"
 import { OmtBlock, getActiveUnlock, type EnforcerEnv } from "./session_state"
-import { irToolDescription, gateMsg } from "../omt_shared"
+import { irToolDescription, gateMsg, argvValue } from "../omt_shared"
 
 // --- TDD tools (thin wrappers delegating to tdd_check.py) -------------------
 // improvement006/OPT-H: one registered tool; op dispatches to the subcommands
@@ -41,10 +41,10 @@ export function createTddTools(env: EnforcerEnv) {
       for (const k of ["behaviors", "feature", "test_node", "target_src"]) {
         const v = args?.[k]
         if (v !== undefined && v !== null && v !== "")
-          // Array guard: SDK coerces JSON-array strings fed to a tool.schema.string() arg
-          // into actual JS arrays; String(v) collapses to "a,b" and tdd/cli.py json.loads
-          // then fails. Re-serialize arrays back to valid JSON. (feature_027 iter-j fix)
-          flags.push(`--${k.replace(/_/g, "-")}`, Array.isArray(v) ? JSON.stringify(v) : String(v))
+          // feature_027 + feature_136: SDK coerces JSON-looking strings fed to a
+          // tool.schema.string() arg into actual JS arrays/objects; argvValue
+          // re-serializes them back to valid JSON (behaviors et al.).
+          flags.push(`--${k.replace(/_/g, "-")}`, argvValue(v))
 // TA: gotcha: GOTCHA: opencode SDK coerces a JSON-array-looking string passed to a tool.schema.string() arg into an actual JS array (feature_027 iter-j diagnosis, 2026-08-15). String(v) on line 44 then collapses the brackets — "["a","b"]" becomes "a,b" — and tdd/cli.py:64 json.loads("a,b") throws "Expecting value: line 1 column 1 (char 0)". Fix APPLIED 2026-08-15: `Array.isArray(v) ? JSON.stringify(v) : String(v)` guard before pushing the flag. Same coercion risk for any tool.schema.string() arg receiving bracketed JSON content (test_node, target_src, feature, behaviors). Verified: manual `uv run scripts/omt/tdd_check.py testlist --behaviors '["x"]'` succeeds; harness path now mirrors it.
       }
       flags.push("--session", session)

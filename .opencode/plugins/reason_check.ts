@@ -14,6 +14,7 @@
 import { tool } from "@opencode-ai/plugin"
 import { spawnSync } from "node:child_process"
 import { join, isAbsolute, resolve as resolvePath } from "node:path"
+import { argvValue } from "../lib/omt_shared" // registry-neutral: standalone serializer (feature_136)
 
 const OPS = ["check", "explain", "compare", "concretize"] as const
 type Op = (typeof OPS)[number]
@@ -79,7 +80,10 @@ function toArgv(op: Op, args: Record<string, string>): string[] {
   for (const flag of ALLOW[op]) {
     const key = flag.replace(/^--/, "")
     const v = (args as any)[key] ?? (args as any)[flag]
-    if (v !== undefined && v !== "") out.push(flag, String(v))
+    if (v !== undefined && v !== "")
+      // feature_136: argvValue re-serializes SDK-coerced arrays/objects (row
+      // takes JSON — could arrive as a JS object) back to valid JSON.
+      out.push(flag, argvValue(v))
   }
   return out
 }

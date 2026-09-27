@@ -133,6 +133,23 @@ export function globToRegex(pattern: string): RegExp {
   return new RegExp(`^${escaped}$`)
 }
 
+// --- argv value serializer (feature_136: SDK JSON shape-coercion guard) ------
+// The opencode SDK coerces JSON-array- AND JSON-object-looking strings passed
+// to tool.schema.string() args into actual JS arrays/objects. feature_027
+// (2026-08-15) diagnosed the array half (String(v) collapses "["a","b"]" to
+// "a,b" → tdd/cli.py json.loads dies); feature_136 (2026-09-27, mh14 run001
+// trial) the object half: omt_session query_json "{"limit": 3}" arrived as a
+// JS object, String(v) → "[object Object]", and session_inspect json.loads
+// threw "Expecting value: line 1 column 2 (char 1)". One serializer for every
+// argv/flag push site (omt_session, omt_net, tdd_hats, reason_check): arrays
+// AND plain objects re-serialize to valid JSON, scalars pass through String(v)
+// unchanged. Pinned by tests/scripts/omt/test_argv_value_guard_pins.py.
+// TA: gotcha: opencode SDK coerces JSON-OBJECT-looking strings passed to tool.schema.string() args into actual JS objects, not just arrays (feature_027 covered the array half only) — omt_session query_json '{"limit": 3}' arrived as an object, String(v) → '[object Object]', session_inspect json.loads died 'Expecting value: line 1 column 2 (char 1)' (feature_136 / mh14 run001 trial, 2026-09-27; blocked experiment collect). Every argv/flag push site must use argvValue() from this file; never bare String(v). Supersedes the per-site Array.isArray ternaries (tdd_hats.ts:48 TA note).
+export function argvValue(v: unknown): string {
+  if (v !== null && typeof v === "object") return JSON.stringify(v)
+  return String(v)
+}
+
 // --- JSONL state IO ---------------------------------------------------------
 // Shared readers/writers for the harness state files (ledger.jsonl,
 // thoughts.jsonl, ...). Append adds the `ts` field; callers pass the rest.

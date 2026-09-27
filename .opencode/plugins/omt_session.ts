@@ -7,7 +7,7 @@
 
 import { tool } from "@opencode-ai/plugin"
 import { execFileSync } from "node:child_process"
-import { initOmtShared, repoRoot, irToolDescription } from "../lib/omt_shared"
+import { initOmtShared, repoRoot, irToolDescription, argvValue } from "../lib/omt_shared"
 
 const OPS = ["sessions", "capture", "query", "inspect", "trace", "profile", "compare", "experiment", "export"]
 
@@ -69,7 +69,11 @@ function createSessionTool() {
         let v: any = (args as any)?.[k]
         if (k === "directory" && (v === undefined || v === null || v === "")) v = undefined
         if (v !== undefined && v !== null && v !== "")
-          argv.push(`--${k}`, Array.isArray(v) ? JSON.stringify(v) : String(v))
+          // feature_136: argvValue re-serializes SDK-coerced arrays/objects —
+          // query_json/manifest/selection_json can arrive as JS objects when
+          // the emission layer object-parses the JSON string ("[object
+          // Object]" class; blocked run001 collect until pinned here).
+          argv.push(`--${k}`, argvValue(v))
       }
       try {
         const out = execFileSync("uv", argv, {

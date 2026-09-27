@@ -8,7 +8,7 @@
 
 > One line: Make the meta-harness opencode **session start** cheap and disciplined — minimal input tokens, fast path to first useful action, productivity gates preserved — proven with `omt_session` evidence (mh13).
 
-**Next:** run001 pilot — 8 human-launched trials. Mechanism shipped: `uv run scripts/omt/lean_start_swap.py --variant control|lean_start_v1` (flips the SESSION STARTUP line of `.agents_prompts/build.md`; control is byte-pinned; restore after each trial). Labels: `.projects/meta/meta_harness_14/run001_labels.jsonl`. Collect → decide per decision rule.
+**Next:** run001 pilot — 7 remaining human-launched trials (rep01 control/fresh executed 2026-09-27, adjudication pending — see CURRENT_STATE). Mechanism shipped: `uv run scripts/omt/lean_start_swap.py --variant control|lean_start_v1` (flips the SESSION STARTUP line of `.agents_prompts/build.md`; control is byte-pinned; restore after each trial). Labels: `.projects/meta/meta_harness_14/run001_labels.jsonl`. Collect → decide per decision rule (collect path hardened by feature_136).
 
 ---
 
@@ -59,6 +59,7 @@ Experiment **run001** (`experiment= mh14_session_start_token_cost`):
 ## Status
 
 - [x] First linked feature (header flips draft → active mechanically) — feature_135.lean_start_v1_variant
+- [x] feature_136.json_arg_object_coercion_transport_hardening — tool-call JSON-arg transport hardened (shared `argvValue` serializer, 4 push sites; run001 collect path safe from the SDK object-coercion class)
 - [ ] run001 pilot collected + decision recorded
 
 ---
