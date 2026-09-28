@@ -28,7 +28,7 @@ Other enabled: none
 Blocked: none
 Resources: 4/4 free
 Pool: pending=0 active=0 done=7 (places 15/15)
-Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:harness_reason, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, unscoped:001, unscoped:002
+Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:meta_harness_14, proj:meta_harness_15, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, unscoped:001, unscoped:002
 Lanes: verification 0/1 free 1, integration 0/1 free 1
 ## Projects (synced by `uv run scripts/omt/project.py sync` — do not hand-edit)
 
@@ -43,6 +43,7 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 | meta_harness_12 | complete | feature_120.toolbox_t1_index_query, feature_121.toolbox_t4_docs_tiers |
 | meta_harness_13 | complete | feature_131.opencode_session_inspection_and_experiments, feature_132.pilot_launch_path, feature_133.dispatcher_gate_wiring, feature_134.real_trial_launcher |
 | meta_harness_14 | active | feature_135.lean_start_v1_variant, feature_136.json_arg_object_coercion_transport_hardening |
+| meta_harness_15 | active | feature_137.trace_bounded_paging |
 | meta_harness_2 | complete | feature_020.meta_harness_navigation, feature_021.meta_harness_think_anywhere, feature_022.meta_harness_think_anywhere_v2, feature_023.meta_harness_improvement, feature_026.omt_q_interrogative_first_ops |
 | meta_harness_3 | complete | feature_028.feature_scoped_gating |
 | meta_harness_4 | complete | feature_037.tdd_testlist_prose_fallback |

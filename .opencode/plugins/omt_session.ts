@@ -18,7 +18,7 @@ const OP_ARGS: Record<string, readonly string[]> = {
   capture: ["db", "directory", "session_ids", "time_from", "time_to", "dest", "expected_revision"],
   query: ["db", "query_json", "limit", "cursor", "expected_revision"],
   inspect: ["db", "session_id", "message_id", "part_id", "page", "per_page", "expected_revision"],
-  trace: ["db", "session_id", "expected_revision"],
+  trace: ["db", "session_id", "page", "per_page", "expected_revision"],
   profile: ["db", "session_id", "top_n", "expected_revision"],
   compare: ["db", "ids_json", "basis", "expected_revision"],
   experiment: ["db", "sub", "manifest", "run", "dest", "expected_revision"],

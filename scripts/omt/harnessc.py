@@ -852,6 +852,36 @@ def check_work_projects_fresh(c: Corpus) -> None:
         c.errors.append("WORK.md `## Projects` section stale — run: uv run scripts/omt/project.py sync")
 
 
+def _tasks_options_proj_drift(tasks_text: str, work_text: str) -> list[str]:
+    """O1 menu staleness: Tasks `Options:` proj slugs vs Projects active slugs.
+
+    Active-only rule mirrors net.sync_md.compose_menu_options (complete/draft
+    projects are never part of Options). Pure + deterministic; the live
+    symptom was a stale menu listing complete harness_reason while missing
+    active meta_harness_14/15 after the Projects table moved on.
+    """
+    opts: set[str] = set()
+    m = re.search(r"^Options:\s*(.+)$", tasks_text, re.M)
+    if m:
+        for tok in m.group(1).split(","):
+            tok = tok.strip()
+            if tok.startswith("proj:"):
+                opts.add(tok[len("proj:"):])
+    active: set[str] = set()
+    proj_start = work_text.find("## Projects")
+    proj_body = work_text[proj_start:] if proj_start != -1 else ""
+    proj_end = proj_body.find("\n## ", 1)
+    if proj_end != -1:
+        proj_body = proj_body[:proj_end]
+    for pm in re.finditer(r"^\|\s*([\w_]+)\s*\|\s*(active|complete|draft)\s*\|", proj_body, re.M):
+        slug, state = pm.group(1), pm.group(2)
+        if slug == "project":
+            continue
+        if state == "active":
+            active.add(slug)
+    return [f"missing:{s}" for s in sorted(active - opts)] + [f"extra:{s}" for s in sorted(opts - active)]
+
+
 def check_work_tasks_canonical(c: Corpus) -> None:
     """WORK.md `## Tasks` section mirrors the net projection (feature_050)."""
     try:
@@ -887,6 +917,15 @@ def check_work_tasks_canonical(c: Corpus) -> None:
         tasks_text = work_text[tasks_start:]
     else:
         tasks_text = work_text[tasks_start:tasks_end]
+
+    opt_drift = _tasks_options_proj_drift(tasks_text, work_text)
+    if opt_drift:
+        c.errors.append(
+            "WORK.md `## Tasks` Options proj drift vs `## Projects` active — "
+            "run: uv run scripts/omt/net_check.py sync --direction net_to_md "
+            "&& uv run scripts/omt/workc.py build\n  "
+            + "; ".join(opt_drift)
+        )
 
     if is_pool_net(st.net):
         # Pool net: check pool counts line

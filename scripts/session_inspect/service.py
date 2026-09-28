@@ -30,7 +30,7 @@ OP_ARGS: dict[str, tuple[str, ...]] = {
     "query": ("db", "query_json", "limit", "cursor", "expected_revision"),
     "inspect": ("db", "session_id", "message_id", "part_id", "page",
                 "per_page", "expected_revision"),
-    "trace": ("db", "session_id", "expected_revision"),
+    "trace": ("db", "session_id", "page", "per_page", "expected_revision"),
     "profile": ("db", "session_id", "top_n", "expected_revision"),
     "compare": ("db", "ids_json", "basis", "expected_revision"),
     "experiment": ("db", "sub", "manifest", "run", "dest", "expected_revision"),
@@ -278,10 +278,12 @@ def dispatch(op: str, args: dict[str, Any]) -> dict[str, Any]:
                 return _refuse("missing_session_id")
             ad = OpenCodeSqliteAdapter(db)
             snap = ad.snapshot(SessionSelector(session_ids=[sid]))
+            page = int(str(args.get("page", "0") or "0"))
+            per_page = int(str(args.get("per_page", "10") or "10"))
             res = _tr.timeline({"events": snap.get("events", ()),
                                "messages": snap.get("messages", ()),
-                               "parts": snap.get("parts", ())}, sid)
-            res["detail_ref"] = f"trace:{sid}:{len(res.get('skeleton', []))}"
+                               "parts": snap.get("parts", ())}, sid,
+                              page=page, page_size=per_page)
             return {"ok": True, "result": res}
         except Exception as e:
             return _refuse("trace_failed", detail=str(e)[:200])
