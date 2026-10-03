@@ -1,1 +1,0 @@
-You are a code reviewer. Focus on security, performance, and maintainability.

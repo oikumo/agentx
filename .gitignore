@@ -3,15 +3,7 @@ node_modules/
 local_sessions/
 uv.lock
 
-# OMT++ process enforcer runtime state (feature_006) — not an artifact.
-# R8: the two compiler-verified projections are tracked (verify-projections diffs
-# them against the .omt source); everything else under .meta/.omt/ stays ignored.
-.meta/.omt/*
-!.meta/.omt/harness.ir.json
-!.meta/.omt/nav.index.jsonl
-
-# Out-of-harness: this project is opencode-only. Claude Code config is not part
-# of the META HARNESS and should not be committed.
+# Out-of-harness: this project is opencode-only.
 .claude/
 
 # Byte-compiled / optimized / DLL files
@@ -31,9 +23,6 @@ downloads/
 eggs/
 .eggs/
 lib/
-# meta_harness_dsl R1: .opencode/lib/ is TRACKED source (shared TS lib for the
-# OMT plugins, receipt-guarded — git must see it or isGitDirty goes blind).
-!.opencode/lib/
 lib64/
 parts/
 sdist/
@@ -233,8 +222,4 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-
-# feature_059 D1-D3: `harnessc build` emits GETTING_STARTED.md per tier —
-# generated onboarding, never committed (same idiom as the ignored .omt state).
-/GETTING_STARTED.md
 

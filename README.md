@@ -40,322 +40,7 @@
 - 🔌 **LangChain/LangGraph** - Full integration for agentic workflows
 - 🧪 **2,300+ Tests** - Comprehensive unit + integration + automated tests (2085 pytest + 283 Vitest)
 
-Developed with **opencode** using the **META HARNESS** (OMT++ methodology: Analysis → Design → Programming → Testing with visible artifacts).
-
----
-
-## 📖 META HARNESS: Process Enforcement System
-
-> **Why this matters:** agentx isn't just an LLM agent framework — it's a working proof that a coding agent can be mechanically constrained to follow a rigorous software development process (Analysis → Design → Programming → Testing) with visible, auditable artifacts at every step. No manual discipline required. And with the Tier-2 **session analysis tool** (`omt_session`, meta_harness_13), the harness can inspect *its own* opencode sessions — usage, failures, experiments — making harness self-evolution an evidence-driven activity.
-
-agentx is developed with **opencode** using a mechanically enforced **META HARNESS** — the OMT++ (Object Modeling Technique++) process enforcement system. Every code change follows a structured workflow with visible artifacts, enforced by plugins, linters, and gates — not human willpower.
-
-```text
-┌──────────────────────────────────────────────────────────────────┐
-│                     OMT++ PHASE MODEL                            │
-│                                                                  │
-│   ANALYSIS ──→ DESIGN ──→ PROGRAMMING ──→ TESTING ──→ DONE       │
-│   (WHAT?)      (HOW?)     (CODE)         (VERIFY)                │
-│                                                                  │
-│   Each phase produces visible artifacts before the next begins.  │
-│   Skipping a phase is mechanically blocked.                      │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-### Components
-
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| **Documentation Structure** | `.meta/` | All development artifacts organized by OMT++ phases |
-| **Enforcement Plugin** | `.opencode/plugins/omt_enforcer.ts` + `.opencode/lib/enforcer/` | Composition root + gate modules driven by `gate_driver.ts` (HDL-2): an IR-ordered chain of 10 gates (budget 12, net-zero) whose order, triggers, predicates, and messages are pure `.omt` declarations |
-| **Status Tool** | `.opencode/plugins/omt_status.ts` | Returns current phase, unlock state, artifact status, TDD state (compact ~350 B/call) + `preflight(tool,path)` ordered gates (feature_055, preflight-on-declare 062) + `resume` ≤2 KB digest (feature_092) |
-| **Navigation Plugin** | `.opencode/plugins/omt_nav.ts` | feature_020 + 061/069: structured doc navigation via ONE consolidated tool — `omt_nav{op:nav\|list_sections\|cross_ref\|quick_ref}` (cached hits, answer caps) |
-| **Interrogative Plugin** | `.opencode/plugins/omt_q.ts` | feature_026 + 077/078: read-only resume questions — `op:state` · `op:plan` · `op:drift` · `op:audit` · `op:graph` — answering "state of X / which gates block / what drifted / historical replay / transitive risk" without re-derivation (JSON envelope + `as_of_commit`) |
-| **Knowledge Base Plugin** | `.opencode/plugins/omt_kb_nav.ts` | Application Knowledge Base (AKB) navigation — concept-altitude `TIER_CODE` index (`g.kb` consult before `src/` edits; sticky per-feature 063, per-file recency 088) |
-| **Think Anywhere Plugin** | `.opencode/plugins/omt_think.ts` | feature_021/022 + 058/066: persistent inline `TA:` thought-tags via ONE consolidated tool — `omt_think{op:add\|list\|remove\|verify\|suggest\|review}` — + session digest, batch consult |
-| **Concurrency Net Plugin** | `.opencode/plugins/omt_net.ts` | feature_039–050 + MH8 T5 (079–084): Petri-net-gated concurrent development — `omt_net{op:probe\|fire\|splice\|sync\|invariant\|synthesize\|mine\|gate\|claim}`; WIP-limited pool (places 15/15, `net_rev:60` drained_complete), net-as-gate (050), session whitelist, claim/generation fencing |
-| **Session Inspector Plugin** | `.opencode/plugins/omt_session.ts` + `scripts/session_inspect/` | **The harness's main self-inspection feature** (feature_131, meta_harness_13) — Tier-2 opencode session analysis + labeled experiments: 9 ops (`sessions` · `capture` · `query` · `inspect` · `trace` · `profile` · `compare` · `experiment` · `export`) over the read-only opencode session DB; usage/cost profiling, failure witnesses, provenance-bound evidence export; experiment `run` gated (no auto launch) |
-| **MVC++ Linter** | `scripts/omt/mvc_check.py` | Architecture checker for layer violations (View↔Model leaks, SQL outside DP, etc.) |
-| **TDD Engine** | `scripts/omt/tdd_check.py` + `omt_tdd` tool | Mechanically enforces Red→Green→Refactor cycles (two-hats gate); **toolchain-aware** (038) — `.py`→pytest, `.ts/.tsx`→vitest; `sync` stranded-red closer (065), same-node lint (067) |
-| **Feature Scaffold** | `scripts/omt/new_feature.py` | Creates consistently-named feature directories from templates |
-| **Harness DSL (source of truth)** | `.meta/META_HARNESS.omt` | OMT-HDL v1: every rule, gate, tool, constant, and budget declared as records in ONE file |
-| **Harness Compiler** | `scripts/omt/harnessc.py` | Projects the DSL → `AGENTS.md`, `opencode.jsonc` blocks, plugin IR, nav index; derives records at projection time; drift-tested; lints grammar vocab, tool-seed drift, message orphans, root hygiene |
-| **Ledger** | `.meta/.omt/ledger.jsonl` | Audit trail of all phase declarations and completions (rotated at 64 KB) |
-| **Configuration** | `opencode.jsonc`, `AGENTS.md` | Protected files, denied commands, process rules — **generated projections of the DSL, never hand-edited** |
-| **Workflows Catalog** | `.workflows/` | Operational workflow playbooks the agent loads and executes on user demand — markdown recipes (NOT a runtime engine). Sits **above** the harness: each workflow's `# Rules` line 1 declares whether it follows or overrides OMT. Two-level discovery read: `.workflows/META.md` → matched subject `META.md` → matched file. Mandatory approval gate (no auto-fix). See [`.workflows/META.md`](.workflows/META.md) |
-| **Projects Home** | `.projects/` | Per-feature design & project-planning home — `PROJECT.md` (canonical single-source design doc) + `CURRENT_STATE.md` (session-by-session log + resume point) + supporting artifacts. Non-gated (NOT in `harness_paths`). Companion to the phase-gated design doc under `.meta/software_development_process/4.design/features/`. Subfolders under `.projects/meta/<feature>/`. See [`.projects/meta/`](.projects/meta/) |
-
-### Workflows (`.workflows/`)
-
-The `.workflows/` catalog holds **human-authored triggered procedures** — operational playbooks the coding agent loads and executes on demand. A workflow is a markdown recipe: a problem statement, a `# Rules` list, and a numbered `# <Strategy>` the agent follows step by step. It is **not** a runtime engine (no DAG executor, no `src/` parser, no event bus) and it is **not** a replacement for OMT — it sits *above* the harness and decides when to invoke it.
-
-**Subjects** namespace the catalog by area of the codebase:
-
-| Subject | Path | State |
-|---------|------|-------|
-| `agentx` | `.workflows/agentx/` | active — 2 loops (`consistency_enforcement`, `feature_fix`) |
-| `meta_harness` | `.workflows/meta_harness/` | active — 2 loops (`meta_harness_evolution`, `meta_harness_project`) + 1 one-shot (`pause_dev_for_resume_later`) |
-| `app_knowledge_base` | `.workflows/app_knowledge_base/` | active — 1 loop (`akb_smart_population_and_update`) |
-
-**How a trigger works** (agent-read procedure, no parser):
-
-```text
-user trigger ("feature X doesn't work, fix it")
-   │
-   ▼  read root manifest
-┌─────────────────────────┐
-│ .workflows/META.md      │  ← subjects, schema, read-order
-└────────┬────────────────┘
-         ▼  pick matched subject, read its META
-┌───────────────────────────┐
-│ .workflows/<subj>/META.md │ ← per-workflow purpose, keywords, output path
-└────────┬──────────────────┘
-         ▼  load the matched workflow file
-┌─────────────────────────────────┐
-│ .workflows/<subj>/loops/<wf>.md │ ← # Rules (OMT stance line 1) + # <Strategy>
-└────────┬────────────────────────┘
-         ▼  execute steps → MANDATORY approval gate → write result to .sandbox/
-```
-
-**OMT stance.** Each workflow's `# Rules` line 1 declares whether the harness gates apply:
-- `Follow omt methodology` → `omt_phase` / `g.kb` / think-gates apply normally.
-- `Do not follow the omt methodology, focus on <X>` → gates are advisory for that run (still uses `omt_think` to embed knowledge).
-
-**Recurring invariants** (preserved across every workflow, treated as non-negotiable):
-1. **Human approval is mandatory** — no workflow auto-applies a fix; the user picks the alternative at the approval gate.
-2. **`omt_think` is always used** to embed knowledge in source — even when the workflow overrides OMT methodology.
-3. **Automated unit tests with mocks** are the preferred verification tool.
-4. **Sub-agents** are preferred for parallel analysis whenever useful.
-5. **Future agent token consumption** is the primary cost to minimize (terse definitions, explicit output paths, two-level read order).
-
-To author a new workflow: copy the template in [`.workflows/META.md`](.workflows/META.md) §6, fill it, drop it under the right subject (`loops/` for recurring, subject root for one-shot), and update that subject's `META.md` table. The full contract (schema, discovery procedure, output-path convention, the approval-gate hard invariant) lives in [`.workflows/META.md`](.workflows/META.md).
-
-### Projects Home (`.projects/`)
-
-The `.projects/` directory is the **per-feature design & project-planning home** — a non-gated companion to the phase-gated design doc that lives under `.meta/software_development_process/4.design/features/`. Each major feature or meta-project gets one subfolder under `.projects/meta/` holding its canonical design document plus the session-by-session log. The harness neither writes here nor gates edits: `.projects/` is not in `@var harness_paths`, not under `src/`, and not protected — the agent consults it before scoping a new feature and writes the resume point back at the end of each session.
-
-**Per-feature folder layout:**
-
-| File | Role |
-|------|------|
-| `PROJECT.md` | Canonical single-source design doc — vision, scope, architecture, acceptance criteria, implementation plan, decision log. On any disagreement with the companion file below, `PROJECT.md` wins. |
-| `CURRENT_STATE.md` | Session-by-session log — what was done, must-survive gotchas, and the precise "start here" resume point for the next session. |
-| Supporting artifacts | Samples, backups, superseded earlier drafts (e.g. `design_001_*.md` marked SUPERSEDED). |
-
-**Existing project folders (`.projects/meta/`, see `WORK.md` `## Projects` — synced by `uv run scripts/omt/project.py sync`):**
-
-| Folder | Subject | State |
-|--------|---------|--------|
-| `agentx_concurrent_development` | Concurrent development | draft |
-| `feature_kb_akb/` | Application Knowledge Base (AKB) | draft (UNIFIED concept-altitude index, `g.kb` consult-gate wired — DONE 2026-08-08) |
-| `workflows/` | `.workflows/` catalog definition layer | draft (root + 3 per-subject `META.md` + authoring schema + 3 open-gap fixes — DONE 2026-08-08) |
-| `petri_net_studio/` | Petri Net Studio v1/v2/v3 (feature_032–036) | active |
-| `project_lifecycle/` | Project lifecycle (feature_030) | active |
-| `rag_v2/` | RAG v2 (feature_027, feature_029 slash commands) | active |
-| `petri_net_library/` | Shared Petri net contract (feature_031) | complete |
-| `net_enforced_harness/` | Net-as-gate (feature_050) | complete |
-| `meta_harness_concurrent/` | Adaptive net engine + composition + WIP pool + dashboard (feature_039–049) | complete |
-| `meta_harness_2/` … `meta_harness_9/` | Harness evolution programs (nav/think/TDD/interrogative → MH9 rebase + benchmark + thin work contract + frontier) | complete (2–9; MH8 065–096 + MH9 097–101 closed 2026-09-14) |
-| `harness_reason/` | Harness Reason — real-token measurement + Tier-0/Tier-1 advisory pilot (feature_122–130) | complete (closed 2026-09-26) |
-| `meta_harness_10/` | Harness evolution — global projection + global gate + claims-through-fire + lanes + payback (feature_102–109) | complete (closed 2026-09-19) |
-| `meta_harness_11/` | Harness evolution — whole-project menu + multi-select + identity-aware pool + dispatch runtime + worktree lifecycle (feature_110–118) | complete |
-| `meta_harness_12/` | Toolbox — T1 index/query + T4 docs tiers (feature_120–121) | complete |
-| `meta_harness_13/` | **OpenCode session inspection & labeled experiments** — the `omt_session` Tier-2 tool (feature_131–134) | complete (closed 2026-09-27) |
-| `agentx_1_0_0/` | agentx 1.0.0 release | draft |
-
-**Relationship to the phase-gated design doc.** `@phase design_req` (in `.meta/META_HARNESS.omt`) requires a design doc on disk for `major_feature`/`new_screen`. The phase gate's `resolveArtifact` accepts an explicit `design_doc=` argument first (any path that exists), else auto-detects under `.meta/software_development_process/4.design/features/<feature>/`. Pointing `omt_phase{design_doc:".projects/meta/<feature>/PROJECT.md"}` makes the richer `PROJECT.md` the canonical artifact while the auto-detected `design_001_*.md` stub acts as a pointer — both paths satisfy the gate; the `.projects/` folder is the richer of the two by convention.
-
-To start a new project folder: create `.projects/meta/<feature_slug>/` and seed `PROJECT.md` (purpose, scope, acceptance criteria) + `CURRENT_STATE.md` (empty or with a session-1 placeholder). The phase-gated design doc scaffold is created separately by `uv run scripts/omt/new_feature.py "<name>" --type major_feature`. The full contract (component + path records) is nav-indexed under `COMP_PROJECTS` / `PTH_PROJECTS` in `.meta/META_HARNESS.omt`.
-
-### 🔍 Session Analysis — the harness's self-inspection main feature (`omt_session`)
-
-A harness that evolves itself needs evidence about its own behavior. `omt_session` (feature_131, project [meta_harness_13](.projects/meta/meta_harness_13/) — closed 2026-09-27) is the Tier-2 tool that provides it: a **session inspector and labeled-experiment engine** over the real opencode session database (read-only SQLite; explicit source selection, versioned adapters — never a blanket storage-format assumption).
-
-It serves two equally important workflows:
-
-1. **Investigate real work** — discover sessions and parent/child trees, reconstruct interleaved timelines, drill down from a session summary to the exact expensive message, its tool/reasoning parts, and the surrounding trace; profile usage (input/output/reasoning/cache/cost), surface failure and retry loops with witnesses, compare sessions.
-2. **Run labeled experiments** — declare a trial-matrix manifest, emit structured `[mh13.experiment]` labels into real message logs, dry-run the exact matrix, collect logs, validate attribution (duplicate/missing/contaminated trials are named, not guessed), compare variants on tokens/latency/errors/quality, and replay saved snapshots without new model calls.
-
-| op | purpose |
-|----|---------|
-| `sessions` | discover/filter sessions + hierarchy (direct vs subtree usage) |
-| `capture` | consistent snapshots; incremental, resumable refresh |
-| `query` | typed search/filter/group/aggregate across sessions |
-| `inspect` | exact message/part/call retrieval (paginated) |
-| `trace` | timeline + recorded causal/parent links |
-| `profile` | usage breakdowns + evidence-backed failure findings |
-| `compare` | sessions/subtrees/labeled-trials comparison |
-| `experiment` | `plan` \| `dry_run` \| `run` \| `collect` \| `validate` \| `replay` |
-| `export` | evidence/report bundle to an allowed destination |
-
-Contracts that keep it honest: raw source counters preserved (no estimates dressed as measurements), provenance on every finding, consistent read-only snapshots, default responses ≤2 KiB with a digest-bound `detail_ref`. **Execution is gated:** the experiment `run` op is explicitly effectful — the shipped launch path (feature_132 `run_gate` → 133 dispatcher → 134 launcher core) is guarded and returns `executed:false`; the live 12-trial pilot was never launched (project decision D7), and no token-saving or promotion claim may be cited from the un-executed pilot.
-
-**Why it matters for self-evolution:** every future harness change can be evaluated against recorded, source-backed evidence — which sessions consumed what, where retry loops formed, whether variant B actually beat baseline A — instead of vibes.
-
-### Single Source of Truth: the META HARNESS DSL (OMT-HDL)
-
-Every rule above — deny lists, protected paths, gates and their execution order, tool schemas, TDD state machines, doc structure, size budgets — is declared in **one file**: [`.meta/META_HARNESS.omt`](.meta/META_HARNESS.omt) (OMT-HDL v1: 277 records, `harnessc check OK` 2026-09-27 — including records the compiler *derives* at projection time instead of hand-maintaining).
-
-A compiler projects that single source into everything the runtime and the agent consume:
-
-```text
- .meta/META_HARNESS.omt   ← the ONLY file you edit
-           │
-           ▼  uv run scripts/omt/harnessc.py build
- ┌──────────────────────────────────────────────────────────────┐
- │ GENERATED PROJECTIONS (never hand-edit — drift-tested)       │
- │  • AGENTS.md ................ agent rules (budget ≤ 2.5 KiB) │
- │  • opencode.jsonc blocks .... deny/permission rules          │
- │  • .meta/.omt/harness.ir.json  IR consumed by the TS plugins │
- │  • .meta/.omt/nav.index.jsonl  omt_nav search index          │
- └──────────────────────────────────────────────────────────────┘
-```
-
-| Command | Purpose |
-|---------|---------|
-| `uv run scripts/omt/harnessc.py check` | Validate the `.omt` (schema, refs, budgets) |
-| `uv run scripts/omt/harnessc.py check --verify-projections` | **Drift test** — fails if any projection is stale or hand-edited |
-| `uv run scripts/omt/harnessc.py build` | Regenerate all projections from the `.omt` |
-
-**Why a DSL?** Constants such as the ledger rotation cap used to live in three places (TS plugin, Python engine, docs). Now `@var` records single-source them — with `{@var.x}` interpolation across records (unknown names are check errors) — and both the TypeScript plugins and the Python engine consume the compiled IR at runtime (7 hand-mirrored constant blocks deleted; pin-tests assert TS == PY == `.omt`). Gate execution order, nav-gate doc paths, and size budgets (AGENTS.md ≤ 3584 B · WORK.md ≤ 10240 B · scratchpad ≤ 3072 B · tool schemas ≤ 2048 B · tool arg describes ≤ 2848 B · gates ≤ 12 · nav-index ≤ 67584 B · IR ≤ 22016 B) are likewise declared once and mechanically verified on every build.
-
-### Token Discipline: every byte that costs tokens is budgeted
-
-A process harness that eats the context window would defeat its own purpose. Every surface that rides the system prompt or session startup carries a `@budget` enforced by `harnessc check` (improvement006 A–H + improvement007 A–I):
-
-| Surface | Before | Now | Paid |
-|---------|--------|-----|------|
-| Tool schemas | 1484 B across **18 tools** | **2014 B across 11 tools** (budget 2048) | every turn |
-| Live arg `describe()`s | 1609 B | **2749 B** (budget 2848) | every turn |
-| `AGENTS.md` | 5120 B cap | **≤ 3584 B** (3511 B live 2026-09-27) | every turn |
-| `WORK.md` | 14 KiB cap, unbounded DONE log | **≤ 10240 B** — pending + last-5 DONE inline, older rotate to `WORK_ARCHIVE.md` (9760 B live) | every session |
-| `omt_status` output | ~1.5 KB/call | **~350 B/call** | on demand |
-
-> **Note on the tool count:** the 18→7 consolidation target predates the later additive harness tools. feature_026 added `omt_q` (interrogative layer), the AKB `omt_kb_nav` grew the family, feature_039 added `omt_net` (concurrency net), and meta_harness_13 added `omt_session` (session analysis — the self-inspection main feature) — now **11 tools** (`omt_phase`/`omt_skip`/`omt_complete`/`omt_status`/`omt_tdd`/`omt_nav`/`omt_kb_nav`/`omt_think`/`omt_q`/`omt_net`/`omt_session`), pushing `@budget tool_schemas` 1024→1280→1536→1856→2048 B and `@budget tool_args` 2592→2848 B — a deliberate trade: read-only + net + session-analysis tools that collapse per-session re-derivation, serialize concurrent work into deterministic calls, and give the harness evidence about its own behavior.
-
-**Foundations (improvement006/007 era, still current):**
-
-- **HDL-2 gate driver** — the before-gate chain iterates IR-declared gates in `order=`, matching `tools=` and evaluating `when=` via a `@pred` registry; after-gates (MVC++ lint, TDD auto-revert) run in the same driver. A new *simple* gate is now a pure `.omt` declaration — no TypeScript to write.
-- **Derive at projection time** — `PHASE_*` / `TT_*` / `SECTION` nav records (and 13 more) are emitted by the compiler; hand-maintained duplicates pruned, killing a whole drift class.
-- **New compile-time lints** — grammar-vocab check (fsm/hat/gate arity), tool seed-drift check (TS seed strings ≡ `.omt` payloads), gate-message orphan check, repo-root hygiene check (allowlisted top level).
-- **On-demand doc diet** — `META_HARNESS.md` 5.5→1.4 KB (stub rotation), `META.md` 6.8→5.0 KB, methodology guide 27.5→23.9 KB with nav cross-ref routes widened 6→16.
-
-**Last changes (MH6 → MH13 + harness_reason, 2026-09-06 → 09-27 — all CLOSED, `check` 277/0):**
-
-- **MH6 (051–059, closed 2026-09-06)** — gate usability: ledger isolation, version canary, concurrency predicate, small-task fast-path, `preflight`, skip taxonomy, ceremony meter, thought-review, tiered template.
-- **MH7 (060–064/066, closed 2026-09-12)** — active-only dangling, nav cache hit, preflight-on-declare, KB sticky per-feature, truthful observation, think batch consult.
-- **MH8 (065–096, 31 items, closed 2026-09-14)** — the big hardening wave: TDD `sync` + same-node lint, schema autolink, nav caps, escape/delegate folds, typed policy, task-prep slice, receipt batch mode, completion hardening, workflow repair (6/6), temporal replay (`op:audit`), graph risk (`op:graph`), transaction authority, claim generation, worktree isolation, capacity arbitration, verification lane, recovery journal, evidence deps, skip audit, KB recency, structural pins, scaffolds/LSP allowlist, budget-diet-bot (warns at ≤64 B headroom), resume digest (`op:resume` ≤2 KB), cost benchmark (093: 17 goldens + 6/6 first-numbers TP=13/FP=0), verifiable-knowledge pilot (094: advisory sidecar only), fresh-review loop (095/096: 0 wins).
-- **MH9 (097–101, closed 2026-09-14)** — rebase + isolation pins → honest-cost follow-up → truthful-boundary residual → thin work contract → frontier experiment (verdict MERGE: fold enabled-ordering into preflight text; Petri stays analysis-only).
-- **harness_reason (122–130, closed 2026-09-26)** — real-token measurement + Tier-0/Tier-1 advisory pilot (contract extraction → checker → composition → paired experiments → held-out real tasks → renderer → pilot → real-token discharge); general-engine promotion verdict **negative** (kernel 1,321,729 vs harness 381,919 measured) — closed with the evidence retained.
-- **MH10 (102–109, closed 2026-09-19)** — read-only global projection + enforced global gate, claims rewired through `fire`, lane integration, crash reorder, dispatch payback matrix.
-- **MH11 (110–118, closed 2026-09-19)** — whole-project menu composer + multi-select directive protocol, identity-aware pool, live progress projection, concurrent dispatch runtime, worktree lifecycle.
-- **MH12 (120–121, closed 2026-09-21)** — toolbox T1 index/query + T4 docs tiers.
-- **MH13 (131–134, closed 2026-09-27)** — `omt_session` Tier-2 session inspector + labeled experiments: inspection verified live on a 242k-record corpus (AC1–AC5, AC9–AC12), label protocol, manifest/dry_run/validate/replay, and a guarded launch path (132 `run_gate` → 133 dispatcher → 134 launcher core, `executed:false` everywhere); the live 12-trial pilot was **not** executed (D7).
-- **Net stable** — no new net topology since 050; `net_rev:60` drained_complete, pool places 15/15, pending 0 / active 0 / done 7.
-
-### How Enforcement Works
-
-| Layer | File | Purpose |
-|-------|------|---------|
-| **Coarse permissions** | `opencode.jsonc` | Declarative deny/allow rules (git commit, bare python, .env edits, etc.) |
-| **Fine process gate** | `.opencode/plugins/omt_enforcer.ts` + `.opencode/lib/enforcer/gate_driver.ts` | IR-ordered gate chain — before edits: nav → protect → receipt → tests-canary → phase → think; after edits: MVC++ lint → TDD revert |
-
-**The META HARNESS Gate:** Before editing any file under `src/`, you **must** declare your OMT++ phase:
-
-```text
-omt_phase{ task_type: "bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs", 
-           phase: "Analysis|Design|Programming|Testing",
-           scope: "one sentence: what 'done' looks like" }
-```
-
-This creates a ledger entry in `.meta/.omt/ledger.jsonl` and unlocks `src/` edits for the session.
-
-**Rigor scales to task size:**
-
-| task_type | Required Artifacts |
-|-----------|-------------------|
-| `bug_fix` / `minor_feature` / `refactor` | Phase declaration only |
-| `major_feature` / `new_screen` | Phase declaration **+** design doc on disk |
-
-**Automatic Architecture Checks:** After every `src/` edit, an after-gate runs the MVC++ linter (`uv run scripts/omt/mvc_check.py`) which checks for View↔Model layer leaks, non-ABC Abstract Partners, SQL outside Data Provider classes, and God controllers (>300 lines). **Newly introduced** hard violations are **blocked** fix-forward (delta vs a pre-edit snapshot — legacy code is never punished); pre-existing issues surface as non-blocking advisories.
-
-### TDD Enforcement (feature_016)
-
-For `major_feature` and `new_screen` tasks, the gate automatically activates **TDD mode** — a Kent Beck-style Red → Green → Refactor cycle enforced mechanically via `omt_tdd{op:testlist→red→green→refactor→done}`:
-
-```text
-  ┌──────────────┐     ┌──────────────┐     ┌─────────────────┐
-  │  TESTLIST    │ →   │  RED (test)  │ →   │  GREEN (code)   │
-  │  behaviors   │     │  write test  │     │  write code     │
-  │  to implement│     │  that FAILS  │     │  to make it PASS│
-  └──────────────┘     └──────────────┘     └─────────────────┘
-                                                  │
-                                                  ▼
-                                         ┌──────────────────┐
-                                         │  REFACTOR        │
-                                         │  improve code    │
-                                         │  tests stay GREEN│
-                                         └──────────────────┘
-                                                  │
-                                                  ▼
-                                         ┌─────────────────┐
-                                         │  DONE           │
-                                         │  full suite +   │
-                                         │  checklist pass │
-                                         └─────────────────┘
-```
-
-**Two-Hats Gate:** RED state → only `tests/` edits allowed; GREEN/REFACTOR state → only `src/` edits allowed. Wrong layer edit → gate blocks with a message telling you which hat to switch to.
-
-**REFACTOR Revert:** If a refactor edit breaks tests, the gate automatically reverts the file to its pre-edit state — you can't accidentally introduce a regression during refactoring.
-
-### Navigation Enforcement (feature_020)
-
-Before answering ANY question about the project (classes, components, features, architecture), agents MUST use the navigation tool (`omt_nav{op:nav|list_sections|cross_ref|quick_ref}`) to search META HARNESS documentation first — only falling back to `grep`/`glob` if navigation returns no results. A mechanical gate (first in the IR-ordered chain) blocks `grep`/`glob` on doc paths (`.meta/`, `AGENTS.md`, `WORK.md`) until a nav op is used.
-
-### Think Anywhere (feature_021/022)
-
-Persistent, grep-friendly `TA:` thought-tags dropped **inline in any non-protected file** so hard-won context (gotchas, "why this is here", risks, cross-refs) survives across sessions. Token-minimal: retrieval is O(hits) via `grep`/`omt_think{op:list}`.
-
-- **`omt_think{op:add}`** — insert a language-aware `TA:` comment (bypasses phase/canary gates; annotation, not code)
-- **`omt_think{op:list}`** — grep-backed retrieval; marks the session consulted (clears the think-gate)
-- **`omt_think{op:remove}`** — remove a `TA:` line + reconcile the JSONL index (`verify`/`suggest` ops also available)
-- **Think-gate (blocking):** editing a file that carries `TA:` thoughts is blocked until the agent consults via `omt_think{op:list}` — NOT bypassable by `omt_skip`
-- **Session digest:** the first tool result of each session carries a compact, capped digest (counts + per-file counts + stale ⚠️ + pointer)
-
-### Tooling
-
-**Eleven consolidated opencode tools** (18 → 7, then +`omt_q` +`omt_kb_nav` +`omt_net` +`omt_session` → 11 — schema cost 1484→2014 B, budget 2048):
-
-| Tool | Purpose |
-|------|---------|
-| `omt_phase` | Declare OMT++ phase; unlocks `src/` edits |
-| `omt_skip` | Logged process-override escape hatch (scopes: src/tests/nav/all) |
-| `omt_complete` | Verify phase artifacts + advance to next phase |
-| `omt_status` | Process context: phase, TDD state, lint, valid next phases (compact) + `preflight` (055/062) + `resume` ≤2 KB digest (092) |
-| `omt_q` | **Interrogative layer (026 + 077/078)** — read-only: `op:state` (feature/session context), `op:plan` (which gates would block), `op:drift` (stale projections), `op:audit` + `op:graph` (history / transitive risk); JSON envelope with `as_of_commit` |
-| `omt_tdd` | TDD cycle driver — `op:testlist` → `red` → `green` → `refactor` → `done` + `op:sync` (065); **toolchain-aware (038)** — `.py`→pytest, `.ts/.tsx`→vitest; same-node lint (067) |
-| `omt_nav` | Navigate META HARNESS docs — `op:nav` · `list_sections` · `cross_ref` · `quick_ref` (feature_020) |
-| `omt_kb_nav` | Application Knowledge Base (AKB) navigation — `op:nav` · `list_sections` · `cross_ref` · `quick_ref` (TIER_CODE concept-altitude index) |
-| `omt_think` | Persistent inline `TA:` thought-tags — `op:add` · `list` · `remove` · `verify` · `suggest` · `review` (021/022 + 058/066) |
-| `omt_net` | **Concurrency net (039–050 + MH8 T5 079–084)** — `op:probe` · `fire` · `splice` · `sync` · `invariant` · `synthesize` · `mine` · `gate` · `claim` — WIP pool (`net_rev:60` stable), net-as-gate, drift checks |
-| `omt_session` | **Session analysis + labeled experiments (131, meta_harness_13) — the harness's self-inspection main feature** — `op:sessions` · `capture` · `query` · `inspect` · `trace` · `profile` · `compare` · `experiment` · `export` — read-only analysis of real opencode sessions (usage, traces, failures) + gated labeled experiments + provenance-bound export |
-
-Command-line engines:
-
-| Command | Purpose |
-|---------|---------|
-| `uv run scripts/omt/mvc_check.py` | MVC++ architecture linter |
-| `uv run scripts/omt/tdd_check.py` | TDD enforcement engine (9 subcommands) |
-| `uv run scripts/omt/new_feature.py "<name>"` | Scaffold a feature's artifacts from `.meta/templates/` |
-| `uv run scripts/omt/harnessc.py check / build` | Harness DSL compiler: validate `.omt` (schema, grammar vocab, budgets, seed/msg/hygiene lints), drift-test projections, regenerate |
-
-### References
-
-- **Harness DSL**: `.meta/META_HARNESS.omt` (single source of truth — edit this, then `harnessc.py build`)
-- **OMT++ methodology**: `.meta/software_development_process/omt_agent_guide.md`
-- **META HARNESS design**: `.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/`
-- **AGENTS.md**: Complete enforcement rules for opencode agents (GENERATED projection — do not hand-edit)
+Developed with **opencode**.
 
 ---
 
@@ -844,7 +529,7 @@ local_sessions/
 
 A **standalone browser-based Petri net workbench** at [`tools/petri-net-studio/`](tools/petri-net-studio/) — a Vite + React + TypeScript app that is **independent of agentx at runtime** (zero agentx/harness imports; `shared/petri-net/` is the only coupling). Its TypeScript engine is an exact behavioral port of the Python model (`src/agentx/model/petri_net/`), with golden byte-parity on the canonical JSON format.
 
-Shipped in three roadmap stages (project [`petri_net_studio`](.projects/meta/petri_net_studio/)):
+Shipped in three stages:
 
 | Stage | Feature | What shipped |
 |-------|---------|--------------|
@@ -1107,7 +792,7 @@ agentx follows a strict **MVC++** (Model-View-Controller) architecture with depe
 
 ## 🧪 Testing
 
-agentx includes **~2,370 automated tests** covering all core modules — **2085 pytest** (agentx + meta harness, `2083 passed / 2 skipped` 2026-09-27) plus **283 Vitest** (Petri Net Studio TS engine/suite, 14 files):
+agentx includes automated tests covering all core modules — pytest (agentx) plus Vitest (Petri Net Studio TS engine/suite):
 
 ```bash
 # Run all tests
@@ -1118,15 +803,6 @@ uv run pytest tests/model/ -v
 
 # Run agent subsystem tests
 uv run pytest tests/features/feature_007.agentx_intelligent_agent_behaviour/ -v
-
-# Run automated tests
-uv run pytest tests/ -v
-
-# Run MVC++ architecture check
-uv run scripts/omt/mvc_check.py
-
-# Run TDD enforcement status check
-uv run scripts/omt/tdd_check.py status
 
 # Petri Net Studio (TS) suite
 (cd tools/petri-net-studio && npm run test)
@@ -1147,13 +823,8 @@ uv run pytest tests/ --cov=agentx --cov-report=html
 - ✅ Agent persistence (stdlib sqlite3 repositories)
 - ✅ Agent facade cycle (perceive→decide→act→reflect→persist)
 - ✅ Demo scenarios & automated e2e tests
-- ✅ TDD enforcement engine (AST analysis, two-hats gate, coverage gap detection)
-- ✅ Meta Harness navigation tools (feature_020: grep-based doc nav, plugin load safety)
-- ✅ Think Anywhere thought-tags (feature_021: inline `TA:` tags, think-gate decider, session digest)
-- ✅ Harness DSL & compiler (`harnessc check OK — 277 records, 0 errors`: `{@var.x}` interpolation, grammar vocab, budgets incl. diet-bot warns, TS/PY↔IR parity pins, gate driver, drift-tested projections)
 - ✅ Petri Net Studio engine (Vitest 283: model/io exact parity, fraction rationals, analysis 38-behavior port, graph projection, store, dashboard, conformance vectors — byte-identical re-runs)
-- ✅ Concurrency net (`omt_net`: probe/fire/splice/sync/invariant/synthesize/mine/gate/claim; WIP-limited pool, net-as-gate, session whitelist, generation-fenced claims)
-- ✅ RAG v2 (feature_027 + 029 slash commands) + project lifecycle (feature_030) + AKB smart population loop
+- ✅ RAG v2 + slash commands
 
 **Characteristics:**
 - **Isolation**: All tests are isolated with mocking (no external dependencies)
@@ -1193,42 +864,25 @@ Set `OPENROUTER_API_KEY` in your `.env` file to avoid the interactive prompt.
 - ✅ **feature_002**: RAG (retrieval augmented generation — Chroma/FAISS/Pinecone, PDF/web ingestion, vector search)
 - ✅ **feature_004**: Modern TUI with Textual (removed — console-only now)
 - ✅ **feature_005**: File system agentic tools
-- ✅ **feature_006**: opencode process enforcement (OMT++ gate, MVC++ linter)
 - ✅ **feature_007**: Intelligent agent behaviour (tools, policy DSL, reflection, self-improvement)
 - ✅ **feature_010**: Agent demo screen (seeded scenarios A & B)
 - ✅ **feature_011**: Fast Agent modal UX (Goal → Running → Reflection → Result)
 - ✅ **feature_012**: TUI framework (removed — console-only now)
 - ✅ **feature_013**: AI model provider selector (6 providers: OpenRouter, OpenAI, Gemini, NVIDIA, Ollama, LlamaCpp)
 - ✅ **feature_014**: Non-blocking runner (daemon thread + queue poll, no UI freeze; TUI removed — console-only now)
-- ✅ **feature_016**: TDD enforcement (Kent Beck Red→Green→Refactor cycle, two-hats gate, AST analysis)
 - ✅ **feature_018**: ReAct chat screen (Reasoning + Acting with visible thinking, tool calls, streaming)
 - ✅ **feature_019**: Coding Agent screen (File system tools: search, read, edit, list, create with diff highlighting)
-- ✅ **feature_020**: Meta Harness Navigation (grep-optimized docs, consolidated `omt_nav{op:…}` plugin tool)
-- ✅ **feature_021/022**: Meta Harness Think Anywhere v1+v2 (persistent inline `TA:` thought-tags, consolidated `omt_think{op:…}`, per-file think-gate, compact session digest)
-- ✅ **feature_023**: Meta Harness improvement F14–F17 (production hook effects root-caused + tested)
 - ✅ **feature_024**: Console parity — all features (react/coding/models/agent/fast-agent) available in the console REPL via `IUIProvider` + streaming (now the only UI)
-- ✅ **feature_026**: `omt_q` interrogative layer — read-only `op:state` / `op:plan` / `op:drift` answering resume questions without re-derivation (returns JSON envelope with `as_of_commit`)
 - ✅ **feature_031**: Petri Net library project — shared cross-language Petri net contract (`shared/petri-net/` FORMAT + examples)
 - ✅ **feature_032/033**: Petri net format + I/O (canonical JSON format, strict parser)
 - ✅ **feature_034**: Petri Net Studio v1 — standalone browser workbench (`tools/petri-net-studio/`): exact TS engine port, React Flow edit/simulate editor, import/export (golden byte-parity)
 - ✅ **feature_035**: Petri Net Studio v2 — exact-parity analysis engine (fraction.ts + analysis.ts) + no-overclaim AnalysisPanel + conformance-vector generator (9 vectors)
 - ✅ **feature_036**: Petri Net Studio v3 — reachability-graph explorer (elkjs layout, SCC/deadlock views), firing-sequence animation, example gallery, `npm run conformance` (283 Vitest live)
-- ✅ **feature_037**: `omt_tdd` testlist prose fallback (`_parse_behaviors` — JSON array/string/bullets/numbered)
-- ✅ **feature_038**: `omt_tdd` toolchain-aware dispatch — routes `.py`→pytest, `.ts/.tsx`→vitest from resolved project root
 - ✅ **feature_tui_dark_mode**: Default dark theme (removed with the TUI — console-only now)
-- ✅ **meta_harness_dsl (R0–R8)**: Harness as code — OMT-HDL single source (`.meta/META_HARNESS.omt`) compiled to AGENTS.md / opencode.jsonc / plugin-IR / nav-index projections with drift tests + size budgets; 64 KB ledger rotation; enforcer split (`lib/enforcer/` ×7)
-- ✅ **meta_harness_2–9 (all CLOSED 2026-09-14)**: Harness evolution programs — nav (020) + think-anywhere v1/v2 (021/022) + improvements (023) + interrogative ops (026) + scoped gating (028) + TDD prose fallback + toolchain-aware (037/038) + MH6 (051–059) + MH7 (060–064/066) + MH8 (065–096: 31 items incl. TDD sync/lint, schema autolink, nav caps, escape/delegate folds, typed policy, task-prep slice, receipt batch, completion hardening, workflow repair 6/6, temporal replay, graph risk, transaction authority, claim generation, worktree isolation, capacity arbitration, verification lane, recovery journal, evidence deps, skip audit, KB recency, structural pins, scaffolds/LSP, budget-diet-bot, resume digest, cost benchmark 17/17 + 6/6 first-numbers, knowledge pilot, fresh-review 0 wins) + MH9 (097–101: rebase → honest-cost → boundary → work contract → frontier MERGE) — suite 2241/2241 @ close, `check` 265/0
-- ✅ **meta_harness_concurrent + net_enforced_harness**: Adaptive net engine (039) + composition supervisor (040) + resource places (041) + goal-net synthesis (042) + dashboard (043) + mined net (044) + WORK-driven net (045) + session whitelist (046) + WIP-limited pool (047/048) + start menu (049) + net-as-gate (050) — live `net_rev:57`, pool places 12/15
-- ✅ **improvement006 (A–H)**: Token diet — 18→7 consolidated tools (`omt_tdd`/`omt_nav`/`omt_think` with `op=`), schemas 1484→775 B, WORK.md DONE-rotation (≤8192 B), `@derive` + nav/IR budgets, HDL-2 `gate_driver` (IR-ordered gates), root-hygiene lint
-- ✅ **improvement007 (A–I)**: DSL hardening — `{@var.x}` interpolation, grammar-vocab check, arg-describe diet (1609→2455 B + `tool_args` budget 2464), TS+PY consume the IR (7 hand-mirrors deleted), after-gates in the driver, IR gate messages + orphan check, derive round 2, on-demand doc diet, guide dedup; `harnessc check OK — 265 records`
 
 ### In Progress
 - 🔄 **feature_001**: Petri-net-driven user objectives — session lifecycle (create → active → switch, SQLite-backed) is implemented; the Petri-net objective engine is stubbed (`GoalManager`) pending full integration
-- 🔄 **rag_v2 (feature_027 + 029)**: RAG v2 + slash commands — active (`src/agentx/model/rag_v2/`, `ui/screens/rag_v2/`)
-- 🔄 **project_lifecycle (feature_030)**: Project home lifecycle (`uv run scripts/omt/project.py new|link|close|sync`) — active
-- ✅ **meta_harness_9 (feature_097–101)**: Rebase + isolation pins → benchmark follow-up → truthful boundary → thin work contract → frontier experiment — complete 2026-09-14 (see above)
-
-> **Note:** Early feature directories in `.meta/` (003, 008, 009, 015) were superseded or folded into the shipped features listed above, so they are not listed separately. `WORK.md` is the live truth: `NEXT: proj:agentx_concurrent_development (recommended) · Other: none · Blocked: none · Resources: 4/4 free · Pool: pending=0 active=0 done=7 (places 15/15) · net_rev:60` (2026-09-27).
+- 🔄 **rag_v2**: RAG v2 + slash commands — active (`src/agentx/model/rag_v2/`, `ui/screens/rag_v2/`)
 
 ### Future Features
 - 🔮 Custom agent graphs with LangGraph
@@ -1245,15 +899,8 @@ For deep dives into architecture, design decisions, and development methodology:
 
 | Document | Description |
 |----------|-------------|
-| `.meta/META.md` | Overview of all development artifacts |
-| `.meta/software_development_process/omt_agent_guide.md` | Complete OMT++ methodology guide |
-| `.meta/software_development_process/4.design/structure/STRUCTURE.md` | Architecture deep dive |
-| `.meta/software_development_process/4.design/behavior/BEHAVIOR.md` | Runtime behavior specifications |
-| `.meta/software_development_process/2.requirements/features/feature_007.agentx_intelligent_agent_behaviour/` | Agent feature analysis, design & test artifacts |
-| `.meta/software_development_process/2.requirements/features/feature_016.tdd_enforcement/` | TDD enforcement feature artifacts |
 | `shared/petri-net/FORMAT.md` | Canonical cross-language Petri net JSON format (LOCKED v1) + example corpus |
-| `tools/petri-net-studio/` | Standalone TS Petri net workbench (engine port, analysis, graph explorer) — project `petri_net_studio` |
-| `AGENTS.md` | Enforcement rules for opencode agents |
+| `tools/petri-net-studio/` | Standalone TS Petri net workbench (engine port, analysis, graph explorer) |
 
 ---
 
@@ -1262,15 +909,10 @@ For deep dives into architecture, design decisions, and development methodology:
 agentx is an educational project. Contributions are welcome!
 
 **Development Workflow:**
-1. Read `AGENTS.md` for agent behavior rules
-2. Read `.meta/software_development_process/omt_agent_guide.md` for OMT++ methodology and the META HARNESS
-3. Declare your phase with `omt_phase` before editing `src/`
-4. For major features: follow the TDD cycle (`omt_tdd{op:testlist}` → `red` → `green` → `refactor` → `done`)
-5. Run tests: `uv run pytest tests/ -v`
-6. Run MVC++ check: `uv run scripts/omt/mvc_check.py`
-7. Changing harness rules? Edit `.meta/META_HARNESS.omt` (never the projections), then `uv run scripts/omt/harnessc.py check && uv run scripts/omt/harnessc.py build`
+1. Run tests: `uv run pytest tests/ -v`
+2. Keep `src/agentx/` imports free of dev-tooling (`scripts/`, `toolbox/` were removed on the `meta_harness_removal` branch).
 
-**Note**: This project uses opencode for development. All code changes must follow the META HARNESS process with visible artifacts.
+**Note**: This project uses opencode for development.
 
 ---
 
@@ -1286,7 +928,6 @@ Apache 2.0 - Educational and experimental purposes.
 
 - Developed with assistance from [opencode](https://opencode.ai) coding agent
 - Built on [LangChain](https://python.langchain.com/) ecosystem
-- Following the OMT++ methodology (documented in [.meta/software_development_process/omt_agent_guide.md](.meta/software_development_process/omt_agent_guide.md))
 
 ---
 
