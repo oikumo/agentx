@@ -1,12 +1,12 @@
 {
   "budgets": {
-    "agents_md": 3584,
+    "agents_md": 3648,
     "digest_cap": 1024,
     "gates": 12,
     "ir_json": 22016,
     "meta_harness_md": 2048,
     "meta_md": 6144,
-    "nav_index": 67584,
+    "nav_index": 67648,
     "nav_tip": 512,
     "tool_args": 2848,
     "tool_schemas": 2048,

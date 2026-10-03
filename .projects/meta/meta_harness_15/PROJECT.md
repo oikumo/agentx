@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_15 — Meta Harness 15
 
-> Status: **active** · **v0.1 (2026-09-27)** — created by `project.py new`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_15`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v0.1 (2026-09-27)** — created by `project.py new`. Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_15`; log sessions in CURRENT_STATE.md (newest on top).
 
 ---
 

@@ -58,7 +58,12 @@ import harnessc
 # plugin only — tier-init trees ship plugins, not the session_inspect core,
 # comp.tdd prose precedent); @budget nav_index deliberately grown
 # 67072→67584 in the same .omt edit. Deliberate, budgets still OK (67475/67584).
-NAV_INDEX_CEIL = 67475
+# Re-pin 2026-09-28 (feature_138 render-once startup): NAV_INDEX_CEIL
+# 67475 → 67539 — @doc startup digest+verbatim sentence (+62B) lands in the
+# nav-indexed doc.startup record (+64B live via _sizes()). Deliberate,
+# budgets still OK (67539/67584); the sentence pays back ~500B every session
+# start via the compact digest call turn (see feature_138 test report).
+NAV_INDEX_CEIL = 67539
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): op describe gains
 # "| resume" (+9B) paid by an include_ledger describe diet (-8B) — net +1B
 # deliberate (tool_args 2455/2464); design note @ 4.design/features/

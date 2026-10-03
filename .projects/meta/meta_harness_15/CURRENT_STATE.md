@@ -43,3 +43,4 @@
 ### Notes / context
 
 - Resume entry point: `PROJECT.md` §New Session Quick Start → this entry → §Next.
+- Closed --force per user direction (feature_137 in-tree, adopted as mh16 work item); line superseded by meta_harness_16.

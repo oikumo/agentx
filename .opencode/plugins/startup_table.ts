@@ -35,7 +35,7 @@ function grab(pattern: RegExp, text: string, fallback = ""): string {
   return m && m[1] ? m[1].trim() : fallback
 }
 
-function parseCompiled(text: string): Parsed {
+export function parseCompiled(text: string): Parsed {
   const rev = grab(/net_rev:(\d+)/, text, "?")
   const next = grab(/^NEXT:\s*(.+)$/m, text)
   const otherBlockedRes = text.match(/^Other:\s*(.+?)\s*\|\s*Blocked:\s*(.+?)\s*\|\s*Resources:\s*(.+)$/m)
@@ -111,7 +111,62 @@ function actionText(r: { label: string; group: string }): string {
   return `Claim + scope new work`
 }
 
-function renderTables(p: Parsed, probe: any | null, pick?: string): { markdown: string; agent: Record<string, any> } {
+// Compact probe digest → full probe-like shape (feature_138, mh16 slice 2).
+// Digest schema (JSON string): {"next","obs","rev","fresh","hint"} — the only
+// probe fields renderTables reads. ~120B vs ~1.2KB full envelope (~10x smaller
+// call turn). Malformed → null (fail-open file-only render, same as bad probeJson).
+// Full envelopes pass through untouched (backward compat).
+export function normalizeProbe(raw: unknown): any | null {
+  let v: any = raw
+  if (typeof v === "string") {
+    if (!v.trim()) return null
+    try {
+      v = JSON.parse(v)
+    } catch {
+      return null
+    }
+  }
+  if (!v || typeof v !== "object") return null
+  if (v.menu !== undefined || v.observation !== undefined) return v
+  if (v.next === undefined && v.obs === undefined && v.rev === undefined) return null
+  return {
+    menu: { next: v.next ?? "none" },
+    observation: { state: v.obs ?? "file-only", revision: v.rev ?? "?" },
+    revision: v.rev ?? "?",
+    freshness: { fresh: v.fresh ?? null, hint: v.hint ?? "" },
+  }
+}
+
+type Resume = { next_task: string; summary: string; rev: string } | null
+
+// Prior-session context → pickup plan (feature_139, mh16 slice 3).
+// resumeDigest schema: JSON {"next_task","summary","rev"} (e.g. the
+// `omt_status{op:"resume"}` digest, <=2KB) or plain text (= summary, next
+// falls back to the suggested default). Empty/malformed → null (fail-open:
+// the normal menu renders byte-identically).
+export function normalizeResume(raw: unknown): Resume {
+  if (raw === null || raw === undefined) return null
+  let v: any = raw
+  if (typeof v === "string") {
+    if (!v.trim()) return null
+    try {
+      v = JSON.parse(v)
+    } catch {
+      // Plain text counts as a summary only if substantive (>=16 chars);
+      // short garbage fails open to the normal menu.
+      const s = v.trim().slice(0, 240)
+      return s.length >= 16 ? { next_task: "", summary: s, rev: "" } : null
+    }
+  }
+  if (!v || typeof v !== "object") return null
+  const next_task = String(v.next_task ?? v.nextTask ?? v.pickup ?? v.next ?? "").slice(0, 160)
+  const summary = String(v.summary ?? v.context ?? v.note ?? "").slice(0, 240)
+  const rev = String(v.rev ?? v.revision ?? "")
+  if (!next_task && !summary) return null
+  return { next_task, summary, rev }
+}
+
+export function renderTables(p: Parsed, probe: any | null, pick?: string, resume?: Resume): { markdown: string; agent: Record<string, any> } {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   const visibleIds = p.optionIds.filter((id) => !id.startsWith("drift:"))
   const rows = visibleIds.map((id, i) => ({
@@ -124,6 +179,7 @@ function renderTables(p: Parsed, probe: any | null, pick?: string): { markdown: 
   const probeNext = probe?.menu?.next ?? probe?.next ?? null
   const probeObs = probe?.observation?.state ?? probe?.observation ?? ""
   const probeRev = probe?.revision ?? probe?.observation?.revision ?? ""
+  const resumeActive = !!resume
   const fresh = probe?.freshness
   // TA: why: stale compares file NEXT vs live probe next — probe wins on mismatch (D4)
   const stale = probeNext !== null && probeNext !== undefined && String(probeNext) !== "" && p.next !== "" && String(probeNext) !== p.next
@@ -161,12 +217,16 @@ function renderTables(p: Parsed, probe: any | null, pick?: string): { markdown: 
     options: rows.map((r) => ({ letter: r.letter, id: r.id, label: r.label, group: r.group })),
     suggested_pick: suggestedKey,
     suggested_id: suggestedRow?.id || "",
+    resume: resumeActive ? { next_task: resume.next_task, summary: resume.summary, rev: resume.rev } : null,
     reply_keys: `A–${rows[rows.length - 1]?.letter || "?"} + S`,
     freshness: fresh || null,
   }
 
   // INTRO (1 paragraph): what this menu is + where data came from + reply single letter.
-  const intro = `This is your task picker from WORK.compiled.md rev ${p.rev}${probeRev ? ` + live probe rev ${probeRev}` : ""} — reply with a single letter.`
+  // Resume mode (feature_139): pickup-first — prior context leads, TASKS map unchanged.
+  const intro = resumeActive
+    ? `Resume pickup${resume.rev ? ` (prior rev ${resume.rev})` : ""} — ${resume.summary || "prior context held"} — reply with a single letter (S = pick up where you left off).`
+    : `This is your task picker from WORK.compiled.md rev ${p.rev}${probeRev ? ` + live probe rev ${probeRev}` : ""} — reply with a single letter.`
 
   // GLOBAL (<=8 plain lines): status/rev, Pool p/a/d, lanes/workers, Projects a/c/d, STALE wins.
   const globalLines = [
@@ -194,11 +254,15 @@ function renderTables(p: Parsed, probe: any | null, pick?: string): { markdown: 
   ]
 
   // SUGGESTED NEXT (advisory D19-exempt <=5 lines: pool state + S=accept, never auto-applied).
+  // Resume mode: pickup-first line leads; map + S mechanics unchanged.
+  const pickup = resumeActive ? (resume.next_task || `${suggestedKey} (${nextFileLabel})`) : ""
   const suggestedLines = [
     `SUGGESTED NEXT (advisory, S=accept, never auto-applied):`,
-    drained
-      ? `- pool drained (${p.pool}) — resume ${suggestedKey} (${nextFileLabel})`
-      : `- pool ${p.pool} — check probe menu, default resume ${suggestedKey} (${nextFileLabel})`,
+    resumeActive
+      ? `- pick up: ${pickup}`
+      : drained
+        ? `- pool drained (${p.pool}) — resume ${suggestedKey} (${nextFileLabel})`
+        : `- pool ${p.pool} — check probe menu, default resume ${suggestedKey} (${nextFileLabel})`,
     `- S = accept ${suggestedKey} (${nextFileLabel})`,
   ]
 
@@ -221,6 +285,8 @@ function createStartupTableTool() {
     description: "Startup menu. OUTPUT (user-only): INTRO + GLOBAL + TASKS + SUGGESTED plain lines, letter shortcuts only. METADATA.agent (agent-only): full state + letter→OptionID map 1:1 (D19). Args: pick (letter/S), probeJson (live probe).",
     args: {
       probeJson: tool.schema.string().optional().describe("Optional live omt_net probe JSON envelope (for STALE + observation/rev)"),
+      probeDigest: tool.schema.string().optional().describe('Compact probe digest JSON {"next","obs","rev","fresh","hint"} — preferred: ~120B vs ~1.2KB envelope, renders identically. Digest wins when both are passed.'),
+      resumeDigest: tool.schema.string().optional().describe('Prior-session context JSON {"next_task","summary","rev"} (e.g. omt_status resume digest, <=2KB) or plain text — renders a pickup-first menu, TASKS map unchanged. Ignored when empty/malformed.'),
       pick: tool.schema.string().optional().describe('Optional letter (A..H) or S: prepend the ACTION PLAN for that pick'),
     },
     async execute(args) {
@@ -236,8 +302,13 @@ function createStartupTableTool() {
       }
       const parsed = parseCompiled(text)
       let probe: any | null = null
+      // Digest-first (feature_138): compact digest wins when both are passed.
+      const digestRaw = (args as any)?.probeDigest
+      if (typeof digestRaw === "string" && digestRaw.trim()) {
+        probe = normalizeProbe(digestRaw)
+      }
       const raw = (args as any)?.probeJson
-      if (typeof raw === "string" && raw.trim()) {
+      if (probe === null && typeof raw === "string" && raw.trim()) {
         try {
           probe = JSON.parse(raw)
         } catch {
@@ -245,7 +316,11 @@ function createStartupTableTool() {
         }
       }
       const pickArg = typeof (args as any)?.pick === "string" ? (args as any).pick : undefined
-      const { markdown, agent } = renderTables(parsed, probe, pickArg)
+      const resumeRaw = (args as any)?.resumeDigest
+      const resume = typeof resumeRaw === "string" || (resumeRaw !== null && typeof resumeRaw === "object")
+        ? normalizeResume(resumeRaw)
+        : null
+      const { markdown, agent } = renderTables(parsed, probe, pickArg, resume)
       return {
         title: "Startup Menu",
         output: markdown,

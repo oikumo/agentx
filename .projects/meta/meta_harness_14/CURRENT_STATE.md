@@ -119,6 +119,7 @@
 ### Notes / context
 
 - Resume entry point: PROJECT.md §New Session Quick Start → this entry → previous entry's trial observations.
+- Closed --force per user direction (feature_136 shipped in-tree, no ledger complete record); line superseded by meta_harness_16.
 
 ---
 

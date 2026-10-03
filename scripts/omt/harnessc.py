@@ -1991,6 +1991,17 @@ def _swap_root(root: Path) -> dict:
                 os.environ.pop(k, None)
             else:
                 os.environ[k] = v
+        # No tmp-tree leakage (full-suite red: check_tree's swapped window lets
+        # checks sys.path-insert the target scripts dir and import its copies;
+        # later bare imports like lean_start_swap would then resolve to the tmp
+        # tree). Scrub both the path entries and the modules loaded from them.
+        prefix = os.path.abspath(root) + os.sep
+        sys.path[:] = [p for p in sys.path
+                       if not (isinstance(p, str) and os.path.abspath(p).startswith(prefix))]
+        for name in [n for n, m in sys.modules.items()
+                     if isinstance(getattr(m, "__file__", None), str)
+                     and os.path.abspath(getattr(m, "__file__")).startswith(prefix)]:
+            del sys.modules[name]
 
     return _restore
 
