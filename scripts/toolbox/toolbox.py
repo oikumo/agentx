@@ -617,7 +617,7 @@ def cmd_promote(args):
             (args.tool_id, name, cat, bash_entry, py_impl, p["title"], tags,
              "0.1.0", "toolbox-promote", now, now),
         )
-        test_path = ROOT / "tests" / "scripts" / "toolbox" / f"test_{name}.py"
+        test_path = ROOT / "tests" / "harness_meta" / "toolbox" / f"test_{name}.py"
         test_path.parent.mkdir(parents=True, exist_ok=True)
         test_path.write_text(
             f'"""Promoted tool {args.tool_id} — scaffold test (T3 gate)."""\n'
@@ -697,7 +697,7 @@ def cmd_prune(args):
             con.commit()
             if tdir.exists():
                 shutil.rmtree(tdir)
-            tpath = ROOT / "tests" / "scripts" / "toolbox" / f"test_{r['name']}.py"
+            tpath = ROOT / "tests" / "harness_meta" / "toolbox" / f"test_{r['name']}.py"
             if tpath.exists():
                 tpath.unlink()
             ledger_append({"kind": "toolbox_prune", "tool": tid, "action": "remove"})

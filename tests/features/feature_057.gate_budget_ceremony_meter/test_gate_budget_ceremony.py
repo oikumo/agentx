@@ -89,7 +89,7 @@ class TestGateBudgetStatic:
         c = harnessc.Corpus(harnessc.parse(omt, []))
         sizes = harnessc.measure_budgets(c, "")
         size, cap = sizes["gates"]
-        assert (size, cap) == (10, 12), f"gates={size}/{cap}"
+        assert (size, cap) == (11, 12), f"gates={size}/{cap}"
 
     def test_over_max_is_a_build_error_with_gate_unit(self) -> None:
         gates = "".join(
@@ -128,7 +128,8 @@ class TestRetirementCandidates:
         recs = [_skip("nav"), _skip("nav"), _skip("tests"),
                 _skip("src"), _skip("all"), _skip("nav", age_h=8 * 24)]
         counts = harnessc.gate_skip_counts(recs, NOW_MS)
-        assert counts == {"g.nav": 2, "g.tests": 1, "g.phase": 1, "g.net": 1}, counts
+        assert counts == {"g.nav": 2, "g.tests": 1, "g.phase": 1, "g.net": 1,
+                          "g.split_proof": 1}, counts
 
     def test_unknown_scope_and_unparseable_ts_ignored(self) -> None:
         recs = [_skip("bogus"), {"kind": "skip", "ts": "not-a-time", "scope": "nav"},

@@ -311,7 +311,7 @@ const SKIP_SCOPE_TO_GATES: Record<string, string[]> = {
   tests: ["g.tests"],
   nav: ["g.nav"],
   src: ["g.phase"],
-  all: ["g.net"],
+  all: ["g.net", "g.split_proof"],
 }
 const CEREMONY_KINDS = new Set(["q", "think_consult", "skip", "tdd", "tdd_testlist"])
 const CEREMONY_BUG_FIX_ALARM = 3

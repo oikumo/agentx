@@ -768,7 +768,11 @@ def check_projects_links(c: Corpus) -> None:
     feats_root = REPO_ROOT / ".meta" / "software_development_process" / "2.requirements" / "features"
     for feat, link in links.items():
         proj = link["project"]
-        if not (_ps.projects_root() / proj).is_dir() \
+        # feature_138 UC8: a link target may live under the sibling agentx/
+        # home (validation-only tolerance — NOT multi-root sync, still T6).
+        home_here = (_ps.projects_root() / proj).is_dir()
+        home_agentx = (REPO_ROOT / ".projects" / "agentx" / proj).is_dir()
+        if not home_here and not home_agentx \
                 and _ps.derive_state(proj, records, links) != "archived":
             c.errors.append(f".projects: link {feat} → {proj}: project home missing (phantom link)")
         if re.match(r"feature_\d+\.", feat) and not (feats_root / feat).is_dir():
@@ -1521,7 +1525,7 @@ SKIP_SCOPE_TO_GATES = {
     "tests": ("g.tests",),
     "nav": ("g.nav",),
     "src": ("g.phase",),
-    "all": ("g.net",),
+    "all": ("g.net", "g.split_proof"),
 }
 
 # Agent-issued pre-work calls (system records — net_*/project_*/complete —
@@ -1659,7 +1663,8 @@ def check_ceremony_alarm(c: Corpus) -> None:
 # multi-session concurrency unproven, 051 stays deferred).
 # # D1: comments in the .omt are parser-ignored (0 nav cost, E1 precedent).
 TIER_GATES_DROP = {
-    1: {"g.nav", "g.think", "g.kb", "g.net", "g.receipt", "g.mvc"},
+    1: {"g.nav", "g.think", "g.kb", "g.net", "g.receipt", "g.mvc",
+        "g.split_proof"},  # feature_138 E2: membrane advisory is T2+ (long-lived repos), like receipt
     2: {"g.net", "g.receipt", "g.mvc"},
     3: {"g.net"},
 }

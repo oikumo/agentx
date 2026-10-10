@@ -319,7 +319,7 @@ def run_pytest(test_node: str, timeout: int = 30) -> tuple[int, str, str]:
         env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         result = subprocess.run(
             [sys.executable, "-m", "pytest", test_node, "-x", "-q", "--no-header", "--tb=short",
-             "-p", "no:cacheprovider"],
+             "-p", "no:cacheprovider", "-p", "xdist", "-n0"],
             capture_output=True, text=True, timeout=timeout, cwd=str(REPO_ROOT),
             env=env,
         )
@@ -415,7 +415,7 @@ def run_full_suite(timeout: int = 120) -> tuple[int, str, str]:
             # suite_failures parses for the KNOWN_SUITE_FAILURES allowlist.
             [sys.executable, "-m", "pytest", "-q", "--no-header", "--tb=short",
              "-rf", "-m", "not opencode_live",
-             "-p", "no:langsmith_plugin", "-p", "no:anyio"],
+             "-p", "no:langsmith_plugin", "-p", "no:anyio", "-p", "xdist"],
             capture_output=True, text=True, timeout=timeout, cwd=str(REPO_ROOT),
             env=env,
         )

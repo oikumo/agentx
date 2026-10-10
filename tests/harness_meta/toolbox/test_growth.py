@@ -39,7 +39,7 @@ def force_cleanup(root, tid):
     draft = root / ".sandbox" / "toolbox_proposals" / (tid.replace(".", "_") + ".md")
     if draft.exists():
         draft.unlink()
-    tpath = root / "tests" / "scripts" / "toolbox" / f"test_{name}.py"
+    tpath = root / "tests" / "harness_meta" / "toolbox" / f"test_{name}.py"
     if tpath.exists():
         tpath.unlink()
 

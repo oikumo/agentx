@@ -71,17 +71,26 @@ function featureNumOf(feature: string): string | null {
 }
 
 function isOwnTestDir(rel: string, feature: string): boolean {
-  if (!feature || (!rel.startsWith("tests/features/") && rel !== "tests/features")) return false
-  const cands = [`tests/features/${feature}/`, `tests/features/${feature}`]
+  // Lane-aware (harness_wrapper_split T3): the own-test-dir auto-unlock
+  // follows the feature's dir wherever it lives — tests/features (legacy),
+  // tests/harness_meta (harness lane) or tests/agentx (product lane).
+  // Same narrowed guardrails as feature_054 C2: full slug or feature_NNN
+  // short form, slash-bounded (feature_054evil must NOT match).
+  if (!feature) return false
+  const lanes = ["tests/features/", "tests/harness_meta/", "tests/agentx/"]
+  const lane = lanes.find((l) => rel.startsWith(l))
+  if (!lane) return false
+  const rest = rel.slice(lane.length)
+  if (rest === feature) return true
   const num = featureNumOf(feature)
-  if (num && num !== feature) cands.push(`tests/features/${num}/`, `tests/features/${num}`)
+  if (num && rest === num) return true
+  const seg = rest.split("/")[0] || ""
+  const cands = [feature, num].filter(Boolean) as string[]
   for (const c of cands) {
-    if (rel === c || rel.startsWith(c.endsWith("/") ? c : c + "/")) return true
-  }
-  if (num) {
-    const rest = rel.slice("tests/features/".length)
-    const seg = rest.split("/")[0] || ""
-    if (seg === num || seg.startsWith(num + ".") || seg.startsWith(num + "_")) return true
+    if (seg === c) return true
+    // short-form prefix matching ONLY for the feature_NNN form (mirrors the
+    // original num fallback: feature_016.tdd_enforcement, feature_016_x)
+    if (c === num && (seg.startsWith(c + ".") || seg.startsWith(c + "_"))) return true
   }
   return false
 }

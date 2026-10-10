@@ -50,7 +50,7 @@ const PHASE_EXIT_REQUIREMENTS: Record<string, { phase: string; patterns: string[
   // Programming → Testing requires: Unit tests, Integration tests
   Programming: [
     { phase: "Implementation", patterns: ["*.md"], description: "Implementation notes (5.implementation/features/...)" },
-    { phase: "Unit tests", patterns: ["test_*.py", "*_test.py"], description: "Unit tests (tests/features/<feature>/...)" },
+    { phase: "Unit tests", patterns: ["test_*.py", "*_test.py"], description: "Unit tests (tests/{features,agentx,harness_meta}/<feature>/...)" },
   ],
   // Testing → Done requires: System tests
   Testing: [
@@ -81,7 +81,22 @@ function checkPhaseExitArtifacts(repoRoot: string, feature: string, fromPhase: s
       } else if (req.phase === "Implementation") {
         dir = resolveFeatureDir(join(repoRoot, PROCESS_ROOT, "5.implementation", "features"), feature, featureNum)
       } else if (req.phase.startsWith("Unit tests")) {
-        dir = resolveFeatureDir(join(repoRoot, "tests", "features"), feature, featureNum)
+        // Lane-aware (harness_wrapper_split T3): a feature's unit tests may
+        // live in tests/features (legacy), tests/agentx (product lane) or
+        // tests/harness_meta (harness lane) — first lane whose feature dir
+        // matches the pattern satisfies the exit. Never silently weakens:
+        // a feature with NO dir in any lane still reports missing.
+        for (const lane of ["features", "agentx", "harness_meta"]) {
+          const d = resolveFeatureDir(join(repoRoot, "tests", lane), feature, featureNum)
+          if (!d) continue
+          try {
+            const files = readdirSync(d, { recursive: true })
+            const regex = globToRegex(pattern)
+            if (files.some(f => regex.test(f))) { exists = true; break }
+          } catch { /* ignore */ }
+        }
+        if (exists) break
+        continue
       } else if (req.phase.startsWith("System tests")) {
         dir = resolveFeatureDir(join(repoRoot, PROCESS_ROOT, "6.testing", "features"), feature, featureNum)
       } else {
@@ -364,7 +379,18 @@ export function createPhaseTools(env: EnforcerEnv) {
       try {
         const featureSlug = String(args.feature || "")
         if (featureSlug && (newPhase === "Programming" || newPhase === "Testing")) {
-          const targets = [`tests/features/${featureSlug}/test_probe.py`]
+          // Lane-aware probe (harness_wrapper_split T3): prefight the
+          // feature's OWN test dir wherever it lives — legacy features/,
+          // product agentx/ or harness harness_meta/ — so the advisory
+          // teaches the real canary toll, not a stale path.
+          let probeDir = `tests/features/${featureSlug}`
+          for (const lane of ["features", "harness_meta", "agentx"]) {
+            const d = join(directory, "tests", lane, featureSlug)
+            try {
+              if (existsSync(d)) { probeDir = `tests/${lane}/${featureSlug}`; break }
+            } catch { /* fall through to legacy default */ }
+          }
+          const targets = [`${probeDir}/test_probe.py`]
           if (newPhase === "Programming") targets.push("src/feature_probe.py")
           for (const t of targets) {
             const proj = await preflightProjection(t, "edit", session, {

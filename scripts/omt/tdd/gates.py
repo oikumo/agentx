@@ -13,6 +13,7 @@ import json
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 from .ast_checks import (
     extract_public_methods,
@@ -185,13 +186,28 @@ def get_dangling_reds(feature: str) -> list[str]:
     return dangling
 
 
+def _feature_test_dirs(feature: str) -> list[Path]:
+    """Lane-aware feature test dirs (harness_wrapper_split T3): a feature's
+    tests live in tests/features (legacy), tests/harness_meta (harness lane)
+    or tests/agentx (product lane) — return ALL existing lane dirs (union, no
+    silent drop while a feature straddles lanes mid-migration)."""
+    dirs: list[Path] = []
+    for lane in ("features", "harness_meta", "agentx"):
+        d = REPO_ROOT / "tests" / lane / feature
+        if d.is_dir():
+            dirs.append(d)
+    return dirs
+
+
 def _run_feature_tests(feature: str, timeout: int = 120) -> tuple[int, str, str]:
     """feature_075 T4-3: run a feature's own test dir once (content-bound
     behavioral evidence for completion, beyond public-method call-coverage).
     Returns (exit_code, stdout, stderr); -1 + message on timeout."""
     import os
 
-    test_dir = REPO_ROOT / "tests" / "features" / feature
+    test_dirs = _feature_test_dirs(feature)
+    if not test_dirs:
+        return -1, "", f"no test dir for {feature} in any tests/ lane"
     try:
         env = dict(os.environ)
         # Speed: hermetic synthetic suites never use langsmith/anyio; skipping
@@ -200,7 +216,7 @@ def _run_feature_tests(feature: str, timeout: int = 120) -> tuple[int, str, str]
         env.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
         env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", str(test_dir), "-q",
+            [sys.executable, "-m", "pytest", *[str(d) for d in test_dirs], "-q",
              "--no-header", "--tb=line", "-rf",
              "-p", "no:cacheprovider"],
             capture_output=True, text=True, timeout=timeout, cwd=str(REPO_ROOT),
@@ -248,8 +264,11 @@ def cmd_validate_exit(args) -> dict:
 
     dangling = get_dangling_reds(feature)
 
-    test_dir = REPO_ROOT / "tests" / "features" / feature
-    test_files = list(test_dir.rglob("test_*.py")) if test_dir.exists() else []
+    # Lane-aware (harness_wrapper_split T3): coverage targets come from the
+    # feature's test files in ALL lanes — union, never a silent drop.
+    test_files: list[Path] = []
+    for d in _feature_test_dirs(feature):
+        test_files.extend(d.rglob("test_*.py"))
     all_targets: set[str] = set()
     for tf in test_files:
         all_targets.update(infer_target_src(tf))

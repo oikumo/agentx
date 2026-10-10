@@ -231,6 +231,12 @@ _OWN_SHORT = "tests/features/feature_054/test_d.py"
 _OTHER = "tests/features/feature_999.other/test_b.py"
 _HARNESS = "tests/scripts/omt/test_c.py"
 _EVIL = "tests/features/feature_054evil/test_e.py"
+# Lane variants (harness_wrapper_split T3): the own-dir auto-unlock follows
+# the feature into tests/harness_meta + tests/agentx; slash-bounded evil
+# still blocks in every lane.
+_OWN_LANE_H = f"tests/harness_meta/{F}/test_a3.py"
+_OWN_LANE_P = f"tests/agentx/{F}/test_a4.py"
+_EVIL_LANE = "tests/harness_meta/feature_054evil/test_e2.py"
 
 
 class TestNarrowedCanaryBun:
@@ -243,7 +249,8 @@ class TestNarrowedCanaryBun:
             # phase record) must not strand own-dir test edits during RED.
             "advance_red_allows_own_dir": {
                 "recs": advance,
-                "rels": [_OWN, _OWN_SHORT, _OTHER, _HARNESS, _EVIL]},
+                "rels": [_OWN, _OWN_SHORT, _OTHER, _HARNESS, _EVIL,
+                         _OWN_LANE_H, _OWN_LANE_P, _EVIL_LANE]},
             "testlist_no_red_blocks": {
                 "recs": [_phase("minor_feature", feature=F, tdd=True), _testlist()],
                 "rels": [_OWN]},
@@ -267,7 +274,9 @@ class TestNarrowedCanaryBun:
                          .replace("%SCENARIOS%", json.dumps(scenarios)))
         assert out["advance_red_allows_own_dir"] == {
             _OWN: "allow", _OWN_SHORT: "allow",
-            _OTHER: "block", _HARNESS: "block", _EVIL: "block"}, out
+            _OTHER: "block", _HARNESS: "block", _EVIL: "block",
+            _OWN_LANE_H: "allow", _OWN_LANE_P: "allow",
+            _EVIL_LANE: "block"}, out
         assert out["testlist_no_red_blocks"][_OWN] == "block"
         assert out["green_supersedes_red_blocks"][_OWN] == "block"
         assert out["no_feature_context_blocks"][_OWN] == "block"

@@ -82,4 +82,6 @@ def test_getting_started_tier_content():
         assert g in g1
     t3 = harnessc.filter_corpus_for_tier(c, 3, with_net=True)
     g3 = harnessc.render_getting_started(t3, 3)
-    assert len([ln for ln in g3.splitlines() if ln.startswith("- `g.")]) == 10
+    # re-pin 2026-10-10 (feature_138 E2): +1 gate g.split_proof 10→11 (kept at
+    # T3 full; dropped at Tier-1 like receipt — g1 above stays net-free)
+    assert len([ln for ln in g3.splitlines() if ln.startswith("- `g.")]) == 11

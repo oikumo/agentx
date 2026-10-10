@@ -187,8 +187,8 @@ class TestPreflightProjectionBun:
     @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
     def test_bun_src_path_empty_ledger(self, tmp_path) -> None:
         """src target, no phase: g.phase+g.kb would block; when=-missed gates
-        (g.protect/g.receipt/g.tests/g.think) report fired=false; after-gates
-        projected."""
+        (g.protect/g.receipt/g.tests/g.split_proof/g.think) report fired=false;
+        after-gates projected."""
         out = _probe(
             {"op": "preflight", "tool": "edit", "path": "src/agentx/__init__.py"},
             tmp_path,
@@ -202,12 +202,13 @@ class TestPreflightProjectionBun:
         orders = [r["order"] for r in meta["before"]]
         assert orders == sorted(orders)
         assert [r["gate_id"] for r in meta["before"]] == [
-            "g.protect", "g.receipt", "g.tests", "g.net",
+            "g.protect", "g.receipt", "g.tests", "g.net", "g.split_proof",
             "g.phase", "g.think", "g.kb"], meta["before"]
         # when=-missed gates are visible but fired=false (not applicable)
         assert rows["g.protect"]["fired"] is False
         assert rows["g.receipt"]["fired"] is False
         assert rows["g.tests"]["fired"] is False
+        assert rows["g.split_proof"]["fired"] is False
         assert rows["g.think"]["fired"] is False
         assert rows["g.net"]["fired"] is True and not rows["g.net"]["blocked"]
         assert rows["g.phase"]["fired"] is True and rows["g.phase"]["blocked"] is True
@@ -215,7 +216,7 @@ class TestPreflightProjectionBun:
         assert meta["summary"]["first_blocker"] == "g.phase"
         assert meta["summary"]["would_block"] == 2
         assert meta["summary"]["before_fired"] == 3
-        assert meta["summary"]["not_applicable"] == 4
+        assert meta["summary"]["not_applicable"] == 5
         # every fired row carries a clearing action
         for r in meta["before"]:
             if r["fired"]:
@@ -274,6 +275,11 @@ class TestPreflightProjectionBun:
         assert rows["g.think"]["fired"] is True and rows["g.think"]["blocked"] is True
         assert rows["g.phase"]["fired"] is False  # not src/
         assert rows["g.kb"]["fired"] is False
+        # feature_138 E2: membrane scope matches → advisory fires, never blocks
+        # locally (empty probe root: no pinned certs; notify is a noop here).
+        assert rows["g.split_proof"]["fired"] is True
+        assert rows["g.split_proof"]["blocked"] is False
+        assert rows["g.split_proof"]["clearing_action"], "fired row needs a clearing action"
         assert meta["summary"]["first_blocker"] == "g.receipt"
         assert "test_omt_harness_e2e.py" in out["output"]
 

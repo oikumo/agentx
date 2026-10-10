@@ -62,7 +62,11 @@ import harnessc
 # the +1 @doc vision record + RUNTIME vision pointer are the deliverable
 # (kinds unchanged: doc/flow/xref/tool/msg); @budget nav_index deliberately
 # grown 67584→67840 in the same .omt edit. Deliberate, budgets OK (67822/67840).
-NAV_INDEX_CEIL = 67822
+# Re-pin 2026-10-10 (feature_138 E5): NAV_INDEX_CEIL 67822 → 68812 — the +1
+# SECTION sec.split_proof banner record is the deliverable; @budget nav_index
+# deliberately grown 67840→69120 in the same .omt edit. Deliberate, budgets
+# OK (68812/69120).
+NAV_INDEX_CEIL = 68812
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): op describe gains
 # "| resume" (+9B) paid by an include_ledger describe diet (-8B) — net +1B
 # deliberate (tool_args 2455/2464); design note @ 4.design/features/
@@ -106,4 +110,4 @@ def test_tight_budgets_unchanged():
     assert sizes["tool_args"][0] <= TOOL_ARGS_CEIL, sizes["tool_args"]
     assert sizes["tool_schemas"][0] <= TOOL_SCHEMAS_CEIL, sizes["tool_schemas"]
     assert sizes["agents_md"][0] <= 3584, sizes["agents_md"]  # re-pin 2026-09-20 (git remote-only rule change): 2944→3072, same .omt edit as NAV_INDEX_CEIL above; re-pin 2026-09-20 (feature_120 startup token diet): 3072→3584, same .omt edit as NAV_INDEX_CEIL above
-    assert sizes["gates"][0] == 10, sizes["gates"]
+    assert sizes["gates"][0] == 11, sizes["gates"]  # re-pin 2026-10-10 (feature_138 E2): +1 gate g.split_proof 10→11

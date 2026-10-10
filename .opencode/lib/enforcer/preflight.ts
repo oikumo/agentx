@@ -31,6 +31,7 @@ const CLEARING_ACTIONS: Record<string, string> = {
   "g.receipt": 'refresh the e2e receipt: uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q (one edit per harness file per round)',
   "g.tests": 'omt_skip{reason:"approved canary test", scope:"tests"}; own feature test dir auto-approved in RED (C2)',
   "g.net": 'omt_net{op:"fire", transition:"work_start"} (solo sessions auto-skip per C1); break-glass omt_skip{scope:"all"} — expiring, audited',
+  "g.split_proof": 'uv run scripts/omt/split_proof.py prove --lane both --out .meta/.omt (pins fresh certs + chain rows); local: advisory only, CI: strict',
   "g.phase": 'omt_phase{task_type, scope} (bug_fix is enough for trivial fixes; major_feature/new_screen also need a design artifact); override omt_skip{reason:"..."}',
   "g.think": 'omt_think{op:"list", path:"<file>"} — NOT skip-bypassable',
   "g.kb": 'omt_kb_nav{op:"nav", query} (CLASS_/CONTRACT_/DEP_/LAYER_ or symbol id); bug_fix/test phase auto-satisfies (C2)',

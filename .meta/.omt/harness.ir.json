@@ -3,14 +3,14 @@
     "agents_md": 3584,
     "digest_cap": 1024,
     "gates": 12,
-    "ir_json": 22016,
+    "ir_json": 24064,
     "meta_harness_md": 2048,
     "meta_md": 6144,
-    "nav_index": 67840,
+    "nav_index": 69120,
     "nav_tip": 512,
     "tool_args": 2848,
     "tool_schemas": 2048,
-    "work_md": 10240,
+    "work_md": 11264,
     "work_scratchpad": 3072
   },
   "deny": [
@@ -182,6 +182,19 @@
       "text": "net permission-to-act (feature_050 Alt A; feature_053 C1: engages only when net_marking(active>1) \u2014 solo sessions skip to phase-gate only, impl-owned check); calls omt_net{op:gate} \u2014 fail-closed unless omt_skip{scope:\"all\"} expiry+audit; git-plane: probe carries worktrees/branches/dirty, invariant triple-checks net\u2194ledger\u2194git",
       "tools": "edit|write|patch|multiedit",
       "when": "path_in(@var.net_paths)"
+    },
+    {
+      "hard": false,
+      "id": "g.split_proof",
+      "msg": "split_proof",
+      "on": "before",
+      "order": 37,
+      "paths": "",
+      "requires": "",
+      "skip_ok": false,
+      "text": "split membrane advisory (feature_138 E2 \u2014 Oracle split_proof v2; impl-owned: reads pinned certs + ledger chain, never shells out or runs the suite; fail-open locally with advisory notify, fail-closed in CI; break-glass scope=all bypasses like g.net; when= membrane scope only \u2014 lane edits stay covered by the firewall goldens + CI prove, zero local ceremony)",
+      "tools": "edit|write|patch|multiedit",
+      "when": "path_in(@var.harness_paths)"
     },
     {
       "hard": true,
@@ -395,6 +408,11 @@
       "see": "",
       "sev": "block",
       "text": "'{rel}' is part of the META HARNESS surface and already has unverified changes \u2014 run the harness e2e before editing again: uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q (refreshes .meta/.omt/omt_harness_e2e_last_run.json)"
+    },
+    "split_proof": {
+      "see": "",
+      "sev": "warn",
+      "text": "split_proof membrane chain not fresh for '{rel}' (no pinned clean certs or ledger advanced past the cut)"
     },
     "tdd_revert": {
       "see": "",

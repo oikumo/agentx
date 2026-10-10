@@ -2,7 +2,7 @@
 
 Tier-2 suite-speed isolation: the toolbox CLI used to mutate REAL repo state
 (``toolbox/index.sqlite3``, ``index.json``, generated ``*.md`` docs, promoted
-tool dirs, ``.sandbox`` drafts, even ``tests/scripts/toolbox/test_*.py``
+tool dirs, ``.sandbox`` drafts, even ``tests/harness_meta/toolbox/test_*.py``
 scaffolds). That blocked pytest-xdist parallelization (workers racing on the
 same files) and polluted ``git status`` after every run.
 
@@ -14,7 +14,7 @@ module (import it explicitly: ``from hermetic_toolbox import hermetic_cli``):
   files resolving ``repo_root()`` from ``__file__`` keep hitting the REAL repo,
   so ``harness.budget_check`` (shells to real ``harnessc check``) and the
   ledger slice behave exactly as in production (read-only paths).
-* ``tests/scripts/toolbox/`` skeleton + ``TOOLBOX_ROOT`` env + fast subprocess
+* ``tests/harness_meta/toolbox/`` skeleton + ``TOOLBOX_ROOT`` env + fast subprocess
   env (no plugin autoload/bytecode/usersite) included.
 
 NOTE: this is deliberately NOT named ``conftest.py`` — a second conftest
@@ -64,7 +64,7 @@ def build_hermetic_root(base: Path) -> Path:
             dest.symlink_to(entry)
         elif entry.is_file():
             dest.symlink_to(entry)
-    (root / "tests" / "scripts" / "toolbox").mkdir(parents=True)
+    (root / "tests" / "harness_meta" / "toolbox").mkdir(parents=True)
     return root
 
 

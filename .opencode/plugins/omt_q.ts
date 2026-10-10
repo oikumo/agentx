@@ -854,6 +854,7 @@ function createQTools() {
             "g.receipt": ["all"],
             "g.tests": ["tests", "all"],
             "g.net": ["all"],
+            "g.split_proof": ["all"],
             "g.phase": ["src", "all"],
           }
           for (const d of decisions) {

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -100,7 +101,13 @@ def _sha256(rel_path: str) -> str:
 
 def _write_receipt(checks: list[str]) -> None:
     RECEIPT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    RECEIPT_PATH.write_text(
+    # Atomic mint (tmp + os.replace): under the parallel suite another
+    # worker reads the receipt (test_receipt_is_content_bound) while this
+    # one re-mints — a truncate+write leaves a partial-JSON window that
+    # fails that reader (observed 2026-10-10). os.replace gives readers
+    # old-or-new, never partial.
+    tmp = RECEIPT_PATH.with_name(RECEIPT_PATH.name + ".tmp")
+    tmp.write_text(
         json.dumps(
             {
                 "passed_at": datetime.now(UTC).isoformat(),
@@ -124,6 +131,7 @@ def _write_receipt(checks: list[str]) -> None:
         + "\n",
         encoding="utf-8",
     )
+    os.replace(tmp, RECEIPT_PATH)
 
 
 def test_omt_meta_harness_end_to_end_contract() -> None:
@@ -615,3 +623,4 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
 
     _write_receipt(checks)
     assert RECEIPT_PATH.exists()
+# TA: gotcha: GOTCHA_RECEIPT_ATOMIC_MINT: _write_receipt must stay atomic (tmp + os.replace). The full suite re-mints this receipt mid-run while test_receipt_is_content_bound reads it on another worker — a truncate+write window fails that reader with a partial-JSON error (observed 2026-10-10). Any future receipt-write site inherits the same rule.

@@ -20,6 +20,7 @@
 // chain must never die open — FALLBACK_GATES mirrors the .omt order/tools.
 
 import { existsSync, readFileSync } from "node:fs"
+import { createHash } from "node:crypto"
 import {
   loadIr, relOf, globToRegex, readLedger, readThoughtsIndex,
   omtHarnessE2eStatus, UNLOCK_WINDOW_MS, protectList, matchesProtect, gateMsg,
@@ -284,6 +285,100 @@ const IMPLS: Record<string, GateImpl> = {
     const data = JSON.parse(res.stdout.toString() || '{"allowed":false,"code":"ERR_NET_NOT_ENABLED"}')
     if (!data.allowed) throw new OmtBlock(`⛔ OMT++ gate (g.net): ${data.message || data.code}`)
   },
+  // feature_138 E2: split-proof membrane advisory (Oracle `split_proof` v2,
+  // V7 §E). Pure over the preflight snapshot + pinned certs + ledger chain:
+  // NEVER shells out, never runs the suite. Fail-open locally (advisory
+  // notify), fail-closed in CI (CI=1/true/yes). Break-glass scope=all
+  // bypasses (audited emergency, mirrors g.net). Missing/stale/tampered
+  // certs advise; only a fresh clean chain is silent. Trust split: this gate
+  // is a freshness signal — CI re-proves from scratch (the authority); the
+  // cert_sha recompute + chain-row presence below both fail SAFE (any
+  // recompute/format doubt degrades to advisory, never to a silent pass).
+  "g.split_proof": async (_gate, ctx) => {
+    const rel = ctx.rel || ""
+    if (!rel) return
+    const unlock = getActiveUnlock(ctx.session)
+    if (unlock?.type === "skip" && (unlock as any)?.record?.scope === "all") return
+    const dir = ctx.env.directory || ""
+    const meta = `${dir}/.meta/.omt`
+    const shaHex = (s: string): string => createHash("sha256").update(s, "utf8").digest("hex")
+    // Mirror of split_proof.GENESIS_SHA (sha256 of the empty chain): intact
+    // by checkCertShaTs first, so GENESIS always means "cut against an empty
+    // chain" (row 0). A live cert never carries it (real ledger never empty).
+    const GENESIS_TS = shaHex("")
+    let ledgerRaw = ""
+    try { ledgerRaw = readFileSync(`${meta}/ledger.jsonl`, "utf8") } catch { ledgerRaw = "" }
+    const ledgerLines = ledgerRaw.split("\n").filter((l) => l.length > 0)
+    // Mirror of split_proof._ledger_prefix_match (append-only growth): row
+    // count K whose K-line prefix sha matches, else null.
+    const prefixRows = (want: string): number | null => {
+      if (shaHex(ledgerRaw) === want) return ledgerLines.length
+      if (want === GENESIS_TS) return 0
+      let acc = ""
+      for (let i = 0; i < ledgerLines.length; i++) {
+        acc += ledgerLines[i] + "\n"
+        if (shaHex(acc) === want) return i + 1
+      }
+      return null
+    }
+    // Mirror of split_proof.check_cert_sha (LOCKED field order, compact
+    // separators, ASCII payloads): any doubt → false → advisory, never pass.
+    const LOCKED_TS = ["oracle", "lane", "file_rev", "live_rev", "ledger_sha",
+      "firewall_verdict", "ta_ast_hash", "newcomer", "tokens_ms", "cert_sha"]
+    const checkCertShaTs = (c: any): boolean => {
+      try {
+        for (const f of LOCKED_TS) if (c[f] === undefined) return false
+        const canon = "{" + LOCKED_TS.filter((f) => f !== "cert_sha")
+          .map((f) => JSON.stringify(f) + ":" + JSON.stringify(c[f])).join(",") + "}"
+        return shaHex(canon) === c.cert_sha
+      } catch { return false }
+    }
+    const strict = ["1", "true", "yes"].includes(
+      String((process as any)?.env?.CI ?? "").toLowerCase())
+    const clearing = "clear: uv run scripts/omt/split_proof.py prove --lane both --out .meta/.omt (pins fresh certs + chain rows)"
+    const advise = async (why: string): Promise<void> => {
+      const base = `${gateMsg("split_proof", { rel })} — ${why}. ${clearing}`
+      if (strict) throw new OmtBlock(`⛔ OMT++ gate (g.split_proof): ${base}`)
+      ctx.env.safeLog("warn", `g.split_proof advisory: ${why} (${rel})`)
+      await ctx.env.notify(`⚠️ OMT++ gate (g.split_proof, advisory — local edits never block): ${base}`)
+    }
+    const certs: any[] = []
+    for (const lane of ["product", "harness"]) {
+      try {
+        certs.push(JSON.parse(readFileSync(`${meta}/split_proof_${lane}.cert.json`, "utf8")))
+      } catch { continue }
+    }
+    if (!certs.length) {
+      await advise("no pinned split_proof certs (.meta/.omt/split_proof_{product,harness}.cert.json)")
+      return
+    }
+    for (const c of certs) {
+      const lane = String(c?.lane ?? "?")
+      if (c?.oracle !== "split_proof/v1" || c?.firewall_verdict !== "clean") {
+        await advise(`lane ${lane}: verdict '${c?.firewall_verdict ?? "unreadable"}' (want clean)`)
+        return
+      }
+      if (!checkCertShaTs(c)) {
+        await advise(`lane ${lane}: cert_sha recompute mismatch (tamper/drift)`)
+        return
+      }
+      if (prefixRows(String(c.ledger_sha ?? "")) === null) {
+        await advise(`lane ${lane}: ledger advanced past the cut (re-prove for a fresh chain link)`)
+        return
+      }
+      let chained = false
+      for (const ln of ledgerLines) {
+        try {
+          const r = JSON.parse(ln)
+          if (r?.kind === "split_proof.cert" && r?.cert_sha === c.cert_sha) { chained = true; break }
+        } catch { continue }
+      }
+      if (!chained) {
+        await advise(`lane ${lane}: no split_proof.cert chain row for this cert`)
+        return
+      }
+    }
+  },
 }
 
 // Generic impl: a before-gate with NO registered impl is fully pred-composed —
@@ -310,6 +405,7 @@ const FALLBACK_GATES = [
   { id: "g.receipt", on: "before", tools: "edit|write|patch|multiedit", when: "path_in(@var.harness_paths)", requires: "receipt_fresh()", msg: "receipt_stale", hard: true, skip_ok: false, order: 20 },
   { id: "g.tests", on: "before", tools: "edit|write|patch|multiedit", when: "path_in(tests/)", requires: "", msg: "tests_canary", hard: true, skip_ok: true, order: 30 },
   { id: "g.net", on: "before", tools: "edit|write|patch|multiedit", when: "path_in(@var.net_paths)", requires: "", msg: "net_required", hard: true, skip_ok: false, order: 35 },
+  { id: "g.split_proof", on: "before", tools: "edit|write|patch|multiedit", when: "path_in(@var.harness_paths)", requires: "", msg: "split_proof", hard: false, skip_ok: false, order: 37 },
   { id: "g.phase", on: "before", tools: "edit|write|patch|multiedit", when: "path_in(src/)", requires: "", msg: "no_phase", hard: true, skip_ok: true, order: 40 },
   { id: "g.think", on: "before", tools: "edit|write|patch|multiedit", when: 'file_has("TA:")', requires: "", msg: "think_gate", hard: true, skip_ok: false, order: 50 },
   { id: "g.kb", on: "before", tools: "edit|write|patch|multiedit", when: "path_in(src/)", requires: "session_flag(kb_consulted)", msg: "kb_required", hard: true, skip_ok: false, order: 55 },
