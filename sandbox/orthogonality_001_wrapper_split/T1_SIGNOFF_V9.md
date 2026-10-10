@@ -3,6 +3,8 @@
 > Status: **sign-off table** (2026-10-10, mechanical enumeration + T1_AUDIT_V8 buckets). No files moved at signing, no renames, no ledger writes. Grandfather rule stood until T2 goldens + T3 lanes land; THIS table is the mapping T1 close-out requires before any move (audit §4). Counts re-measured 2026-10-10.
 >
 > **First bucket LANDED 2026-10-10b** (T2 goldens + first lane unit): `tests/scripts/toolbox/*` (6 files) → `tests/harness_meta/toolbox/` mirror move; T2 goldens `tests/harness_meta/split_proof_meta/{test_rename_away_meta,test_ledger_contract_meta}.py` (9 tests). LIT fixes in-commit: `hermetic_toolbox.py` (skeleton + docstrings), `test_growth.py` force_cleanup, `scripts/toolbox/toolbox.py` promote/prune scaffold paths. Suite 2118 + 4 triaged drift, check 281/0. Remaining buckets: this table still governs.
+>
+> **omt bucket LANDED 2026-10-10 (R1–R3, feature_141)**: `tests/scripts/omt/*` (72 files) → `tests/harness_meta/omt/` — `858d4c9` net×28, `8f5a8e6` tdd+q+kb+misc×34, `c2b5e2c` e2e+receipt+template×10 + the `.omt` e2e-vars/harness_paths swap + harnessc init-template segmented swap + 44 referencer LIT fixes (17 harness-source + 27 tests-side, incl. 5 map-missed segmented/mock sites). Suite 2118 + 5 triaged drift, check 281/0, prove both lanes clean, zero-literal sweep 0 (rows stay; dated rows unchanged). Remaining buckets: this table still governs.
 
 ## 0. Method
 

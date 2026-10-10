@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-10-10d (resume session — omt bucket R3 LANDED, unit feature_141 complete)
+
+### Done
+
+- Resumed per `.sandbox/pause_2026-10-10b.md` §2 verbatim; baseline re-verified (tree clean @ `f34c75c`, check 281/0, suite 2118 + the same 5 triaged live-drift + 6 skipped). Canary + phase records still valid at resume (22:00Z; expiry ~04:15Z next day — no re-declare needed).
+- **R3 `c2b5e2c`:** 10-file `git mv` (e2e+receipt+template cluster) + `rm -rf tests/scripts/omt` — **omt bucket complete: 72 files in `tests/harness_meta/omt/` across R1–R3.**
+- Stage protocol honored end-to-end: stage(8) → harness-source batch (harnessc.py init-template segmented :2092/:2158, `omt_shared.ts` ×5 incl. `isOmtHarness:594` fallback set-equal to `.omt:38`, preflight.ts, omt_q.ts, bench/tasks.py, new_feature.py :86, split_proof.py docstring, lessons.json ×2) → `.omt` LAST (:23/:24/:38) → re-stage → e2e self-LIT first (receipt-exempt) → single e2e from new home (receipt minted) → `harnessc build` → check 281/0.
+- Tests-side LIT: in-bucket self-LIT (receipt_batch_mode :141 command-string assert, harnessc, harnessc_workflows, budget_diet, docs_drift_pins ×2, project_lifecycle header), segmented catches (guard_source_pins :46, 059 test_init_fs :8/:37, 054 fake-path :232), 030 sentinel import pair, kb acceptance :14/:166.
+- **5 map-missed sites** caught by the extended segmented sweep (plain-rg class): 055 test_gate_preflight :39, 058 test_thought_review :35, 016 test_tdd_enforcement :141, test_scaffolds_lsp_allowlist :366, test_omt_q U11 :516/:531/:534 (asserts live-IR refresh_tests/refresh_cmd — functional, not cosmetic).
+- Green gates: suite 2118 + same 5 triaged + 6 skipped; check 281/0 (ir_json 22583/24064, nav_index 68812/69120, agents_md unchanged); prove `--lane both --out /tmp/opencode/` clean, certs deleted (§1 root-stray gotcha honored, 0 untracked); zero-literal sweep 0 hits (only exempt dated TA xref new_feature.py:158); extended segmented sweep 0.
+- Close-out: R3 commit, WORK.md `[~]` → `[x]` DONE row, T1_SIGNOFF_V9 LANDED header note, `omt_complete` → Done.
+
+### Next
+
+- Post-omt-bucket backlog (pause §2 tail, unchanged): `tests/scripts/reason` (3) + `tests/scripts/session_inspect` (24) buckets, T3 lanes CI, omt_q telemetry isolation (owns the audit_t1_1 live-probe family + the 5 triaged), T4 TA strip, T5 receipts, T6 multi-root sync + 4 project relocations (re-read the relocations-gap note in the 2026-10-10 block first), UC0 archival, `bridge:` backlog, CI cert pinning.
+
+---
+
 ## 2026-10-10c (pause session — omt bucket R1+R2 LANDED, R3 researched + paused)
 
 ### Done
