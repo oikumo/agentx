@@ -99,7 +99,7 @@ def _seeded_records(session: str, scope: str = "omt_status op:resume") -> list[d
          "files": ["src/x.py"], "feature": F},
         {"ts": ts(2), "kind": "tdd_testlist", "session": session, "feature": F},
         {"ts": ts(4), "kind": "tdd", "session": session, "state": "red",
-         "test_node": "tests/scripts/omt/test_resume_digest.py::test_one_read_resume",
+         "test_node": "tests/harness_meta/omt/test_resume_digest.py::test_one_read_resume",
          "feature": F},
         {"ts": ts(6), "kind": "phase", "session": session,
          "task_type": "minor_feature", "phase": "Programming",
@@ -171,7 +171,7 @@ class TestResumeDigest:
         base = datetime.now(timezone.utc) - timedelta(hours=1)
         ts = lambda m: (base + timedelta(minutes=m)).strftime("%Y-%m-%dT%H:%M:%SZ")
         records = _seeded_records("ses_t33", scope="s" * 400)
-        node = "tests/scripts/omt/test_resume_digest.py::test_over_cap_drop_optional"
+        node = "tests/harness_meta/omt/test_resume_digest.py::test_over_cap_drop_optional"
         for i in range(40):
             records.append({"ts": ts(10 + i), "kind": "tdd", "session": "ses_t33",
                             "state": "red", "test_node": node, "feature": F})

@@ -2,7 +2,7 @@
 """Unit tests for mvc_check.py — OMT++ MVC++ architecture linter.
 
 Tests cover all ERROR and WARNING rules from guide §16 "Common Mistakes to Catch".
-Run with: uv run pytest tests/scripts/omt/test_mvc_check.py -v
+Run with: uv run pytest tests/harness_meta/omt/test_mvc_check.py -v
 """
 from __future__ import annotations
 

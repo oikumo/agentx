@@ -12,7 +12,7 @@ import { initOmtShared, repoRoot, irToolDescription, argvValue } from "../lib/om
 const OPS = ["sessions", "capture", "query", "inspect", "trace", "profile", "compare", "experiment", "export"]
 
 // Per-op argv whitelist mirroring service.py OP_ARGS
-// (cross-source pinned @ tests/scripts/omt/test_omt_session_plugin_args.py).
+// (cross-source pinned @ tests/harness_meta/omt/test_omt_session_plugin_args.py).
 const OP_ARGS: Record<string, readonly string[]> = {
   sessions: ["db", "directory", "session_ids", "time_from", "time_to", "limit", "expected_revision"],
   capture: ["db", "directory", "session_ids", "time_from", "time_to", "dest", "expected_revision"],

@@ -72,12 +72,12 @@ export function designRoot(root?: string): string {
 // list/gate are never blind to what omt_think wrote. grep -E / JS RegExp
 // compatible (\s is a GNU-grep ERE extension — confirmed on box).
 // SINGLE SOURCE (R1): previously byte-duplicated in omt_enforcer.ts and
-// omt_think.ts (audit P1/F10); pinned by tests/scripts/omt/test_thought_pattern_pin.py.
+// omt_think.ts (audit P1/F10); pinned by tests/harness_meta/omt/test_thought_pattern_pin.py.
 export const THOUGHT_PATTERN = "^\\s*(#|//|/\\*|<!--|--)\\s*TA:"
 
 // improvement007/OPT-E: .omt @var thought_pattern (compiled ir.vars) is the
 // FUNCTIONAL source; the const above stays the pinned IR-missing fallback
-// (never die open; value-pinned by tests/scripts/omt/test_thought_pattern_pin.py).
+// (never die open; value-pinned by tests/harness_meta/omt/test_thought_pattern_pin.py).
 export function thoughtPattern(): string {
   const v = loadIr()?.vars?.thought_pattern
   return typeof v === "string" && v ? v : THOUGHT_PATTERN
@@ -143,7 +143,7 @@ export function globToRegex(pattern: string): RegExp {
 // threw "Expecting value: line 1 column 2 (char 1)". One serializer for every
 // argv/flag push site (omt_session, omt_net, tdd_hats, reason_check): arrays
 // AND plain objects re-serialize to valid JSON, scalars pass through String(v)
-// unchanged. Pinned by tests/scripts/omt/test_argv_value_guard_pins.py.
+// unchanged. Pinned by tests/harness_meta/omt/test_argv_value_guard_pins.py.
 // TA: gotcha: opencode SDK coerces JSON-OBJECT-looking strings passed to tool.schema.string() args into actual JS objects, not just arrays (feature_027 covered the array half only) — omt_session query_json '{"limit": 3}' arrived as an object, String(v) → '[object Object]', session_inspect json.loads died 'Expecting value: line 1 column 2 (char 1)' (feature_136 / mh14 run001 trial, 2026-09-27; blocked experiment collect). Every argv/flag push site must use argvValue() from this file; never bare String(v). Supersedes the per-site Array.isArray ternaries (tdd_hats.ts:48 TA note).
 export function argvValue(v: unknown): string {
   if (v !== null && typeof v === "object") return JSON.stringify(v)
@@ -193,7 +193,7 @@ export function appendJsonlOrThrow(path: string, record: Record<string, unknown>
 // LATEST archive + the hot file; the 8 h unlock window shared by every gate
 // reader makes current+latest sufficient. scripts/omt/tdd/state.py keeps its
 // own copy of the cap (cross-language) — keep in sync; pinned by
-// tests/scripts/omt/test_thought_pattern_pin.py.
+// tests/harness_meta/omt/test_thought_pattern_pin.py.
 export const LEDGER_CAP_BYTES = 64 * 1024
 
 export function latestLedgerArchive(root?: string): string | null {

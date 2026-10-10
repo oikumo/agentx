@@ -14,7 +14,7 @@ Pins:
    `Options proj drift`; fresh WORK.md → no such error (live-net faked).
 
 Run with:
-    uv run pytest tests/scripts/omt/test_tasks_options_drift.py -q
+    uv run pytest tests/harness_meta/omt/test_tasks_options_drift.py -q
 """
 from __future__ import annotations
 

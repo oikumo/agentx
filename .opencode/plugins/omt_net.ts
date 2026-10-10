@@ -17,7 +17,7 @@ import { initOmtShared, repoRoot, irToolDescription, argvValue } from "../lib/om
 const OPS = ["probe", "fire", "invariant", "splice", "sync", "synthesize", "mine", "gate", "claim", "release", "transfer", "checkpoint"]
 
 // Per-op argv whitelist mirroring the cli.py subparser declarations
-// (cross-source pinned @ tests/scripts/omt/test_omt_net_plugin_args.py).
+// (cross-source pinned @ tests/harness_meta/omt/test_omt_net_plugin_args.py).
 const OP_ARGS: Record<string, readonly string[]> = {
   probe: ["expected_revision"],
   fire: ["transition", "reasoning", "session", "expected_revision"],

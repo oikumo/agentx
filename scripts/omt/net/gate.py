@@ -4,7 +4,7 @@ Pure-Python permission-to-act check used by the TS enforcer (g.net:35)
 and by harnessc WORK.md canonical verification. Fail-closed: net-down
 or missing receipt BLOCKs unless expiring break-glass scope:all.
 
-Contract (tests/scripts/omt/test_net_gate.py IS the spec):
+Contract (tests/features/feature_050.net_as_gate/test_net_gate.py IS the spec):
   check_edit_allowed(...) -> {"allowed": bool, "code": str, ...}
 Codes: ERR_NET_NOT_ENABLED / ERR_NET_STALE_REV / ERR_NET_DRIFT_CONFLICT
   / ERR_NET_DOWN / OK (+ break_glass flag).

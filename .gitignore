@@ -238,3 +238,9 @@ __marimo__/
 # generated onboarding, never committed (same idiom as the ignored .omt state).
 /GETTING_STARTED.md
 
+# feature_138 split_proof `prove` transient lane certs (default --out .) —
+# regenerable verification output; the @var root_allowlist hygiene keeps the
+# repo root tracked-clean, so never commit these.
+/split_proof_product.cert.json
+/split_proof_harness.cert.json
+

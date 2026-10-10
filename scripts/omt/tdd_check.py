@@ -10,7 +10,7 @@ The implementation moved into the scripts/omt/tdd/ package:
 This shim preserves every pre-split call site:
   - CLI:    uv run scripts/omt/tdd_check.py <subcommand> ...   (enforcer + docs)
   - Module: import tdd_check  → re-exports the full former public API
-            (tests/scripts/omt/test_tdd_check.py imports it directly).
+            (tests/harness_meta/omt/test_tdd_check.py imports it directly).
 """
 from __future__ import annotations
 

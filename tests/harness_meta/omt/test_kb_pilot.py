@@ -55,11 +55,11 @@ def test_lookup_unrelated_surface_returns_empty():
 
 def test_lookup_includes_dependents():
     advisories = lookup(
-        _doc(), changed_files=["tests/scripts/omt/test_gate_two_hats_message.py"]
+        _doc(), changed_files=["tests/harness_meta/omt/test_gate_two_hats_message.py"]
     )
     assert [a["id"] for a in advisories] == ["tdd_node"]
     assert advisories[0]["matched_on"] == [
-        "dependent:tests/scripts/omt/test_gate_two_hats_message.py"
+        "dependent:tests/harness_meta/omt/test_gate_two_hats_message.py"
     ]
 
 

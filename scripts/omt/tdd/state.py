@@ -35,8 +35,8 @@ _LEDGER_ENV = os.environ.get("OMT_LEDGER_PATH")
 LEDGER_PATH = Path(_LEDGER_ENV) if _LEDGER_ENV else REPO_ROOT / ".meta" / ".omt" / "ledger.jsonl"
 _SNAPSHOT_ENV = os.environ.get("OMT_SNAPSHOT_DIR")
 SNAPSHOT_DIR = Path(_SNAPSHOT_ENV) if _SNAPSHOT_ENV else REPO_ROOT / ".meta" / ".omt" / "tdd_snapshots"
-UNLOCK_WINDOW_MS = 8 * 60 * 60 * 1000  # 8 hours literal fallback (keep in sync with .opencode/lib/omt_shared.ts — single TS source since meta_harness_dsl R1; pinned by tests/scripts/omt/test_thought_pattern_pin.py)
-LEDGER_CAP_BYTES = 64 * 1024  # 64 KB hot-file cap literal fallback (meta_harness_dsl R4 — keep in sync with .opencode/lib/omt_shared.ts; pinned by tests/scripts/omt/test_thought_pattern_pin.py)
+UNLOCK_WINDOW_MS = 8 * 60 * 60 * 1000  # 8 hours literal fallback (keep in sync with .opencode/lib/omt_shared.ts — single TS source since meta_harness_dsl R1; pinned by tests/harness_meta/omt/test_thought_pattern_pin.py)
+LEDGER_CAP_BYTES = 64 * 1024  # 64 KB hot-file cap literal fallback (meta_harness_dsl R4 — keep in sync with .opencode/lib/omt_shared.ts; pinned by tests/harness_meta/omt/test_thought_pattern_pin.py)
 
 
 def _ir_var_int(name: str) -> int | None:
@@ -124,7 +124,7 @@ def _rotate_ledger_if_needed() -> None:
 # feature_051 (A1 — ledger test isolation, meta_harness_6): the allowlist is
 # PERMANENTLY EMPTY — the harness ships a green suite, full stop. The
 # constant + the omt_q U10 extractor stay (op:state surfaces the invariant
-# live); the shape-pin in tests/scripts/omt/test_ledger_rotation.py asserts
+# live); the shape-pin in tests/harness_meta/omt/test_ledger_rotation.py asserts
 # emptiness. The historical members were root-caused: the feature_018
 # react_screen trio (Textual/mock failures predating the harness) has been
 # stably green since the mock-leak fix, and the window-flaky real-ledger

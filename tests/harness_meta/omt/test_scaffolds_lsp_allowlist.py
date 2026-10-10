@@ -1,4 +1,4 @@
-# tests/scripts/omt/test_scaffolds_lsp_allowlist.py — feature_090.scaffolds_and_lsp_allowlist goldens (mh8 T2-7).
+# tests/harness_meta/omt/test_scaffolds_lsp_allowlist.py — feature_090.scaffolds_and_lsp_allowlist goldens (mh8 T2-7).
 #
 # Covers BOTH halves of the feature:
 #   (a) new_feature.py testing/implementation subcommands (hermetic, constants

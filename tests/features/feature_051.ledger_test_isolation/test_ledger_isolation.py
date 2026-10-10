@@ -10,7 +10,7 @@ Three invariants:
      ledgerPath() returns it and appendLedger writes there (bun probe); the
      repo-relative default is not touched.
   3. KNOWN_SUITE_FAILURES is permanently empty (A1: suite green means green;
-     canonical shape-pin lives in tests/scripts/omt/test_ledger_rotation.py).
+     canonical shape-pin lives in tests/harness_meta/omt/test_ledger_rotation.py).
 """
 from __future__ import annotations
 
@@ -115,7 +115,7 @@ class TestAllowlistPermanentlyEmpty:
     def test_known_suite_failures_empty(self):
         """A1: zero tolerated failures — suite green means green. Growing
         KNOWN_SUITE_FAILURES reverts the A1 decision (canonical shape-pin:
-        tests/scripts/omt/test_ledger_rotation.py)."""
+        tests/harness_meta/omt/test_ledger_rotation.py)."""
         sys.path.insert(0, str(REPO_ROOT / "scripts" / "omt"))
         from tdd import state  # noqa: PLC0415
         assert len(state.KNOWN_SUITE_FAILURES) == 0

@@ -139,7 +139,7 @@ class TestOpStateResumeSnapshot:
              "session": "ses_u1", "behaviors": ["U1"], "remaining": [],
              "feature": "feature_026.omt_q_interrogative_first_ops"},
             {"ts": ts(5), "kind": "tdd", "session": "ses_u1",
-             "state": "red", "test_node": "tests/scripts/omt/test_omt_q.py::T::t",
+             "state": "red", "test_node": "tests/harness_meta/omt/test_omt_q.py::T::t",
              "target_src": [".opencode/plugins/omt_q.ts"], "verified": False,
              "exit_code": 1, "feature": "feature_026.omt_q_interrogative_first_ops"},
         ])

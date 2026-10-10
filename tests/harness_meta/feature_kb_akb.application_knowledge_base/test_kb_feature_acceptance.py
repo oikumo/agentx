@@ -10,7 +10,7 @@ These tests pin the feature-level contracts of the Application Knowledge Base:
   with the per-query MAX_RECORDS cap + truncated marker.
 
 The contract tests live alongside the existing unit tests
-(`tests/scripts/omt/test_kb_*.py` — 21 tests for AST extraction + compiler) and
+(`tests/harness_meta/omt/test_kb_*.py` — 21 tests for AST extraction + compiler) and
 the structural e2e tests (`tests/scripts/omt/test_omt_harness_e2e.py`); this
 file fills the feature-acceptance layer required by the §12 phase-exit matrix
 (phase_gate.ts PHASE_EXIT_REQUIREMENTS["Programming"] → Testing).

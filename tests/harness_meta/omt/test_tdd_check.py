@@ -5,7 +5,7 @@ Tests cover AST functions, gate logic, ledger interaction, and the
 subcommand JSON interface. Uses temp files + temp ledger to avoid
 polluting the real project state.
 
-Run with: uv run pytest tests/scripts/omt/test_tdd_check.py -v
+Run with: uv run pytest tests/harness_meta/omt/test_tdd_check.py -v
 """
 from __future__ import annotations
 

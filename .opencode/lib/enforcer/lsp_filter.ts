@@ -12,7 +12,7 @@
 //     tool.execute.after mechanism), never blocks.
 //
 // Render contract (pinned from live opencode.db samples, pyright 1.1.408 —
-// recorded fixtures live in tests/scripts/omt/test_scaffolds_lsp_allowlist.py):
+// recorded fixtures live in tests/harness_meta/omt/test_scaffolds_lsp_allowlist.py):
 //   <base>\n\n
 //   LSP errors detected in this file, please fix:      (or "in other files:")
 //   <diagnostics file="<abs>">
@@ -95,7 +95,7 @@ export interface LspFilterApplied {
   dropped: number
 }
 
-// TA: xref: feature_090 (mh8 T2-7 / mh3 P3-11) — the render contract above is pinned from live opencode.db samples (pyright 1.1.408); fixtures in tests/scripts/omt/test_scaffolds_lsp_allowlist.py. If opencode's LSP render format ever changes (headers/block shape/ERROR prefix), this strict parser fails OPEN (null → unfiltered output) — update parser + fixtures together. The allowlist file is DATA (.meta/lsp_allowlist.json), NOT a harness surface: editing it needs NO e2e receipt round.
+// TA: xref: feature_090 (mh8 T2-7 / mh3 P3-11) — the render contract above is pinned from live opencode.db samples (pyright 1.1.408); fixtures in tests/harness_meta/omt/test_scaffolds_lsp_allowlist.py. If opencode's LSP render format ever changes (headers/block shape/ERROR prefix), this strict parser fails OPEN (null → unfiltered output) — update parser + fixtures together. The allowlist file is DATA (.meta/lsp_allowlist.json), NOT a harness surface: editing it needs NO e2e receipt round.
 export function applyLspAllowlist(
   text: string,
   diags: Record<string, any[]>,
