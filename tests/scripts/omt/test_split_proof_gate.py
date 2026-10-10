@@ -30,6 +30,7 @@ DRIVER = REPO_ROOT / ".opencode" / "lib" / "enforcer" / "gate_driver.ts"
 STATE = REPO_ROOT / ".opencode" / "lib" / "enforcer" / "session_state.ts"
 IR = REPO_ROOT / ".meta" / ".omt" / "harness.ir.json"
 CLI = REPO_ROOT / "scripts" / "omt" / "split_proof.py"
+# TA: gotcha: gotcha: GOTCHA_PROVE_CERTS_ROOT_STRAY: split_proof.py prove defaults --out '.' — lane certs land at REPO ROOT where the @var root_allowlist stray-hygiene check errors on them (FILESYSTEM-based, NOT a git check — untracking/ignoring does not help; only absence does), failing every check-expecting test (4 in feature_141 R2 2026-10-10: harnessc zero-errors + projections-fresh + budget_diet live pin + toolbox harness.budget_check seed); a root cert present at commit time also gets swept by git add -A. Prove with --out /tmp/... (or delete after); .gitignore carries /split_proof_{product,harness}.cert.json as belt-and-braces; never allowlist the strays.
 MANIFEST = REPO_ROOT / "scripts" / "omt" / "split_proof_exemptions.json"
 BENCH_TASKS = REPO_ROOT / "scripts" / "omt" / "bench" / "tasks.py"
 

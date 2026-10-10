@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-10-10c (pause session — omt bucket R1+R2 LANDED, R3 researched + paused)
+
+### Done
+
+- Baseline verified; **5th triaged failure classified** (prior pause's "4" undercounted): `test_omt_q_audit_t1_1::test_bootstrap_templates_last_three_live` — real ledger (current+archive) has zero `kind:skip`+bootstrap rows (ledger lifecycle ate them); live-probe family, user-approved triage-only (the omt_q telemetry-isolation follow-up owns the class).
+- User-approved decisions: one-commit-first (`9f786aa`: features 138–140), 3-round referencer-owned granularity, triage-only 5th failure, all-3-rounds go-ahead, bookkeeping commits per pause.
+- **R1 `858d4c9`:** net×28 → `tests/harness_meta/omt/` (mirror move, zero content edits) + 13 referencer fixes (039/040/041 sentinel lists + docstrings, 114/118/043 docstrings, `scripts/omt/net/{__init__,conformance,io,cli}.py` docstrings; cli.py think-gate).
+- **R2 `8f5a8e6`:** 34-file cluster + 28 fixes (026 golden-smoke import, 051 ×2, `tdd/state.py` ×3 + `tdd_check.py` + `lessons.json` gate_two_hats lesson + kb_akb docstring, `gate.py` stale test_net_gate path → features lane, `omt_shared.ts` ×5, `lsp_filter.ts` ×2, `omt_net.ts` + `omt_session.ts` pins). Receipt round-robin fired as designed: state.py + lsp_filter.ts 2nd edits blocked → 2 mid-round e2e mints.
+- **prove-certs root-stray gotcha** root-caused + fixed + TA'd (`test_split_proof_gate.py:33`): R1 `prove --out .` → root certs → `add -A` committed them → the FILESYSTEM-based root_allowlist stray-hygiene check broke 4 check-expecting tests; `git rm` + delete + `.gitignore` entries; future proves `--out /tmp/opencode/`.
+
+### Next
+
+- **R3 per `.sandbox/pause_2026-10-10b.md` §2** (self-sufficient map — no re-research): 10-file move, stage protocol (.omt LAST → re-stage → e2e from new home → build), `omt_shared.ts:594` ↔ `.omt` harness_paths set-sync, segmented catches plain rg misses (`guard_source_pins:46`, `test_init_fs:37`, `054:232`), 030 import pair, budget expectations, green gates + close-out + `omt_complete`. **Canary + phase records expire ~04:15Z 2026-10-11** — re-declare phase FIRST, then re-mint canary (pause §0).
+
+---
+
 ## 2026-10-10b (resume session — T2 goldens + first lane bucket + REVIEW bucket LANDED)
 
 ### Done
