@@ -8,7 +8,7 @@ maps as sorted pair-arrays, marking keys comma-joined) so a vector produced
 from the tested library must match this harness clone byte-for-byte in
 structure.
 
-Used by `tests/scripts/omt/test_net_conformance.py`; structure-changing ops
+Used by `tests/harness_meta/omt/test_net_conformance.py`; structure-changing ops
 (`splice`/`sync`/`synthesize`, feature_040+) re-run it as the regression
 gate (IDEA-002 v4 §5.0 trigger matrix).
 """

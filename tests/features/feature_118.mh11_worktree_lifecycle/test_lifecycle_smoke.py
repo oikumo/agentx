@@ -1,6 +1,6 @@
 """Feature-118 pointer smoke - exercises the public surface.
 
-Canonical goldens live at tests/scripts/omt/test_net_worktree_lifecycle_b.py
+Canonical goldens live at tests/harness_meta/omt/test_net_worktree_lifecycle_b.py
 (11/11, O4 precedent); this file keeps the coverage gate fed from the
 feature-owned dir: every public worktree_lifecycle method is called here.
 """

@@ -11,7 +11,7 @@ phase-2 extension at 044):
     synthesize             feature_042 (goal→net template proposal, D4)
     mine                   feature_044 (ledger→net behavioral draft, D4)
 
-Contract (tests/scripts/omt/test_net_{cli,splice,sync,synthesize}.py ARE the
+Contract (tests/harness_meta/omt/test_net_{cli,splice,sync,synthesize}.py ARE the
 spec): one JSON envelope on stdout, exit 0 ok / 1 error; bootstrap ordering
 §5.1 — probe/fire/invariant/synthesize fail clean with net_not_bootstrapped
 until the bundle exists (sync is the first-call entry point). `fire` is

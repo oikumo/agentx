@@ -2,7 +2,7 @@
 
 Satisfies the `omt_complete{Programming -> Testing}` pattern matcher
 `tests/features/<feature>/test_*.py`. The feature's suites are split by
-toolchain (GOTCHA_TDD_TOOLCHAIN): pytest (`tests/scripts/omt/
+toolchain (GOTCHA_TDD_TOOLCHAIN): pytest (`tests/harness_meta/omt/
 test_net_history.py` — ledger replay + snapshot vectors incl. the LIVE
 golden) and Vitest (`tools/petri-net-studio/tests/dashboard/` — blockage,
 snapshot guard, Dashboard render).

@@ -1,6 +1,6 @@
 """Feature pointer tests for O4 concurrent dispatch runtime (feature_114).
 
-Canonical goldens (23/23) live at tests/scripts/omt/test_net_dispatch_o4.py
+Canonical goldens (23/23) live at tests/harness_meta/omt/test_net_dispatch_o4.py
 (planner + preview + join, hermetic). This pointer satisfies the
 Programming→Testing §12 unit-test path (tests/features/<feature>/...) with
 a hermetic smoke over the same contract — no live net touch.

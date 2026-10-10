@@ -2,7 +2,7 @@
 
 Satisfies the `omt_complete{Programming -> Testing}` pattern matcher
 `tests/features/<feature>/test_*.py`. The feature's CANONICAL test suite
-lives at `tests/scripts/omt/test_net_{conformance,engine,state,cli}.py`
+lives at `tests/harness_meta/omt/test_net_{conformance,engine,state,cli}.py`
 (37 tests at feature completion: 11 conformance + 8 engine + 7 state +
 11 CLI; evidence @
 `6.testing/features/feature_039.adaptive_net_engine/test_report.md`).
@@ -23,10 +23,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 CANONICAL_SUITE = [
-    "tests/scripts/omt/test_net_conformance.py",
-    "tests/scripts/omt/test_net_engine.py",
-    "tests/scripts/omt/test_net_state.py",
-    "tests/scripts/omt/test_net_cli.py",
+    "tests/harness_meta/omt/test_net_conformance.py",
+    "tests/harness_meta/omt/test_net_engine.py",
+    "tests/harness_meta/omt/test_net_state.py",
+    "tests/harness_meta/omt/test_net_cli.py",
 ]
 
 FEATURE_SRC_FILES = [

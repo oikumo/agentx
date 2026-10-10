@@ -2,8 +2,8 @@
 
 Satisfies the `omt_complete{Programming -> Testing}` pattern matcher
 `tests/features/<feature>/test_*.py`. The feature's CANONICAL test suite
-lives at `tests/scripts/omt/test_net_resources.py` (+ the evolved pins in
-`tests/scripts/omt/test_net_sync.py` — bootstrap catalog, subnet-template
+lives at `tests/harness_meta/omt/test_net_resources.py` (+ the evolved pins in
+`tests/harness_meta/omt/test_net_sync.py` — bootstrap catalog, subnet-template
 arcs, ports.resources; evidence @
 `6.testing/features/feature_041.resource_places_concurrency/test_report.md`).
 
@@ -23,8 +23,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 CANONICAL_SUITE = [
-    "tests/scripts/omt/test_net_resources.py",
-    "tests/scripts/omt/test_net_sync.py",
+    "tests/harness_meta/omt/test_net_resources.py",
+    "tests/harness_meta/omt/test_net_sync.py",
 ]
 
 FEATURE_SRC_FILES = [

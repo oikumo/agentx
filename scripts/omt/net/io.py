@@ -6,7 +6,7 @@ HARNESS CLONE (feature_039, D2): byte-faithful copy of
 source module exactly (error precedence syntax→format→version→L1→L2, V-rule
 ids in messages, integral-float→int normalization, bool rejection, layout
 verbatim/extensions/V6, canonical §8 bytes); golden canonical bytes:
-shared/petri-net/examples/ (pinned by tests/scripts/omt/test_net_engine.py).
+shared/petri-net/examples/ (pinned by tests/harness_meta/omt/test_net_engine.py).
 Do NOT extend here (F6) — sync with the library as one versioned event.
 
 The format is the ONLY coupling to external tools (D5); semantics stay with

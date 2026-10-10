@@ -8,5 +8,5 @@ splice|sync|synthesize reserved for feature_040+).
 
 Parity is pinned by the 9 shared conformance vectors
 (`shared/petri-net/conformance/analysis-v1/` →
-`tests/scripts/omt/test_net_conformance.py`).
+`tests/harness_meta/omt/test_net_conformance.py`).
 """
