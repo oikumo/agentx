@@ -6,7 +6,7 @@
 
 ## Subject scope
 
-This subject covers workflows whose `# <Strategy>` operates on the META harness artifacts (`.meta/`, `META_HARNESS.omt`, `AGENTS.md`, the enforcer, `omt_*` tools) and on session-level work state (`WORK.md`, `.sandbox/meta/`). Two recurring loops live under `loops/`, and one **top-level one-shot** (`pause_dev_for_resume_later.md`) lives at the subject root.
+This subject covers workflows whose `# <Strategy>` operates on the META harness artifacts (`.meta/`, `META_HARNESS.omt`, `AGENTS.md`, the enforcer, `omt_*` tools) and on session-level work state (`WORK.md`, `.sandbox/meta/`). Two recurring loops live under `loops/`, and one **top-level one-shot** (`pause_dev_for_resume_later.md`) lives at the subject root. The guiding vision lives in `META_VISION.md` (nav: `@doc vision`).
 
 OMT gate stance varies per workflow — read each workflow's `# Rules` line 1 before invoking. The meta harness evolution loop explicitly opts out of OMT methodology in its own `# Rules` line 1; the project loop also opts out; the pause/resume one-shot does not modify `src/` so the harness gates do not come into play.
 

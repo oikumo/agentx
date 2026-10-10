@@ -58,7 +58,11 @@ import harnessc
 # plugin only — tier-init trees ship plugins, not the session_inspect core,
 # comp.tdd prose precedent); @budget nav_index deliberately grown
 # 67072→67584 in the same .omt edit. Deliberate, budgets still OK (67475/67584).
-NAV_INDEX_CEIL = 67475
+# Re-pin 2026-10-10 (improvement006_vision): NAV_INDEX_CEIL 67475 → 67822 —
+# the +1 @doc vision record + RUNTIME vision pointer are the deliverable
+# (kinds unchanged: doc/flow/xref/tool/msg); @budget nav_index deliberately
+# grown 67584→67840 in the same .omt edit. Deliberate, budgets OK (67822/67840).
+NAV_INDEX_CEIL = 67822
 # Re-pin 2026-09-13 (feature_092, mh8 T3-3 resume digest): op describe gains
 # "| resume" (+9B) paid by an include_ledger describe diet (-8B) — net +1B
 # deliberate (tool_args 2455/2464); design note @ 4.design/features/

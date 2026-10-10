@@ -134,12 +134,16 @@ def test_live_check_emits_diet_warnings(capsys) -> None:
     description is the feature's deliverable); tool_args 2749/2848 (99B),
     agents_md 3451/3584, nav_index 66744/67072 and ir_json 21683/22016 stay
     silent. Re-pin deliberately whenever these budgets move (feature_059 pin
-    discipline)."""
+    discipline).
+    Re-pin 2026-10-10 (improvement006_vision): +1 @doc vision + RUNTIME
+    pointer push agents_md 3451→3549 (35B) and nav_index 67475→67822 (18B)
+    into the 64B zone — both warnings are the deliverable's cost, budgets
+    still OK (3549/3584, 67822/67840)."""
     assert harnessc.main(["harnessc.py", "check"]) == 0
     err = capsys.readouterr().err
     assert "budget-diet: tool_schemas 2014/2048B — 34B headroom (≤64B)" in err
     assert "diet: longest @tool" in err, "composable hint names a real @tool"
-    assert "budget-diet: agents_md" not in err
+    assert "budget-diet: agents_md 3549/3584B — 35B headroom (≤64B)" in err
+    assert "budget-diet: nav_index 67822/67840B — 18B headroom (≤64B)" in err
     assert "budget-diet: tool_args" not in err
-    assert "budget-diet: nav_index" not in err
     assert "budget-diet: ir_json" not in err
