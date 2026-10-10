@@ -2089,7 +2089,7 @@ def _build_tree(dest: Path, src_omt_text: str, filtered: Corpus,
     dest.mkdir(parents=True, exist_ok=True)
     (dest / ".meta" / ".omt").mkdir(parents=True, exist_ok=True)
     (dest / ".projects" / "meta").mkdir(parents=True, exist_ok=True)
-    (dest / "tests" / "scripts" / "omt").mkdir(parents=True, exist_ok=True)
+    (dest / "tests" / "harness_meta" / "omt").mkdir(parents=True, exist_ok=True)
     for rel, min_tier in INIT_COPY_DIRS:
         if tier < min_tier:
             continue
@@ -2155,7 +2155,7 @@ def _build_tree(dest: Path, src_omt_text: str, filtered: Corpus,
     report.append(f"projection AGENTS.md: {len(agents_md.encode())} B")
     (dest / ".meta" / ".omt" / "harness.report").write_text(
         "\n".join(report) + "\n", encoding="utf-8")
-    (dest / "tests" / "scripts" / "omt" / "test_template_e2e.py").write_text(
+    (dest / "tests" / "harness_meta" / "omt" / "test_template_e2e.py").write_text(
         _template_e2e_py(tier), encoding="utf-8")
 
 

@@ -15,7 +15,7 @@ opencode plugin uses that receipt to force a fresh run before repeatedly editing
 the OMT harness after it has changed.
 
 Run with:
-    uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q
+    uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-E2E_COMMAND = "uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q"
+E2E_COMMAND = "uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q"
 RECEIPT_PATH = REPO_ROOT / ".meta" / ".omt" / "omt_harness_e2e_last_run.json"
 
 HARNESS_FILES = [
@@ -76,7 +76,7 @@ HARNESS_FILES = [
     "scripts/omt/net/cli.py",
     "scripts/omt/net_check.py",
     ".opencode/plugins/omt_net.ts",
-    "tests/scripts/omt/test_omt_harness_e2e.py",
+    "tests/harness_meta/omt/test_omt_harness_e2e.py",
 ]
 
 
@@ -203,7 +203,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     assert "behavioral" in tdd_gates
     assert "tddData.failing_tests" in _read(".opencode/lib/enforcer/phase_gate.ts")
     assert "receiptResultsPassed" in shared
-    assert '"results"' in _read("tests/scripts/omt/test_omt_harness_e2e.py")
+    assert '"results"' in _read("tests/harness_meta/omt/test_omt_harness_e2e.py")
     checks.append("T4-3 completion hardening wired (behavioral validate-exit + results-bound receipt)")
 
     # 4. Coarse permissions still force uv and deny the risky actions the meta

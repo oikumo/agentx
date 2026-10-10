@@ -11,8 +11,8 @@ from .model import Step, TaskDef, validate_all
 MODEL_FILE = "src/agentx/model/chat/chat_history.py"
 UI_FILE = "src/agentx/ui/screens/chat/chat_controller.py"
 CHAT_TEST = "tests/unit/model/test_chat_history.py"
-BUDGET_TEST = "tests/scripts/omt/test_budget_diet.py"
-E2E_TEST = "tests/scripts/omt/test_omt_harness_e2e.py"
+BUDGET_TEST = "tests/harness_meta/omt/test_budget_diet.py"
+E2E_TEST = "tests/harness_meta/omt/test_omt_harness_e2e.py"
 HARNESS_C = "scripts/omt/harnessc.py"
 NET_STATE = "scripts/omt/net/state.py"
 

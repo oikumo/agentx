@@ -370,7 +370,7 @@ function foldReceiptDetail(rel: string, abs: string): {
     isHarnessPath = !status.ok || status.message !== ""
   }
   if (!isHarnessPath) return null
-  const E2E_TEST = "tests/scripts/omt/test_omt_harness_e2e.py"
+  const E2E_TEST = "tests/harness_meta/omt/test_omt_harness_e2e.py"
   const E2E_CMD = `uv run pytest ${E2E_TEST} -q`
   let file_mtime = 0
   let receipt_passed_at = 0

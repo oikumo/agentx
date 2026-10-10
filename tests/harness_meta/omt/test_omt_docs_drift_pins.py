@@ -61,9 +61,9 @@ SINGULAR_PATH_PARTS = re.compile(r"""["']\.opencode["']\s*/\s*["']plugin["']""")
 FROZEN_FILES = {
     "README.md",  # F25: NEVER-edit protected; user hand-edits at leisure
     # F24: the docstring quotes the pre-rename path to describe the pinned bug
-    "tests/scripts/omt/test_omt_enforcer_guard_source_pins.py",
+    "tests/harness_meta/omt/test_omt_enforcer_guard_source_pins.py",
     # self-exclusion: this file carries the pattern by definition
-    "tests/scripts/omt/test_omt_docs_drift_pins.py",
+    "tests/harness_meta/omt/test_omt_docs_drift_pins.py",
 }
 FROZEN_PREFIXES = (
     ".meta/software_development_process/",  # F16: per-feature docs = frozen history

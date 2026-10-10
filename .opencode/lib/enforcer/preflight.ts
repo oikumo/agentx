@@ -28,7 +28,7 @@ import { type GateCtx, runBeforeGatesDry } from "./gate_driver"
 const CLEARING_ACTIONS: Record<string, string> = {
   "g.nav": 'omt_nav{op:"nav"|"list_sections"|"quick_ref"} first (read + src/non-doc exempt); override omt_skip{scope:"nav"}; bug_fix/test phase auto-satisfies (C2)',
   "g.protect": '.env* is NEVER editable; README/uv.lock/LICENSE → ask the user, then omt_skip{scope:"all"}',
-  "g.receipt": 'refresh the e2e receipt: uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q (one edit per harness file per round)',
+  "g.receipt": 'refresh the e2e receipt: uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q (one edit per harness file per round)',
   "g.tests": 'omt_skip{reason:"approved canary test", scope:"tests"}; own feature test dir auto-approved in RED (C2)',
   "g.net": 'omt_net{op:"fire", transition:"work_start"} (solo sessions auto-skip per C1); break-glass omt_skip{scope:"all"} — expiring, audited',
   "g.split_proof": 'uv run scripts/omt/split_proof.py prove --lane both --out .meta/.omt (pins fresh certs + chain rows); local: advisory only, CI: strict',

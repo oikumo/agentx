@@ -83,7 +83,7 @@ def build_impl_notes_stub(slug: str, date: str) -> str:
         "## What changed\n\n<!-- files touched + why; one bullet per site -->\n\n"
         "## Discipline notes\n\n"
         "- Receipt round-robin respected for harness-surface files (ONE edit per file\n"
-        "  per e2e receipt; `uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q`).\n"
+        "  per e2e receipt; `uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q`).\n"
         "- `uv` only (no bare python/pip/pytest).\n"
     )
 

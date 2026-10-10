@@ -1,4 +1,4 @@
-# tests/scripts/omt/test_project_lifecycle.py — feature_030.project_lifecycle goldens.
+# tests/harness_meta/omt/test_project_lifecycle.py — feature_030.project_lifecycle goldens.
 #
 # Hermetic: OMT_LEDGER_PATH / OMT_PROJECTS_ROOT / OMT_PROJECTS_ARCHIVE redirect
 # all state to tmp_path (project_state.py reads env PER CALL — design_001 §1).

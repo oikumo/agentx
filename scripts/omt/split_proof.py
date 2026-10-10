@@ -360,7 +360,7 @@ def verify_cert(
 
     The `ledger_sha` chain link binds the ledger state at prove time, but the
     suite itself appends real ledger rows on parallel workers (observed
-    2026-10-10: `ledger.jsonl` grows during `pytest tests/scripts/omt`), so a
+    2026-10-10: `ledger.jsonl` grows during `pytest tests/harness_meta/omt`), so a
     single compare is racy. Retry up to `attempts` times: pass on the first
     agreeing pair. If fresh proves agree with each other but not the given
     cert, the cert is STALE (ledger advanced since it was cut — re-prove),

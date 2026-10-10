@@ -5,7 +5,7 @@ Contract (GREEN pins per design_001 §3.2–3.3 + operation_spec_001):
   (tier-filtered source records), WORK.md skeleton, .meta/.omt ledger+thoughts,
   GETTING_STARTED.md, opencode.jsonc (harnessc blocks), runtime copies
   (scripts/omt, .opencode w/o node_modules, .meta/templates, guide, f006 dir,
-  .workflows at T2+), tests/scripts/omt/test_template_e2e.py, .projects
+  .workflows at T2+), tests/harness_meta/omt/test_template_e2e.py, .projects
   manifest + WORK.md Projects section; self-validates via check_tree (fail-closed).
 - init refuses non-empty dir even with --force (never clobber).
 - render_getting_started: Tier-1 names core gates, contains no nav/think/kb/net
@@ -34,7 +34,7 @@ def test_init_tier1_builds_working_tree(tmp_path):
     assert (dest / "WORK.md").exists()
     assert (dest / "GETTING_STARTED.md").exists()
     assert (dest / "opencode.jsonc").exists()
-    assert (dest / "tests" / "scripts" / "omt" / "test_template_e2e.py").exists()
+    assert (dest / "tests" / "harness_meta" / "omt" / "test_template_e2e.py").exists()
     assert (dest / "AGENTS.md").exists()
     # tier purity of the emitted policy
     text = omt.read_text(encoding="utf-8")

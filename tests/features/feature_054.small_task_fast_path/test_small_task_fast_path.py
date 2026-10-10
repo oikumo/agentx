@@ -229,7 +229,7 @@ console.log(JSON.stringify(out))
 _OWN = f"tests/features/{F}/test_a.py"
 _OWN_SHORT = "tests/features/feature_054/test_d.py"
 _OTHER = "tests/features/feature_999.other/test_b.py"
-_HARNESS = "tests/scripts/omt/test_c.py"
+_HARNESS = "tests/harness_meta/omt/test_c.py"
 _EVIL = "tests/features/feature_054evil/test_e.py"
 # Lane variants (harness_wrapper_split T3): the own-dir auto-unlock follows
 # the feature into tests/harness_meta + tests/agentx; slash-bounded evil

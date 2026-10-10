@@ -363,7 +363,7 @@ class TestSourcePins:
         assert "await lspAfterEdit(env, input, output)" in enforcer
 
     def test_harness_files_covers_lsp_filter(self):
-        e2e = (REPO_ROOT / "tests" / "scripts" / "omt" / "test_omt_harness_e2e.py").read_text(
+        e2e = (REPO_ROOT / "tests" / "harness_meta" / "omt" / "test_omt_harness_e2e.py").read_text(
             encoding="utf-8")
         assert '".opencode/lib/enforcer/lsp_filter.ts"' in e2e
 

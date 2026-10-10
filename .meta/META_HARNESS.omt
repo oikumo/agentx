@@ -20,8 +20,8 @@
 @var receipt_path : .meta/.omt/omt_harness_e2e_last_run.json
 @var ir_path : .meta/.omt/harness.ir.json
 @var nav_index_path : .meta/.omt/nav.index.jsonl
-@var e2e_test : tests/scripts/omt/test_omt_harness_e2e.py
-@var e2e_cmd : uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q
+@var e2e_test : tests/harness_meta/omt/test_omt_harness_e2e.py
+@var e2e_cmd : uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q
 @var thought_pattern : ^\s*(#|//|/\*|<!--|--)\s*TA:
 @var doc_paths : .meta/,AGENTS.md,WORK.md
 @var process_root : .meta/software_development_process
@@ -35,7 +35,7 @@
 @var harnessc : uv run scripts/omt/harnessc.py
 @var edit_tools : edit|write|patch|multiedit
 @var search_tools : grep|glob|rg|find
-@var harness_paths : AGENTS.md,opencode.jsonc,.meta/META_HARNESS.omt,.meta/software_development_process/omt_agent_guide.md,.opencode/plugins/omt_,.opencode/lib/omt_,.opencode/lib/enforcer/,scripts/omt/,.meta/templates/,.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/,tests/scripts/omt/
+@var harness_paths : AGENTS.md,opencode.jsonc,.meta/META_HARNESS.omt,.meta/software_development_process/omt_agent_guide.md,.opencode/plugins/omt_,.opencode/lib/omt_,.opencode/lib/enforcer/,scripts/omt/,.meta/templates/,.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/,tests/harness_meta/omt/
 @var net_paths : src/,tests/,.opencode/,scripts/omt/
 @var root_allowlist : AGENTS.md,LICENSE,README.md,WORK.md,WORK.compiled.md,WORK_ARCHIVE.md,opencode.jsonc,pyproject.toml,uv.lock,.gitignore,.python-version,.meta,.opencode,.agents,.agents_prompts,prompts,scripts,shared,src,tests,tests_automated,tools,.projects,.workflows,sandbox,GETTING_STARTED.md,META_VISION.md,toolbox
 @var projects_root : .projects/meta

@@ -513,7 +513,7 @@ class TestOpPlanReceiptDetail:
         rec_dst.parent.mkdir(parents=True, exist_ok=True)
         rec_dst.write_text(json.dumps({
             "passed_at": 1,  # epoch-second: very old
-            "ok": True, "command": "uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q",
+            "ok": True, "command": "uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q",
         }), encoding="utf-8")
         out = _q_probe(
             json.dumps({"op": "plan",
@@ -528,10 +528,10 @@ class TestOpPlanReceiptDetail:
         assert rd.get("stale") is True, (
             f"U11 stale should be true (file newer than old receipt): {rd}")
         assert rd.get("refresh_tests") == [
-            "tests/scripts/omt/test_omt_harness_e2e.py"], (
+            "tests/harness_meta/omt/test_omt_harness_e2e.py"], (
             f"U11 refresh_tests mismatch: {rd}")
         assert rd.get("refresh_cmd") == (
-            "uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q"), (
+            "uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q"), (
             f"U11 refresh_cmd mismatch: {rd}")
 
 

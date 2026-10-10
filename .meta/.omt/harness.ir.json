@@ -278,7 +278,7 @@
       "scripts/omt/",
       ".meta/templates/",
       ".meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/",
-      "tests/scripts/omt/"
+      "tests/harness_meta/omt/"
     ]
   },
   "hats": {
@@ -407,7 +407,7 @@
     "receipt_stale": {
       "see": "",
       "sev": "block",
-      "text": "'{rel}' is part of the META HARNESS surface and already has unverified changes \u2014 run the harness e2e before editing again: uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q (refreshes .meta/.omt/omt_harness_e2e_last_run.json)"
+      "text": "'{rel}' is part of the META HARNESS surface and already has unverified changes \u2014 run the harness e2e before editing again: uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q (refreshes .meta/.omt/omt_harness_e2e_last_run.json)"
     },
     "split_proof": {
       "see": "",
@@ -605,13 +605,13 @@
   "vars": {
     "design_features": ".meta/software_development_process/4.design/features",
     "doc_paths": ".meta/,AGENTS.md,WORK.md",
-    "e2e_cmd": "uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q",
-    "e2e_test": "tests/scripts/omt/test_omt_harness_e2e.py",
+    "e2e_cmd": "uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q",
+    "e2e_test": "tests/harness_meta/omt/test_omt_harness_e2e.py",
     "edit_tools": "edit|write|patch|multiedit",
     "enforcer_lib": ".opencode/lib/enforcer/",
     "git_branch_prefix": "feat/",
     "git_worktree_root": ".sandbox/bench",
-    "harness_paths": "AGENTS.md,opencode.jsonc,.meta/META_HARNESS.omt,.meta/software_development_process/omt_agent_guide.md,.opencode/plugins/omt_,.opencode/lib/omt_,.opencode/lib/enforcer/,scripts/omt/,.meta/templates/,.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/,tests/scripts/omt/",
+    "harness_paths": "AGENTS.md,opencode.jsonc,.meta/META_HARNESS.omt,.meta/software_development_process/omt_agent_guide.md,.opencode/plugins/omt_,.opencode/lib/omt_,.opencode/lib/enforcer/,scripts/omt/,.meta/templates/,.meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/,tests/harness_meta/omt/",
     "harnessc": "uv run scripts/omt/harnessc.py",
     "ir_path": ".meta/.omt/harness.ir.json",
     "ledger_cap_bytes": 65536,

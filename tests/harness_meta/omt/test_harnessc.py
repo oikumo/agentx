@@ -21,7 +21,7 @@ splice / budget report. These tests pin:
    (irToolDescription region), per-op helpers excluded (OPT-A).
 
 Run with:
-    uv run pytest tests/scripts/omt/test_harnessc.py -q
+    uv run pytest tests/harness_meta/omt/test_harnessc.py -q
 """
 from __future__ import annotations
 

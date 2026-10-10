@@ -17,7 +17,7 @@ Pins the .workflows/ machine contract in scripts/omt/harnessc.py:
    LAST non-Rules/non-Result '# ' heading, so `# ... rules` blocks do not win).
 
 Run with:
-    uv run pytest tests/scripts/omt/test_harnessc_workflows.py -q
+    uv run pytest tests/harness_meta/omt/test_harnessc_workflows.py -q
 """
 from __future__ import annotations
 

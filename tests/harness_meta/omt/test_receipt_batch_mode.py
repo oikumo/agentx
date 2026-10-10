@@ -10,7 +10,7 @@ Acceptance (PROJECT.md T4-2 + Improvement002 D-bar):
   - outside a stage the per-file guard stays fail-closed.
 
 Run with:
-    uv run pytest tests/scripts/omt/test_receipt_batch_mode.py -q
+    uv run pytest tests/harness_meta/omt/test_receipt_batch_mode.py -q
 """
 from __future__ import annotations
 
@@ -138,7 +138,7 @@ def test_receipt_is_content_bound() -> None:
     """The boundary receipt covers content (digests + policy_ver), not time."""
     data = _fresh_receipt()
     assert data["policy_ver"] == _sha256(".meta/META_HARNESS.omt")
-    assert data["toolchain"]["command"] == "uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q"
+    assert data["toolchain"]["command"] == "uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q"
 
     # Mechanism proof: any content change flips the digest, so the receipt no
     # longer covers the file (input change invalidates).

@@ -138,7 +138,7 @@ class TestTddCheckEnforcerIntegration:
         assert "TDD Mode" in status
 
     def test_tdd_check_in_harness_files(self):
-        e2e = (REPO_ROOT / "tests" / "scripts" / "omt" / "test_omt_harness_e2e.py").read_text()
+        e2e = (REPO_ROOT / "tests" / "harness_meta" / "omt" / "test_omt_harness_e2e.py").read_text()
         assert "scripts/omt/tdd_check.py" in e2e
 
 

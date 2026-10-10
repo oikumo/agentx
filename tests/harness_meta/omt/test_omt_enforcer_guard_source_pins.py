@@ -43,7 +43,7 @@ import pytest
 REPO_ROOT = Path(__file__).parent.parent.parent.parent
 ENFORCER = REPO_ROOT / ".opencode" / "plugins" / "omt_enforcer.ts"
 SHARED_LIB = REPO_ROOT / ".opencode" / "lib" / "omt_shared.ts"
-E2E_TEST = REPO_ROOT / "tests" / "scripts" / "omt" / "test_omt_harness_e2e.py"
+E2E_TEST = REPO_ROOT / "tests" / "harness_meta" / "omt" / "test_omt_harness_e2e.py"
 
 
 def _hook_body(source: str, hook: str) -> str:

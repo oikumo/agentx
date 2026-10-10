@@ -36,7 +36,7 @@ STATUS_PLUGIN = REPO_ROOT / ".opencode" / "plugins" / "omt_status.ts"
 PREFLIGHT_LIB = REPO_ROOT / ".opencode" / "lib" / "enforcer" / "preflight.ts"
 GATE_DRIVER = REPO_ROOT / ".opencode" / "lib" / "enforcer" / "gate_driver.ts"
 SHARED_LIB = REPO_ROOT / ".opencode" / "lib" / "omt_shared.ts"
-E2E_TEST = REPO_ROOT / "tests" / "scripts" / "omt" / "test_omt_harness_e2e.py"
+E2E_TEST = REPO_ROOT / "tests" / "harness_meta" / "omt" / "test_omt_harness_e2e.py"
 
 BUN = shutil.which("bun")
 

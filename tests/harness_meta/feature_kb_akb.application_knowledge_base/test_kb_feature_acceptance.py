@@ -11,7 +11,7 @@ These tests pin the feature-level contracts of the Application Knowledge Base:
 
 The contract tests live alongside the existing unit tests
 (`tests/harness_meta/omt/test_kb_*.py` — 21 tests for AST extraction + compiler) and
-the structural e2e tests (`tests/scripts/omt/test_omt_harness_e2e.py`); this
+the structural e2e tests (`tests/harness_meta/omt/test_omt_harness_e2e.py`); this
 file fills the feature-acceptance layer required by the §12 phase-exit matrix
 (phase_gate.ts PHASE_EXIT_REQUIREMENTS["Programming"] → Testing).
 """
@@ -163,7 +163,7 @@ class TestKbConsultGateWiring:
     def test_omt_kb_nav_in_harness_files_list(self) -> None:
         """omt_kb_nav.ts is in the e2e HARNESS_FILES list (receipt-guard
         coverage)."""
-        e2e = _read("tests/scripts/omt/test_omt_harness_e2e.py")
+        e2e = _read("tests/harness_meta/omt/test_omt_harness_e2e.py")
         assert '".opencode/plugins/omt_kb_nav.ts"' in e2e, (
             "omt_kb_nav.ts missing from HARNESS_FILES in e2e test")
 

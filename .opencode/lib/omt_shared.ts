@@ -336,9 +336,9 @@ export function readThoughtsAt(commit: string, root?: string): any[] {
 // from its before-hook (R2: the receipt_guard module). The guard requires a
 // fresh comprehensive e2e receipt before a SECOND edit of any already-dirty
 // harness file.
-export const OMT_HARNESS_E2E_COMMAND = "uv run pytest tests/scripts/omt/test_omt_harness_e2e.py -q"
+export const OMT_HARNESS_E2E_COMMAND = "uv run pytest tests/harness_meta/omt/test_omt_harness_e2e.py -q"
 export const OMT_HARNESS_E2E_RECEIPT = join(".meta", ".omt", "omt_harness_e2e_last_run.json")
-export const OMT_HARNESS_E2E_TEST = "tests/scripts/omt/test_omt_harness_e2e.py"
+export const OMT_HARNESS_E2E_TEST = "tests/harness_meta/omt/test_omt_harness_e2e.py"
 
 // improvement007/OPT-E: .omt @var e2e_cmd is the FUNCTIONAL source; the const
 // above stays the pinned IR-missing fallback.
@@ -501,7 +501,7 @@ export function loadKbIr(root?: string,): any | null {
 // The .omt records (compiled into the IR) are the FUNCTIONAL source for the
 // values below; each FALLBACK_* literal keeps its guard alive when the
 // projection is missing/corrupt (never die open) and is value-pinned against
-// the IR by tests/scripts/omt/test_omt_enforcer_guard_source_pins.py — edit
+// the IR by tests/harness_meta/omt/test_omt_enforcer_guard_source_pins.py — edit
 // the .omt, run harnessc.py build, and update the fallback in the same commit.
 
 const FALLBACK_PHASE_TRANSITIONS = "Analysis>Design,Testing;Design>Programming,Analysis;Programming>Testing,Design,Analysis;Testing>Analysis,Design,Programming,Done"
@@ -591,7 +591,7 @@ export function isOmtHarness(rel: string): boolean {
     rel.startsWith("scripts/omt/") ||
     rel.startsWith(".meta/templates/") ||
     rel.startsWith(".meta/software_development_process/2.requirements/features/feature_006.opencode_process_enforcement/") ||
-    rel.startsWith("tests/scripts/omt/")
+    rel.startsWith("tests/harness_meta/omt/")
 }
 
 export function receiptTimestampMs(): number {
@@ -772,7 +772,7 @@ export function foldThoughtEvents(recs: any[]): {
 // session on the first tool result.
 // R7 T5: hard byte cap as the last line of defense under the structural caps
 // (top-6 files, top-5 stale) — source-pinned by
-// tests/scripts/omt/test_omt_docs_drift_pins.py (token budget pins).
+// tests/harness_meta/omt/test_omt_docs_drift_pins.py (token budget pins).
 export const DIGEST_CAP_BYTES = 1024
 export function thinkDigest(): string {
   const hits = grepThoughts(thoughtPattern(), ".")

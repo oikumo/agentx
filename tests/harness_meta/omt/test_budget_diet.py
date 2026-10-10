@@ -22,7 +22,7 @@ Goldens:
      ir_json (401B) stay silent.
 
 Run with:
-    uv run pytest tests/scripts/omt/test_budget_diet.py -q
+    uv run pytest tests/harness_meta/omt/test_budget_diet.py -q
 """
 from __future__ import annotations
 
