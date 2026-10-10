@@ -148,7 +148,7 @@ class TestMvcCheckTool:
     def test_mvc_check_zero_errors_for_feature_files(self) -> None:
         """Run the project's MVC++ linter on all feature_013 files."""
         result = subprocess.run(
-            ["uv", "run", "scripts/omt/mvc_check.py", *map(str, ALL_FILES)],
+            [sys.executable, "scripts/omt/mvc_check.py", *map(str, ALL_FILES)],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,

@@ -1,11 +1,8 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 from langchain_core.language_models import BaseChatModel
-from langchain_openai import ChatOpenAI
-from langchain_openrouter import ChatOpenRouter
-
-from agentx.model.ai.local.llama_cpp.llamacpp_config import LlamaCppConfig
-from agentx.model.ai.local.llama_cpp_factory import model_factory_llamacpp
 
 
 class LLMProvider(ABC):
@@ -29,6 +26,12 @@ class LlamaCppProvider(LLMProvider):
         self.context_size = context_size
 
     def create_llm(self) -> BaseChatModel:
+        # Lazy imports keep provider-module load light (saves ~1s import:
+        # ChatOpenAI pulls openai/httpx; LlamaCpp pulls native bindings).
+        # Matches the established Ollama/Gemini/Nvidia lazy pattern.
+        from agentx.model.ai.local.llama_cpp.llamacpp_config import LlamaCppConfig
+        from agentx.model.ai.local.llama_cpp_factory import model_factory_llamacpp
+
         config = LlamaCppConfig()
         config.model_filename = self.model_filename
         config.context_size = self.context_size
@@ -39,6 +42,8 @@ class OpenAIProvider(LLMProvider):
     """Cloud LLM provider using OpenAI GPT-3.5-turbo."""
 
     def create_llm(self) -> BaseChatModel:
+        from langchain_openai import ChatOpenAI
+
         return ChatOpenAI(model="gpt-3.5-turbo")
 
 
@@ -49,6 +54,8 @@ class OpenRouterProvider(LLMProvider):
         self._model_name = model_name
 
     def create_llm(self) -> BaseChatModel:
+        from langchain_openrouter import ChatOpenRouter
+
         return ChatOpenRouter(
             model=self._model_name,
             temperature=0.7,

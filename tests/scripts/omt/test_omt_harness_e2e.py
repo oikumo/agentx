@@ -183,7 +183,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     harnessc = _read("scripts/omt/harnessc.py")
     assert "def cmd_stage" in harnessc
     assert "omt_harness_stage.json" in harnessc
-    stage_help = _run(["uv", "run", "scripts/omt/harnessc.py", "stage", "--status"])
+    stage_help = _run([sys.executable, "scripts/omt/harnessc.py", "stage", "--status"])
     assert stage_help.returncode == 0, stage_help.stdout + stage_help.stderr
     checks.append("receipt batch stage wired (stage CLI + staged bypass + content-bound receipt)")
 
@@ -226,7 +226,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     checks.append("guide §12 and plugin artifact matrix stay aligned")
 
     # 6. Python OMT helper scripts execute successfully through uv.
-    mvc = _run(["uv", "run", "scripts/omt/mvc_check.py", "--json"])
+    mvc = _run([sys.executable, "scripts/omt/mvc_check.py", "--json"])
     assert mvc.returncode == 0, mvc.stdout + mvc.stderr
     mvc_data = json.loads(mvc.stdout)
     assert mvc_data["errors"] == 0
@@ -235,8 +235,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
 
     scaffolder = _run(
         [
-            "uv",
-            "run",
+            sys.executable,
             "scripts/omt/new_feature.py",
             "harness e2e canary",
             "--type",
@@ -262,7 +261,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     checks.append("TDD tools and gate are wired in tdd_hats/session_state")
 
     # 8. tdd_check.py runs successfully through uv.
-    tdd = _run(["uv", "run", "scripts/omt/tdd_check.py", "status", "--session", ""])
+    tdd = _run([sys.executable, "scripts/omt/tdd_check.py", "status", "--session", ""])
     assert tdd.returncode == 0, tdd.stdout + tdd.stderr
     tdd_data = json.loads(tdd.stdout)
     assert "tdd_mode" in tdd_data

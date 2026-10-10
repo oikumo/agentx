@@ -18,7 +18,9 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-TDD_CHECK = ["uv", "run", "scripts/omt/tdd_check.py"]
+# Fast: sys.executable (not ``uv run``) avoids uv sync overhead (~40ms) per
+# invocation — same venv interpreter, same script, same coverage.
+TDD_CHECK = [sys.executable, "scripts/omt/tdd_check.py"]
 
 
 def _run_tdd(*args: str) -> subprocess.CompletedProcess[str]:

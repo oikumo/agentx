@@ -32,7 +32,7 @@ def test_s6_b1_no_shadow_as_script(tmp_path):
     assert not (REPO_ROOT / "scripts" / "session_inspect" / "inspect.py").exists(), \
         "scripts/session_inspect/inspect.py shadows stdlib inspect — rename to detail.py"
     proc = subprocess.run(
-        ["uv", "run", "scripts/session_inspect/service.py", "sessions",
+        [sys.executable, "scripts/session_inspect/service.py", "sessions",
          "--db", db, "--directory", "/repo", "--limit", "2"],
         cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=60)
     assert proc.returncode == 0, f"script launch failed: {proc.stderr[-2000:]}"

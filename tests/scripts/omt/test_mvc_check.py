@@ -422,7 +422,7 @@ class TestJSONOutput:
         import json
         
         result = subprocess.run(
-            ["uv", "run", "scripts/omt/mvc_check.py", "--json"],
+            [sys.executable, "scripts/omt/mvc_check.py", "--json"],
             cwd=Path(__file__).parent.parent.parent.parent,
             capture_output=True,
             text=True,

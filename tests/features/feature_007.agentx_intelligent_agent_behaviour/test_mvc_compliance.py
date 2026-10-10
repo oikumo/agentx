@@ -12,31 +12,34 @@ import pytest
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
+@pytest.fixture(scope="module")
+def _mvc_agent_report() -> dict:
+    """Run mvc_check once per module (was twice: errors + warnings each spawned
+    ``uv run`` ≈0.2s). Shared fixture saves one subprocess with identical
+    assertions — no coverage loss. Uses sys.executable (not ``uv run``) to
+    avoid uv sync overhead (~40ms)."""
+    result = subprocess.run(
+        [sys.executable, "scripts/omt/mvc_check.py", "src/agentx/agent/", "--json"],
+        capture_output=True,
+        text=True,
+        cwd=str(_REPO_ROOT),
+    )
+    assert result.returncode == 0, f"mvc_check failed: {result.stderr}"
+    return json.loads(result.stdout)
+
+
 class TestMvcCompliance:
-    def test_agent_module_zero_errors(self):
+    def test_agent_module_zero_errors(self, _mvc_agent_report):
         """mvc_check.py must report 0 errors on src/agentx/agent/."""
-        result = subprocess.run(
-            ["uv", "run", "scripts/omt/mvc_check.py", "src/agentx/agent/", "--json"],
-            capture_output=True,
-            text=True,
-            cwd=str(_REPO_ROOT),
-        )
-        assert result.returncode == 0, f"mvc_check failed: {result.stderr}"
-        data = json.loads(result.stdout)
+        data = _mvc_agent_report
         assert data["errors"] == 0, (
             f"MVC++ violations found: {data['errors']} errors\n"
             + json.dumps(data["findings"], indent=2)
         )
 
-    def test_agent_module_warnings_acceptable(self):
+    def test_agent_module_warnings_acceptable(self, _mvc_agent_report):
         """mvc_check.py should report 0 warnings on src/agentx/agent/."""
-        result = subprocess.run(
-            ["uv", "run", "scripts/omt/mvc_check.py", "src/agentx/agent/", "--json"],
-            capture_output=True,
-            text=True,
-            cwd=str(_REPO_ROOT),
-        )
-        data = json.loads(result.stdout)
+        data = _mvc_agent_report
         agent_warnings = [
             f for f in data["findings"]
             if "src/agentx/agent/" in f["file"]

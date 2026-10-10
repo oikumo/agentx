@@ -391,9 +391,10 @@ class TestRunTestDispatch:
         monkeypatch.setattr(tdd_state, "REPO_ROOT", tmp_path)
         calls = {}
 
-        def fake_run(cmd, capture_output=None, text=None, timeout=None, cwd=None):
+        def fake_run(cmd, capture_output=None, text=None, timeout=None, cwd=None, env=None, **kwargs):
             calls["cmd"] = cmd
             calls["cwd"] = cwd
+            calls["env"] = env
             return _FakeResult(0, "", "")
         monkeypatch.setattr(tdd_state.subprocess, "run", fake_run)
         return tmp_path, calls
@@ -507,7 +508,7 @@ class TestTddCheckSubprocess:
     def test_status_returns_valid_json(self, tmp_path):
         import subprocess
         result = subprocess.run(
-            ["uv", "run", "scripts/omt/tdd_check.py", "status", "--session", ""],
+            [sys.executable, "scripts/omt/tdd_check.py", "status", "--session", ""],
             capture_output=True, text=True, timeout=10,
             cwd=str(SCRIPTS_DIR.parent.parent), env=self._hermetic_env(tmp_path),
         )
@@ -519,7 +520,7 @@ class TestTddCheckSubprocess:
     def test_gate_returns_allowed_when_no_tdd(self, tmp_path):
         import subprocess
         result = subprocess.run(
-            ["uv", "run", "scripts/omt/tdd_check.py", "gate", "--path", "src/foo.py", "--session", ""],
+            [sys.executable, "scripts/omt/tdd_check.py", "gate", "--path", "src/foo.py", "--session", ""],
             capture_output=True, text=True, timeout=10,
             cwd=str(SCRIPTS_DIR.parent.parent), env=self._hermetic_env(tmp_path),
         )
@@ -543,7 +544,7 @@ class TestTddCheckSubprocess:
     def test_validate_exit_returns_ok_for_unknown_feature(self, tmp_path):
         import subprocess
         result = subprocess.run(
-            ["uv", "run", "scripts/omt/tdd_check.py", "validate-exit", "--feature", "feature_999.nonexistent"],
+            [sys.executable, "scripts/omt/tdd_check.py", "validate-exit", "--feature", "feature_999.nonexistent"],
             capture_output=True, text=True, timeout=10,
             cwd=str(SCRIPTS_DIR.parent.parent), env=self._hermetic_env(tmp_path),
         )

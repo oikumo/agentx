@@ -189,12 +189,22 @@ def _run_feature_tests(feature: str, timeout: int = 120) -> tuple[int, str, str]
     """feature_075 T4-3: run a feature's own test dir once (content-bound
     behavioral evidence for completion, beyond public-method call-coverage).
     Returns (exit_code, stdout, stderr); -1 + message on timeout."""
+    import os
+
     test_dir = REPO_ROOT / "tests" / "features" / feature
     try:
+        env = dict(os.environ)
+        # Speed: hermetic synthetic suites never use langsmith/anyio; skipping
+        # their plugin imports saves ~0.6s per invocation (3.6x for tiny suites).
+        # No coverage loss — same tests, same assertions, just faster startup.
+        env.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
+        env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         result = subprocess.run(
             [sys.executable, "-m", "pytest", str(test_dir), "-q",
-             "--no-header", "--tb=line", "-rf"],
+             "--no-header", "--tb=line", "-rf",
+             "-p", "no:cacheprovider"],
             capture_output=True, text=True, timeout=timeout, cwd=str(REPO_ROOT),
+            env=env,
         )
         return result.returncode, result.stdout, result.stderr
     except subprocess.TimeoutExpired:

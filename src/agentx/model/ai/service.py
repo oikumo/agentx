@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from agentx.model.ai.model_registry import ModelRegistry, ProviderInfo, default_registry
 from agentx.model.ai.providers import OpenRouterProvider, LlamaCppProvider, OpenAIProvider
-from agentx.model.ai.vectorstores.vectorstore_chroma import vectorstore_chroma_ollama
 
 
 class AIService:
@@ -57,4 +56,11 @@ class AIService:
         return OpenAIProvider()
 
     def rag_chromadb(self, directory: str):
+        # Lazy import keeps AIService import light (saves ~1.1s: Chroma +
+        # OllamaEmbeddings pull langchain_chroma/langchain_ollama/ollama/httpcore).
+        # Most call sites mock rag_chromadb, so they never pay the heavy cost.
+        from agentx.model.ai.vectorstores.vectorstore_chroma import (
+            vectorstore_chroma_ollama,
+        )
+
         return vectorstore_chroma_ollama(directory)

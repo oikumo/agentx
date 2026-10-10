@@ -314,9 +314,14 @@ def diff_snapshots(before: dict | None, after: dict | None) -> list[dict]:
 
 def run_pytest(test_node: str, timeout: int = 30) -> tuple[int, str, str]:
     try:
+        env = dict(os.environ)
+        env.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
+        env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", test_node, "-x", "-q", "--no-header", "--tb=short"],
+            [sys.executable, "-m", "pytest", test_node, "-x", "-q", "--no-header", "--tb=short",
+             "-p", "no:cacheprovider"],
             capture_output=True, text=True, timeout=timeout, cwd=str(REPO_ROOT),
+            env=env,
         )
         return result.returncode, result.stdout, result.stderr
     except subprocess.TimeoutExpired:
@@ -401,14 +406,18 @@ def run_test(test_node: str, timeout: int = 30) -> tuple[int, str, str]:
 
 def run_full_suite(timeout: int = 120) -> tuple[int, str, str]:
     try:
+        env = dict(os.environ)
+        env.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
         result = subprocess.run(
             # R4 (audit F7): exclude opencode_live — with the opencode binary
             # present, live tests blew the 120 s timeout and made omt_done
             # unreachable. -rf emits the FAILED short summary that
             # suite_failures parses for the KNOWN_SUITE_FAILURES allowlist.
             [sys.executable, "-m", "pytest", "-q", "--no-header", "--tb=short",
-             "-rf", "-m", "not opencode_live"],
+             "-rf", "-m", "not opencode_live",
+             "-p", "no:langsmith_plugin", "-p", "no:anyio"],
             capture_output=True, text=True, timeout=timeout, cwd=str(REPO_ROOT),
+            env=env,
         )
         return result.returncode, result.stdout, result.stderr
     except subprocess.TimeoutExpired:

@@ -30,7 +30,7 @@ BUN = shutil.which("bun")
 
 def _tdd(args: list[str], env: dict[str, str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["uv", "run", "scripts/omt/tdd_check.py", *args],
+        [sys.executable, "scripts/omt/tdd_check.py", *args],
         capture_output=True, text=True, timeout=30, cwd=str(REPO_ROOT), env=env,
     )
 
