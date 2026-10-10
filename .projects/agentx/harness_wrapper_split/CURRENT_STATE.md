@@ -19,7 +19,8 @@
 
 ### Next
 
-- Post-omt-bucket backlog (pause §2 tail, unchanged): `tests/scripts/reason` (3) + `tests/scripts/session_inspect` (24) buckets, T3 lanes CI, omt_q telemetry isolation (owns the audit_t1_1 live-probe family + the 5 triaged), T4 TA strip, T5 receipts, T6 multi-root sync + 4 project relocations (re-read the relocations-gap note in the 2026-10-10 block first), UC0 archival, `bridge:` backlog, CI cert pinning.
+- **feature_142 per `.sandbox/pause_2026-10-10b.md` §2 (self-sufficient map, user-confirmed ONE round):** last two `tests/scripts/` buckets — reason (3 files, zero edits) + session_inspect (24 incl. conftest), 6 LIT sites total, stage-free (no harness surface — no stage/receipt/build, canary only). Nothing minted yet (no expiry pressure): declare `omt_phase` FIRST, then tests canary. PAUSED same day (fourth close) — `[~]` row @ WORK.md.
+- After feature_142: `tests/scripts/` fully retired → remaining backlog (pause §2 tail): `tests/features` buckets per T1_SIGNOFF rows, T3 lanes CI, omt_q telemetry isolation (owns the audit_t1_1 live-probe family + the 5 triaged), T4 TA strip, T5 receipts, T6 multi-root sync + 4 project relocations (re-read the relocations-gap note in the 2026-10-10 block first), UC0 archival, `bridge:` backlog, CI cert pinning.
 
 ---
 

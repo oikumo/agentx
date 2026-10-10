@@ -154,3 +154,4 @@ def tok(total=None, input=0, output=0, reasoning=0, cache_read=0, cache_write=0)
     if total is not None:
         d = {"total": total, **d}
     return d
+# TA: gotcha: GOTCHA_MIRROR_MOVE_CONTEST_ADJACENCY: mirror move tests/scripts/session_inspect → tests/harness_meta/session_inspect is safe (feature_142 map @ .sandbox/pause_2026-10-10b.md §2): parents[3]=repo-root is depth-preserved; ~18 sibling tests use bare `from conftest import ...` which relies on dir-adjacency + pytest prepend import mode — conftest.py moves WITH the dir, never add __init__.py or a second conftest under tests/ (xdist worker import shadow, documented @ tests/harness_meta/toolbox/hermetic_toolbox.py:22).

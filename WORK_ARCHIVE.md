@@ -111,3 +111,8 @@
 ## 2026-09-20 rotation (work_md budget trim for MH11 wild green)
 
 - [x] **meta_harness_6 program execution** — PROGRAM COMPLETE + CLOSED 2026-09-06 (feature_051..059, all 13 items; suite 1979/0, KNOWN=0 held; delta report @ `.projects/meta/meta_harness_6/CURRENT_STATE.md` iter 10; verdicts D4–D6 @ PROJECT.md Decisions log).
+
+## 2026-10-10 rotation (work_md budget trim for feature_142 pause)
+
+- [x] **meta_harness_8 execution — T3-3 (feature_092.resume_digest)** — SHIPPED 2026-09-13, same-day pause→resume: one-line probe fix (JSON.stringify; GOTCHA_PROBE_SERIALIZATION TA'd) + 3 follow-on pin re-pins (055 static, budget_diet live, 059 NAV_INDEX 64956→64990); 7 goldens + boundary e2e green, stage cleared, check/build 0 errors, suite 2214/2214; `op:resume` dogfooded for its own resume session. Next per §Scope: T3-4 / T3-6, then T5-8 loop. Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.
+- [x] **meta_harness_8 execution — T1-6 (feature_076.workflow_index_and_repair_quickfix)** — SHIPPED 2026-09-12 (canonical-target fix, authority markers on 6 workflows, `harnessc check_workflows` + `workflows [--subject|--plan]` subcommand; 16 goldens + boundary e2e green; suite 2079/2080, pre-existing 059 pin only). T4-3 (feature_075) shipped earlier. Next per §Scope: T1-4 / T1-3 → T5-1 2A; open repair flag: `meta_harness_development_self_evaluation.md` unindexed (drift warning). Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.
