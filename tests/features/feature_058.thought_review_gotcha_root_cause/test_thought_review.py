@@ -251,10 +251,16 @@ def test_probe_records_consult_for_shown_files(tmp_path: Path) -> None:
 
 def test_probe_live_repo_zero_stale() -> None:
     """Live-repo smoke (read-only): today's index has nothing >90d (analysis_001)."""
-    result = subprocess.run(
-        ["uv", "run", "--no-sync", "python", "-c",
-         "import json; recs=[json.loads(l) for l in "
-         "open('.meta/.omt/thoughts.jsonl')]; print(len(recs))"],
-        capture_output=True, text=True, cwd=str(REPO_ROOT))
-    assert result.returncode == 0
-    assert int(result.stdout.strip()) >= 100
+    # Fast-path: direct read replaces `uv run --no-sync python -c` subprocess
+    # (~0.3s uv overhead for a pure-Python line count). Same assertion.
+    # Skip when the live index is absent (unbootstrapped checkout) — matches
+    # the read-only live-smoke pattern elsewhere (no hard fail off-harness).
+    thoughts_path = REPO_ROOT / ".meta/.omt/thoughts.jsonl"
+    if not thoughts_path.is_file():
+        pytest.skip("thoughts index not bootstrapped")
+    recs = [
+        json.loads(line)
+        for line in thoughts_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert len(recs) >= 100

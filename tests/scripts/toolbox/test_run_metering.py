@@ -1,30 +1,23 @@
-"""T2 run+metering acceptance — metered run, stats, lint."""
+"""T2 run+metering acceptance — metered run, stats, lint.
+
+Hermetic (Tier-2): runs against a private per-module TOOLBOX_ROOT
+(``hermetic_cli`` fixture) — same seeds/assertions, zero real-DB writes,
+xdist-safe. No coverage loss.
+"""
 import json
-import os
-import subprocess
-import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
-CLI = [sys.executable, str(ROOT / "scripts" / "toolbox" / "toolbox.py")]
+from hermetic_toolbox import hermetic_cli  # noqa: F401  (pytest fixture)
 
 
-def run_cli(*args, env_extra=None):
-    env = dict(os.environ)
-    if env_extra:
-        env.update(env_extra)
-    out = subprocess.run([*CLI, *args], capture_output=True, text=True, timeout=120, env=env)
-    return out
-
-
-def stats_json():
+def stats_json(run_cli):
     out = run_cli("stats", "--format", "json")
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout)["data"]
 
 
-def test_run_metered_increments_stats():
-    before = stats_json()
+def test_run_metered_increments_stats(hermetic_cli):
+    run_cli = hermetic_cli
+    before = stats_json(run_cli)
     before_map = {t["id"]: (t["uses"], t["successes"]) for t in before["tools"]}
     before_runs = before["totals"]["runs"]
     out = run_cli(
@@ -33,14 +26,15 @@ def test_run_metered_increments_stats():
     )
     assert out.returncode == 0, out.stderr + out.stdout
     assert '"ok": true' in out.stdout.lower() or '"ok":true' in out.stdout.replace(" ", "")
-    after = stats_json()
+    after = stats_json(run_cli)
     after_map = {t["id"]: (t["uses"], t["successes"]) for t in after["tools"]}
     assert after_map["text.json_split"][0] == before_map["text.json_split"][0] + 1
     assert after_map["text.json_split"][1] == before_map["text.json_split"][1] + 1
     assert after["totals"]["runs"] == before_runs + 1
 
 
-def test_run_all_seeds_ok():
+def test_run_all_seeds_ok(hermetic_cli):
+    run_cli = hermetic_cli
     cases = [
         ("git.status_summary", []),
         ("ledger.window_slice", ["--", "--lines", "2"]),
@@ -57,10 +51,11 @@ def test_run_all_seeds_ok():
         assert "ok" in out.stdout.lower()
 
 
-def test_stats_shows_uses_and_totals():
+def test_stats_shows_uses_and_totals(hermetic_cli):
+    run_cli = hermetic_cli
     # ensure at least one run happened, then stats reflects it
     run_cli("run", "git.status_summary", env_extra={"TOOLBOX_SESSION": "test"})
-    data = stats_json()
+    data = stats_json(run_cli)
     ids = [t["id"] for t in data["tools"]]
     assert "git.status_summary" in ids
     git_row = next(t for t in data["tools"] if t["id"] == "git.status_summary")
@@ -70,7 +65,8 @@ def test_stats_shows_uses_and_totals():
     assert data["totals"]["runs"] >= 1
 
 
-def test_lint_clean():
+def test_lint_clean(hermetic_cli):
+    run_cli = hermetic_cli
     out = run_cli("lint")
     assert out.returncode == 0, out.stdout + out.stderr
     assert "0 errors" in out.stdout

@@ -16,7 +16,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -36,6 +38,10 @@ STAGE_PAIR = [
 
 
 def _run(argv: list[str]) -> subprocess.CompletedProcess[str]:
+    # Fast env: no plugin autoload/bytecode (subprocess is a plain CLI probe).
+    env = dict(os.environ)
+    env.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
+    env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
     return subprocess.run(
         argv,
         cwd=REPO_ROOT,
@@ -43,6 +49,7 @@ def _run(argv: list[str]) -> subprocess.CompletedProcess[str]:
         text=True,
         timeout=60,
         check=False,
+        env=env,
     )
 
 
@@ -51,7 +58,9 @@ def _sha256(rel: str) -> str:
 
 
 def _harnessc_stage(*args: str) -> subprocess.CompletedProcess[str]:
-    return _run(["uv", "run", "scripts/omt/harnessc.py", "stage", *args])
+    # sys.executable over `uv run` avoids uv sync/resolve overhead (~0.2s)
+    # per call with identical CLI behavior. No coverage loss.
+    return _run([sys.executable, "scripts/omt/harnessc.py", "stage", *args])
 
 
 @pytest.fixture()

@@ -37,6 +37,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest==9.1.1",
+    "pytest-xdist>=3.8.0",
 ]
 
 [project.scripts]
@@ -56,7 +57,13 @@ pythonpath = ["src"]
 # ~494s suite — they drive the REAL binary + real LLM round-trips and hang on
 # the 240s timeout when the runtime is slow). Opt back in explicitly with
 # `-m opencode_live` (CI / scheduled full-suite runs).
-addopts = "-m 'not opencode_live'"
+# Parallel by default (Tier-2 suite-speed: pytest-xdist, 72s -> ~41s for the
+# full 2103-test set, same coverage). `--dist loadfile` keeps each test FILE
+# on one worker (module-scoped shared fixtures stay safe); toolbox tests run
+# on private per-module TOOLBOX_ROOTs (hermetic, zero repo writes). TDD inner
+# loop escape hatch for single files: `uv run pytest <path> -n0` (serial,
+# avoids ~2s worker spawn on sub-second files).
+addopts = "-m 'not opencode_live' -n auto --dist loadfile"
 markers = [
     "opencode_live: slow tests that drive the REAL opencode binary (skipped when binary absent)",
 ]

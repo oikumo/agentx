@@ -1,11 +1,11 @@
-"""T4 docs+tiers acceptance — tier filtering, tiers map, docs gen/check, snippet budget."""
-import json
-import subprocess
-import sys
-from pathlib import Path
+"""T4 docs+tiers acceptance — tier filtering, tiers map, docs gen/check, snippet budget.
 
-ROOT = Path(__file__).resolve().parents[3]
-CLI = [sys.executable, str(ROOT / "scripts" / "toolbox" / "toolbox.py")]
+Hermetic (Tier-2): private per-module TOOLBOX_ROOT — docs gen/tamper in tmp,
+zero real-*.md writes. No coverage loss.
+"""
+import json
+
+from hermetic_toolbox import hermetic_cli  # noqa: F401  (pytest fixture)
 
 CORE5 = {
     "git.status_summary",
@@ -16,19 +16,15 @@ CORE5 = {
 }
 
 
-def run_cli(*args):
-    out = subprocess.run([*CLI, *args], capture_output=True, text=True, timeout=60)
-    return out
-
-
-def test_list_tier1_is_core5_only():
-    out = run_cli("list", "--tier", "1", "--format", "json")
+def test_list_tier1_is_core5_only(hermetic_cli):
+    out = hermetic_cli("list", "--tier", "1", "--format", "json")
     assert out.returncode == 0, out.stderr + out.stdout
     ids = {r["id"] for r in json.loads(out.stdout)["data"]}
     assert ids == CORE5, f"tier1 must be core-5, got {ids}"
 
 
-def test_list_tier2_is_full_superset():
+def test_list_tier2_is_full_superset(hermetic_cli):
+    run_cli = hermetic_cli
     t1 = {r["id"] for r in json.loads(run_cli("list", "--tier", "1", "--format", "json").stdout)["data"]}
     out = run_cli("list", "--tier", "2", "--format", "json")
     assert out.returncode == 0, out.stderr + out.stdout
@@ -41,8 +37,8 @@ def test_list_tier2_is_full_superset():
     assert {r["id"] for r in json.loads(out3.stdout)["data"]} == ids
 
 
-def test_query_tier_filter_restricts():
-    out = run_cli("query", "git", "--tier", "1", "--format", "json")
+def test_query_tier_filter_restricts(hermetic_cli):
+    out = hermetic_cli("query", "git", "--tier", "1", "--format", "json")
     assert out.returncode == 0, out.stderr + out.stdout
     ids = [r["id"] for r in json.loads(out.stdout)["data"]]
     assert ids, "tier1 git query must return core tool"
@@ -50,8 +46,8 @@ def test_query_tier_filter_restricts():
     assert "git.status_summary" in ids
 
 
-def test_tiers_command_mapping():
-    out = run_cli("tiers", "--format", "json")
+def test_tiers_command_mapping(hermetic_cli):
+    out = hermetic_cli("tiers", "--format", "json")
     assert out.returncode == 0, out.stderr + out.stdout
     data = json.loads(out.stdout)["data"]
     assert set(data["tier1"]["tools"]) == CORE5
@@ -60,7 +56,9 @@ def test_tiers_command_mapping():
     assert "git.recent_log" in data["tier2"]["tools"]
 
 
-def test_docs_gen_check_and_stale():
+def test_docs_gen_check_and_stale(hermetic_cli):
+    run_cli = hermetic_cli
+    ROOT = hermetic_cli.root
     out = run_cli("docs", "--gen")
     assert out.returncode == 0, out.stderr + out.stdout
     assert "snippet=" in out.stdout
@@ -89,8 +87,8 @@ def test_docs_gen_check_and_stale():
     assert run_cli("docs", "--check").returncode == 0
 
 
-def test_startup_snippet_budget():
-    snippet = (ROOT / "toolbox" / "STARTUP_SNIPPET.txt").read_text().strip()
+def test_startup_snippet_budget(hermetic_cli):
+    snippet = (hermetic_cli.root / "toolbox" / "STARTUP_SNIPPET.txt").read_text().strip()
     assert snippet, "snippet must be non-empty"
     assert len(snippet.encode()) <= 120, f"snippet {len(snippet.encode())}B > 120B: {snippet!r}"
     assert "toolbox:" in snippet and "query" in snippet

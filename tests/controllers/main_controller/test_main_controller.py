@@ -8,12 +8,26 @@ Follows OMT++ §11:
 
 from __future__ import annotations
 
+import sys
 import threading
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from agentx.ui.screens.main.main_controller import MainController
 from agentx.ui.interfaces import IUIProvider
+
+
+def _stub_coding_module(mock_ctrl_cls: MagicMock) -> MagicMock:
+    """Stub module avoiding heavy langchain/deepagents import.
+
+    ``show_coding`` does ``from ...coding_controller import CodingController``
+    inside the method — patching that path still imports the real module
+    (~2s). A sys.modules stub skips the import entirely; wiring contract
+    (provider called, controller cached, view wired) is still verified.
+    """
+    stub = MagicMock(name="coding_controller_stub")
+    stub.CodingController = mock_ctrl_cls
+    return stub
 
 
 class TestMainControllerShowReact(TestCase):
@@ -72,12 +86,20 @@ class TestMainControllerShowCoding(TestCase):
         self.controller = MainController(provider=self.mock_provider)
 
     def test_show_coding_calls_provider_create_coding_view(self) -> None:
-        self.controller.show_coding()
+        # Fast-path: sys.modules stub avoids importing real CodingController
+        # (langchain/deepagents/AIService ~2s). Wiring verified with mock;
+        # real service covered by test_coding_integration. No coverage loss.
+        mock_cls = MagicMock(name="CodingController")
+        with patch.dict(sys.modules, {"agentx.ui.screens.coding.coding_controller": _stub_coding_module(mock_cls)}):
+            self.controller.show_coding()
+            mock_cls.assert_called_once_with()
         self.mock_provider.create_coding_view.assert_called_once()
 
     def test_show_coding_stores_controller_and_view(self) -> None:
-        self.controller.show_coding()
-        assert self.controller._coding_controller is not None
+        mock_cls = MagicMock(name="CodingController")
+        with patch.dict(sys.modules, {"agentx.ui.screens.coding.coding_controller": _stub_coding_module(mock_cls)}):
+            self.controller.show_coding()
+            assert self.controller._coding_controller is mock_cls.return_value
         assert self.controller._coding_view is self.mock_coding_view
 
 

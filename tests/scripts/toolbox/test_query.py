@@ -1,20 +1,15 @@
-"""T1 query acceptance — ranked query, list/show, sync stale detection."""
+"""T1 query acceptance — ranked query, list/show, sync stale detection.
+
+Hermetic (Tier-2): private per-module TOOLBOX_ROOT — sync tamper-check in
+tmp, zero real-index.json writes. No coverage loss.
+"""
 import json
-import subprocess
-import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
-CLI = [sys.executable, str(ROOT / "scripts" / "toolbox" / "toolbox.py")]
+from hermetic_toolbox import hermetic_cli  # noqa: F401  (pytest fixture)
 
 
-def run_cli(*args):
-    out = subprocess.run([*CLI, *args], capture_output=True, text=True, timeout=30)
-    return out
-
-
-def test_query_ranks_git_tool_first():
-    out = run_cli("query", "git dirty status", "--format", "json")
+def test_query_ranks_git_tool_first(hermetic_cli):
+    out = hermetic_cli("query", "git dirty status", "--format", "json")
     assert out.returncode == 0, out.stderr
     payload = json.loads(out.stdout)
     assert payload["ok"]
@@ -22,14 +17,15 @@ def test_query_ranks_git_tool_first():
     assert payload["data"][0]["id"] == "git.status_summary"
 
 
-def test_query_tdd_prose_finds_text_tool():
-    out = run_cli("query", "tdd behaviors prose", "--format", "json")
+def test_query_tdd_prose_finds_text_tool(hermetic_cli):
+    out = hermetic_cli("query", "tdd behaviors prose", "--format", "json")
     assert out.returncode == 0, out.stderr
     ids = [r["id"] for r in json.loads(out.stdout)["data"]]
     assert "text.json_split" in ids
 
 
-def test_list_category_and_show():
+def test_list_category_and_show(hermetic_cli):
+    run_cli = hermetic_cli
     out = run_cli("list", "--category", "git", "--format", "json")
     assert out.returncode == 0, out.stderr
     ids = [r["id"] for r in json.loads(out.stdout)["data"]]
@@ -39,7 +35,9 @@ def test_list_category_and_show():
     assert json.loads(out.stdout)["data"]["id"] == "ledger.window_slice"
 
 
-def test_sync_check_fresh_and_stale(tmp_path=None):
+def test_sync_check_fresh_and_stale(hermetic_cli):
+    run_cli = hermetic_cli
+    ROOT = hermetic_cli.root
     fresh = run_cli("sync", "--check")
     assert fresh.returncode == 0, fresh.stdout + fresh.stderr
     assert "fresh" in fresh.stdout

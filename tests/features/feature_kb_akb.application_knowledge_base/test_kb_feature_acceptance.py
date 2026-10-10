@@ -33,12 +33,19 @@ def _read(path: str) -> str:
 
 
 def _run(cmd: list[str], timeout: int = 30) -> subprocess.CompletedProcess[str]:
+    import os
+
+    # Fast env: no plugin autoload/bytecode for CLI probe subprocess.
+    env = dict(os.environ)
+    env.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
+    env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
     return subprocess.run(
         cmd,
         capture_output=True,
         text=True,
         timeout=timeout,
         cwd=str(REPO_ROOT),
+        env=env,
     )
 
 
@@ -57,7 +64,7 @@ class TestKbFeatureAcceptance:
         IR artifacts. Index well-formedness + record-field coverage is pinned in
         test_kb_index_jsonl_well_formed_and_comprehensive below.
         """
-        result = _run(["uv", "run", "scripts/omt/kb_compiler.py", "build"])
+        result = _run([sys.executable, "scripts/omt/kb_compiler.py", "build"])
         assert result.returncode == 0, result.stdout + result.stderr
         # The build summary line reports "N records (kind=count, ...)" — assert
         # every expected kind is present (the contract), without pinning counts.

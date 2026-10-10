@@ -12,7 +12,16 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+# Hermetic-test override: TOOLBOX_ROOT redirects ALL repo-relative state
+# (DB, index.json, tool dirs, proposals, generated docs/tests) to an isolated
+# root. Default is the real repo (parents[2] of this file) — production
+# behavior unchanged. Tests copy/symlink the toolbox tree to tmp_path and set
+# TOOLBOX_ROOT so parallel workers (pytest-xdist) never share mutable state.
+# Tool impls that resolve the repo from their own __file__ (budget_check,
+# ledger slice) keep working because the fixture symlinks impl dirs to the
+# real tree — only mutated files (DB/index/docs/new tools) are private copies.
+_DEFAULT_ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("TOOLBOX_ROOT", _DEFAULT_ROOT))
 DB = ROOT / "toolbox" / "index.sqlite3"
 SCHEMA = ROOT / "toolbox" / "schema.sql"
 INDEX_JSON = ROOT / "toolbox" / "index.json"
@@ -609,6 +618,7 @@ def cmd_promote(args):
              "0.1.0", "toolbox-promote", now, now),
         )
         test_path = ROOT / "tests" / "scripts" / "toolbox" / f"test_{name}.py"
+        test_path.parent.mkdir(parents=True, exist_ok=True)
         test_path.write_text(
             f'"""Promoted tool {args.tool_id} — scaffold test (T3 gate)."""\n'
             "import json\nimport subprocess\nimport sys\nfrom pathlib import Path\n\n"
