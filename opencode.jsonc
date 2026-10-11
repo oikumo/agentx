@@ -1,116 +1,305 @@
-// agentx — LIVE opencode configuration (authoritative).
+// agentx — LIVE opencode configuration (authoritative, v2 permissions[]).
 // Coarse, declarative enforcement of the AGENTS.md "NEVER" rules. Fine-grained,
 // teaching enforcement of the OMT++ process lives in .opencode/plugins/omt_enforcer.ts.
 // Local plugins auto-load from .opencode/plugins/ — the `plugin` array is npm-only
 // (official docs), so the omt_* plugins are deliberately NOT listed there.
+// v2 format: https://opencode.ai/v2/docs/permissions/ — `permissions[]` with
+// {action, resource, effect}, `shell` (was `bash`), `agents` plural (was `agent`),
+// `system` (was `prompt`), `permissions` (was `tools`). Last match wins.
 {
   "$schema": "https://opencode.ai/config.json",
-  "lsp": true,
-
-  "agent": {
+  "websearch": {
+    "provider": "tavily"
+  },
+  "agents": {
     "build": {
-      "prompt": "{file:./.agents_prompts/build.md}"
+      "system": "{file:./.agents_prompts/build.md}"
     },
     "code-reviewer": {
       "description": "Reviews code for best practices and potential issues",
       "mode": "primary",
       "model": "openrouter/openrouter/auto",
-      "prompt": "{file:./.agents_prompts/code-reviewer.md}",
-      "tools": {
-        "write": false,
-        "edit": false
-      }
+      "system": "{file:./.agents_prompts/code-reviewer.md}",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        }
+      ]
     }
   },
-
-  // Last matching pattern wins. Defaults stay permissive for a solo dev; the
-  // hard rules below are the ones AGENTS.md marks as NEVER.
-  "permission": {
-    "edit": "allow",
-    "read": {
-      "*": "allow",
-      // harnessc:begin read
-        "*.env": "deny",
-        "*.env.*": "deny"
-      // harnessc:end read
+  // Ordered rules, last match wins. Broad allows/asks first, harness-generated
+  // denies + omt_* allows last (inside the harnessc block) so denies win.
+  "permissions": [
+    {
+      "action": "edit",
+      "resource": "*",
+      "effect": "allow"
     },
-    "bash": {
-      "*": "ask",
-      "uv *": "allow",
-      "bun *": "allow",
-      "npx *": "allow",
-      "npm *": "allow",
-      "ls *": "allow",
-      "cat *": "allow",
-      "git status *": "allow",
-      "git log *": "allow",
-      "git diff *": "allow",
-      "git show *": "allow",
-      "git stash *": "allow",
-      "git add *": "allow",
-      "git commit *": "allow",
-      "grep *": "allow",
-      "find *": "allow",
-      "sort *": "allow",
-      "head *": "allow",
-      "echo *": "allow",
-      "tail *": "allow",
-      "sed *": "allow",
-      "wc *": "allow",
-      "rg *": "allow",
-      "uniq *": "allow",
-      "tr *": "allow",
-      "awk *": "allow",
-      "rm *": "allow",
-      "true" : "allow",
-      "nl *": "allow",
-      "mv *": "allow",
-      "stat *": "allow",
-      "mkdir *": "allow",
-      "rmdir *": "allow",
-      "date *": "allow",
-      "pwd *": "allow",
-      "which *": "allow",
-      "jq *": "allow",
-      "sqlite3 *": "allow",
-      "git worktree *": "allow",
-      "git *": "allow",
-      "time *": "allow",
-      "xargs *": "allow",
-      // harnessc:begin bash
-        "git push *": "deny",
-        "git pull *": "deny",
-        "git fetch *": "deny",
-        "git ls-remote *": "deny",
-        "git remote *": "deny",
-        "git clone *": "deny",
-        "git submodule *": "deny",
-        "python *": "deny",
-        "python3 *": "deny",
-        "pip *": "deny",
-        "pip3 *": "deny",
-        "pytest *": "deny"
-      // harnessc:end bash
+    {
+      "action": "read",
+      "resource": "*",
+      "effect": "allow"
     },
-    "grep *": "allow",
-    "glob *": "allow",
-    "list *": "allow",
-    "lsp": "allow",
-    "skill": "allow",
-    "reason_check": "allow",
-    // harnessc:begin perm
-      "webfetch": "deny",
-      "omt_phase": "allow",
-      "omt_skip": "allow",
-      "omt_complete": "allow",
-      "omt_status": "allow",
-      "omt_tdd": "allow",
-      "omt_nav": "allow",
-      "omt_think": "allow",
-      "omt_kb_nav": "allow",
-      "omt_q": "allow",
-      "omt_net": "allow",
-      "omt_session": "allow"
-    // harnessc:end perm
-  }
+    {
+      "action": "shell",
+      "resource": "*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "uv *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "bun *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "npx *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "npm *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "ls *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "cat *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git status *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git log *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git diff *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git show *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git stash *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git add *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git commit *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "grep *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "find *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "sort *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "head *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "echo *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "tail *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "sed *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "wc *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "rg *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "uniq *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "tr *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "awk *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "rm *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "true",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "nl *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "mv *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "stat *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "mkdir *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "rmdir *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "date *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "pwd *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "which *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "jq *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "sqlite3 *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git worktree *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "time *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "xargs *",
+      "effect": "allow"
+    },
+    {
+      "action": "grep",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "glob",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "skill",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "reason_check",
+      "resource": "*",
+      "effect": "allow"
+    },
+    // v2: `lsp` and `list` are not Core permission actions — dropped.
+    // harnessc:begin permissions
+      {"action": "shell","resource": "git push *","effect": "deny"},
+      {"action": "shell","resource": "git pull *","effect": "deny"},
+      {"action": "shell","resource": "git fetch *","effect": "deny"},
+      {"action": "shell","resource": "git ls-remote *","effect": "deny"},
+      {"action": "shell","resource": "git remote *","effect": "deny"},
+      {"action": "shell","resource": "git clone *","effect": "deny"},
+      {"action": "shell","resource": "git submodule *","effect": "deny"},
+      {"action": "shell","resource": "python *","effect": "deny"},
+      {"action": "shell","resource": "python3 *","effect": "deny"},
+      {"action": "shell","resource": "pip *","effect": "deny"},
+      {"action": "shell","resource": "pip3 *","effect": "deny"},
+      {"action": "shell","resource": "pytest *","effect": "deny"},
+      {"action": "read","resource": "*.env","effect": "deny"},
+      {"action": "read","resource": "*.env.*","effect": "deny"},
+      {"action": "webfetch","resource": "*","effect": "deny"},
+      {"action": "omt_phase","resource": "*","effect": "allow"},
+      {"action": "omt_skip","resource": "*","effect": "allow"},
+      {"action": "omt_complete","resource": "*","effect": "allow"},
+      {"action": "omt_status","resource": "*","effect": "allow"},
+      {"action": "omt_tdd","resource": "*","effect": "allow"},
+      {"action": "omt_nav","resource": "*","effect": "allow"},
+      {"action": "omt_think","resource": "*","effect": "allow"},
+      {"action": "omt_kb_nav","resource": "*","effect": "allow"},
+      {"action": "omt_q","resource": "*","effect": "allow"},
+      {"action": "omt_net","resource": "*","effect": "allow"},
+      {"action": "omt_session","resource": "*","effect": "allow"}
+    // harnessc:end permissions
+  ]
 }

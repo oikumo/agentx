@@ -209,21 +209,20 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     checks.append("T4-3 completion hardening wired (behavioral validate-exit + results-bound receipt)")
 
     # 4. Coarse permissions still force uv and deny the risky actions the meta
-    # harness is meant to prevent.
+    # harness is meant to prevent (v2 permissions[]: https://opencode.ai/v2/docs/permissions/).
     assert '"$schema": "https://opencode.ai/config.json"' in config
-    assert '"uv *": "allow"' in config
-    assert '"python *": "deny"' in config
-    assert '"python3 *": "deny"' in config
-    assert '"pip *": "deny"' in config
-    assert '"pytest *": "deny"' in config
-    assert '"git push *": "deny"' in config
-    assert '"git pull *": "deny"' in config
-    assert '"git fetch *": "deny"' in config
-    assert '"git ls-remote *": "deny"' in config
-    assert '"git remote *": "deny"' in config
-    assert '"git clone *": "deny"' in config
-    assert '"git submodule *": "deny"' in config
-    assert '"git commit *": "deny"' not in config
+    assert '"permissions"' in config
+    assert '"permission"' not in config.replace('"permissions"', '')
+    assert '"action": "shell"' in config
+    assert '"bash"' not in config.replace('scope must be bash', '')
+    assert '"resource": "uv *"' in config
+    assert '"resource": "python *"' in config
+    assert '"action": "shell"' in config and '"effect": "deny"' in config
+    for pat in ('"git push *"', '"git pull *"', '"git fetch *"', '"git ls-remote *"',
+                '"git remote *"', '"git clone *"', '"git submodule *"',
+                '"python3 *"', '"pip *"', '"pytest *"'):
+        assert pat in config, f"v2 permissions missing deny {pat}"
+    assert '"git commit *", "effect": "deny"' not in config
     checks.append("opencode config enforces uv and denies risky actions")
 
     # 5. The guide contract and plugin gate agree on adaptive rigor.
@@ -291,10 +290,10 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     assert "thinkGateDecision" in think_gate
     assert "hasConsultedThoughts" in think_gate
     assert "think_consult" in think_gate
-    assert '"omt_think": "allow"' in config  # OPT-H: one consolidated think tool
+    assert '"action": "omt_think"' in config and '"effect": "allow"' in config  # OPT-H: one consolidated think tool
     for legacy in ("omt_think_list", "omt_think_remove", "omt_think_verify",
                    "omt_think_suggest", "omt_think_reindex"):
-        assert f'"{legacy}": "allow"' not in config
+        assert f'"action": "{legacy}"' not in config
     # improvement004/OPT-A: slim projection keeps a one-line think-gate pointer
     assert "Think gate" in _read("AGENTS.md")
     # meta_harness_dsl R8 (OMT-HDL-1): META_HARNESS.md is RETIRED to a

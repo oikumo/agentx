@@ -61,10 +61,23 @@ def _strip_jsonc_comments(text: str) -> str:
 
 
 def parse_deny_rules(config_path: Path | None = None) -> dict[str, list[str]]:
-    """Parse opencode.jsonc permission deny lists (bash + read)."""
+    """Parse opencode.jsonc permission deny lists (v2 permissions[] + v1 fallback).
+
+    v2 (https://opencode.ai/v2/docs/permissions/): ordered {action,resource,effect}
+    array, last match wins — shell (was bash) + read. v1 fallback: permission.bash/read.
+    """
     cfg = config_path or (REPO_ROOT / "opencode.jsonc")
     raw = cfg.read_text(encoding="utf-8")
     data = json.loads(_strip_jsonc_comments(raw))
+    perms = data.get("permissions", []) if isinstance(data, dict) else []
+    if isinstance(perms, list) and perms:
+        bash_deny = sorted({str(p.get("resource", "")) for p in perms
+                            if isinstance(p, dict) and p.get("action") == "shell"
+                            and p.get("effect") == "deny" and p.get("resource") != "*"})
+        read_deny = sorted({str(p.get("resource", "")) for p in perms
+                            if isinstance(p, dict) and p.get("action") == "read"
+                            and p.get("effect") == "deny" and p.get("resource") != "*"})
+        return {"bash_deny": bash_deny, "read_deny": read_deny}
     perm = data.get("permission", {}) if isinstance(data, dict) else {}
     bash = perm.get("bash", {}) if isinstance(perm, dict) else {}
     read = perm.get("read", {}) if isinstance(perm, dict) else {}

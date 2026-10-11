@@ -45,8 +45,8 @@
 # G1 (improvement003/git-plane): sidecar execution plane — wild pilots d1-d3 used .sandbox/bench/* worktrees; claim->branch mapping lives here (vars, not prose)
 @var git_worktree_root : .sandbox/bench
 @var git_branch_prefix : feat/
-# F1 (feature_052.opencode_version_canary): audited live-binary line — session start warns + canary suite fails when `opencode --version` falls outside; re-baseline deliberately (live smoke + full suite on the new binary, then bump here + rebuild)
-@var opencode_version_range : >=1.18.29,<1.19
+# F1 (feature_052.opencode_version_canary + feature_143.opencode_v2_permissions): audited live-binary line — session start warns + canary suite fails when `opencode --version` falls outside; re-baseline deliberately (live smoke + full suite on the new binary, then bump here + rebuild). v2 line: binary v2.0.26 audited with v2 permissions[] format (shell/subagent/agents plural).
+@var opencode_version_range : >=2.0.26,<2.1
 # A2 (feature_056.skip_taxonomy_phase_hygiene): weekly uncategorized-bypass alarm — check warns past this, never blocks
 @var skip_override_warn_per_week : 5
 # D1 (feature_059.harness_tiered_template): tiered-template default — tier table lives in harnessc.py TIERS (code, not records); init/build onboarding uses this
@@ -113,7 +113,7 @@
 # PRED — closed gate-condition vocabulary (HDL-1: data only; TS owns builtins)
 # ============================================================
 @pred path_in : path_in(glob|@var) — repo-relative path matches glob/prefix set
-@pred cmd_match : cmd_match(@deny.*) — bash command matches a deny pattern
+@pred cmd_match : cmd_match(@deny.*) — shell command matches a deny pattern (v2: shell, was bash in v1)
 @pred ledger_has : ledger_has(kind,k=v,window) — ledger record of kind within window ms
 @pred session_flag : session_flag(name) | !session_flag(name) — per-session container flag
 @pred file_has : file_has("lit") — target file content carries literal

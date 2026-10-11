@@ -175,7 +175,7 @@ const kbBootstrapMsg = (): string | null => {
 // unobservable binary or unparsable range never warns (absence ≠ drift).
 // Posture (shared-lib header): the FALLBACK literal is pinned vs the IR by
 // test_omt_enforcer_guard_source_pins.py — edit the .omt, rebuild, update here.
-const FALLBACK_OPENCODE_VERSION_RANGE = ">=1.18.29,<1.19"
+const FALLBACK_OPENCODE_VERSION_RANGE = ">=2.0.26,<2.1"
 function versionRange(): string {
   const v = loadIr()?.vars?.opencode_version_range
   return typeof v === "string" && v ? v : FALLBACK_OPENCODE_VERSION_RANGE
@@ -220,16 +220,19 @@ export function versionInRange(ver: string, range: string): boolean | null {
   return true
 }
 
-// Live `opencode --version` (bare "1.18.29" on stdout). Null when the binary
-// is unobservable (absent/PATH) — the bootstrap treats that as no-signal,
-// never as drift.
+// Live `opencode --version` (v1: bare "1.18.29"; v2: "opencode v2.0.26").
+ // Null when the binary is unobservable (absent/PATH) — the bootstrap treats
+ // that as no-signal, never as drift.
 export function liveBinaryVersion(): string | null {
   try {
     const out = execFileSync("opencode", ["--version"], {
       encoding: "utf8",
       timeout: 10000,
     })
-    const ver = String(out || "").trim().split(/\s+/)[0]
+    const toks = String(out || "").trim().split(/\s+/)
+    const hit = toks.find((t) => /^v?\d+(\.\d+)*$/.test(t))
+    if (!hit) return null
+    const ver = hit.startsWith("v") ? hit.slice(1) : hit
     return parseDotted(ver) ? ver : null
   } catch {
     return null

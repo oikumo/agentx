@@ -16,7 +16,7 @@ is pinned mechanically here so it cannot recur:
    WORK.md + probe + GLOBAL+TASKS+SUGGESTED NEXT startup sentence (R8: the AGENTS.md leg is now pinned by
    `harnessc check --verify-projections` — the .omt single-sources it).
 4. Tool-set sync (R8 form): plugin-registered tools == IR `tools` keys (F35).
-   The AGENTS.md table, opencode.jsonc perm keys and CMD_ entries are
+   The AGENTS.md table, opencode.jsonc v2 `permissions[]` actions and CMD_ entries are
    compiler-projected from the same IR — verify-projections owns those legs.
 5. R7 T5 token budget pins (F32: conversation-resident injections re-pay EVERY
    model turn): AGENTS.md ≤ 2816 B; WORK.md ≤ 8 KiB with scratchpad ≤ 3 KiB;

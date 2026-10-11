@@ -442,7 +442,7 @@
     "wrn_opencode_version": {
       "see": "",
       "sev": "warn",
-      "text": "opencode binary {rel} is outside the audited range (>=1.18.29,<1.19) \u2014 gates were audited against that line; re-run the live canary suite and re-baseline the range before trusting gate behavior"
+      "text": "opencode binary {rel} is outside the audited range (>=2.0.26,<2.1) \u2014 gates were audited against that line; re-run the live canary suite and re-baseline the range before trusting gate behavior"
     },
     "wrn_sql_dp": {
       "see": "",
@@ -619,7 +619,7 @@
     "mvc_check": "uv run scripts/omt/mvc_check.py",
     "nav_index_path": ".meta/.omt/nav.index.jsonl",
     "net_paths": "src/,tests/,.opencode/,scripts/omt/",
-    "opencode_version_range": ">=1.18.29,<1.19",
+    "opencode_version_range": ">=2.0.26,<2.1",
     "plugin_dir": ".opencode/plugins/",
     "process_root": ".meta/software_development_process",
     "project_resume_threshold_bytes": 16384,

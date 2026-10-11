@@ -444,8 +444,8 @@ def check_schema(c: Corpus) -> None:
             c.errors.append(f"{OMT_REL}:{r.line}: @{r.kind} {r.rid}: missing attrs {sorted(missing)}")
         if r.kind == "always" and not ({"run", "glob"} & set(r.attrs)):
             c.errors.append(f"{OMT_REL}:{r.line}: @always {r.rid}: needs run= or glob=")
-        if r.kind == "deny" and r.attrs.get("scope") not in ("bash", "read", "toplevel"):
-            c.errors.append(f"{OMT_REL}:{r.line}: @deny {r.rid}: scope must be bash|read|toplevel")
+        if r.kind == "deny" and r.attrs.get("scope") not in ("bash", "shell", "read", "toplevel", "webfetch"):
+            c.errors.append(f"{OMT_REL}:{r.line}: @deny {r.rid}: scope must be bash|shell|read|toplevel|webfetch (v2: shell=bash, webfetch=toplevel)")
         if r.kind == "msg" and r.attrs.get("sev") not in ("block", "warn", "info"):
             c.errors.append(f"{OMT_REL}:{r.line}: @msg {r.rid}: sev must be block|warn|info")
         if r.kind == "state" and r.attrs.get("mode") not in ("append", "rotate", "rewrite"):
@@ -1055,9 +1055,11 @@ def render_agents(c: Corpus) -> str:
     n_tools = len(c.of("tool"))
 
     deny = c.of("deny")
-    bash = " ".join(f"`{r.attrs['match']}`" for r in deny if r.attrs["scope"] == "bash")
+    # v2: opencode `permissions[]` uses `shell` (not `bash`) + `webfetch` (not `toplevel`).
+    # IR keeps the v1 scope strings (bash/toplevel) for gate_driver compat; display maps to v2.
+    shell = " ".join(f"`{r.attrs['match']}`" for r in deny if r.attrs["scope"] in ("bash", "shell"))
     read = " ".join(f"`{r.attrs['match']}`" for r in deny if r.attrs["scope"] == "read")
-    toplevel = " ".join(f"`{r.attrs['match']}`" for r in deny if r.attrs["scope"] == "toplevel")
+    webfetch = " ".join(f"`{r.attrs['match']}`" for r in deny if r.attrs["scope"] in ("toplevel", "webfetch"))
     prot_hard = " ".join(f"`{r.attrs['path']}`" for r in c.of("protect") if r.attrs["hard"] == "true")
     prot_soft = " ".join(f"`{r.attrs['path']}`" for r in c.of("protect") if r.attrs["hard"] == "false")
     gate_phrases = [GATE_NEVER[r.rid] for r in sorted(c.of("gate"), key=lambda r: int(r.attrs["order"]))
@@ -1108,8 +1110,8 @@ def render_agents(c: Corpus) -> str:
 **ENF:** {docs['enforcement']}
 
 ## NEVER (blocked by gate)
-- bash deny: {bash}
-- read deny: {read}; toplevel deny: {toplevel}
+- shell deny: {shell}
+- read deny: {read}; webfetch deny: {webfetch}
 - protected: {prot_hard} (hard — no override) · {prot_soft} (`omt_skip{{scope:"all"}}` only)
 - edit gates: {" · ".join(gate_phrases)}
 
@@ -1226,15 +1228,31 @@ def render_nav_index(c: Corpus) -> str:
 
 
 def config_blocks(c: Corpus) -> dict[str, list[str]]:
+    """v2 permissions array (https://opencode.ai/v2/docs/permissions/).
+
+    Maps the v1 .omt scopes to v2 actions (last match wins, so denies sort last):
+      scope bash/shell -> action shell, scope read -> action read,
+      scope toplevel/webfetch (match is the tool name, e.g. "webfetch")
+        -> action <match>, resource "*", @tool -> action <rid>, resource "*".
+    Static broad allows (edit *, read *, shell * ask, shell allowlist, grep/glob/skill)
+    live hand-maintained in opencode.jsonc above the generated block; this block
+    carries only the deny records + tool allows so denies win.
+    """
     deny = c.of("deny")
-    blocks: dict[str, list[str]] = {}
-    for name, scope in (("read", "read"), ("bash", "bash")):
-        entries = [f'{json.dumps(r.attrs["match"])}: "deny"' for r in deny if r.attrs["scope"] == scope]
-        blocks[name] = entries
-    perm = [f'{json.dumps(r.attrs["match"])}: "deny"' for r in deny if r.attrs["scope"] == "toplevel"]
-    perm += [f'{json.dumps(r.rid)}: "{r.attrs["perm"]}"' for r in c.of("tool")]
-    blocks["perm"] = perm
-    return blocks
+    entries: list[str] = []
+    for r in deny:
+        scope = r.attrs.get("scope", "")
+        match = r.attrs["match"]
+        if scope in ("bash", "shell"):
+            entries.append(json.dumps({"action": "shell", "resource": match, "effect": "deny"}, separators=(",", ": ")))
+        elif scope == "read":
+            entries.append(json.dumps({"action": "read", "resource": match, "effect": "deny"}, separators=(",", ": ")))
+        elif scope in ("toplevel", "webfetch"):
+            # v1 toplevel match is the tool/action name (e.g. "webfetch")
+            entries.append(json.dumps({"action": match, "resource": "*", "effect": "deny"}, separators=(",", ": ")))
+    for r in c.of("tool"):
+        entries.append(json.dumps({"action": r.rid, "resource": "*", "effect": r.attrs["perm"]}, separators=(",", ": ")))
+    return {"permissions": entries}
 
 
 def splice_config(text: str, blocks: dict[str, list[str]]) -> str:
@@ -1903,12 +1921,9 @@ TEMPLATE_WORK_TASKS = "\n".join([
 TEMPLATE_OPENCODE_JSONC = "\n".join([
     "{",
     '  "$schema": "https://opencode.ai/config.json",',
-    "  // harnessc:begin read",
-    "  // harnessc:end read",
-    "  // harnessc:begin bash",
-    "  // harnessc:end bash",
-    "  // harnessc:begin perm",
-    "  // harnessc:end perm",
+    "  // v2 permissions array (https://opencode.ai/v2/docs/permissions/): single generated block",
+    "  // harnessc:begin permissions",
+    "  // harnessc:end permissions",
     "}",
     "",
 ])

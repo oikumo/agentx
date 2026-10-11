@@ -89,7 +89,11 @@ def _live_version() -> str:
     proc = subprocess.run(
         ["opencode", "--version"], capture_output=True, text=True, timeout=30)
     assert proc.returncode == 0, f"opencode --version failed: {proc.stderr[-300:]!r}"
-    ver = proc.stdout.strip().split()[0]
+    # v1: bare "1.18.29"; v2: "opencode v2.0.26" — take the first dotted-numeric
+    # token, stripping a leading "v".
+    toks = proc.stdout.strip().split()
+    ver = next((t.lstrip("v") for t in toks
+                if _parse_dotted(t.lstrip("v")) is not None), toks[0] if toks else "")
     assert _parse_dotted(ver) is not None, (
         f"unparsable `opencode --version` output: {proc.stdout.strip()!r}")
     return ver

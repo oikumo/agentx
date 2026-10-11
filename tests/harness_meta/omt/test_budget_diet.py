@@ -142,12 +142,15 @@ def test_live_check_emits_diet_warnings(capsys) -> None:
     Re-pin 2026-10-10 (feature_138 E5): +1 SECTION sec.split_proof pushes
     nav_index 67822→68812 — headroom 308B, OUT of the 64B zone (the warning
     disappears); @budget nav_index deliberately grown 67840→69120 in the
-    same .omt edit. agents_md/tool_schemas warnings unchanged."""
+    same .omt edit. agents_md/tool_schemas warnings unchanged.
+    Re-pin 2026-10-11 (feature_143.opencode_v2_permissions): AGENTS.md
+    NEVER shell/webfetch rename pushes agents_md 3549→3550 (34B headroom) —
+    budgets still OK (3550/3584)."""
     assert harnessc.main(["harnessc.py", "check"]) == 0
     err = capsys.readouterr().err
     assert "budget-diet: tool_schemas 2014/2048B — 34B headroom (≤64B)" in err
     assert "diet: longest @tool" in err, "composable hint names a real @tool"
-    assert "budget-diet: agents_md 3549/3584B — 35B headroom (≤64B)" in err
+    assert "budget-diet: agents_md 3550/3584B — 34B headroom (≤64B)" in err
     assert "budget-diet: nav_index" not in err
     assert "budget-diet: tool_args" not in err
     assert "budget-diet: ir_json" not in err

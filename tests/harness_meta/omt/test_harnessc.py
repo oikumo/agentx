@@ -115,33 +115,32 @@ def test_unknown_budget_id_is_an_error() -> None:
         f"closed budget set not enforced: {c.errors}")
 
 
-# --- 7. splice_config round-trip + missing end marker --------------------------
+# --- 7. splice_config round-trip + missing end marker (v2 permissions[]) ---
 
 _CONFIG_FIXTURE = (
     "{\n"
-    "  // harnessc:begin read\n"
-    "  // harnessc:end read\n"
-    "  // harnessc:begin bash\n"
-    "  // harnessc:end bash\n"
-    "  // harnessc:begin perm\n"
-    "  // harnessc:end perm\n"
+    '  "permissions": [\n'
+    "  // harnessc:begin permissions\n"
+    "  // harnessc:end permissions\n"
+    "  ],\n"
     "}\n"
 )
-_BLOCKS = {"read": ['"*.env": "deny"'], "bash": ['"pip *": "deny"'],
-           "perm": ['"omt_x": "allow"']}
+_BLOCKS = {"permissions": ['{"action": "read", "resource": "*.env", "effect": "deny"}',
+                           '{"action": "shell", "resource": "pip *", "effect": "deny"}',
+                           '{"action": "omt_x", "resource": "*", "effect": "allow"}']}
 
 
 def test_splice_config_round_trip_is_idempotent() -> None:
     once = harnessc.splice_config(_CONFIG_FIXTURE, _BLOCKS)
     twice = harnessc.splice_config(once, _BLOCKS)
     assert once == twice, "splice is not idempotent (round-trip drift)"
-    for entry in ('"*.env": "deny"', '"pip *": "deny"', '"omt_x": "allow"'):
+    for entry in ('"action": "read"', '"action": "shell"', '"action": "omt_x"'):
         assert entry in once
-    assert once.count("// harnessc:begin read") == 1
+    assert once.count("// harnessc:begin permissions") == 1
 
 
 def test_splice_config_missing_end_marker_raises() -> None:
-    bad = "{\n  // harnessc:begin read\n  \"x\": 1\n}\n"
+    bad = "{\n  // harnessc:begin permissions\n  \"x\": 1\n}\n"
     with pytest.raises(SystemExit, match="no end marker"):
         harnessc.splice_config(bad, _BLOCKS)
 
