@@ -19,7 +19,7 @@ module (import it explicitly: ``from hermetic_toolbox import hermetic_cli``):
 
 NOTE: this is deliberately NOT named ``conftest.py`` — a second conftest
 under ``tests/`` shadows the top-level ``conftest`` module that
-``tests/scripts/session_inspect/test_*.py`` imports helpers from
+``tests/harness_meta/session_inspect/test_*.py`` imports helpers from
 (``from conftest import msg_row``), breaking those tests under xdist worker
 import ordering. Explicit import keeps both working.
 

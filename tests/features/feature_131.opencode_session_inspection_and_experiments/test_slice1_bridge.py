@@ -1,6 +1,6 @@
 """Bridge unit tests — feature_131 slice 1 (Programming→Testing gate).
 
-Real suite lives in tests/scripts/session_inspect/ (25 passed). This bridge
+Real suite lives in tests/harness_meta/session_inspect/ (25 passed). This bridge
 asserts the slice-1 public contracts from the canonical tests/features location.
 """
 import sys

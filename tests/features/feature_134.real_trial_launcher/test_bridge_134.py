@@ -1,6 +1,6 @@
 """Bridge unit tests — feature_134 fake launcher (Programming→Testing gate).
 
-Real suite lives in tests/scripts/session_inspect/test_fake_launcher.py (4 passed).
+Real suite lives in tests/harness_meta/session_inspect/test_fake_launcher.py (4 passed).
 This bridge asserts plan + gated run from canonical tests/features location.
 Unique basename test_bridge_134.py avoids 132/133 clash.
 """

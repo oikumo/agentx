@@ -1,6 +1,6 @@
 """Bridge unit tests — feature_132 run-gate (Programming→Testing gate).
 
-Real suite lives in tests/scripts/session_inspect/test_run_gate.py (5 passed).
+Real suite lives in tests/harness_meta/session_inspect/test_run_gate.py (5 passed).
 This bridge asserts gate refusal + allow paths from canonical tests/features location.
 """
 import sys
