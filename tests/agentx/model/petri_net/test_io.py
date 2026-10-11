@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[4]
 EXAMPLES = REPO_ROOT / "shared" / "petri-net" / "examples"
 SCHEMA = REPO_ROOT / "shared" / "petri-net" / "petri-net-json-v1.schema.json"
 
