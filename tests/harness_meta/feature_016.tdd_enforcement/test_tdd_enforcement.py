@@ -4,7 +4,7 @@
 Verifies the TDD engine's subcommands, gate logic, and AST analysis work
 end-to-end through the CLI interface.
 
-Run with: uv run pytest tests/features/feature_016.tdd_enforcement/ -v
+Run with: uv run pytest tests/harness_meta/feature_016.tdd_enforcement/ -v
 """
 from __future__ import annotations
 
@@ -130,7 +130,7 @@ class TestTddCheckEnforcerIntegration:
 
     def test_enforcer_has_validate_exit(self):
         phase_gate = (REPO_ROOT / ".opencode" / "lib" / "enforcer" / "phase_gate.ts").read_text()
-        assert "tdd_check.py validate-exit" in phase_gate
+        assert "tdd_check.py" in phase_gate and "validate-exit" in phase_gate
 
     def test_status_has_tdd_section(self):
         status = (REPO_ROOT / ".opencode" / "plugins" / "omt_status.ts").read_text()

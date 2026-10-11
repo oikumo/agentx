@@ -1,7 +1,7 @@
 """Bridge unit tests — feature_132 run-gate (Programming→Testing gate).
 
 Real suite lives in tests/harness_meta/session_inspect/test_run_gate.py (5 passed).
-This bridge asserts gate refusal + allow paths from canonical tests/features location.
+This bridge asserts gate refusal + allow paths from canonical tests/harness_meta location.
 """
 import sys
 from pathlib import Path
