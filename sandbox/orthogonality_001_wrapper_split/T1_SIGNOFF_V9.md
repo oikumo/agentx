@@ -20,6 +20,8 @@
 
 > **Telemetry isolation LANDED 2026-10-11 (feature_148)**: `omt_q.ts` emitQEnvelope OMT_Q_TELEMETRY=off guard + 3 `_q_probe` live→off + new `split_proof_meta/test_telemetry_isolation_meta.py` 2 goldens; targeted 35/36 (1 triaged bootstrap), overlay 6, lanes 12F/2127P/5S same-12, prove both clean verify STALE-valid cert-growth (+0q 242→246), check 281/0, receipt FRESH.
 
+> **T4 TA-inversion LANDED 2026-10-11 (feature_150)**: `omt_shared.ts` readThoughtsIndex read-time `{location,owner}` enrichment (product roots src/agentx|tools|shared|tests/agentx; owner=harness, product reserved) + logic-touch-alongside-TA enforcement (`phase_gate.ts` guardSrcPath TA content snapshot → `gate_driver.ts` g.mvc calls new `mvc_after.ts` `taLogicTouchCheck` BEFORE the lint delta — scope:src skip bypass bounded to TA-only edits, full phase otherwise) + new `split_proof_meta/test_ta_inversion_meta.py` 7 goldens (3 bun enforcement scenarios, index hermetic+live, studio stripped-copy tsc clean, .opencode stripped bun-parse). 5 harness files × 1 edit, 1 e2e receipt. Lanes 12F/2134P/5S same-12, prove both clean, check 281/0. `split_proof_meta/` now firewall/rename_away/ledger_contract/newcomer/ta_strip/overlay/telemetry_isolation/ta_inversion.
+
 ## 0. Method
 
 - Enumerated every `tests/**/*.py` (225 files, `__pycache__` excluded) with a script (`/tmp` scratch, not committed). Buckets = T1_AUDIT_V8 §2 + feature_138 → harness_meta (E4 planned home `tests/harness_meta/split_proof_meta/`).

@@ -10,8 +10,8 @@
 
 import { existsSync, readFileSync } from "node:fs"
 import { execFileSync } from "node:child_process"
-import { gateMsg } from "../omt_shared"
-import { OmtBlock, type EnforcerEnv } from "./session_state"
+import { gateMsg, THOUGHT_PATTERN } from "../omt_shared"
+import { OmtBlock, getActiveUnlock, type EnforcerEnv } from "./session_state"
 
 // V2 (migrate-v1): `$` Bun helper replaced by node:child_process (no process
 // API on the plugin context — manage our own).
@@ -101,6 +101,39 @@ export async function mvcAfterEdit(env: EnforcerEnv, abs: string, rel: string): 
     await env.notify(`⚠️ ${gateMsg("mvc_warn", { rel })}:\n${top}`)
   }
   return true
+}
+
+// feature_150 (T4 §4, harness_wrapper_split): logic-touch-alongside-TA
+// enforcement. The scope:src skip bypass exists so TA-only comment edits
+// can ride a logged skip + think consult; ANY non-TA change on the same
+// file must go through a full omt_phase declaration (PROPOSAL_V7 §4
+// "no bypass"). Pre-content comes from guardSrcPath’s taContentSnapshot;
+// no-op when the file carries no snapshot (non-TA files, non-src/ paths,
+// read failures — fail-open). Comment-only diffs (TA lines stripped from
+// both sides equal) stay legal under any unlock.
+export async function taLogicTouchCheck(
+  env: EnforcerEnv,
+  session: string | undefined,
+  abs: string,
+  rel: string,
+): Promise<void> {
+  const pre = env.state.taContentSnapshot.get(abs)
+  if (pre === undefined) return
+  env.state.taContentSnapshot.delete(abs)
+  let post = ""
+  try { post = existsSync(abs) ? readFileSync(abs, "utf8") : "" }
+  catch { return /* fail-open */ }
+  if (post === pre) return
+  const isTa = (ln: string) => new RegExp(THOUGHT_PATTERN).test(ln)
+  const core = (t: string) => t.split("\n").filter((ln) => !isTa(ln)).join("\n")
+  if (core(pre) === core(post)) return // TA-only edit — bypass stays valid
+  const unlock = getActiveUnlock(session)
+  if (unlock && unlock.type === "phase") return // full phase declared — allowed
+  throw new OmtBlock(
+    `⛔ OMT++ gate: logic touch alongside TA: in ${rel} — TA-only edits may ` +
+    "ride omt_skip{scope:src} + omt_think consult, but any non-TA change " +
+    "requires a full omt_phase declaration (T4 §4, no bypass). Declare " +
+    "omt_phase or revert the logic change.")
 }
 
 // event hook: repo-wide MVC++ sweep when the session goes idle (advisory).

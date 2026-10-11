@@ -53,6 +53,9 @@ export function createSessionState() {
     hardSnapshot: new Map<string, Record<string, number>>(),
     // TDD REFACTOR: abs path -> file content captured pre-edit (revert source)
     refactorSnapshots: new Map<string, string>(),
+    // feature_150 (T4 §4): abs path -> pre-edit content of TA-carrying src/
+    // files (logic-touch-alongside-TA enforcement — skip bypass bounded)
+    taContentSnapshot: new Map<string, string>(),
   }
 }
 export type SessionState = ReturnType<typeof createSessionState>

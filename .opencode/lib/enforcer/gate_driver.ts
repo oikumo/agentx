@@ -36,7 +36,7 @@ import {
 import { guardSrcPath } from "./phase_gate"
 import { guardThoughts, fileThoughtsIn } from "./think_gate"
 import { evaluatePolicy } from "./policy_decision"
-import { mvcAfterEdit } from "./mvc_after"
+import { mvcAfterEdit, taLogicTouchCheck } from "./mvc_after"
 import { tddAfterEdit } from "./tdd_hats"
 
 export interface GateCtx {
@@ -547,8 +547,13 @@ type AfterImpl = (gate: any, ctx: GateCtx) => Promise<void | "stop">
 const AFTER_IMPLS: Record<string, AfterImpl> = {
   // MVC++ delta gate: throws on NEW hard violations; false ⇒ the lint itself
   // failed → stop the chain (skip g.tdd_after), the monolith's early return.
-  "g.mvc": async (_gate, ctx) =>
-    (await mvcAfterEdit(ctx.env, ctx.abs!, ctx.rel!)) === false ? "stop" : undefined,
+  "g.mvc": async (_gate, ctx) => {
+    // feature_150 (T4 §4): bound the scope:src skip bypass to TA-only edits —
+    // runs BEFORE the lint delta so a TA-content block is never masked by a
+    // lint failure (mvcAfterEdit false ⇒ "stop" would skip g.tdd_after).
+    await taLogicTouchCheck(ctx.env, ctx.session, ctx.abs!, ctx.rel!)
+    return (await mvcAfterEdit(ctx.env, ctx.abs!, ctx.rel!)) === false ? "stop" : undefined
+  },
   // TDD after-edit: advisory + REFACTOR revert check (ir.hats via R5).
   "g.tdd_after": async (_gate, ctx) => {
     await tddAfterEdit(ctx.env, ctx.input, ctx.abs!, ctx.rel!)

@@ -671,7 +671,22 @@ export function omtHarnessE2eStatus(rel: string, abs: string): { ok: boolean; me
 // Read the JSONL index (append-only event log: add / verify / remove records).
 // Skips corrupt lines, fail-open [].
 export function readThoughtsIndex(root?: string): any[] {
-  return readJsonl(thoughtsIndexPath(root))
+  const recs = readJsonl(thoughtsIndexPath(root))
+  // feature_150 (T4 §4, harness_wrapper_split): derive {location, owner} per
+  // thought at READ time — the index stays append-only mint-shaped
+  // {ts,path,line,category,thought,anchor}; audits get who-annotated-what
+  // without reading diffs. location follows the lanes decision (product =
+  // src/agentx|tools|shared|tests/agentx; harness = everything else).
+  // owner=harness: the think mechanic is harness-owned and the only writer
+  // today (the one declared inversion — harness TA: lines in product files);
+  // owner:"product" is reserved for future product self-annotation.
+  const PRODUCT_PREFIXES = ["src/agentx/", "tools/", "shared/", "tests/agentx/"]
+  for (const r of recs) {
+    const norm = String(r?.path || "").replace(/\\/g, "/")
+    r.location = PRODUCT_PREFIXES.some((p) => norm.startsWith(p)) ? "product" : "harness"
+    r.owner = "harness"
+  }
+  return recs
 }
 
 // grep thought lines across a target (file or dir), honoring excludes. Returns

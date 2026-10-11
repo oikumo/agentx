@@ -15,7 +15,7 @@ Runtime-orthogonal, dev-coupled separation of AgentX product and meta-harness:
 - **T1 (audit+mapping):** DONE — `T1_AUDIT_V8.md` (slug map + test buckets + row #1 + bridge backlog) + `T1_SIGNOFF_V9.md` (225-file lanes table, zero moves).
 - **T2 (goldens):** DONE — `test_firewall_meta`, `test_rename_away_meta`, `test_ledger_contract_meta`, `test_newcomer_meta` (138/R6), `test_ta_strip_meta` 4 tests (146), `test_overlay_meta` 6 + feature147 gate 3 (147), `test_telemetry_isolation_meta` 2 (148) in `tests/harness_meta/split_proof_meta/`.
 - **T3 (lanes):** DONE — per-bucket moves per sign-off table (R1-R6: scripts retired, features retired → `harness_meta/omt/` 72, `harness_meta/` 35/39, `agentx/` 13/56) + overlay lane proofs (147) + telemetry isolation (148); lanes 12F/2127P/5S same-12 pre-existing.
-- **T4 (TA strip):** OPEN — TS half (`tsc` + snapshot-identical) + index `{location,owner}` + logic-touch enforcement (Python `ast.dump`-identical already pinned by 146).
+- **T4 (TA strip):** DONE — py `ast.dump`-identical + TS comment-only pinned (146); logic-touch-alongside-TA enforcement + index `{location,owner}` + studio stripped-tsc + .opencode bun-parse goldens (150).
 - **T5–T7:** per PROPOSAL_V7 (receipts, multi-root sync, vision fit).
 - **Oracle (feature_138):** DONE — `scripts/omt/split_proof.py` (prove/verify/attest-bridge/newcomer-probe) + `split_proof.{cert,attest}` chain kinds + `g.split_proof` (order 37, advisory-local/strict-CI) + `SECTION:split_proof`.
 
@@ -30,3 +30,5 @@ Runtime-orthogonal, dev-coupled separation of AgentX product and meta-harness:
 - feature_138.split_proof_oracle_firewall_slice (Oracle membrane core — DONE, this session's close-out)
 - feature_143.r4_harness_features_bucket, feature_144.r5_product_features_bucket, feature_145.r6_138_goldens_bucket (lanes buckets — DONE)
 - feature_146.t2_ta_strip_golden, feature_147.t3_overlay_lane_proofs, feature_148.omt_q_telemetry_isolation (goldens+lanes+isolation — DONE)
+- feature_149.triage_12_residual (triage-only: 12/12 fail solo, owned outside split — DONE)
+- feature_150.t4_ta_logic_touch_and_index (T4 closeout — DONE)

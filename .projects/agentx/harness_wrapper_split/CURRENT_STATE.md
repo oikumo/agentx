@@ -5,6 +5,25 @@
 
 ---
 
+## 2026-10-11i (T4 TA-inversion LANDED, unit feature_150 complete)
+
+### Done
+
+- Declared `omt_phase` test Analysis `feature_150.t4_ta_logic_touch_and_index` + fresh `omt_skip` tests canary (phase-then-skip, user go `do all`).
+- **Harness round (5 files × 1 edit, shell-disciplined, single e2e receipt 16:32 > all mtimes):** `session_state.ts` taContentSnapshot map · `phase_gate.ts` guardSrcPath TA content snapshot (THOUGHT_PATTERN m-regex, fail-open) · `mvc_after.ts` new `taLogicTouchCheck` (core-diff = strip TA lines both sides; TA-only → allowed under any unlock; logic touch + skip unlock → OmtBlock; phase unlock → allowed) · `gate_driver.ts` g.mvc impl calls it BEFORE lint delta (block never masked by lint failure) · `omt_shared.ts` readThoughtsIndex read-time `{location,owner}` (product roots src/agentx|tools|shared|tests/agentx, backslash-normalized; owner=harness, product reserved).
+- **Goldens:** new `test_ta_inversion_meta.py` 7 — 3 enforcement scenarios (skip+logic BLOCKED w/ "logic touch alongside TA", skip+TA-only allowed, phase+logic allowed), index hermetic 8-path rule table + live enriched, studio stripped-copy `tsc --noEmit` clean, `.opencode` stripped bun-build parse clean.
+- **Root-stray caught + fixed:** live index probe wrote `probe_idx.ts` to REPO root → harnessc check FAILED (stray hygiene class, GOTCHA_PROVE_CERTS_ROOT_STRAY) → probe moved to scratch dir, stray rm'd, 4 check-expecting tests re-green.
+- Gates: targeted 79 (1 triaged bootstrap); lanes 12F/2134P/5S same-12 (triaged by 149); `prove --lane both --out /tmp/opencode/` clean ×2 + verify STALE-valid cert-growth only; certs rm'd; `harnessc check` 281/0; ledger 261.
+- Close-out: WORK.md DONE row + 144 rotated, T1_SIGNOFF T4 note, PROJECT Scope/Features, `omt_complete` → Done.
+
+### Next
+
+- **T5 per-mechanic receipts** (design first: replace global `g.receipt` second-edit guard slice by slice; proposal §8.3 leans ledger kinds).
+- **T6 multi-root sync + 4 relocations** (re-read 2026-10-10 relocations-gap FIRST — `link` ≠ project move; single-root sync clobbers `WORK.md ## Projects`).
+- Program close tail: UC0 archival, `bridge:` backlog, CI cert pinning, Q1/Q3/Q5 (opencode.jsonc webfetch-deny), phantom-link, WORK.compiled rev60-vs-live STALE.
+
+---
+
 ## 2026-10-11h (B 12-triage DONE, unit feature_149 complete)
 
 ### Done

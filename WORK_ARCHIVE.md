@@ -140,3 +140,7 @@
 ## 2026-10-11 rotation (work_md budget trim for 148 telemetry close-out)
 
 - [x] **feature_143 close-out — R4 harness-features bucket DONE 2026-10-11** — 35 dirs/39 files `tests/features` → `tests/harness_meta/` (`568afdb`) + 5 same-commit fixes (016 run-path, 131/132/134 bridge prose, 016 validate-exit split-args pin); targeted 016+050 33 passed, lanes 1441+12 HEAD-proven pre-existing (5 known + 054/056/058/060×2/062-parity/103) +6 skipped, 2 parallel flakes pass solo, prove both clean. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R5/R6 per dry-runs.
+
+## 2026-10-11 rotation (work_md budget trim for T4 close-out)
+
+- [x] **feature_144 close-out — R5 product-features bucket DONE 2026-10-11** — 13 dirs/56 files `tests/features` → `tests/agentx/` (`c881212`) + 5 same-commit fixes (031 4× `tests.model`→`tests.agentx.model` imports incl conftest + docstring path, stale since R1); agentx lane 902+3, both lanes 2097+same stable 12 pre-existing+9 skipped, prove both clean; 4 matcher placeholders reviewed-intentional. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R6 per dry-run.

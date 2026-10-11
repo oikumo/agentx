@@ -14,7 +14,7 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import { join } from "node:path"
-import { resolveFeatureDir, globToRegex, irToolDescription, phaseTransitions, tddAutoOn, gateMsg, readLedgerAll } from "../omt_shared"
+import { resolveFeatureDir, globToRegex, irToolDescription, phaseTransitions, tddAutoOn, gateMsg, readLedgerAll, THOUGHT_PATTERN } from "../omt_shared"
 import {
   OmtBlock, writeLedger, readLedger, getActiveUnlock, getActiveFeaturePhase, type EnforcerEnv,
 } from "./session_state"
@@ -239,6 +239,15 @@ export async function guardSrcPath(
     await tddGateCheck(env, session, rel, false)
   }
   await capturePreEditSnapshot(env, abs, rel, unlock.record.tdd_mode === true)
+  // feature_150 (T4 §4): snapshot pre-edit content of TA-carrying src/ .py
+  // files so the after-hook (taLogicTouchCheck) can bound the scope:src skip
+  // bypass to TA-only edits. Fail-open on read errors (advisory stance).
+  try {
+    if (rel.endsWith(".py") && existsSync(abs) &&
+        new RegExp(THOUGHT_PATTERN, "m").test(readFileSync(abs, "utf8"))) {
+      env.state.taContentSnapshot.set(abs, readFileSync(abs, "utf8"))
+    }
+  } catch { /* fail-open — enforcement never blocks on read errors */ }
 }
 
 // feature_056 A3 phase_hygiene: tombstone the feature's latest dangling

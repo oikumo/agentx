@@ -65,6 +65,8 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 
 ## Paused (resumable)
 
+- [x] **feature_150 close-out — T4 TA strip DONE 2026-10-11** — index `{location,owner}` read-time enrichment (omt_shared) + logic-touch-alongside-TA enforcement (guardSrcPath snapshot → g.mvc `taLogicTouchCheck`, skip bypass bounded) + `test_ta_inversion_meta.py` 7 goldens (3 enforcement scenarios + index hermetic/live + studio stripped-tsc + .opencode bun-parse); targeted 79 (1 triaged bootstrap), lanes 12F/2134P/5S same-12, prove both clean, check 281/0, receipt FRESH. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: T5–T6 + program close.
+
 - [x] **feature_148 close-out — telemetry isolation DONE 2026-10-11** — `omt_q.ts` OMT_Q_TELEMETRY=off guard + 3 live probes live→off + new `test_telemetry_isolation_meta.py` 2 passed; targeted 35/36 (1 triaged bootstrap), overlay 6, lanes 12F/2127P/5S same-12, prove both clean verify STALE-valid cert-growth (+0q 242→246), check 281/0, receipt FRESH. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: 12-triage + T4–T6.
 
 - [x] **feature_147 close-out — T3 overlay lane proofs DONE 2026-10-11** — `scripts/omt/split_proof.py` overlay amendments (mvc stage-for-suite, manifest-filter missing-pins, harness src stage, verify-overlay fallback) + `.github/workflows/split.yml` + `test_overlay_meta.py` 6 + `feature147/test_overlay_feature_gate.py` 3; targeted 33 passed, lanes 12F/2125P/5S (same 12 pre-existing), product overlay GREEN 1 cert verify STALE-valid via overlay (row 224), harness overlay same 12 (1218P, no new), check 281/0, e2e 1 passed. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: telemetry isolation + T4–T6.
@@ -72,8 +74,6 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 - [x] **feature_146 close-out — T2 ta-strip golden DONE 2026-10-11** — new `tests/harness_meta/split_proof_meta/test_ta_strip_meta.py` 4 tests (`ca6a937`, 5 total in `split_proof_meta/`); 30 lines/18 files pinned, py AST-identical, CLI `_ta_hash` agrees, TS comment-only (tsc deferred to T3 CI); 0 LIT, DEPTH `parents[3]` intact, targeted 24 passed, lanes 2112+same stable 12 pre-existing+9 skipped, prove both clean. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: T3 lanes CI + telemetry isolation + T4–T6.
 
 - [x] **feature_145 close-out — R6 138-goldens bucket DONE 2026-10-11** — 2 files `feature_138.split_proof_oracle_firewall_slice` → `tests/harness_meta/split_proof_meta/` (`6575842`, 4 total); LIT 0, DEPTH `parents[3]` intact, targeted 20 passed, lanes 2108+same stable 12 pre-existing+9 skipped, prove both clean (verify STALE-valid ledger-grew, certs rm'd). Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: T3 lanes CI + telemetry isolation + T4–T6 per pause map.
-
-- [x] **feature_144 close-out — R5 product-features bucket DONE 2026-10-11** — 13 dirs/56 files `tests/features` → `tests/agentx/` (`c881212`) + 5 same-commit fixes (031 4× `tests.model`→`tests.agentx.model` imports incl conftest + docstring path, stale since R1); agentx lane 902+3, both lanes 2097+same stable 12 pre-existing+9 skipped, prove both clean; 4 matcher placeholders reviewed-intentional. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R6 per dry-run.
 
 
 ## Agent Scratchpad (auto-managed, do not edit manually)
