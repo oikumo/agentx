@@ -9,7 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "scripts"))
 
-from tests.scripts.session_inspect.conftest import build_db, ses_row, msg_row, part_row, tok
+from tests.harness_meta.session_inspect.conftest import build_db, ses_row, msg_row, part_row, tok
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
