@@ -18,6 +18,8 @@
 
 > **T2 ta-strip LANDED 2026-10-11 (feature_146)**: new `tests/harness_meta/split_proof_meta/test_ta_strip_meta.py` 4 tests (`ca6a937`, 5 total) — 30 lines/18 files pinned, py AST-identical, CLI `_ta_hash` agrees, TS comment-only (tsc deferred to T3 CI). 0 LIT, targeted 24 passed, lanes 2112+same stable 12+9 skipped, prove both clean. `split_proof_meta/` now firewall/rename_away/ledger_contract/newcomer/ta_strip.
 
+> **Telemetry isolation LANDED 2026-10-11 (feature_148)**: `omt_q.ts` emitQEnvelope OMT_Q_TELEMETRY=off guard + 3 `_q_probe` live→off + new `split_proof_meta/test_telemetry_isolation_meta.py` 2 goldens; targeted 35/36 (1 triaged bootstrap), overlay 6, lanes 12F/2127P/5S same-12, prove both clean verify STALE-valid cert-growth (+0q 242→246), check 281/0, receipt FRESH.
+
 ## 0. Method
 
 - Enumerated every `tests/**/*.py` (225 files, `__pycache__` excluded) with a script (`/tmp` scratch, not committed). Buckets = T1_AUDIT_V8 §2 + feature_138 → harness_meta (E4 planned home `tests/harness_meta/split_proof_meta/`).

@@ -19,6 +19,7 @@ once (GOTCHA_TDD_NODE_GRANULARITY: red/green/refactor at the SAME test_node).
 """
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -130,7 +131,9 @@ def _q_probe(args_str: str, session: str = "ses_probe", extra_files: dict | None
             .replace("%SESSION%", session),
         encoding="utf-8",
     )
-    out = subprocess.run([BUN, str(probe), str(root)],
+    # feature_148 telemetry isolation: live probes must not pollute real ledger
+    env = {**os.environ, "OMT_Q_TELEMETRY": "off"} if use_real_root else None
+    out = subprocess.run([BUN, str(probe), str(root)], env=env,
                          capture_output=True, text=True, timeout=60)
     assert out.returncode == 0, f"bun probe failed:\n{out.stderr}\n---"
     lines = out.stdout.strip().splitlines()

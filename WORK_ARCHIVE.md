@@ -136,3 +136,7 @@
 ## 2026-10-11 rotation (work_md budget trim for T3 overlay close-out)
 
 - [x] **feature_142 close-out — reason+session_inspect buckets DONE 2026-10-11** — R1 17 product-dirs → `tests/agentx/` (`df585a1`+test_io[4]) + R2 3 reason → `harness_meta/reason` (`8074515`) + R3 24 session_inspect → `harness_meta/session_inspect` (`fe890f1`+2 dotted, `b864dbf` 4 LIT completes 6) + `rm -rf tests/scripts` (fully retired); session 72+2, both lanes 1140+same 5 triaged+6 skipped, check 281/0, prove both clean, sweep 0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R4/R5/R6 per dry-runs.
+
+## 2026-10-11 rotation (work_md budget trim for 148 telemetry close-out)
+
+- [x] **feature_143 close-out — R4 harness-features bucket DONE 2026-10-11** — 35 dirs/39 files `tests/features` → `tests/harness_meta/` (`568afdb`) + 5 same-commit fixes (016 run-path, 131/132/134 bridge prose, 016 validate-exit split-args pin); targeted 016+050 33 passed, lanes 1441+12 HEAD-proven pre-existing (5 known + 054/056/058/060×2/062-parity/103) +6 skipped, 2 parallel flakes pass solo, prove both clean. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R5/R6 per dry-runs.

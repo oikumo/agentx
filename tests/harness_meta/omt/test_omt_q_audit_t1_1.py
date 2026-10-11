@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import glob
 import json
+import os
 import shutil
 import subprocess
 from collections import Counter
@@ -73,7 +74,9 @@ def _q_probe(args_str: str, session: str = "ses_t1_1", tmp_path: Path | None = N
         .replace("%SESSION%", session),
         encoding="utf-8",
     )
-    out = subprocess.run([BUN, str(probe), str(root)],
+    # feature_148 telemetry isolation: live probes must not pollute real ledger
+    env = {**os.environ, "OMT_Q_TELEMETRY": "off"} if use_real_root else None
+    out = subprocess.run([BUN, str(probe), str(root)], env=env,
                          capture_output=True, text=True, timeout=60)
     assert out.returncode == 0, f"bun probe failed:\n{out.stderr}\n---"
     return json.loads(out.stdout.strip().splitlines()[-1])

@@ -671,6 +671,11 @@ function featurePhaseAt(records: any[], feature: string, session?: string): any 
 
 // Shared envelope emit + ledger append (consolidates the 3-op duplication:
 // latency_ms + appendLedger{kind:"q"} + JSON.stringify). Fail-open on ledger.
+// feature_148 telemetry isolation: OMT_Q_TELEMETRY=off skips the ledger append
+// (live-probe hermetic — reads live substrate without polluting the real
+// ledger; fixes GOTCHA_LEDGER_WINDOW_RACY + STALE-valid race from test +1/+4
+// q rows per run). Production default unchanged (append) to keep ceremony
+// meter + miner kind:q readers green; full move to telemetry.jsonl is T5.
 function emitQEnvelope(
   start: number, op: string,
   op_set: string[], fold_used: string,
@@ -679,11 +684,13 @@ function emitQEnvelope(
 ): string {
   const latency_ms = Date.now() - start
   try {
-    appendLedger({
-      kind: "q", op, ts: new Date().toISOString(),
-      op_set, fold_used, latency_ms, as_of: "HEAD",
-      ...ledger_extra,
-    })
+    if (process.env.OMT_Q_TELEMETRY !== "off") {
+      appendLedger({
+        kind: "q", op, ts: new Date().toISOString(),
+        op_set, fold_used, latency_ms, as_of: "HEAD",
+        ...ledger_extra,
+      })
+    }
   } catch { /* ledger fail-open */ }
   return JSON.stringify({ op, ...extra })
 }

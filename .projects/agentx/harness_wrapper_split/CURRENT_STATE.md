@@ -5,6 +5,21 @@
 
 ---
 
+## 2026-10-11g (telemetry isolation LANDED, unit feature_148 complete)
+
+### Done
+
+- Baseline per `sandbox/pause_2026-10-11.md` v7 §v7.2 verified (HEAD `7dfa02d`, 4xM code+tests + WORK M + 1 new + 7 sandbox `??`, ledger 242, no certs, phase Analysis + canary valid).
+- **A gates:** targeted `test_telemetry_isolation_meta` 2/2 + 3x `test_omt_q*` 33/34 (1F bootstrap triaged) = 35/36; `test_overlay_meta` 6/6 (tsc path); lanes 12F/2127P/5S same-12 (058, net_history, kb×2, 054,056,062,103,060×2, dashboard/043, t1_1-bootstrap); `prove --lane both --out /tmp/opencode/` clean ×2 + `verify` STALE-valid cert-growth only; ledger 242→246 (+4 cert, +0q); `harnessc check` 281/0; receipt FRESH (e2e 15:52:45 > omt_q.ts 15:47:35); certs rm'd.
+- Close-out: WORK.md `[~]`→`[x]` DONE + 143 rotated, T1_SIGNOFF T148 note, PROJECT Scope+Features fix, `omt_complete` → Done.
+
+### Next
+
+- **B 12-triage** (own phase+canary): re-run lanes post-148 residual, per-failure ownership, harness-overlay + nightly RED until green.
+- Then **C T4 TA strip** (own phase+canary): TS `tsc` + snapshot-identical + index `{location,owner}` + logic-touch enforcement. After: T5 receipts, T6 multi-root + 4 relocations (re-read 2026-10-10 gap FIRST), UC0 archival, `bridge:` backlog, CI pinning.
+
+---
+
 ## 2026-10-11f (T3 session — overlay lane proofs LANDED, unit feature_147 complete)
 
 ### Done
