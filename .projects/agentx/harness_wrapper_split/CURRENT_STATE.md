@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-10-11b (R4 session — harness-features bucket LANDED, unit feature_143 complete)
+
+### Done
+
+- Declared `omt_phase` test Analysis `feature_143.r4_harness_features_bucket` + fresh `omt_skip` tests canary; verified all 35 src dirs present, dest clear, no `feature_143` collision.
+- **R4 `568afdb`:** 35 dirs/39 files mirror `tests/features` → `tests/harness_meta/` (R4a 22 SYS-heavy + R4b 13 LIT-heavy, pure renames) + 5 same-commit fixes (016 run-path docstring, 131/132/134 bridge prose → `harness_meta`, 016 `validate-exit` pin split-args form — stale pin proven failing at HEAD via stash check).
+- LIT review per dry-run (inspect each, no blind sed): fixed 4 docstrings + 1 pin; left golden fixtures/placeholders untouched (054 own-dir/evil, 055 fake path, 056 guard path, 062 message format, sentinel `<feature>` patterns).
+- Failure triage via stash-check at HEAD old homes: 7 newly-collected failures (054/056/058/060×2/062-parity/103) fail identically pre-move (v2-plugin-migration fallout + live-drift) — triage-only; 2 DeclareEmbed failures are parallel-load flakes (pass solo + at HEAD, pass on lanes re-run).
+- Green: targeted 016+050 33 passed; lanes 1441 passed + 12 HEAD-proven pre-existing + 6 skipped; `prove --lane both --out /tmp/opencode/` clean, certs rm'd; DEPTH `parents[3]` intact.
+- Close-out: WORK.md DONE row + oldest DONE rotated to archive, T1_SIGNOFF_V9 R4 note, `omt_complete` → Done.
+
+### Next
+
+- **R5/R6 per saved dry-runs (user go, each fresh canary):** R5 product features 13 dirs/56 files → `tests/agentx/` (LIT 4 sentinels, fixtures move WITH dir); R6 138 goldens 2 files → `split_proof_meta/`.
+- After R5–R6: `tests/features` fully retired (only 138 dir + ignored `__pycache__` shells left) → T3 lanes CI, telemetry isolation, T4–T6 per pause map.
+
+---
+
 ## 2026-10-11 (resume session — R3 blocker cleared, feature_142 complete, tests/scripts/ retired)
 
 ### Done

@@ -65,13 +65,14 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 
 ## Paused (resumable)
 
+- [x] **feature_143 close-out — R4 harness-features bucket DONE 2026-10-11** — 35 dirs/39 files `tests/features` → `tests/harness_meta/` (`568afdb`) + 5 same-commit fixes (016 run-path, 131/132/134 bridge prose, 016 validate-exit split-args pin); targeted 016+050 33 passed, lanes 1441+12 HEAD-proven pre-existing (5 known + 054/056/058/060×2/062-parity/103) +6 skipped, 2 parallel flakes pass solo, prove both clean. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R5/R6 per dry-runs.
+
 - [x] **feature_142 close-out — reason+session_inspect buckets DONE 2026-10-11** — R1 17 product-dirs → `tests/agentx/` (`df585a1`+test_io[4]) + R2 3 reason → `harness_meta/reason` (`8074515`) + R3 24 session_inspect → `harness_meta/session_inspect` (`fe890f1`+2 dotted, `b864dbf` 4 LIT completes 6) + `rm -rf tests/scripts` (fully retired); session 72+2, both lanes 1140+same 5 triaged+6 skipped, check 281/0, prove both clean, sweep 0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R4/R5/R6 per dry-runs.
 
 - [x] **feature_141 close-out — omt bucket unit (harness_wrapper_split) DONE 2026-10-10** — R3 10-file e2e+receipt+template cluster LANDED (`c2b5e2c`): omt bucket complete, 72 files → `tests/harness_meta/omt/` (R1 `858d4c9` net×28, R2 `8f5a8e6` tdd+q+kb+misc×34, R3 ×10); `.omt` e2e vars + harness_paths swap, harnessc init template, staged-batch single-e2e receipt; 5 map-missed segmented/mock sites fixed (055/058/016/scaffolds/omt_q-U11); suite 2118 + same 5 triaged + 6 skipped, check 281/0, prove both lanes clean (`--out /tmp`, certs rm'd), zero-literal sweep 0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`.
 
 - [x] **feature_138 close-out ("all") DONE 2026-10-10** — row #1 deleted + E3 chain kinds (11/11 hermetic) + E2 g.split_proof order=37 (6/6 gate goldens) + E5 SECTION:split_proof + T1_SIGNOFF_V9 (225-file lanes table, zero moves) + UC8 (harness_wrapper_split home + feature_138 link). Suite 2109 + 4 pre-existing drift; check 281/0. Residual: per-bucket lanes moves + T2 goldens + 4 project relocations (T6). Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`.
 - [x] **meta_harness_10 P2 CLOSED 2026-09-19** — P1 + A/B/B2/B3/B3b/C/D shipped (feature_108 6 goldens suite 1788 C1 CLOSED; feature_109 13 goldens suite 1801 deny matrix proven; rev 60 drained_complete; check 265/0). Residual: payback (a) needs wild sessions N≥10.
-- [x] **meta_harness_8 execution — T3-4 (feature_093.task_cost_benchmark)** — SHIPPED 2026-09-14: probe double-encode fix + stale-rev placeholder + harness golden narrow; 17/17 goldens, first-numbers 6/6 green @3478bb2 (TP=13/FP=0/missed=0), suite 2231/2231; test report @ 6.testing/features/feature_093.task_cost_benchmark/test_report.md. Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.
 
 ## Agent Scratchpad (auto-managed, do not edit manually)
 
