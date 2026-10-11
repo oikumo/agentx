@@ -5,6 +5,23 @@
 
 ---
 
+## 2026-10-11c (R5 session — product-features bucket LANDED, unit feature_144 complete)
+
+### Done
+
+- Declared `omt_phase` test Analysis `feature_144.r5_product_features_bucket` + fresh `omt_skip` tests canary; verified all 13 src dirs present, dest clear.
+- **R5 `c881212`:** 13 dirs/56 files mirror `tests/features` → `tests/agentx/` (pure renames) + 5 same-commit fixes (031 sentinel 3 imports + conftest import `tests.model.petri_net`→`tests.agentx.model.petri_net` + docstring path — stale since R1; was 8 collection errors).
+- LIT review: 4 sentinel `tests/features/<feature>/` hits are harness-matcher-convention placeholders (generic, not live paths) — reviewed-intentional, untouched. DEPTH `parents[3]` preserved (mirror); `rag_v2/fixtures` moved WITH dir.
+- Green: agentx lane 902+3; lanes 2097 + same stable 12 pre-existing + 9 skipped (no new failures vs R4 set); `prove --lane both --out /tmp/opencode/` clean, certs rm'd.
+- Close-out: WORK.md DONE row + oldest DONE rotated to archive, T1_SIGNOFF_V9 R5 note, `omt_complete` → Done.
+
+### Next
+
+- **R6 per saved dry-run (user go, fresh canary):** 138 goldens 2 files (`test_firewall_meta.py`, `test_newcomer_meta.py`) → `tests/harness_meta/split_proof_meta/` (4 total) — 0 LIT, DEPTH mirror-safe, firewall root-safe.
+- After R6: `tests/features/` holds only 138 remnants + ignored `__pycache__` shells → T3 lanes CI, telemetry isolation, T4–T6 per pause map.
+
+---
+
 ## 2026-10-11b (R4 session — harness-features bucket LANDED, unit feature_143 complete)
 
 ### Done

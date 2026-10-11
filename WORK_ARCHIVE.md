@@ -120,3 +120,7 @@
 ## 2026-10-11 rotation (work_md budget trim for R4 close-out)
 
 - [x] **meta_harness_8 execution — T3-4 (feature_093.task_cost_benchmark)** — SHIPPED 2026-09-14: probe double-encode fix + stale-rev placeholder + harness golden narrow; 17/17 goldens, first-numbers 6/6 green @3478bb2 (TP=13/FP=0/missed=0), suite 2231/2231; test report @ 6.testing/features/feature_093.task_cost_benchmark/test_report.md. Done-chain @ `.projects/meta/meta_harness_8/CURRENT_STATE.md`.
+
+## 2026-10-11 rotation (work_md budget trim for R5 close-out)
+
+- [x] **meta_harness_10 P2 CLOSED 2026-09-19** — P1 + A/B/B2/B3/B3b/C/D shipped (feature_108 6 goldens suite 1788 C1 CLOSED; feature_109 13 goldens suite 1801 deny matrix proven; rev 60 drained_complete; check 265/0). Residual: payback (a) needs wild sessions N≥10.
