@@ -5,6 +5,23 @@
 
 ---
 
+## 2026-10-11 (resume session — R3 blocker cleared, feature_142 complete, tests/scripts/ retired)
+
+### Done
+
+- Resumed per `sandbox/pause_2026-10-11.md` verbatim; baseline verified (HEAD `8074515`, 24 staged R3 renames, ledger 51, `M WORK.md` pointer). Declared `omt_phase` test Analysis `feature_142.reason_session_inspect_bucket_moves` + fresh `omt_skip` tests canary (phase-then-skip order).
+- **R3 `fe890f1`:** 24-file mirror `tests/scripts/session_inspect → tests/harness_meta/session_inspect` (conftest WITH dir, no `__init__`, `parents[3]` kept, 16 bare-conftest siblings untouched) + 2 dotted-import fixes (`slice5:8`, `slice6:12` → `harness_meta`). Session 72 passed+2 skipped; both lanes 1140 passed+same 5 triaged (kb_akb×2, net_history, dashboard, omt_q_audit_t1_1)+6 skipped; `prove --lane both --out /tmp/opencode/` clean, certs rm'd.
+- **R3b `b864dbf`:** 4 docstring LIT (toolbox hermetic note + bridges 131/132/134) — completes the 6-site map. Targeted 99 passed+2 skipped; zero-literal sweep 0 live (2 exempt TA: `new_feature.py:158`, `conftest.py:157`).
+- **`rm -rf tests/scripts`** (stale `__pycache__` only — sources already moved in R2/R3): `tests/scripts/` GONE, fully retired. `harnessc check` 281/0.
+- Close-out: WORK.md `[~]`→`[x]` DONE row, T1_SIGNOFF_V9 `tests/scripts/ RETIRED` header note, `omt_complete` → Done.
+
+### Next
+
+- **R4/R5/R6 per saved dry-runs (user go, each fresh canary):** R4 harness features 39 files/35 dirs → `tests/harness_meta/` (LIT 13); R5 product features 56/13 → `tests/agentx/` (LIT 4); R6 138 goldens 2 files → `split_proof_meta/`.
+- After R4–R6: `tests/features` buckets per T1_SIGNOFF rows, T3 lanes CI, omt_q telemetry isolation (owns the 5 triaged), T4 TA strip, T5 receipts, T6 multi-root sync + 4 project relocations (re-read the relocations-gap note in the 2026-10-10 block first), UC0 archival, `bridge:` backlog, CI cert pinning.
+
+---
+
 ## 2026-10-10d (resume session — omt bucket R3 LANDED, unit feature_141 complete)
 
 ### Done

@@ -5,6 +5,8 @@
 > **First bucket LANDED 2026-10-10b** (T2 goldens + first lane unit): `tests/scripts/toolbox/*` (6 files) → `tests/harness_meta/toolbox/` mirror move; T2 goldens `tests/harness_meta/split_proof_meta/{test_rename_away_meta,test_ledger_contract_meta}.py` (9 tests). LIT fixes in-commit: `hermetic_toolbox.py` (skeleton + docstrings), `test_growth.py` force_cleanup, `scripts/toolbox/toolbox.py` promote/prune scaffold paths. Suite 2118 + 4 triaged drift, check 281/0. Remaining buckets: this table still governs.
 >
 > **omt bucket LANDED 2026-10-10 (R1–R3, feature_141)**: `tests/scripts/omt/*` (72 files) → `tests/harness_meta/omt/` — `858d4c9` net×28, `8f5a8e6` tdd+q+kb+misc×34, `c2b5e2c` e2e+receipt+template×10 + the `.omt` e2e-vars/harness_paths swap + harnessc init-template segmented swap + 44 referencer LIT fixes (17 harness-source + 27 tests-side, incl. 5 map-missed segmented/mock sites). Suite 2118 + 5 triaged drift, check 281/0, prove both lanes clean, zero-literal sweep 0 (rows stay; dated rows unchanged). Remaining buckets: this table still governs.
+>
+> **tests/scripts/ RETIRED 2026-10-11 (R1+R2+R3+R3b, feature_142)**: `tests/<pdir>` 17 files → `tests/agentx/<pdir>` (`df585a1` + test_io parents[4]); `tests/scripts/reason/` 3 → `tests/harness_meta/reason/` (`8074515`); `tests/scripts/session_inspect/` 24 → `tests/harness_meta/session_inspect/` (`fe890f1` +2 dotted fixes, `b864dbf` 4 docstring LIT completes 6-site map) + `rm -rf tests/scripts`. Session 72+2, both lanes 1140+same 5 triaged+6 skipped, prove both clean, sweep 0 (2 exempt TA). Remaining: R4/R5/R6 per dry-runs.
 
 ## 0. Method
 
