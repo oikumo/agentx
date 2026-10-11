@@ -425,6 +425,16 @@ function receiptPolicyVer(): string | null {
   } catch { return null }
 }
 
+// feature_151 T5: read one slice block (slices.<name>) from the shared
+// receipt; null when absent/corrupt (→ caller takes the legacy global branch).
+function receiptSliceBlock(name: string): any | null {
+  try {
+    const data = JSON.parse(readFileSync(join(REPO_ROOT, e2eReceiptPath()), "utf8") || "{}")
+    const b = (data as any)?.slices?.[name]
+    return b && typeof b === "object" ? b : null
+  } catch { return null }
+}
+
 // feature_075 T4-3 completion hardening: the receipt must be evidence of a
 // PASSING run, not merely of a run — a receipt written with results.status
 // !== "passed" (or a bogus results block when the writer records one) is
@@ -436,6 +446,59 @@ export function receiptResultsPassed(): boolean {
     if (r == null) return true
     return typeof r === "object" && r.status === "passed"
   } catch { return false }
+}
+
+// --- per-mechanic receipt slices (feature_151 T5, harness_wrapper_split) ----
+// The slice map's FUNCTIONAL source is the IR @var receipt_slices_path — a
+// scalar pointer (never JSON inside an @var payload: DSL colon-handling is
+// unverified) to .meta/templates/receipt_slices.json, compiled into the IR by
+// harnessc build. The pinned const below is the IR-missing/manifest-missing
+// fallback (never die open — improvement007/OPT-E pattern). Hermetic goldens
+// rely on the fallback: their seeded tmp roots carry the IR but not the
+// templates manifest.
+export const FALLBACK_RECEIPT_SLICES: Record<string, { files: string[]; tests: string[] }> = {
+  q: {
+    files: [".opencode/plugins/omt_q.ts"],
+    tests: ["tests/harness_meta/omt/test_omt_q.py", "tests/harness_meta/omt/test_omt_q_audit.py"],
+  },
+  net: {
+    files: [".opencode/plugins/omt_net.ts", "scripts/omt/net/", "scripts/omt/net_check.py"],
+    tests: ["tests/harness_meta/feature_050.net_as_gate/test_net_gate.py", "tests/harness_meta/feature_053.net_gate_concurrency_predicate/"],
+  },
+  split_proof: {
+    files: ["scripts/omt/split_proof.py"],
+    tests: ["tests/harness_meta/split_proof_meta/"],
+  },
+}
+
+export function receiptSlices(): Record<string, { files: string[]; tests: string[] }> {
+  const v = loadIr()?.vars?.receipt_slices_path
+  if (typeof v === "string" && v) {
+    try {
+      const p = join(REPO_ROOT, v)
+      if (existsSync(p)) {
+        const data = JSON.parse(readFileSync(p, "utf8"))
+        if (data && typeof data === "object") {
+          return data as Record<string, { files: string[]; tests: string[] }>
+        }
+      }
+    } catch { /* fall through to the pinned fallback */ }
+  }
+  return FALLBACK_RECEIPT_SLICES
+}
+
+// Resolve a repo-relative harness path to its slice: the first slice whose
+// files entry equals rel or is a "/"-suffixed directory prefix of it.
+// Unmapped → null (legacy global branch). Pure — no receipt I/O.
+export function receiptSliceFor(rel: string): string | null {
+  const slices = receiptSlices()
+  for (const name of Object.keys(slices)) {
+    const files = Array.isArray(slices[name]?.files) ? slices[name].files : []
+    for (const f of files) {
+      if (f === rel || (f.endsWith("/") && rel.startsWith(f))) return name
+    }
+  }
+  return null
 }
 
 // --- compiler projections (meta_harness_dsl R8 / OMT-HDL-1) -----------------
@@ -638,6 +701,38 @@ export function omtHarnessE2eStatus(rel: string, abs: string): { ok: boolean; me
   // improvement007 R8/OPT-G: block text from the IR @msg receipt_stale
   // record ({@var.e2e_cmd}/{@var.receipt_path} baked at build; {rel} per call).
   const stale = () => ({ ok: false, message: `⛔ OMT++ gate: ${gateMsg("receipt_stale", { rel })}` })
+
+  // feature_151 T5 (per-mechanic receipts): a MAPPED file with a slice block
+  // present gets its freshness from the SLICE block — decoupled from the
+  // global window (another slice's dirty file no longer blocks this one).
+  // Slice freshness is a PURE Date.parse(passed_at) vs mtime check —
+  // deliberately NOT receiptTimestampMs(): its receipt-file mtime floor would
+  // re-couple slices (any other slice's mint would refresh this file's
+  // validity window). Block ABSENT for a mapped file → legacy global branch
+  // (deploy-compat: old receipts stay valid until each slice's first mint).
+  const sliceName = receiptSliceFor(rel)
+  if (sliceName) {
+    const block = receiptSliceBlock(sliceName)
+    if (block) {
+      const slicePassed = Date.parse(String(block.passed_at || ""))
+      if (Number.isNaN(slicePassed) || slicePassed < targetMtime) return stale()
+      const wantSliceDigest = (block.digests || {})[rel]
+      if (typeof wantSliceDigest === "string" && wantSliceDigest) {
+        const gotDigest = sha256OfRel(rel)
+        if (gotDigest && gotDigest !== wantSliceDigest) return stale()
+      }
+      if (block.results_passed !== true) return stale()
+      // policy_ver stays GLOBAL for all files (design I-flow): a policy edit
+      // re-receipts everything, mapped slices included.
+      const sliceRpv = receiptPolicyVer()
+      if (sliceRpv) {
+        const curPolicy = sha256OfRel(".meta/META_HARNESS.omt")
+        if (curPolicy && curPolicy !== sliceRpv) return stale()
+      }
+      return { ok: true, message: "" }
+    }
+  }
+
   if (lastPassed < targetMtime) return stale()
 
   // feature_074 T4-2 D-bar (content-bound evidence): the receipt covers the

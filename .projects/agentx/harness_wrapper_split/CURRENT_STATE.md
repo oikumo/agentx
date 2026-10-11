@@ -5,6 +5,25 @@
 
 ---
 
+## 2026-10-11j (T5 per-mechanic receipts LANDED, unit feature_151 complete)
+
+### Done
+
+- Resumed per `sandbox/pause_2026-10-11.md` v8 §v8.2 verbatim; baseline verified (HEAD `fef7660`, ledger 266–270 = Analysis/Design/canary/testlist/RED exit 1, 4 feature_151 untracked process dirs + 10-test golden, WORK/ARCHIVE pointer diffs as recorded). `.sandbox/ideas/*` left untouched per user (not a project concern; excluded from every commit pathspec).
+- Goldens re-shaped in the RED hat BEFORE green (build order step 8): `_seed_tree` → REAL git-dirty tmp roots (init+config+commit+append+utime; `git=False` keeps the no-git fail-open weak pin); receipt writes post-seed (digests hash post-append content); legacy golden seeds +0.5h future mtimes (receipt-file mtime floor documented); probe `message`→`msg`; stale assert pins the baked e2e command ("e2e", not the word "receipt"). 9F/1P still-RED shape verified before impl.
+- Staged batch: `@var receipt_slices_path` (scalar pointer — no JSON in @var) + `.meta/templates/receipt_slices.json` + `omt_shared.ts` ONE python shell round (3 anchored hunks; v1 tail byte-identical; slice freshness PURE passed_at vs mtime — no mtime-floor re-coupling; policy_ver global inside the branch) + NEW `scripts/omt/receipt.py`. Stage → policy edit → re-stage discipline (R3); `stage --clear` at the boundary.
+- TDD engine truth learned: `green` RUNS the node (not a hat switch) — GREEN recorded 22:08 only after impl; REFACTOR 22:09; DONE 22:11 (same node). The done-op's own e2e re-mint clobbers slice blocks (e2e owns the global block) → re-minted after; receipt.py's merge preserves the global block by design.
+- Live fail-closed proof: net slice's drafted test paths were pre-R1 ghosts → pytest exit 5 → mint exit 1 NO write; corrected to `feature_050.net_as_gate/test_net_gate.py` + `feature_053.net_gate_concurrency_predicate/` (24 passed) in manifest + TS fallback + design doc (annotated).
+- Gates: goldens 10 passed; boundary e2e 1; self-mints q/net/split_proof (digests 1/3/1, all results_passed); split_proof_meta 39; lanes **12F/2144P/5S same-12 zero-new** (+10); prove both clean (268+37, exempted 8) verify STALE-valid rows 275/276, certs rm'd, no strays; check **282/0** (+1 @var record). Mid-close server restart: state re-verified from ledger/git before continuing.
+- Close-out: WORK.md `[~]`→`[x]` + 146 rotated, T1_SIGNOFF T5 note, PROJECT Scope/Features, artifacts (impl notes + test report + FEATURE rows), `omt_complete` → Done.
+
+### Next
+
+- **T6 multi-root sync + 4 relocations** (RE-READ the 2026-10-10 relocations-gap note FIRST — `link` ≠ project move; single-root sync clobbers `WORK.md ## Projects`).
+- Program close tail: UC0 archival, `bridge:` backlog, CI pinning, Q5 opencode.jsonc webfetch-deny, phantom-link, WORK.compiled rev60-vs-live STALE.
+
+---
+
 ## 2026-10-11i (T4 TA-inversion LANDED, unit feature_150 complete)
 
 ### Done

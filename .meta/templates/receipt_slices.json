@@ -1,0 +1,20 @@
+{
+  "q": {
+    "files": [".opencode/plugins/omt_q.ts"],
+    "tests": [
+      "tests/harness_meta/omt/test_omt_q.py",
+      "tests/harness_meta/omt/test_omt_q_audit.py"
+    ]
+  },
+  "net": {
+    "files": [".opencode/plugins/omt_net.ts", "scripts/omt/net/", "scripts/omt/net_check.py"],
+    "tests": [
+      "tests/harness_meta/feature_050.net_as_gate/test_net_gate.py",
+      "tests/harness_meta/feature_053.net_gate_concurrency_predicate/"
+    ]
+  },
+  "split_proof": {
+    "files": ["scripts/omt/split_proof.py"],
+    "tests": ["tests/harness_meta/split_proof_meta/"]
+  }
+}

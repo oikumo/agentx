@@ -144,3 +144,11 @@
 ## 2026-10-11 rotation (work_md budget trim for T4 close-out)
 
 - [x] **feature_144 close-out — R5 product-features bucket DONE 2026-10-11** — 13 dirs/56 files `tests/features` → `tests/agentx/` (`c881212`) + 5 same-commit fixes (031 4× `tests.model`→`tests.agentx.model` imports incl conftest + docstring path, stale since R1); agentx lane 902+3, both lanes 2097+same stable 12 pre-existing+9 skipped, prove both clean; 4 matcher placeholders reviewed-intentional. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R6 per dry-run.
+
+## 2026-10-11 rotation (work_md budget trim for T5 pause pointer)
+
+- [x] **feature_145 close-out — R6 138-goldens bucket DONE 2026-10-11** — 2 files `feature_138.split_proof_oracle_firewall_slice` → `tests/harness_meta/split_proof_meta/` (`6575842`, 4 total); LIT 0, DEPTH `parents[3]` intact, targeted 20 passed, lanes 2108+same stable 12 pre-existing+9 skipped, prove both clean (verify STALE-valid ledger-grew, certs rm'd). Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: T3 lanes CI + telemetry isolation + T4–T6 per pause map.
+
+## 2026-10-11 rotation (work_md budget trim for T5 close-out)
+
+- [x] **feature_146 close-out — T2 ta-strip golden DONE 2026-10-11** — new `tests/harness_meta/split_proof_meta/test_ta_strip_meta.py` 4 tests (`ca6a937`, 5 total in `split_proof_meta/`); 30 lines/18 files pinned, py AST-identical, CLI `_ta_hash` agrees, TS comment-only (tsc deferred to T3 CI); 0 LIT, DEPTH `parents[3]` intact, targeted 24 passed, lanes 2112+same stable 12 pre-existing+9 skipped, prove both clean. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: T3 lanes CI + telemetry isolation + T4–T6.

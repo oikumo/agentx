@@ -18,6 +18,7 @@
 @var ledger_path : .meta/.omt/ledger.jsonl
 @var thoughts_path : .meta/.omt/thoughts.jsonl
 @var receipt_path : .meta/.omt/omt_harness_e2e_last_run.json
+@var receipt_slices_path : .meta/templates/receipt_slices.json
 @var ir_path : .meta/.omt/harness.ir.json
 @var nav_index_path : .meta/.omt/nav.index.jsonl
 @var e2e_test : tests/harness_meta/omt/test_omt_harness_e2e.py

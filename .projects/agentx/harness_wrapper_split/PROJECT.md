@@ -16,7 +16,8 @@ Runtime-orthogonal, dev-coupled separation of AgentX product and meta-harness:
 - **T2 (goldens):** DONE — `test_firewall_meta`, `test_rename_away_meta`, `test_ledger_contract_meta`, `test_newcomer_meta` (138/R6), `test_ta_strip_meta` 4 tests (146), `test_overlay_meta` 6 + feature147 gate 3 (147), `test_telemetry_isolation_meta` 2 (148) in `tests/harness_meta/split_proof_meta/`.
 - **T3 (lanes):** DONE — per-bucket moves per sign-off table (R1-R6: scripts retired, features retired → `harness_meta/omt/` 72, `harness_meta/` 35/39, `agentx/` 13/56) + overlay lane proofs (147) + telemetry isolation (148); lanes 12F/2127P/5S same-12 pre-existing.
 - **T4 (TA strip):** DONE — py `ast.dump`-identical + TS comment-only pinned (146); logic-touch-alongside-TA enforcement + index `{location,owner}` + studio stripped-tsc + .opencode bun-parse goldens (150).
-- **T5–T7:** per PROPOSAL_V7 (receipts, multi-root sync, vision fit).
+- **T5 (per-mechanic receipts):** DONE — `@var receipt_slices_path` + `.meta/templates/receipt_slices.json` (q/net/split_proof) + `omt_shared.ts` slice branch (pure per-slice freshness, legacy byte-compat) + `scripts/omt/receipt.py` mint/status + 10 goldens (feature_151); mapped-file edits re-receipt via `receipt.py mint --slice <name>`.
+- **T6–T7:** per PROPOSAL_V7 (multi-root sync + relocations, vision fit).
 - **Oracle (feature_138):** DONE — `scripts/omt/split_proof.py` (prove/verify/attest-bridge/newcomer-probe) + `split_proof.{cert,attest}` chain kinds + `g.split_proof` (order 37, advisory-local/strict-CI) + `SECTION:split_proof`.
 
 ## Decisions log
@@ -32,3 +33,4 @@ Runtime-orthogonal, dev-coupled separation of AgentX product and meta-harness:
 - feature_146.t2_ta_strip_golden, feature_147.t3_overlay_lane_proofs, feature_148.omt_q_telemetry_isolation (goldens+lanes+isolation — DONE)
 - feature_149.triage_12_residual (triage-only: 12/12 fail solo, owned outside split — DONE)
 - feature_150.t4_ta_logic_touch_and_index (T4 closeout — DONE)
+- feature_151.t5_per_mechanic_receipts (T5 per-mechanic receipts — DONE)
