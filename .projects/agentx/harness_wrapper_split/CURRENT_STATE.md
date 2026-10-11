@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-10-11h (B 12-triage DONE, unit feature_149 complete)
+
+### Done
+
+- Declared `omt_phase` test Analysis `feature_149.triage_12_residual` + fresh `omt_skip` tests canary (phase-then-skip, user go `do all`).
+- Solo re-runs post-148 (3 batches ×4): 12/12 fail solo, 0 flakes — true residual, no parallel-load class this round.
+- Ownership (triage-only, owned outside split — fail identically at old homes per R4 stash-check, fail solo post-148): live-replay goldens (net_history, dashboard/043, 103, 058 probe-live) = live-drift; kb_akb×2 + 054 bun-canary + 056 hygiene + 062-parity + 060×2 = v2-plugin-migration fallout + live-drift; t1_1-bootstrap = ledger lifecycle (0 bootstrap rows). No split-caused failures. Harness-overlay cert + nightly-full stay RED until green (accepted).
+- Close-out: `omt_complete` Analysis→Testing→Done (no WORK row — work_md budget 11236/11264; no code, no commit).
+
+### Next
+
+- **C T4 TA strip** (own phase+canary): TS `tsc` + snapshot-identical + index `{location,owner}` + logic-touch enforcement.
+- After: T5 receipts, T6 multi-root + 4 relocations (gap FIRST), UC0 archival, `bridge:` backlog, CI pinning.
+
+---
+
 ## 2026-10-11g (telemetry isolation LANDED, unit feature_148 complete)
 
 ### Done
