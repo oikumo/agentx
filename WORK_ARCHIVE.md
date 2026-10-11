@@ -124,3 +124,7 @@
 ## 2026-10-11 rotation (work_md budget trim for R5 close-out)
 
 - [x] **meta_harness_10 P2 CLOSED 2026-09-19** — P1 + A/B/B2/B3/B3b/C/D shipped (feature_108 6 goldens suite 1788 C1 CLOSED; feature_109 13 goldens suite 1801 deny matrix proven; rev 60 drained_complete; check 265/0). Residual: payback (a) needs wild sessions N≥10.
+
+## 2026-10-11 rotation (work_md budget trim for R6 close-out)
+
+- [x] **feature_138 close-out ("all") DONE 2026-10-10** — row #1 deleted + E3 chain kinds (11/11 hermetic) + E2 g.split_proof order=37 (6/6 gate goldens) + E5 SECTION:split_proof + T1_SIGNOFF_V9 (225-file lanes table, zero moves) + UC8 (harness_wrapper_split home + feature_138 link). Suite 2109 + 4 pre-existing drift; check 281/0. Residual: per-bucket lanes moves + T2 goldens + 4 project relocations (T6). Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`.

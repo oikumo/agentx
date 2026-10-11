@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-10-11d (R6 session — 138-goldens bucket LANDED, unit feature_145 complete, `tests/features/` buckets complete)
+
+### Done
+
+- Resumed per `sandbox/pause_2026-10-11.md` v2 §2 verbatim; baseline verified (HEAD `1bb7a14`, 2 staged R6 renames, `M WORK.md` pointer, ledger phase Analysis `feature_145` + `skip/tests` both still valid — no re-mint).
+- **R6 `6575842`:** 2-file mirror `tests/features/feature_138.split_proof_oracle_firewall_slice/` → `tests/harness_meta/split_proof_meta/` (pure renames, 4 total, 0 content edits). LIT 0, DEPTH `parents[3]` intact, SYS firewall root-safe, src holds only ignored `__pycache__`.
+- Green: targeted `split_proof_meta` 20 passed; lanes 2108 passed + same stable 12 pre-existing (kb_akb×2, net_history, dashboard, 103, 054, 056, 058, 060×2, 062-parity, omt_q_audit_t1_1) + 9 skipped; `prove --lane both --out /tmp/opencode/` clean (verify STALE-valid ledger-grew, certs rm'd).
+- Close-out: WORK.md `[~]`→`[x]` DONE row + oldest DONE (138) rotated to archive, T1_SIGNOFF_V9 R6 note, `omt_complete` → Done.
+
+### Next
+
+- **`tests/features/` buckets complete (only 138 remnants + ignored `__pycache__` shells left)** → T3 lanes CI, omt_q telemetry isolation (owns the 5 triaged live-probe family + ledger-growth STALE-valid), T4 TA strip, T5 receipts, T6 multi-root sync + 4 project relocations (re-read relocations-gap note in 2026-10-10 block first), UC0 archival, `bridge:` backlog, CI cert pinning.
+- After R6: pause file v2 retired — next pause (if needed) is a fresh file.
+
+---
+
 ## 2026-10-11c (R5 session — product-features bucket LANDED, unit feature_144 complete)
 
 ### Done
