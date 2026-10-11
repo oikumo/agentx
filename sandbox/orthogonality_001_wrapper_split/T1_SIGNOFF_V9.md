@@ -13,6 +13,8 @@
 > **R5 LANDED 2026-10-11 (feature_144)**: `tests/features/` 13 dirs/56 files → `tests/agentx/` (`c881212`) + 5 same-commit fixes (031 4× `tests.model.petri_net`→`tests.agentx.model.petri_net` imports incl conftest + docstring path — stale since R1 product-dirs move). Agentx lane 902+3 (was 8 collection errors); lanes 2097+same stable 12 pre-existing+9 skipped, no new failures; prove both clean; DEPTH intact; fixtures WITH dir. Left untouched: 4 sentinel matcher-pattern placeholders (harness-matcher convention refs, not live paths). Remaining: R6 per dry-run.
 >
 > **R6 LANDED 2026-10-11 (feature_145)**: `tests/features/feature_138.split_proof_oracle_firewall_slice/` 2 files (`test_firewall_meta.py`, `test_newcomer_meta.py`) → `tests/harness_meta/split_proof_meta/` (`6575842`, 4 total, pure renames, 0 LIT). DEPTH `parents[3]` intact, SYS firewall REPO root-safe, targeted 20 passed, lanes 2108+same stable 12 pre-existing+9 skipped, prove both clean (verify STALE-valid ledger-grew, certs rm'd). Source dir holds only ignored `__pycache__`. `tests/features/` buckets complete — remaining: T3 lanes CI, telemetry isolation, T4–T6.
+>
+> **T2 ta-strip LANDED 2026-10-11 (feature_146)**: new `tests/harness_meta/split_proof_meta/test_ta_strip_meta.py` 4 tests (`ca6a937`, 5 total) — 30 lines/18 files pinned, py AST-identical, CLI `_ta_hash` agrees, TS comment-only (tsc deferred to T3 CI). 0 LIT, targeted 24 passed, lanes 2112+same stable 12+9 skipped, prove both clean. `split_proof_meta/` now firewall/rename_away/ledger_contract/newcomer/ta_strip.
 
 ## 0. Method
 

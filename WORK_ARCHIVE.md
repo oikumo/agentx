@@ -128,3 +128,7 @@
 ## 2026-10-11 rotation (work_md budget trim for R6 close-out)
 
 - [x] **feature_138 close-out ("all") DONE 2026-10-10** — row #1 deleted + E3 chain kinds (11/11 hermetic) + E2 g.split_proof order=37 (6/6 gate goldens) + E5 SECTION:split_proof + T1_SIGNOFF_V9 (225-file lanes table, zero moves) + UC8 (harness_wrapper_split home + feature_138 link). Suite 2109 + 4 pre-existing drift; check 281/0. Residual: per-bucket lanes moves + T2 goldens + 4 project relocations (T6). Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`.
+
+## 2026-10-11 rotation (work_md budget trim for T2 ta-strip close-out)
+
+- [x] **feature_141 close-out — omt bucket unit (harness_wrapper_split) DONE 2026-10-10** — R3 10-file e2e+receipt+template cluster LANDED (`c2b5e2c`): omt bucket complete, 72 files → `tests/harness_meta/omt/` (R1 `858d4c9` net×28, R2 `8f5a8e6` tdd+q+kb+misc×34, R3 ×10); `.omt` e2e vars + harness_paths swap, harnessc init template, staged-batch single-e2e receipt; 5 map-missed segmented/mock sites fixed (055/058/016/scaffolds/omt_q-U11); suite 2118 + same 5 triaged + 6 skipped, check 281/0, prove both lanes clean (`--out /tmp`, certs rm'd), zero-literal sweep 0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`.

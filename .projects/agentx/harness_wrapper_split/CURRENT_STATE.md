@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-10-11e (T2 session — ta-strip golden LANDED, unit feature_146 complete)
+
+### Done
+
+- Declared `omt_phase` test Analysis `feature_146.t2_ta_strip_golden` + fresh `omt_skip` tests canary (user go `do it`).
+- **T2 `ca6a937`:** new `tests/harness_meta/split_proof_meta/test_ta_strip_meta.py` 4 tests (5 total in dir, pure add, 0 content edits elsewhere). 30 lines/18 files pinned, py `ast.dump` identical after strip, CLI `_ta_hash` agrees, TS `// TA:` comment-only (tsc `--noEmit` deferred to T3 CI).
+- Green: targeted 24 passed; lanes 2112 passed + same stable 12 pre-existing + 9 skipped; `prove --lane both --out /tmp/opencode/` clean (verify STALE-valid ledger-grew, certs rm'd).
+- Close-out: WORK.md DONE row + oldest DONE (141) rotated to archive, T1_SIGNOFF_V9 T2 note, `omt_complete` → Done.
+
+### Next
+
+- **T3 lanes CI** (wiring, moves done): split runs + nightly full green, shared build-roots declared, TS `tsc --noEmit` for TA-strip.
+- Then: telemetry isolation, T4–T6 per `2026-10-11d` Next (unchanged).
+
+---
+
 ## 2026-10-11d (R6 session — 138-goldens bucket LANDED, unit feature_145 complete, `tests/features/` buckets complete)
 
 ### Done
