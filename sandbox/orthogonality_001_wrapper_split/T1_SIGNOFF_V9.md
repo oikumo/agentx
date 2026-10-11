@@ -14,6 +14,8 @@
 >
 > **R6 LANDED 2026-10-11 (feature_145)**: `tests/features/feature_138.split_proof_oracle_firewall_slice/` 2 files (`test_firewall_meta.py`, `test_newcomer_meta.py`) → `tests/harness_meta/split_proof_meta/` (`6575842`, 4 total, pure renames, 0 LIT). DEPTH `parents[3]` intact, SYS firewall REPO root-safe, targeted 20 passed, lanes 2108+same stable 12 pre-existing+9 skipped, prove both clean (verify STALE-valid ledger-grew, certs rm'd). Source dir holds only ignored `__pycache__`. `tests/features/` buckets complete — remaining: T3 lanes CI, telemetry isolation, T4–T6.
 >
+> **T3 overlay LANDED 2026-10-11 (feature_147)**: `scripts/omt/split_proof.py` overlay amendments (mvc stage-for-suite, manifest-filter, harness src stage, verify-overlay fallback) + `.github/workflows/split.yml` (product/harness lanes + nightly) + `test_overlay_meta.py` 6 + `feature147/test_overlay_feature_gate.py` 3; targeted 33 passed, lanes 12F/2125P/5S (same 12 pre-existing), product overlay GREEN 1 cert verify STALE-valid via overlay (row 224), harness overlay same 12 (1218P, no new), check 281/0, e2e 1 passed. `split_proof_meta/` now firewall/rename_away/ledger_contract/newcomer/ta_strip/overlay.
+
 > **T2 ta-strip LANDED 2026-10-11 (feature_146)**: new `tests/harness_meta/split_proof_meta/test_ta_strip_meta.py` 4 tests (`ca6a937`, 5 total) — 30 lines/18 files pinned, py AST-identical, CLI `_ta_hash` agrees, TS comment-only (tsc deferred to T3 CI). 0 LIT, targeted 24 passed, lanes 2112+same stable 12+9 skipped, prove both clean. `split_proof_meta/` now firewall/rename_away/ledger_contract/newcomer/ta_strip.
 
 ## 0. Method

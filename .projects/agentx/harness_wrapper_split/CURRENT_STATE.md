@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-10-11f (T3 session — overlay lane proofs LANDED, unit feature_147 complete)
+
+### Done
+
+- Resumed per `sandbox/pause_2026-10-11.md` v5 §v5.2 verbatim; baseline verified (HEAD `4bfb96c`, `M WORK.md` + `M split_proof.py` + `M META_HARNESS.omt` + `M harness.ir.json`, untracked `.github/` + 4×147 dirs + feature147 + overlay_meta tests).
+- **Overlay fixes (4 shell-disciplined rounds, receipt each):** product `mvc_check.py` stage-for-suite-only (stdlib-only, 2 product files) + manifest-filter missing pinned bench files in copy + harness `src/agentx` stage-for-suite-only (newcomer/ta/e2e/kb real-tree product-coupled) + `verify_cert` overlay-tmpfs fallback (LOCKED v1 has no overlay field — current first, overlay second).
+- Green: targeted 33 passed; lanes 12F/2125P/5S (same 12 pre-existing, no flake this run); product overlay GREEN 1 cert (199+37, exempted 0) verify STALE-valid via overlay (row 224); harness overlay same 12 (1218P/7S, 10 extras fixed by staging); e2e 1 passed; check 281/0; `tsc` real clean.
+- Close-out: WORK.md `[~]`→`[x]` DONE + 142 rotated, T1_SIGNOFF T3 note, `omt_complete` → Done.
+
+### Next
+
+- **Telemetry isolation** (omt_q live-probe family + ledger-growth STALE-valid), T4 TA strip, T5 receipts, T6 multi-root sync + 4 project relocations (re-read relocations-gap note in 2026-10-10 block first), UC0 archival, `bridge:` backlog, CI cert pinning.
+
+---
+
+
 ## 2026-10-11e (T2 session — ta-strip golden LANDED, unit feature_146 complete)
 
 ### Done

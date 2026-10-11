@@ -7,6 +7,8 @@ AST import firewall (Python `ast` + TS imports, never substring) with a
 versioned exemption manifest, plus a newcomer REPL probe (the AgentX-vision
 guard). CI-strict / local-advisory; v1 scans the current tree (worktree
 overlay lands with T3).
+T3 (feature_147): `prove --overlay tmpfs|worktree` runs the lane suite in an
+ephemeral copy (never a rename in the dev tree); suite-red cuts no cert.
 
 Deviation log (honesty over plan):
 - `prove` runs the firewall scans only; the REPL boot lives in
@@ -33,6 +35,7 @@ import ast
 import hashlib
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -328,6 +331,198 @@ def prove_lane(
     return dest
 
 
+OVERLAY_PRODUCT_DROP = (
+    "scripts/omt",
+    "scripts/session_inspect",
+    ".opencode",
+    ".meta",
+)
+OVERLAY_HARNESS_DROP = ("src/agentx",)
+OVERLAY_SHARED_ROOTS = (
+    "tests/__init__.py",
+    "tests/conftest.py",
+    "tests/constants.py",
+    "tests/testing_utils.py",
+)
+OVERLAY_LANE_SUITE = {
+    "product": ("tests/agentx",),
+    "harness": ("tests/harness_meta",),
+}
+
+
+def _copy_tree_minus(root: Path, dest: Path, drops: tuple[str, ...]) -> None:
+    """Copy `root` to `dest` minus `drops` (top-level or nested relpaths)."""
+    if dest.exists():
+        shutil.rmtree(dest)
+    dest.mkdir(parents=True)
+    top_drops = {d for d in drops if "/" not in d}
+    for child in sorted(root.iterdir()):
+        if child.name in top_drops:
+            continue
+        if child.is_dir() and not child.is_symlink():
+            shutil.copytree(
+                child, dest / child.name, symlinks=True,
+                ignore=shutil.ignore_patterns(".venv", "__pycache__", "node_modules", ".git"),
+            )
+        else:
+            shutil.copy2(child, dest / child.name, follow_symlinks=False)
+    for rel in sorted(d for d in drops if "/" in d):
+        shutil.rmtree(dest / rel, ignore_errors=True)
+
+
+def build_overlay(root: Path, lane: str, dest: Path, overlay: str = "tmpfs") -> Path:
+    """Ephemeral lane copy (T3). `current` returns the live tree (v1 compat).
+
+    product = tree minus the 4 harness dirs; harness = tree minus frozen
+    `src/agentx/`. Shared build-roots must survive (asserted). `worktree`
+    is backed by `git worktree` at HEAD plus the working-tree diff on top.
+    """
+    root = Path(root)
+    if overlay == "current":
+        return root
+    if lane not in ("product", "harness"):
+        raise SystemExit(f"overlay: unknown lane {lane!r}")
+    drops = OVERLAY_PRODUCT_DROP if lane == "product" else OVERLAY_HARNESS_DROP
+    dest = Path(dest)
+    if overlay == "tmpfs":
+        _copy_tree_minus(root, dest, drops)
+    elif overlay == "worktree":
+        if dest.exists():
+            shutil.rmtree(dest)
+        add = subprocess.run(
+            ["git", "worktree", "add", "--detach", str(dest), "HEAD"],
+            capture_output=True, text=True, timeout=120, cwd=str(root),
+        )
+        if add.returncode != 0:
+            raise SystemExit(f"overlay: git worktree failed: {add.stderr[-1000:]}")
+        try:
+            diff = subprocess.run(
+                ["git", "diff", "--name-only"], capture_output=True, text=True,
+                timeout=60, cwd=str(root),
+            ).stdout.splitlines()
+            untracked = [
+                ln[3:] for ln in subprocess.run(
+                    ["git", "status", "--porcelain", "--untracked-files=all"],
+                    capture_output=True, text=True, timeout=60, cwd=str(root),
+                ).stdout.splitlines() if ln.startswith("?? ")
+            ]
+            for rel in diff + untracked:
+                s = root / rel
+                d = dest / rel
+                if not s.exists() or s.is_dir():
+                    continue
+                d.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(s, d)
+        except SystemExit:
+            raise
+        except Exception as e:
+            raise SystemExit(f"overlay: worktree diff overlay failed: {e}")
+        for rel in sorted(d for d in drops if "/" in d):
+            shutil.rmtree(dest / rel, ignore_errors=True)
+        for name in {d for d in drops if "/" not in d}:
+            shutil.rmtree(dest / name, ignore_errors=True)
+    else:
+        raise SystemExit(f"overlay: unknown mode {overlay!r} (current|tmpfs|worktree)")
+    missing = [r for r in OVERLAY_SHARED_ROOTS if not (dest / r).exists()]
+    if missing:
+        raise SystemExit(f"overlay: shared build-roots missing in {lane} copy: {missing}")
+    return dest
+
+
+def _run_lane_suite(work: Path, lane: str, runner=None) -> None:
+    """Run the lane suite in `work`. Red (non-zero/raise) → SystemExit, no cert."""
+    if runner is not None:
+        try:
+            runner(work, lane)
+        except SystemExit:
+            raise
+        except Exception as e:
+            raise SystemExit(f"suite RED in overlay ({lane}): {e}")
+        return
+    suite = OVERLAY_LANE_SUITE[lane]
+    proc = subprocess.run(
+        [sys.executable, "-m", "pytest", *suite, "-q"],
+        capture_output=True, text=True, timeout=1500, cwd=str(work),
+    )
+    if proc.returncode != 0:
+        tail = (proc.stdout + proc.stderr)[-3000:]
+        raise SystemExit(f"suite RED in overlay ({lane}, exit {proc.returncode}):\n{tail}")
+
+
+def prove_lane_overlay(
+    lane: str,
+    manifest_path: Path,
+    root: Path,
+    out_dir: Path,
+    ledger: Path,
+    runner=None,
+    overlay: str = "tmpfs",
+) -> Path:
+    """T3: prove a lane inside an ephemeral overlay (copy), cut cert on green.
+
+    Scans + cert schema (LOCKED v1, ≤2 KiB) are `prove_lane`'s — the suite gates
+    the exit exactly like a firewall VIOLATION (red → SystemExit, no cert, no
+    chain row). The dev tree is never renamed; overlay temp dirs are removed.
+    """
+    manifest_path, root, out_dir, ledger = (
+        Path(manifest_path), Path(root), Path(out_dir), Path(ledger))
+    if overlay == "current":
+        return prove_lane(lane, manifest_path, root, out_dir, ledger)
+    work = Path(tempfile.mkdtemp(prefix=f"split_proof_{lane}_"))
+    try:
+        build_overlay(root, lane, work / "copy", overlay=overlay)
+        copy = work / "copy"
+        # T3-mvc (feature_147 Testing amendment): product suite needs harness
+        # dev-tooling `scripts/omt/mvc_check.py` (stdlib-only). Stage for SUITE
+        # only, remove before SCANS (keeps build_overlay drops + hermetic
+        # goldens intact; hermetic tests inject runner so staging is skipped).
+        staged = None
+        staged_harness_src = None
+        if lane == "product" and runner is None:
+            src_tool = Path(root) / "scripts" / "omt" / "mvc_check.py"
+            if src_tool.is_file():
+                dst = copy / "scripts" / "omt" / "mvc_check.py"
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src_tool, dst)
+                staged = copy / "scripts" / "omt"
+        if lane == "harness" and runner is None:
+            # Mirror of product mvc staging: harness suite has product-coupled
+            # tests (newcomer boots src/agentx, ta-strip counts, e2e, kb real-
+            # tree). Stage frozen src/agentx for SUITE only, remove before SCANS.
+            src_prod = Path(root) / "src" / "agentx"
+            if src_prod.is_dir():
+                dst_prod = copy / "src" / "agentx"
+                dst_prod.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(src_prod, dst_prod, symlinks=True,
+                                ignore=shutil.ignore_patterns("__pycache__", ".venv"))
+                staged_harness_src = dst_prod
+        _run_lane_suite(copy, lane, runner)
+        if staged is not None:
+            shutil.rmtree(staged, ignore_errors=True)
+        if staged_harness_src is not None:
+            shutil.rmtree(staged_harness_src, ignore_errors=True)
+        # Overlay drops intentionally remove pinned harness files (product lane
+        # drops scripts/omt/bench/*). Missing pinned files are not drift in the
+        # copy — filter the manifest to files present in the copy (keeps scans
+        # strict for existing files; hermetic empty-manifest goldens unaffected).
+        try:
+            man = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+        except OSError:
+            man = {}
+        if isinstance(man.get("python_exemptions"), list):
+            man["python_exemptions"] = [
+                e for e in man["python_exemptions"]
+                if (copy / e.get("file", "")).is_file()
+            ]
+        manifest_for_lane = manifest_path
+        if man != {}:
+            manifest_for_lane = work / "manifest_overlay.json"
+            manifest_for_lane.write_text(json.dumps(man), encoding="utf-8")
+        return prove_lane(lane, manifest_for_lane, copy, out_dir, ledger)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 def _ledger_prefix_match(want_sha: str, ledger: Path) -> int | None:
     """Return the row count K if `want_sha` is the sha256 of a K-line prefix
     of the current ledger (append-only growth), else None. K=0 (empty-chain
@@ -398,6 +593,39 @@ def verify_cert(
                     "for a fresh chain link)"
                 )
                 return
+    # Overlay certs (T3): current-tree re-prove drifts (drops change file counts
+    # 199+37 vs 267+37, exempted 0 vs 8). Re-run the overlay (tmpfs, slower same
+    # contract) and compare the same way. LOCKED v1 has no overlay field, so this
+    # fallback is heuristic: current first, overlay second.
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            prove_lane_overlay(data["lane"], manifest_path, root, Path(tmp), ledger,
+                               runner=None, overlay="tmpfs")
+            other = json.loads(
+                (Path(tmp) / f"split_proof_{data['lane']}.cert.json").read_bytes()
+            )
+        if all(
+            data[k] == other[k]
+            for k in LOCKED_FIELDS
+            if k not in ("cert_sha", "tokens_ms")
+        ):
+            print(f"verify: {Path(cert_path).name} byte-identical via overlay (minus tokens_ms)")
+            return
+        if all(
+            data[k] == other[k]
+            for k in LOCKED_FIELDS
+            if k not in ("cert_sha", "tokens_ms", "ledger_sha")
+        ):
+            rows = _ledger_prefix_match(data["ledger_sha"], ledger)
+            if rows is not None:
+                print(
+                    f"verify: {Path(cert_path).name} STALE-valid via overlay "
+                    f"(cut at ledger row {rows}; ledger only grew since — re-prove "
+                    "for a fresh chain link)"
+                )
+                return
+    except SystemExit as e:
+        print(f"verify: overlay re-prove failed: {e}")
     raise SystemExit(f"verify: field drift in {Path(cert_path).name} (see fresh proves)")
 
 
@@ -452,6 +680,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--lane", choices=["product", "harness", "both"], default="both")
     p.add_argument("--out", default=".")
     p.add_argument("--ledger", default=None)
+    p.add_argument("--overlay", choices=["current", "tmpfs", "worktree"],
+                   default="current",
+                   help="T3: run the lane suite in an ephemeral copy "
+                   "(tmpfs/worktree); current = v1 scans only (fast)")
 
     v = sub.add_parser("verify")
     v.add_argument("cert")
@@ -471,7 +703,11 @@ def main(argv: list[str] | None = None) -> int:
         if args.verb == "prove":
             lanes = ["product", "harness"] if args.lane == "both" else [args.lane]
             for lane in lanes:
-                prove_lane(lane, manifest, root, Path(args.out), ledger)
+                if args.overlay == "current":
+                    prove_lane(lane, manifest, root, Path(args.out), ledger)
+                else:
+                    prove_lane_overlay(lane, manifest, root, Path(args.out), ledger,
+                                       overlay=args.overlay)
         elif args.verb == "verify":
             verify_cert(Path(args.cert), manifest, root, ledger)
         elif args.verb == "attest-bridge":

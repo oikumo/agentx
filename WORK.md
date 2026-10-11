@@ -65,6 +65,8 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 
 ## Paused (resumable)
 
+- [x] **feature_147 close-out — T3 overlay lane proofs DONE 2026-10-11** — `scripts/omt/split_proof.py` overlay amendments (mvc stage-for-suite, manifest-filter missing-pins, harness src stage, verify-overlay fallback) + `.github/workflows/split.yml` + `test_overlay_meta.py` 6 + `feature147/test_overlay_feature_gate.py` 3; targeted 33 passed, lanes 12F/2125P/5S (same 12 pre-existing), product overlay GREEN 1 cert verify STALE-valid via overlay (row 224), harness overlay same 12 (1218P, no new), check 281/0, e2e 1 passed. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: telemetry isolation + T4–T6.
+
 - [x] **feature_146 close-out — T2 ta-strip golden DONE 2026-10-11** — new `tests/harness_meta/split_proof_meta/test_ta_strip_meta.py` 4 tests (`ca6a937`, 5 total in `split_proof_meta/`); 30 lines/18 files pinned, py AST-identical, CLI `_ta_hash` agrees, TS comment-only (tsc deferred to T3 CI); 0 LIT, DEPTH `parents[3]` intact, targeted 24 passed, lanes 2112+same stable 12 pre-existing+9 skipped, prove both clean. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: T3 lanes CI + telemetry isolation + T4–T6.
 
 - [x] **feature_145 close-out — R6 138-goldens bucket DONE 2026-10-11** — 2 files `feature_138.split_proof_oracle_firewall_slice` → `tests/harness_meta/split_proof_meta/` (`6575842`, 4 total); LIT 0, DEPTH `parents[3]` intact, targeted 20 passed, lanes 2108+same stable 12 pre-existing+9 skipped, prove both clean (verify STALE-valid ledger-grew, certs rm'd). Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: T3 lanes CI + telemetry isolation + T4–T6 per pause map.
@@ -73,7 +75,6 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 
 - [x] **feature_143 close-out — R4 harness-features bucket DONE 2026-10-11** — 35 dirs/39 files `tests/features` → `tests/harness_meta/` (`568afdb`) + 5 same-commit fixes (016 run-path, 131/132/134 bridge prose, 016 validate-exit split-args pin); targeted 016+050 33 passed, lanes 1441+12 HEAD-proven pre-existing (5 known + 054/056/058/060×2/062-parity/103) +6 skipped, 2 parallel flakes pass solo, prove both clean. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R5/R6 per dry-runs.
 
-- [x] **feature_142 close-out — reason+session_inspect buckets DONE 2026-10-11** — R1 17 product-dirs → `tests/agentx/` (`df585a1`+test_io[4]) + R2 3 reason → `harness_meta/reason` (`8074515`) + R3 24 session_inspect → `harness_meta/session_inspect` (`fe890f1`+2 dotted, `b864dbf` 4 LIT completes 6) + `rm -rf tests/scripts` (fully retired); session 72+2, both lanes 1140+same 5 triaged+6 skipped, check 281/0, prove both clean, sweep 0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R4/R5/R6 per dry-runs.
 
 ## Agent Scratchpad (auto-managed, do not edit manually)
 

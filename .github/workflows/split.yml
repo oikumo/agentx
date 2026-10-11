@@ -1,0 +1,50 @@
+# T3 overlay lane proofs (feature_147): split lane runs + nightly full.
+# Jobs are thin shells over `scripts/omt/split_proof.py` (logic lives in the
+# CLI, tested by `tests/harness_meta/split_proof_meta/`). Certs are uploaded
+# per run (<=2 KiB each), never committed (root-stray gotcha).
+name: split-lanes
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * *"
+
+jobs:
+  product-lane:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version-file: ".python-version" }
+      - run: uv sync --frozen
+      - run: uv run scripts/omt/split_proof.py prove --lane product --overlay tmpfs --out /tmp/opencode/
+      - run: uv run scripts/omt/split_proof.py verify /tmp/opencode/split_proof_product.cert.json
+
+  harness-lane:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version-file: ".python-version" }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: tools/petri-net-studio/package-lock.json }
+      - run: uv sync --frozen
+      - run: uv run scripts/omt/split_proof.py prove --lane harness --overlay tmpfs --out /tmp/opencode/
+      - run: uv run scripts/omt/split_proof.py verify /tmp/opencode/split_proof_harness.cert.json
+      # T2 deferral closed here: tsc is STRICT in CI (skip-open locally only).
+      - run: npm ci --prefix tools/petri-net-studio
+      - run: npx --prefix tools/petri-net-studio tsc --noEmit
+
+  nightly-full:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version-file: ".python-version" }
+      - run: uv sync --frozen
+      - run: uv run pytest tests/agentx tests/harness_meta -q
+      - run: uv run scripts/omt/split_proof.py prove --lane both --out /tmp/opencode/
+      - run: uv run scripts/omt/split_proof.py attest-bridge
+      - run: uv run scripts/omt/split_proof.py newcomer-probe

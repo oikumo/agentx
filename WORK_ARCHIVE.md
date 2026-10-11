@@ -132,3 +132,7 @@
 ## 2026-10-11 rotation (work_md budget trim for T2 ta-strip close-out)
 
 - [x] **feature_141 close-out — omt bucket unit (harness_wrapper_split) DONE 2026-10-10** — R3 10-file e2e+receipt+template cluster LANDED (`c2b5e2c`): omt bucket complete, 72 files → `tests/harness_meta/omt/` (R1 `858d4c9` net×28, R2 `8f5a8e6` tdd+q+kb+misc×34, R3 ×10); `.omt` e2e vars + harness_paths swap, harnessc init template, staged-batch single-e2e receipt; 5 map-missed segmented/mock sites fixed (055/058/016/scaffolds/omt_q-U11); suite 2118 + same 5 triaged + 6 skipped, check 281/0, prove both lanes clean (`--out /tmp`, certs rm'd), zero-literal sweep 0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`.
+
+## 2026-10-11 rotation (work_md budget trim for T3 overlay close-out)
+
+- [x] **feature_142 close-out — reason+session_inspect buckets DONE 2026-10-11** — R1 17 product-dirs → `tests/agentx/` (`df585a1`+test_io[4]) + R2 3 reason → `harness_meta/reason` (`8074515`) + R3 24 session_inspect → `harness_meta/session_inspect` (`fe890f1`+2 dotted, `b864dbf` 4 LIT completes 6) + `rm -rf tests/scripts` (fully retired); session 72+2, both lanes 1140+same 5 triaged+6 skipped, check 281/0, prove both clean, sweep 0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: R4/R5/R6 per dry-runs.
