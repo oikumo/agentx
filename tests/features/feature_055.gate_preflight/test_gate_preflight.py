@@ -72,7 +72,31 @@ _probe_template = """
 import { initOmtShared } from "%LIB%"
 initOmtShared(process.argv[2])
 const mod = await import("%PLUGIN%")
-const { tool } = await mod.default({ directory: process.argv[2], worktree: process.argv[2] })
+const plugin: any = (mod as any).default
+const captured: any = {}
+const mockCtx: any = {
+  location: { directory: process.argv[2], project: { id: "test", directory: process.argv[2], canonical: process.argv[2] } },
+  options: {},
+  tool: {
+    transform: async (cb: any) => {
+      const editor: any = {
+        add: (t: any) => { captured[t.name] = t },
+        list: () => Object.values(captured),
+        get: (id: string) => (captured as any)[id],
+        update: () => {}, remove: () => {}, namespace: () => {},
+      }
+      cb(editor)
+      return { dispose: async () => {} }
+    },
+    hook: async () => ({ dispose: async () => {} }),
+    list: async () => [],
+    reload: async () => {},
+  },
+  event: { subscribe: async function* () {} },
+  storage: { get: async () => undefined, set: async () => {}, remove: async () => {}, scan: async () => ({ entries: [] }) },
+}
+await plugin.setup(mockCtx)
+const tool: any = { omt_status: captured["omt_status"], omt_think: captured["omt_think"], omt_q: captured["omt_q"] }
 const result = await tool.omt_status.execute(%ARGS%, { sessionID: "%SESSION%" })
 console.log(JSON.stringify(result))
 """
@@ -226,9 +250,9 @@ class TestPreflightProjectionBun:
             ("g.mvc", 60), ("g.tdd_after", 70)]
         assert all(a["note"] for a in meta["after"])
         # rendered text is the actionable checklist
-        assert out["output"].startswith("🛫 OMT++ PREFLIGHT")
-        assert "WOULD BLOCK" in out["output"]
-        assert "clear: omt_phase{task_type, scope}" in out["output"]
+        assert "🛫 OMT++ PREFLIGHT" in out["content"]
+        assert "WOULD BLOCK" in out["content"]
+        assert "clear: omt_phase{task_type, scope}" in out["content"]
 
     @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
     def test_bun_src_path_bug_fix_fast_path(self, tmp_path) -> None:
@@ -250,7 +274,7 @@ class TestPreflightProjectionBun:
         assert rows["g.kb"]["blocked"] is False
         assert meta["summary"]["would_block"] == 0
         assert meta["summary"]["first_blocker"] is None
-        assert "all clear" in out["output"]
+        assert "all clear" in out["content"]
 
     @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
     def test_bun_harness_path_receipt_and_think(self, tmp_path) -> None:
@@ -281,7 +305,7 @@ class TestPreflightProjectionBun:
         assert rows["g.split_proof"]["blocked"] is False
         assert rows["g.split_proof"]["clearing_action"], "fired row needs a clearing action"
         assert meta["summary"]["first_blocker"] == "g.receipt"
-        assert "test_omt_harness_e2e.py" in out["output"]
+        assert "test_omt_harness_e2e.py" in out["content"]
 
     @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
     def test_bun_tests_path_canary_halts_chain(self, tmp_path) -> None:
@@ -304,7 +328,7 @@ class TestPreflightProjectionBun:
         assert tests_row["blocked"] is False
         assert tests_row["halts_chain"] is True
         assert meta["after"] == []  # not src/ — no after-gates
-        assert "halts the chain" in out["output"]
+        assert "halts the chain" in out["content"]
 
     @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
     def test_bun_search_tool_nav_gate(self, tmp_path) -> None:
@@ -318,18 +342,18 @@ class TestPreflightProjectionBun:
         assert [r["gate_id"] for r in meta["before"]] == ["g.nav"], meta["before"]
         assert meta["before"][0]["blocked"] is True
         assert meta["summary"]["first_blocker"] == "g.nav"
-        assert "omt_nav" in out["output"]
+        assert "omt_nav" in out["content"]
         assert meta["after"] == []
 
     @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
     def test_bun_path_required_unknown_op_and_protected(self, tmp_path) -> None:
         missing = _probe({"op": "preflight", "tool": "edit"}, tmp_path, ledger=[])
         assert missing["metadata"]["error"] == "path required"
-        assert "path required" in missing["output"]
+        assert "path required" in missing["content"]
         bogus = _probe({"op": "bogus"}, tmp_path, ledger=[])
         assert bogus["metadata"]["error"] == "unknown op"
-        assert "unknown op" in bogus["output"]
-        assert "status (default) | preflight" in bogus["output"]
+        assert "unknown op" in bogus["content"]
+        assert "status (default) | preflight" in bogus["content"]
         # protected path: g.protect FIRES and blocks (the one gate whose
         # when= matches README.md) — clearing action points at the user ask.
         prot = _probe(
@@ -339,7 +363,7 @@ class TestPreflightProjectionBun:
         rows = {r["gate_id"]: r for r in meta["before"]}
         assert rows["g.protect"]["fired"] is True and rows["g.protect"]["blocked"] is True
         assert meta["summary"]["first_blocker"] == "g.protect"
-        assert "ask the user" in prot["output"]
+        assert "ask the user" in prot["content"]
 
     @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
     def test_bun_default_path_banner_intact(self, tmp_path) -> None:
@@ -347,12 +371,12 @@ class TestPreflightProjectionBun:
         (banner preserved; the preflight branch did not regress the contract;
         a live model filling the schema's default does not get an error)."""
         out = _probe({"include_ledger": False}, tmp_path, ledger=[])
-        assert out["title"] == "OMT++ Status"
-        assert out["output"].startswith("📊 OMT++ STATUS")
-        assert "preflight" not in out["output"].splitlines()[0]
+        assert out["content"].startswith("OMT++ Status")
+        assert "📊 OMT++ STATUS" in out["content"]
+        assert "preflight" not in out["content"].splitlines()[0]
         alias = _probe({"op": "status"}, tmp_path, ledger=[])
-        assert alias["title"] == "OMT++ Status"
-        assert alias["output"].startswith("📊 OMT++ STATUS")
+        assert alias["content"].startswith("OMT++ Status")
+        assert "📊 OMT++ STATUS" in alias["content"]
 
 
 if __name__ == "__main__":

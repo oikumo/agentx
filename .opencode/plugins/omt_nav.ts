@@ -9,7 +9,8 @@
 // so the tools are built inside createNavTools() AFTER initOmtShared ran (a
 // module-level tool() would read the IR under the pre-init cwd — F2/F17).
 
-import { tool } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { tool, registerTools } from "../lib/v1_compat"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join, relative } from "node:path"
 import { execFileSync } from "node:child_process"
@@ -436,10 +437,11 @@ function createNavTools() {
 // before any hook runs (all lib path getters are lazy — see lib header).
 // R8: tools build post-init (createNavTools) so descriptions read the IR under
 // the injected root.
-export default async ({ directory, worktree }) => {
-  initOmtShared(worktree ?? directory)
-  const { omt_nav } = createNavTools()
-  return {
-    tool: { omt_nav },
-  }
-}
+export default Plugin.define({
+  id: "omt-nav",
+  async setup(ctx) {
+    initOmtShared(ctx.location.directory)
+    const {omt_nav } = createNavTools()
+    await registerTools(ctx, { omt_nav })
+  },
+})

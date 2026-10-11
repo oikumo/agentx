@@ -248,9 +248,32 @@ writeFileSync(LEDGER, recs.map((r) => JSON.stringify(r)).join("\\n") + "\\n");
 const mod = await import("STATUS_ABS");
 const budget = mod.gateBudget();
 const ceremony = mod.ceremonyMeter();
-const plugin = await mod.default({ directory: ROOT, worktree: ROOT });
-const res = await plugin.tool.omt_status.execute({}, {});
-console.log(JSON.stringify({ budget, ceremony, output: res.output, meta: { gate_budget: res.metadata.gate_budget, ceremony: res.metadata.ceremony } }));
+const plugin: any = (mod as any).default;
+const captured: any = {};
+const mockCtx: any = {
+  location: { directory: ROOT, project: { id: "test", directory: ROOT, canonical: ROOT } },
+  options: {},
+  tool: {
+    transform: async (cb: any) => {
+      const editor: any = {
+        add: (x: any) => { captured[x.name] = x },
+        list: () => Object.values(captured),
+        get: (id: string) => (captured as any)[id],
+        update: () => {}, remove: () => {}, namespace: () => {},
+      }
+      cb(editor)
+      return { dispose: async () => {} }
+    },
+    hook: async () => ({ dispose: async () => {} }),
+    list: async () => [],
+    reload: async () => {},
+  },
+  event: { subscribe: async function* () {} },
+  storage: { get: async () => undefined, set: async () => {}, remove: async () => {}, scan: async () => ({ entries: [] }) },
+};
+await plugin.setup(mockCtx);
+const res = await captured["omt_status"].execute({}, { sessionID: "" });
+console.log(JSON.stringify({ budget, ceremony, output: (res as any).content ?? res.output, meta: { gate_budget: res.metadata.gate_budget, ceremony: res.metadata.ceremony } }));
 """
 
 

@@ -68,7 +68,31 @@ _probe_template = """
 import { initOmtShared } from "%LIB%"
 initOmtShared(process.argv[2])
 const mod = await import("%PLUGIN%")
-const { tool } = await mod.default({ directory: process.argv[2], worktree: process.argv[2] })
+const plugin: any = (mod as any).default
+const captured: any = {}
+const mockCtx: any = {
+  location: { directory: process.argv[2], project: { id: "test", directory: process.argv[2], canonical: process.argv[2] } },
+  options: {},
+  tool: {
+    transform: async (cb: any) => {
+      const editor: any = {
+        add: (t: any) => { captured[t.name] = t },
+        list: () => Object.values(captured),
+        get: (id: string) => (captured as any)[id],
+        update: () => {}, remove: () => {}, namespace: () => {},
+      }
+      cb(editor)
+      return { dispose: async () => {} }
+    },
+    hook: async () => ({ dispose: async () => {} }),
+    list: async () => [],
+    reload: async () => {},
+  },
+  event: { subscribe: async function* () {} },
+  storage: { get: async () => undefined, set: async () => {}, remove: async () => {}, scan: async () => ({ entries: [] }) },
+}
+await plugin.setup(mockCtx)
+const tool: any = { omt_status: captured["omt_status"] }
 const result = await tool.omt_status.execute(%ARGS%, { sessionID: "%SESSION%" })
 console.log(JSON.stringify(result))
 """
@@ -124,8 +148,8 @@ class TestResumeDigest:
                             "T3-3 resume digest — design note first")
 
         out = _probe({"op": "resume"}, "ses_t33", tmp_path)
-        text = out["output"]
-        assert out["title"] == "OMT++ Resume Digest"
+        text = out["content"]
+        assert out["content"].startswith("OMT++ Resume Digest")
         nbytes = len(text.encode("utf-8"))
         assert nbytes <= DIGEST_CAP, f"digest {nbytes}B > {DIGEST_CAP}B:\n{text}"
         # identity banner
@@ -150,7 +174,9 @@ class TestResumeDigest:
         assert out["metadata"]["op"] == "resume"
         assert out["metadata"]["cap"] == DIGEST_CAP
         assert out["metadata"]["truncated"] is False
-        assert out["metadata"]["digest_bytes"] == nbytes
+        # V2: content = title + "\n" + body; digest_bytes measures the body.
+        body = text.split("\n", 1)[1] if "\n" in text else text
+        assert out["metadata"]["digest_bytes"] == len(body.encode("utf-8"))
 
     @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
     def test_ledger_read_only(self, tmp_path):
@@ -181,12 +207,14 @@ class TestResumeDigest:
         _write_project_home(tmp_path, PROJECT, "n" * 200)
 
         out = _probe({"op": "resume"}, "ses_t33", tmp_path)
-        text = out["output"]
+        text = out["content"]
         nbytes = len(text.encode("utf-8"))
         assert nbytes <= DIGEST_CAP, f"digest {nbytes}B > {DIGEST_CAP}B:\n{text}"
         assert "digest capped" in text, text
         assert out["metadata"]["truncated"] is True
-        assert out["metadata"]["digest_bytes"] == nbytes
+        # V2: content = title + "\n" + body; digest_bytes measures the body.
+        body = text.split("\n", 1)[1] if "\n" in text else text
+        assert out["metadata"]["digest_bytes"] == len(body.encode("utf-8"))
         # optional lines were the droppable ones
         assert "Trail (this session" not in text
         assert "Docs:" not in text
@@ -202,12 +230,14 @@ class TestResumeDigest:
         _write_project_home(tmp_path, PROJECT, "T3-3 resume digest")
 
         out = _probe({"op": "resume"}, "ses_t33", tmp_path)
-        text = out["output"]
-        nbytes = len(text.encode("utf-8"))
+        text = out["content"]
+        # V2: content = title + "\n" + body; the cap binds the body.
+        body = text.split("\n", 1)[1] if "\n" in text else text
+        nbytes = len(body.encode("utf-8"))
         assert nbytes <= DIGEST_CAP, f"digest {nbytes}B > {DIGEST_CAP}B:\n{text}"
         assert "digest capped" in text
         assert out["metadata"]["truncated"] is True
-        assert text.startswith("\U0001F9ED RESUME DIGEST"), text[:80]
+        assert "\U0001F9ED RESUME DIGEST" in text, text[:80]
 
     @pytest.mark.skipif(BUN is None, reason="bun runtime not available")
     def test_no_unlock_cross_session_resume(self, tmp_path):
@@ -230,7 +260,7 @@ class TestResumeDigest:
                             "T3-3 resume digest — design note first")
 
         out = _probe({"op": "resume"}, "ses_fresh", tmp_path)
-        text = out["output"]
+        text = out["content"]
         assert len(text.encode("utf-8")) <= DIGEST_CAP
         assert "no unlock" in text
         assert "Last:" in text and F2 in text
@@ -248,7 +278,7 @@ class TestResumeDigest:
         _write_project_home(tmp_path, PROJECT, "T3-3 resume digest")
 
         out = _probe({"op": "resume"}, "ses_t33", tmp_path)
-        text = out["output"]
+        text = out["content"]
         assert "OMT++ STATUS" not in text
         assert "lint" not in text
         # TDD subprocess is fail-open in the hermetic tmp root (no uv project)
@@ -264,4 +294,4 @@ class TestResumeDigest:
 
         bogus = _probe({"op": "bogus"}, "ses_t33", tmp_path)
         assert bogus["metadata"]["error"] == "unknown op"
-        assert "status (default) | preflight | resume" in bogus["output"]
+        assert "status (default) | preflight | resume" in bogus["content"]

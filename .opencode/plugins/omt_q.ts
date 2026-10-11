@@ -31,7 +31,8 @@
 // sibling runBeforeGatesDry in gate_driver.ts (behaviour-preserving — the real
 // throw-path is byte-identical).
 
-import { tool } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { tool, registerTools } from "../lib/v1_compat"
 import { execFileSync } from "node:child_process"
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
@@ -1322,10 +1323,11 @@ function foldSkipAudit(records: any[], feature?: string): {
 // iterates Object.values and requires every export to be a function (or
 // {}.server). The tool objects are NOT functions, so only the default export
 // is allowed.
-export default async ({ directory, worktree }: { directory: string; worktree?: string }) => {
-  initOmtShared(worktree ?? directory)
-  const { omt_q } = createQTools()
-  return {
-    tool: { omt_q },
-  }
-}
+export default Plugin.define({
+  id: "omt-q",
+  async setup(ctx) {
+    initOmtShared(ctx.location.directory)
+    const {omt_q } = createQTools()
+    await registerTools(ctx, { omt_q })
+  },
+})

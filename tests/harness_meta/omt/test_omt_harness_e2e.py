@@ -143,10 +143,11 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     checks: list[str] = []
 
     # 1. The status plugin is standalone and the previous dynamic import failure
-    # mode cannot return.
-    assert "export default async ({" in status
-    assert "initOmtShared(" in status  # R1: ctx root (worktree ?? directory) injected
-    assert "tool: { omt_status }" in status
+    # mode cannot return. V1: `export default async ({` factory + `tool: { omt_status }`;
+    # V2 (migrate-v1): `export default Plugin.define({` + registerTools.
+    assert ("export default async ({" in status or "export default Plugin.define({" in status)
+    assert "initOmtShared(" in status  # R1: ctx root injected (V1 worktree ?? directory; V2 ctx.location.directory)
+    assert ("tool: { omt_status }" in status or "registerTools(ctx, { omt_status })" in status)
     assert "p.split" not in status
     assert "dynamic" not in status.lower()
     assert "omt_status is registered by .opencode/plugins/omt_status.ts" in enforcer
@@ -157,9 +158,10 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     # artifact over-enforcement. R2: the tools live in lib/enforcer/phase_gate.ts;
     # the composition root wires them via createPhaseTools.
     phase_gate = _read(".opencode/lib/enforcer/phase_gate.ts")
-    assert "const omt_phase = tool" in phase_gate
-    assert "const omt_skip = tool" in phase_gate
-    assert "const omt_complete = tool" in phase_gate
+    # V1: const omt_phase = tool({ ... }); V2: const omt_phase = { name: "omt_phase", ... }
+    assert ("const omt_phase = tool" in phase_gate or 'name: "omt_phase"' in phase_gate)
+    assert ("const omt_skip = tool" in phase_gate or 'name: "omt_skip"' in phase_gate)
+    assert ("const omt_complete = tool" in phase_gate or 'name: "omt_complete"' in phase_gate)
     assert "getActiveFeaturePhase(feature, session)" in phase_gate
     assert 'ARTIFACT_REQUIRED.has(phaseRecord.task_type || "")' in phase_gate
     assert "checkPhaseExitArtifacts(directory, feature, currentPhase)" in phase_gate
@@ -279,9 +281,9 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     # 9. feature_021 think-anywhere: standalone plugin + think-gate (R2: the
     # gate lives in lib/enforcer/think_gate.ts; the plugin is tools-only).
     think = _read(".opencode/plugins/omt_think.ts")
-    assert "export default async ({" in think
+    assert ("export default async ({" in think or "export default Plugin.define({" in think)
     assert "initOmtShared(" in think  # R1: ctx root injected
-    assert "tool: { omt_think }" in think  # OPT-H: 5 think tools → one op= dispatcher
+    assert ("tool: { omt_think }" in think or "registerTools(ctx, { omt_think })" in think)  # OPT-H: 5 think tools → one op= dispatcher
     assert "commentSyntaxFor" in think
     # meta_harness_dsl R6 S1: reindex tool deleted (append-only index, grep-is-truth).
     assert "const omt_think_reindex" not in think
@@ -324,7 +326,7 @@ def test_omt_meta_harness_end_to_end_contract() -> None:
     # by the receipt guard. R6 S6: the session bootstrap (nav tip + compact TA
     # digest) has ONE emission site in the enforcer after-hook; the think
     # plugin's Tier-1c hook is deleted and the digest builder is shared-lib.
-    assert "export default async ({" in enforcer
+    assert ("export default async ({" in enforcer or "export default Plugin.define({" in enforcer)
     assert "\nexport function" not in enforcer
     assert "\nexport const" not in enforcer
     # improvement007 R7: receipt_guard left the root with the after-hook slim

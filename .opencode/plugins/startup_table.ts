@@ -11,7 +11,8 @@
 // mapping keeps full IDs 1:1 (D19: no invented IDs in TASKS).
 // TA: why: `startup_table` (no omt_ prefix) avoids isOmtHarness + TOOL registry churn — new `omt_*` plugin would need @tool row + harnessc build + e2e receipt; template stays usable prompt-side with zero harness edits.
 
-import { tool } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { tool, registerTools } from "../lib/v1_compat"
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { initOmtShared, repoRoot } from "../lib/omt_shared"
@@ -260,10 +261,11 @@ function createStartupTableTool() {
   })
 }
 
-export default async ({ directory, worktree }: { directory: string; worktree?: string }) => {
-  initOmtShared(worktree ?? directory)
-  const startup_table = createStartupTableTool()
-  return {
-    tool: { startup_table },
-  }
-}
+export default Plugin.define({
+  id: "startup-table",
+  async setup(ctx) {
+    initOmtShared(ctx.location.directory)
+    const startup_table = createStartupTableTool()
+    await registerTools(ctx, { startup_table })
+  },
+})

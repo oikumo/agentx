@@ -138,9 +138,33 @@ _probe_template = """
 import { initOmtShared } from "%LIB%"
 initOmtShared(process.argv[2])
 const mod = await import("%PLUGIN%")
-const { tool } = await mod.default({ directory: process.argv[2], worktree: process.argv[2] })
+const plugin: any = (mod as any).default
+const captured: any = {}
+const mockCtx: any = {
+  location: { directory: process.argv[2], project: { id: "test", directory: process.argv[2], canonical: process.argv[2] } },
+  options: {},
+  tool: {
+    transform: async (cb: any) => {
+      const editor: any = {
+        add: (t: any) => { captured[t.name] = t },
+        list: () => Object.values(captured),
+        get: (id: string) => (captured as any)[id],
+        update: () => {}, remove: () => {}, namespace: () => {},
+      }
+      cb(editor)
+      return { dispose: async () => {} }
+    },
+    hook: async () => ({ dispose: async () => {} }),
+    list: async () => [],
+    reload: async () => {},
+  },
+  event: { subscribe: async function* () {} },
+  storage: { get: async () => undefined, set: async () => {}, remove: async () => {}, scan: async () => ({ entries: [] }) },
+}
+await plugin.setup(mockCtx)
+const tool: any = { omt_status: captured["omt_status"], omt_think: captured["omt_think"], omt_q: captured["omt_q"] }
 const result = await tool.omt_think.execute(%ARGS%, { sessionID: "%SESSION%" })
-console.log(JSON.stringify(result))
+console.log(JSON.stringify(typeof result === "string" ? result : ((result as any).content ?? result)))
 """
 
 

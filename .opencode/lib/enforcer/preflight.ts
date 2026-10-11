@@ -47,7 +47,7 @@ const DRY_CAVEATS: Record<string, string> = {
 export const PREFLIGHT_DEFAULT_TOOL = "edit"
 
 // feature_062 P0-1: the declare-embed passes the LIVE session state so the
-// projection is honest about consults already paid (g.kb, nav); $ stays inert
+// projection is honest about consults already paid (g.kb, nav); dryRun stays inert
 // so the dry-run never shells out (g.net keeps its dry caveat).
 export type PreflightEnvOverride = {
   state?: EnforcerEnv["state"]
@@ -66,9 +66,8 @@ function buildPreflightCtx(
     directory: envOverride?.directory ?? repoRoot(),
     safeLog: () => {},
     notify: async () => {},
-    client: {},
-    $: {},
-  }
+    dryRun: true,
+  } as EnforcerEnv
   // Pre-seed nav from the ledger only for a FRESH state — an overridden live
   // state already knows what this session used (and must not be mutated).
   if (session && !envOverride?.state) {

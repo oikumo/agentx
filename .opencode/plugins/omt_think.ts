@@ -33,7 +33,8 @@
 //   • NO named tool-object exports (DEFECT-A safe); only the default factory
 //   • file ops via execFileSync/readFileSync/writeFileSync (no shell — H3 safe)
 
-import { tool } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { tool, registerTools } from "../lib/v1_compat"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { extname } from "node:path"
 import { execFileSync } from "node:child_process"
@@ -675,11 +676,11 @@ function createThinkTools() {
 // (lib/enforcer/nav_gate.ts), so this plugin returns no hooks.
 // R8: tools build post-init (createThinkTools) so descriptions read the IR
 // under the injected root.
-export default async ({ directory, worktree }) => {
-  initOmtShared(worktree ?? directory)
-  const { omt_think } = createThinkTools()
-  return {
-    tool: { omt_think },
-  }
-}
-// TA: xref: feature_022.meta_harness_think_anywhere_v2 FEATURE.md catalogs 13 flaws of this v1 (string-unaware insertion F1, unsafe # default F2, gate substring false-positives F3) + tiered fixes A-E — read before modifying
+export default Plugin.define({
+  id: "omt-think",
+  async setup(ctx) {
+    initOmtShared(ctx.location.directory)
+    const {omt_think } = createThinkTools()
+    await registerTools(ctx, { omt_think })
+  },
+})

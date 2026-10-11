@@ -227,11 +227,14 @@ export async function lspAfterEdit(env: EnforcerEnv, input: any, output: any): P
     if (!diags || typeof diags !== "object" || Array.isArray(diags)) return
     const allowlist = loadAllowlist(env.directory)
     if (!allowlist) return
+    const baseText = typeof output.output === "string" ? output.output
+      : typeof (output as any)?.content === "string" ? (output as any).content : ""
     const res = applyLspAllowlist(
-      typeof output.output === "string" ? output.output : "",
+      baseText,
       diags, allowlist, env.directory)
     if (!res) return
-    output.output = res.text
+    if (typeof output.output === "string") output.output = res.text
+    else if (typeof (output as any)?.content === "string") (output as any).content = res.text
     md.diagnostics = res.diags
     env.safeLog("info", `lsp_filter: suppressed ${res.dropped} allowlisted LSP diagnostic(s)`)
   } catch (e: any) {

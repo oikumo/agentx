@@ -360,7 +360,9 @@ class TestSourcePins:
         enforcer = (REPO_ROOT / ".opencode" / "plugins" / "omt_enforcer.ts").read_text(
             encoding="utf-8")
         assert 'from "../lib/enforcer/lsp_filter"' in enforcer
-        assert "await lspAfterEdit(env, input, output)" in enforcer
+        # V1: await lspAfterEdit(env, input, output); V2: synthetic input/output
+        # (event мост). Accept either — the wiring (import + call) is the pin.
+        assert "lspAfterEdit(env," in enforcer
 
     def test_harness_files_covers_lsp_filter(self):
         e2e = (REPO_ROOT / "tests" / "harness_meta" / "omt" / "test_omt_harness_e2e.py").read_text(

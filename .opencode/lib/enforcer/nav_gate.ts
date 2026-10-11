@@ -366,7 +366,7 @@ export async function sessionBootstrap(env: EnforcerEnv, input: any, output: any
     if (!firstEver && !sendReminder) return
     if (firstEver) env.state.bootstrapped.add(session)
     if (sendReminder) env.state.navReminded.add(session)
-    if (typeof output?.output === "string") {
+    {
       const parts: string[] = []
       if (sendReminder) parts.push(navReminderMsg())
       if (firstEver) {
@@ -376,7 +376,13 @@ export async function sessionBootstrap(env: EnforcerEnv, input: any, output: any
         const vw = opencodeVersionWarn()
         if (vw) parts.push(vw)
       }
-      if (parts.length) output.output += "\n\n" + parts.join("\n\n")
+      if (parts.length) {
+        const suffix = "\n\n" + parts.join("\n\n")
+        // V1: output.output string; V2: result.content string (or TextContent[]).
+        if (typeof output?.output === "string") output.output += suffix
+        else if (typeof (output as any)?.content === "string") (output as any).content += suffix
+        else if (Array.isArray((output as any)?.content)) (output as any).content.push({ type: "text", text: suffix })
+      }
     }
   } catch (e: any) {
     env.safeLog("warn", "session bootstrap failed open: " + (e?.message || e))

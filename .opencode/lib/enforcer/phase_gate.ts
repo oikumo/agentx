@@ -6,9 +6,13 @@
 // phase-exit artifact matrix they enforce.
 // R8 (OMT-HDL-1): tool descriptions resolve from the compiled IR
 // (irToolDescription) with the in-source text as fallback seed.
+//
+// V2 (migrate-v1): V1 `tool()` helper removed — createPhaseTools returns V2
+// Tool.Info definitions for ctx.tool.transform(editor.add). `$` Bun helper
+// replaced by node:child_process.
 
-import { tool } from "@opencode-ai/plugin"
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
+import { execFileSync } from "node:child_process"
 import { join } from "node:path"
 import { resolveFeatureDir, globToRegex, irToolDescription, phaseTransitions, tddAutoOn, gateMsg, readLedgerAll } from "../omt_shared"
 import {
@@ -265,20 +269,37 @@ function abandonDanglingPhase(
 }
 
 // --- phase lifecycle tools ---------------------------------------------------
-export function createPhaseTools(env: EnforcerEnv) {
-  const { directory, $, safeLog } = env
+// V2 helper: run a python check script, return parsed JSON (null on failure).
+function runPyJson(env: EnforcerEnv, argv: string[]): any | null {
+  try {
+    const out = execFileSync("uv", argv, {
+      cwd: env.directory, encoding: "utf8", timeout: 60000,
+      stdio: ["ignore", "pipe", "ignore"],
+    } as any)
+    return JSON.parse(String(out || "{}"))
+  } catch { return null }
+}
 
-  const omt_phase = tool({
+export function createPhaseTools(env: EnforcerEnv) {
+  const { directory, safeLog } = env
+
+  const omt_phase = {
+    name: "omt_phase",
     description: irToolDescription("omt_phase", "Declare phase before src/ edits (task_type/scope → ledger; §12 unlock matrix)."),
-    args: {
-      task_type: tool.schema.string().describe("bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs"),
-      scope: tool.schema.string().describe("one sentence describing what 'done' looks like"),
-      phase: tool.schema.string().optional().describe("Analysis|Design|Programming|Testing"),
-      feature: tool.schema.string().optional().describe("feature slug, e.g. feature_006.x"),
-      design_doc: tool.schema.string().optional().describe("design artifact path (major/new_screen only)"),
-      tdd: tool.schema.boolean().optional().describe("TDD for Programming (auto-on majors)"),
+    input: {
+      type: "object",
+      properties: {
+        task_type: { type: "string", description: "bug_fix|minor_feature|major_feature|new_screen|refactor|test|docs" },
+        scope: { type: "string", description: "one sentence describing what 'done' looks like" },
+        phase: { type: "string", description: "Analysis|Design|Programming|Testing" },
+        feature: { type: "string", description: "feature slug, e.g. feature_006.x" },
+        design_doc: { type: "string", description: "design artifact path (major/new_screen only)" },
+        tdd: { type: "boolean", description: "TDD for Programming (auto-on majors)" },
+      },
+      required: [],
+      additionalProperties: false,
     },
-    async execute(args, context) {
+    async execute(args: any, context: any) {
       const tt = String(args.task_type || "").trim()
       if (!VALID_TASK_TYPES.has(tt)) {
         return `❌ invalid task_type '${tt}'. Use one of: ${[...VALID_TASK_TYPES].join(", ")}.`
@@ -323,9 +344,7 @@ export function createPhaseTools(env: EnforcerEnv) {
       let baseline: string[] | undefined
       if (tddMode && (args.phase || "") === "Programming") {
         try {
-          const res = await $`uv run scripts/omt/tdd_check.py baseline`
-            .cwd(directory).quiet().nothrow()
-          const data = JSON.parse(res.stdout.toString() || "{}")
+          const data = runPyJson(env, ["run", "scripts/omt/tdd_check.py", "baseline"]) || {}
           if (Array.isArray(data.baseline_failures)) baseline = data.baseline_failures
         } catch (e: any) {
           safeLog("warn", `baseline capture failed: ${e?.message || e}`)
@@ -401,17 +420,23 @@ export function createPhaseTools(env: EnforcerEnv) {
         }
       } catch { /* fail-open: the embed is advisory */ }
       return lines.join("\n")
-    },
-  })
+    }
+  };
 
-  const omt_skip = tool({
+  const omt_skip = {
+    name: "omt_skip",
     description: irToolDescription("omt_skip", "Logged escape hatch: unlock without phase. Scopes: src|tests|nav|all. purpose: canary|emergency|break_glass|override."),
-    args: {
-      reason: tool.schema.string().describe("why (logged)"),
-      scope: tool.schema.string().optional().describe("src|tests|nav|all (default all)"),
-      purpose: tool.schema.string().optional().describe("canary|emergency|break_glass|override (tests default canary)"),
+    input: {
+      type: "object",
+      properties: {
+        reason: { type: "string", description: "why (logged)" },
+        scope: { type: "string", description: "src|tests|nav|all (default all)" },
+        purpose: { type: "string", description: "canary|emergency|break_glass|override (tests default canary)" },
+      },
+      required: [],
+      additionalProperties: false,
     },
-    async execute(args, context) {
+    async execute(args: any, context: any) {
       const session = context?.sessionID || undefined
       const scope = args.scope || "all"
       // feature_056 A2: purpose turns opaque skips into signal. Unknown values
@@ -432,17 +457,23 @@ export function createPhaseTools(env: EnforcerEnv) {
         : "scope=src unlocks src/ edits."
       return `⚠️ OMT++ skip recorded (scope=${scope}, purpose=${purpose}): "${args.reason}". ` +
         "This override is logged in .meta/.omt/ledger.jsonl. " + scopeNote
-    },
-  })
+    }
+  };
 
   // --- omt_complete: Verify phase completion and optionally advance ---
-  const omt_complete = tool({
+  const omt_complete = {
+    name: "omt_complete",
     description: irToolDescription("omt_complete", "Verify phase artifacts; optionally advance (Design|Programming|Testing|Done)."),
-    args: {
-      feature: tool.schema.string().describe("feature slug, e.g. feature_006.x"),
-      advance_to: tool.schema.string().optional().describe("advance to: Design|Programming|Testing|Done"),
+    input: {
+      type: "object",
+      properties: {
+        feature: { type: "string", description: "feature slug, e.g. feature_006.x" },
+        advance_to: { type: "string", description: "advance to: Design|Programming|Testing|Done" },
+      },
+      required: [],
+      additionalProperties: false,
     },
-    async execute(args, context) {
+    async execute(args: any, context: any) {
       const session = context?.sessionID || undefined
       const feature = args.feature || ""
       const advanceTo = args.advance_to || ""
@@ -476,9 +507,7 @@ export function createPhaseTools(env: EnforcerEnv) {
       // All artifacts present - record completion
       // TDD validate-exit: check coverage gaps and dangling reds
       try {
-        const tddRes = await $`uv run scripts/omt/tdd_check.py validate-exit --feature ${feature}`
-          .cwd(directory).quiet().nothrow()
-        const tddData = JSON.parse(tddRes.stdout.toString() || '{"ok":false,"error":"empty verifier output (fail-closed, feature_099 S2)"}')
+        const tddData = runPyJson(env, ["run", "scripts/omt/tdd_check.py", "validate-exit", "--feature", feature]) || { ok: false, error: "empty verifier output (fail-closed, feature_099 S2)" }
         if (!tddData.ok) {
           let msg = `⛔ TDD phase exit blocked:\n`
           if (tddData.dangling_reds?.length)
@@ -534,8 +563,7 @@ export function createPhaseTools(env: EnforcerEnv) {
       // FAIL-OPEN (net_not_bootstrapped → silent; the invariant op itself logs
       // drift rows to harness.net.drift.jsonl).
       try {
-        const netRes = await $`uv run scripts/omt/net_check.py invariant`.cwd(directory).quiet().nothrow()
-        const netData = JSON.parse(netRes.stdout.toString() || '{"ok":false}')
+        const netData = runPyJson(env, ["run", "scripts/omt/net_check.py", "invariant"]) || { ok: false }
         if (netData.ok && netData.drift?.drifted) {
           result += `\n⚠️ Net drift: net revision ${netData.drift.net_revision} != ledger revision ${netData.drift.ledger_revision} (harness.net.drift.jsonl)`
         }
@@ -552,8 +580,8 @@ export function createPhaseTools(env: EnforcerEnv) {
       }
 
       return result
-    },
-  })
+    }
+  };
 
   async function syncWorkMdFromLedger() {
     const workMdPath = join(directory, "WORK.md")

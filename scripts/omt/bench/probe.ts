@@ -81,10 +81,50 @@ const tddTools: any = createTddTools(env);
 // env; cross-plugin state flows via ledger + trackers, which the probe calls
 // itself — TA:111).
 const LIVE = process.cwd();
+// V2 (migrate-v1): plugins export Plugin.define({id, setup}); load via setup with a minimal mock ctx.
 async function loadPluginTool(rel: string, key: string): Promise<any> {
   const mod = await import(join(LIVE, rel));
-  const { tool } = await mod.default({ directory: sandbox, worktree: sandbox });
-  return tool[key];
+  const plugin: any = (mod as any).default;
+  const captured: any = {};
+  const mockCtx: any = {
+    location: { directory: sandbox, project: { id: "bench", directory: sandbox, canonical: sandbox } },
+    options: {},
+    tool: {
+      transform: async (cb: any) => {
+        const editor: any = {
+          add: (x: any) => { captured[x.name] = x },
+          list: () => Object.values(captured),
+          get: (id: string) => (captured as any)[id],
+          update: () => {}, remove: () => {}, namespace: () => {},
+        };
+        cb(editor);
+        return { dispose: async () => {} };
+      },
+      hook: async () => ({ dispose: async () => {} }),
+      list: async () => [],
+      reload: async () => {},
+    },
+    event: { subscribe: async function* () {} },
+    storage: { get: async () => undefined, set: async () => {}, remove: async () => {}, scan: async () => ({ entries: [] }) },
+  };
+  await plugin.setup(mockCtx);
+  return captured[key];
+}
+// V2 result unwrap: restore V1 shapes for the transcript (string tools -> string,
+// {title,output,metadata} tools -> V1 object without the V2 `content` field).
+function v1(r: any): any {
+  if (typeof r === "string") return r;
+  if (r && typeof r === "object") {
+    if ("output" in (r as any)) {
+      const o: any = {};
+      if ("title" in (r as any)) o.title = (r as any).title;
+      o.output = (r as any).output;
+      if ("metadata" in (r as any)) o.metadata = (r as any).metadata;
+      return o;
+    }
+    if ("content" in (r as any)) return (r as any).content;
+  }
+  return r;
 }
 const toolStatus = await loadPluginTool(".opencode/plugins/omt_status.ts", "omt_status");
 const toolThink = await loadPluginTool(".opencode/plugins/omt_think.ts", "omt_think");
@@ -158,27 +198,26 @@ function relFor(step: any): string | null {
 
 async function execOmt(toolName: string, args: any, session: string): Promise<string> {
   const ctx = { sessionID: session };
-  if (toolName === "omt_phase") return String(await phaseTools.omt_phase.execute(args, ctx));
-  if (toolName === "omt_skip") return String(await phaseTools.omt_skip.execute(args, ctx));
-  if (toolName === "omt_complete") return String(await phaseTools.omt_complete.execute(args, ctx));
+  if (toolName === "omt_phase") return String(v1(await phaseTools.omt_phase.execute(args, ctx)));
+  if (toolName === "omt_skip") return String(v1(await phaseTools.omt_skip.execute(args, ctx)));
+  if (toolName === "omt_complete") return String(v1(await phaseTools.omt_complete.execute(args, ctx)));
   if (toolName === "omt_tdd") {
     // SDK array-coercion guard lives in tdd_hats; pass behaviors through as-is.
-    return String(await tddTools.omt_tdd.execute(args, ctx));
+    return String(v1(await tddTools.omt_tdd.execute(args, ctx)));
   }
   // String-or-object guard (GOTCHA_PROBE_SERIALIZATION): plugin tools that
   // shell out (omt_net) return an already-serialized JSON string — blind
   // JSON.stringify would double-encode it (escaped quotes), hiding engine
   // refusals ('"ok": false') and claim receipts ('"ok": true') from the
   // transcript asserts. Same shape as the omt_q branch below.
-  if (toolName === "omt_status") { const r: any = await toolStatus.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
-  if (toolName === "omt_think") { const r: any = await toolThink.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
-  if (toolName === "omt_nav") { const r: any = await toolNav.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
-  if (toolName === "omt_kb_nav") { const r: any = await toolKb.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
-  if (toolName === "omt_net") { const r: any = await toolNet.execute(args, ctx); return typeof r === "string" ? r : JSON.stringify(r); }
+  if (toolName === "omt_status") { const r: any = v1(await toolStatus.execute(args, ctx)); return typeof r === "string" ? r : JSON.stringify(r); }
+  if (toolName === "omt_think") { const r: any = v1(await toolThink.execute(args, ctx)); return typeof r === "string" ? r : JSON.stringify(r); }
+  if (toolName === "omt_nav") { const r: any = v1(await toolNav.execute(args, ctx)); return typeof r === "string" ? r : JSON.stringify(r); }
+  if (toolName === "omt_kb_nav") { const r: any = v1(await toolKb.execute(args, ctx)); return typeof r === "string" ? r : JSON.stringify(r); }
+  if (toolName === "omt_net") { const r: any = v1(await toolNet.execute(args, ctx)); return typeof r === "string" ? r : JSON.stringify(r); }
   if (toolName === "omt_q") {
-    const m = await import(join(LIVE, ".opencode/plugins/omt_q.ts"));
-    const { tool } = await m.default({ directory: sandbox, worktree: sandbox });
-    const r = await tool.omt_q.execute(args, ctx);
+    const toolQ: any = await loadPluginTool(".opencode/plugins/omt_q.ts", "omt_q");
+    const r = v1(await toolQ.execute(args, ctx));
     return typeof r === "string" ? r : JSON.stringify(r);
   }
   return `⛔ unknown omt tool ${toolName}`;

@@ -33,10 +33,21 @@
 //
 // Ledger: .meta/.omt/ledger.jsonl  (gitignored runtime state, one JSON record per line)
 //
-// API note (verify on opencode 1.17.x via the Step-0 probe): assumes `input.sessionID`
-// on tool.execute.before and `context.sessionID` on custom-tool execute. If absent, the
-// gate falls back to an 8-hour time window so it still functions for a single user.
+// V2 (migrate-v1): Plugin.define({id:"omt-enforcer", setup(ctx)}).
+// Context mapping: directory→ctx.location.directory, project→ctx.location.project,
+// client→console logging (makeSafeLog/makeNotify without client), `$`→node:child_process
+// in lib, event→ctx.event.subscribe with AbortController cleanup, tool map→
+// ctx.tool.transform(editor.add), tool.execute.before/after→ctx.tool.hook.
+//
+// API note (V2): before event = {tool, sessionID, input}; after event =
+// {tool, sessionID, input, result|error, status}. Synthetic V1 input/output
+// objects preserve the gate_driver contract (input={tool,sessionID}, output={args}).
 
+// omt_status is registered by .opencode/plugins/omt_status.ts as its own
+// standalone plugin. Keeping it out of this enforcer avoids dynamic-import
+// cache/loading failures and duplicate tool registration.
+
+import { Plugin } from "@opencode/plugin"
 import { initOmtShared } from "../lib/omt_shared"
 import {
   OmtBlock, createSessionState, makeSafeLog, makeNotify, type EnforcerEnv,
@@ -49,96 +60,103 @@ import { injectThoughtsOnRead } from "../lib/enforcer/think_gate"
 import { sessionIdleSweep } from "../lib/enforcer/mvc_after"
 import { lspAfterEdit } from "../lib/enforcer/lsp_filter"
 
-
-// omt_status is registered by .opencode/plugins/omt_status.ts as its own
-// standalone plugin. Keeping it out of this enforcer avoids dynamic-import
-// cache/loading failures and duplicate tool registration.
-
-export default async ({ client, $, directory: cwd, worktree }) => {
-  // F2/F17 (meta_harness_dsl R1): repo root = worktree ?? directory.
-  // `directory` is the current working directory, so a subdir launch breaks
-  // repo-relative paths exactly like a bare cwd did pre-R1; `worktree`
-  // is the git worktree path. The shared lib is initialized with the same
-  // value; all lib path getters are lazy and honor it.
-  const directory = worktree ?? cwd
-  initOmtShared(directory)
-
-  const safeLog = makeSafeLog(client)
-  const env: EnforcerEnv = {
-    client, $, directory,
-    state: createSessionState(),
-    safeLog,
-    notify: makeNotify(client, safeLog),
-  }
-
-  // --- hooks ---------------------------------------------------------------
+// Wrap a lib tool (intermediate string-returning or V2 {content}-returning)
+// into a V2 Tool.Info execute returning {content}.
+function toV2(name: string, t: any) {
   return {
-    tool: { ...createPhaseTools(env), ...createTddTools(env) },
+    name,
+    description: t.description,
+    input: t.input,
+    async execute(input: any, toolCtx: any) {
+      const r = await t.execute(input, toolCtx)
+      if (typeof r === "string") return { content: r }
+      return r
+    },
+  }
+}
 
-    "tool.execute.before": async (input, output) => {
-      const session = input?.sessionID || undefined
+export default Plugin.define({
+  id: "omt-enforcer",
+  async setup(ctx) {
+    // V2 location: plugin instance directory (repo root for local plugins).
+    const directory = ctx.location.directory
+    initOmtShared(directory)
+
+    const safeLog = makeSafeLog()
+    const env: EnforcerEnv = {
+      directory,
+      state: createSessionState(),
+      safeLog,
+      notify: makeNotify(undefined, safeLog),
+    }
+
+    // --- tools ---------------------------------------------------------------
+    const phaseTools = createPhaseTools(env) as Record<string, any>
+    const tddTools = createTddTools(env) as Record<string, any>
+    await ctx.tool.transform((editor) => {
+      for (const [name, t] of Object.entries({ ...phaseTools, ...tddTools })) {
+        editor.add(toV2(name, t) as any)
+      }
+    })
+
+    // --- before hook (V1 "tool.execute.before") --------------------------------
+    await ctx.tool.hook("execute.before", async (event: any) => {
+      const session = event?.sessionID || undefined
+      // Synthetic V1 shapes: input={tool,sessionID}, output={args}
+      const synthInput = { tool: event.tool, sessionID: event.sessionID }
+      const synthOutput = { args: event.input as any }
 
       // feature_099 S2 (F02): advice may fail open, authority must not.
-      // nav/kb instrumentation stays warn+allow; the gate chain below refuses
-      // on unknown/internal errors (fail-closed) instead of allowing the edit.
       try {
-        // feature_020: nav-vs-search tracking (instrumentation — the g.nav
-        // block decision is in the data-driven chain below).
-        await navTrack(env, session, input)
-
-        // feature_kb_akb: KB consult tracking — g.kb gate predicate consumes
-        // state.kb(session).consulted (gate_driver.ts SESSION_FLAGS).
-        await kbTrack(env, session, input)
+        await navTrack(env, session, synthInput)
+        await kbTrack(env, session, synthInput)
       } catch (e: any) {
         safeLog("warn", "before-hook instrumentation error (failing open): " + (e?.message || e))
       }
 
       try {
-        // HDL-2 (improvement006/OPT-F): the gate chain is data-driven — the
-        // driver iterates IR before-gates in order=, matching tools= and
-        // evaluating when= via the @pred registry (lib/enforcer/gate_driver.ts).
-        // SDK contract: in tool.execute.before args live on OUTPUT (input=
-        // {tool, sessionID, callID} only). Reading input?.args here (a3ffb81's
-        // false "F14 fix") made raw always undefined → every edit guard dead.
-        // The AFTER hook is the one that reads input.args (genuine F14 fix).
-        const raw = output?.args?.filePath ?? output?.args?.path ?? output?.args?.file
-        await runBeforeGates(env, session, input, output,
+        // V2: args live on event.input (was output.args in V1 before-hook).
+        const rawInput: any = event.input as any
+        const raw = rawInput?.filePath ?? rawInput?.path ?? rawInput?.file
+        await runBeforeGates(env, session, synthInput, synthOutput,
           typeof raw === "string" && raw ? raw : null)
       } catch (e: any) {
-        if (e instanceof OmtBlock) throw e          // intentional gate → block the edit
+        if (e instanceof OmtBlock) throw e
         throw new OmtBlock(`⛔ OMT++ gate (authority resolution failed closed): ${(e?.message || e)}`)
       }
-    },
+    })
 
-    "tool.execute.after": async (input, output) => {
+    // --- after hook (V1 "tool.execute.after") ----------------------------------
+    await ctx.tool.hook("execute.after", async (event: any) => {
+      // V2 after: {tool, sessionID, input, result|error, status}.
+      // Lib expects V1 (input={tool,sessionID,args}, output=result mutable).
+      const synthInput = { tool: event.tool, sessionID: event.sessionID, args: event.input as any }
+      const synthOutput: any = event.status === "completed" ? (event.result as any) : {}
       // R6 S6: session bootstrap — nav reminder + TA digest, once per session
-      // on the FIRST tool result (any tool). Fail-open.
-      await sessionBootstrap(env, input, output)
-      // feature_088 T2-5: per-file Read-recency — record completed Reads so a
-      // read-then-edit of the same file passes g.kb for that file.
-      await trackRead(env, input?.sessionID || undefined, input)
-      // feature_022 D1: read-time thought injection (first read per file per
-      // session). Fail-open.
-      await injectThoughtsOnRead(env, input, output)
+      await sessionBootstrap(env, synthInput, synthOutput)
+      await trackRead(env, (event as any)?.sessionID || undefined, synthInput)
+      await injectThoughtsOnRead(env, synthInput, synthOutput)
+      // feature_090: LSP allowlist (keys off result metadata, runs before raw guard)
+      await lspAfterEdit(env, synthInput, synthOutput)
 
-      // feature_090 (mh8 T2-7): known-LSP-error allowlist — purge allowlisted
-      // (file, code) pairs from edit/write/patch results (output text +
-      // metadata), fail-open. Runs BEFORE the raw early-return below: it keys
-      // off output.metadata.diagnostics, not the edited path.
-      await lspAfterEdit(env, input, output)
-
-      // HDL-2 (improvement007 R7/OPT-F): the after-chain is data-driven too —
-      // the driver iterates IR after-gates in order=; the edit-tools filter
-      // and the src/**.py scope are exactly the gates' tools=/when= attrs.
-      // SDK contract: in tool.execute.after args live on INPUT — the genuine
-      // F14 fix (output.args never existed in any SDK version).
-      const raw = input?.args?.filePath ?? input?.args?.path ?? input?.args?.file
+      const rawInput: any = event.input as any
+      const raw = rawInput?.filePath ?? rawInput?.path ?? rawInput?.file
       if (typeof raw !== "string" || !raw) return
-      await runAfterGates(env, input?.sessionID || undefined, input, output, raw)
-    },
+      await runAfterGates(env, (event as any)?.sessionID || undefined, synthInput, synthOutput, raw)
+    })
 
-    event: async ({ event }) => {
-      await sessionIdleSweep(env, event)
-    },
-  }
-}
+    // --- events (V1 `event` hook → V2 subscribe + cleanup) ----------------------
+    const controller = new AbortController()
+    void (async () => {
+      try {
+        for await (const ev of ctx.event.subscribe({ signal: controller.signal }) as any) {
+          try {
+            await sessionIdleSweep(env, ev as any)
+          } catch { /* fail-open */ }
+        }
+      } catch { /* abort on unload */ }
+    })()
+
+    return () => controller.abort()
+  },
+})

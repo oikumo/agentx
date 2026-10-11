@@ -62,27 +62,29 @@ export type Notify = (message: string) => Promise<void>
 
 // The ambient context every gate module receives (assembled once by the
 // composition root).
+// V2 (migrate-v1): Bun `$` shell helper + V1 `client` removed — lib uses
+// node:child_process directly; logging uses console (fail-open, no client).
 export interface EnforcerEnv {
-  client: any
-  $: any
   directory: string
   state: SessionState
   safeLog: SafeLog
   notify: Notify
+  dryRun?: boolean
 }
 
-export function makeSafeLog(client: any): SafeLog {
+export function makeSafeLog(_client?: any): SafeLog {
   return (level, message) => {
-    try { client?.app?.log?.({ service: "omt-enforcer", level, message }) }
+    try { console.log(`[omt-enforcer:${level}] ${message}`) }
     catch { /* logging is best-effort */ }
   }
 }
 
-export function makeNotify(client: any, safeLog: SafeLog): Notify {
-  // Non-blocking surfacing: try a toast, always fall back to the log.
+export function makeNotify(_client?: any, safeLog?: SafeLog): Notify {
+  // V2: no client.tui toast — console warn + safeLog fallback (fail-open).
+  const log = safeLog ?? ((level, message) => { try { console.log(`[omt-enforcer:${level}] ${message}`) } catch {} })
   return async (message) => {
-    try { await client?.tui?.showToast?.({ message, variant: "warning" }) } catch { /* ignore */ }
-    safeLog("warn", message)
+    try { console.warn(message) } catch { /* ignore */ }
+    try { log("warn", message) } catch { /* ignore */ }
   }
 }
 

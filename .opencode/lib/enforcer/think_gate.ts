@@ -180,12 +180,16 @@ export async function injectThoughtsOnRead(env: EnforcerEnv, input: any, output:
           seen.add(abs)
           const shown = hits.slice(0, 10)
             .map((t) => `  ${rel}:${t.line}: ${t.content}`).join("\n")
-          output.output += `\n\n💡 TA: thoughts in ${rel} (${hits.length}) — review ` +
+          const suffix = `\n\n💡 TA: thoughts in ${rel} (${hits.length}) — review ` +
             `before editing (think-gate applies; omt_think{op:"list", path:"${rel}"} ` +
             `records consult):\n${shown}` +
             (hits.length > 10
               ? `\n  … (+${hits.length - 10} more: omt_think{op:"list", path:"${rel}"})`
               : "")
+          // V1: output.output string; V2: result.content string/array.
+          if (typeof output?.output === "string") output.output += suffix
+          else if (typeof (output as any)?.content === "string") (output as any).content += suffix
+          else if (Array.isArray((output as any)?.content)) (output as any).content.push({ type: "text", text: suffix })
         }
       }
     }

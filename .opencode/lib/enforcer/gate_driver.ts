@@ -276,13 +276,27 @@ const IMPLS: Record<string, GateImpl> = {
     })
     if (verdict.via === "activation_solo_skip") return
     if (verdict.via === "exception_break_glass") return
-    // Dry-run / synthetic ctx (omt_q op:plan): no SDK shell on env.$ — the
-    // gate still fires in the predicted chain, but its verdict needs the
-    // live enforcer path (skip the shell-out instead of crashing the fold).
-    if (typeof ctx.env.$ !== "function") return
-    // Call net.gate to check permission.
-    const res = await ctx.env.$`uv run scripts/omt/net_check.py gate --path ${rel} --session ${ctx.session || ""}`.cwd(ctx.env.directory).quiet().nothrow()
-    const data = JSON.parse(res.stdout.toString() || '{"allowed":false,"code":"ERR_NET_NOT_ENABLED"}')
+    // Dry-run / synthetic ctx: V2 preflight sets env.dryRun; V1-era probes
+    // (split_proof E2, bench) construct env with `$: {}` (non-function) to
+    // mark synthetic contexts — preserve that skip so hermetic probes never
+    // shell out (V1: `typeof env.$ !== "function"`).
+    if ((ctx.env as any).dryRun) return
+    if ("$" in (ctx.env as any) && typeof (ctx.env as any).$ !== "function") return
+    // Call net.gate to check permission (V2: node:child_process).
+    let data: any = { allowed: false, code: "ERR_NET_NOT_ENABLED" }
+    try {
+      const { execFileSync: _exec } = await import("node:child_process")
+      const out = _exec("uv", ["run", "scripts/omt/net_check.py", "gate", "--path", rel, "--session", ctx.session || ""], {
+        cwd: ctx.env.directory, encoding: "utf8", timeout: 30000,
+        stdio: ["ignore", "pipe", "ignore"],
+      } as any)
+      data = JSON.parse(String(out || '{"allowed":false,"code":"ERR_NET_NOT_ENABLED"}'))
+    } catch (e: any) {
+      const stdout = String((e as any)?.stdout || "").trim()
+      if (stdout) {
+        try { data = JSON.parse(stdout) } catch { /* keep default deny */ }
+      }
+    }
     if (!data.allowed) throw new OmtBlock(`⛔ OMT++ gate (g.net): ${data.message || data.code}`)
   },
   // feature_138 E2: split-proof membrane advisory (Oracle `split_proof` v2,

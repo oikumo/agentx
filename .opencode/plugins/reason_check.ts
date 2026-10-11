@@ -11,7 +11,8 @@
 // grants before argv is even built. Output is the §5 envelope (≤ ~2KB summaries).
 // TA: why: `reason_check` (no omt_ prefix) stays outside harness registry churn like `reason_table` — advisory JSON only, never throws the session, never touches net/ledger/src.
 
-import { tool } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { tool, registerTools } from "../lib/v1_compat"
 import { spawnSync } from "node:child_process"
 import { join, isAbsolute, resolve as resolvePath } from "node:path"
 import { argvValue } from "../lib/omt_shared" // registry-neutral: standalone serializer (feature_136)
@@ -156,10 +157,11 @@ function createReasonCheckTool(root: string) {
   })
 }
 
-export default async ({ directory, worktree }: { directory: string; worktree?: string }) => {
-  const root = worktree ?? directory
-  const reason_check = createReasonCheckTool(root)
-  return {
-    tool: { reason_check },
-  }
-}
+export default Plugin.define({
+  id: "reason-check",
+  async setup(ctx) {
+    const root = ctx.location.directory
+    const reason_check = createReasonCheckTool(root)
+    await registerTools(ctx, { reason_check })
+  },
+})

@@ -11,7 +11,8 @@
 // as plain text. Parses digests (`sha256:*`, `cert:sha256:*`) and `detail_ref`s.
 // TA: why: `reason_table` (no omt_ prefix) avoids isOmtHarness + TOOL registry churn — new `omt_*` plugin would need @tool row + harnessc build + e2e receipt; template stays usable prompt-side with zero harness edits.
 
-import { tool } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { tool, registerTools } from "../lib/v1_compat"
 import { existsSync, readFileSync } from "node:fs"
 import { join, isAbsolute } from "node:path"
 
@@ -271,10 +272,11 @@ function createReasonTableTool(root: string) {
   })
 }
 
-export default async ({ directory, worktree }: { directory: string; worktree?: string }) => {
-  const root = worktree ?? directory
-  const reason_table = createReasonTableTool(root)
-  return {
-    tool: { reason_table },
-  }
-}
+export default Plugin.define({
+  id: "reason-table",
+  async setup(ctx) {
+    const root = ctx.location.directory
+    const reason_table = createReasonTableTool(root)
+    await registerTools(ctx, { reason_table })
+  },
+})

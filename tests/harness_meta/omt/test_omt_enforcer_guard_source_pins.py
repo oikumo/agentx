@@ -47,9 +47,16 @@ E2E_TEST = REPO_ROOT / "tests" / "harness_meta" / "omt" / "test_omt_harness_e2e.
 
 
 def _hook_body(source: str, hook: str) -> str:
-    """Slice one registered-hook body out of the plugin's returned object:
-    from the `"<hook>":` key to the next top-level `"…":` hook key or the
-    closing of the returned literal. Good enough for a source pin."""
+    """Slice one registered-hook body out of the plugin source.
+    V1: from the `"<hook>":` key to the next hook key. V2: from
+    `ctx.tool.hook("<hook>"` to the matching `})` close (good enough for a pin)."""
+    if f'"{hook}"' in source and ("ctx.tool.hook" in source or "tool.hook" in source):
+        # Prefer the V2 registration site when present.
+        m = re.search(r'hook\("' + re.escape(hook) + r'"[^)]*\)\s*,\s*async.*?\n', source)
+        if m:
+            start = m.start()
+            # Take a generous window (next 60 lines) — pins use `in`, not exact slice.
+            return "\n".join(source[start:].splitlines()[:60])
     start = source.index(f'"{hook}"')
     # next registered key after this one (hook keys are quoted, end with ':')
     m = re.search(r'\n\s{4}"[a-z._]+":\s*async', source[start + 1:])
@@ -58,26 +65,52 @@ def _hook_body(source: str, hook: str) -> str:
 
 
 class TestBeforeHookContractPin:
-    """BUG-A pin: the before-hook EDIT path must read args from `output`
-    (SDK contract: before input has NO args; after input HAS args)."""
+    """BUG-A pin (V1) / V2 event-input pin: the before-hook EDIT path must read
+    args from `output` (V1 SDK: before input has NO args) or from `event.input`
+    (V2: before event carries {tool, sessionID, input})."""
 
     def test_before_hook_edit_path_reads_output_args(self):
-        body = _hook_body(ENFORCER.read_text(encoding="utf-8"), "tool.execute.before")
-        assert "output?.args?.filePath" in body, (
-            "before-hook edit path must read output?.args?.filePath "
-            "(before-hook contract: args on output, not input)")
+        src = ENFORCER.read_text(encoding="utf-8")
+        if 'ctx.tool.hook("execute.before"' in src:
+            # V2 contract: args live on event.input (was output.args in V1).
+            body = _hook_body(src, "tool.execute.before")
+            assert "event.input" in body and "filePath" in body, (
+                "V2 before-hook edit path must read event.input.filePath "
+                "(V2 contract: before event carries input)")
+        else:
+            body = _hook_body(src, "tool.execute.before")
+            assert "output?.args?.filePath" in body, (
+                "before-hook edit path must read output?.args?.filePath "
+                "(before-hook contract: args on output, not input)")
 
     def test_before_hook_edit_path_never_reads_input_args_for_filepath(self):
-        body = _hook_body(ENFORCER.read_text(encoding="utf-8"), "tool.execute.before")
-        assert "input?.args?.filePath" not in body, (
-            "BUG-A: before-hook input carries NO args per SDK d.ts — reading "
-            "input?.args?.filePath makes every edit guard dead (F14 mirrored)")
+        src = ENFORCER.read_text(encoding="utf-8")
+        if 'ctx.tool.hook("execute.before"' in src:
+            # V2: the V1 `input?.args` shape is gone (synthetic input has no .args
+            # for the path — path comes from event.input). Guard the V1 defect class.
+            body = _hook_body(src, "tool.execute.before")
+            assert "input?.args?.filePath" not in body, (
+                "V2 before-hook must not read input?.args?.filePath "
+                "(V1 defect class — path lives on event.input)")
+        else:
+            body = _hook_body(src, "tool.execute.before")
+            assert "input?.args?.filePath" not in body, (
+                "BUG-A: before-hook input carries NO args per SDK d.ts — reading "
+                "input?.args?.filePath makes every edit guard dead (F14 mirrored)")
 
     def test_after_hook_edit_path_reads_input_args(self):
-        body = _hook_body(ENFORCER.read_text(encoding="utf-8"), "tool.execute.after")
-        assert "input?.args?.filePath" in body, (
-            "after-hook edit path must read input?.args?.filePath "
-            "(after-hook contract: args on input — the genuine F14 fix)")
+        src = ENFORCER.read_text(encoding="utf-8")
+        if 'ctx.tool.hook("execute.after"' in src:
+            # V2 contract: args live on event.input (synthetic input.args mirrors it).
+            body = _hook_body(src, "tool.execute.after")
+            assert ("event.input" in body or "args: event.input" in body) and "filePath" in body, (
+                "V2 after-hook edit path must read event.input.filePath "
+                "(after-hook contract: args on input)")
+        else:
+            body = _hook_body(src, "tool.execute.after")
+            assert "input?.args?.filePath" in body, (
+                "after-hook edit path must read input?.args?.filePath "
+                "(after-hook contract: args on input — the genuine F14 fix)")
 
     def test_no_false_f14_comment_in_before_hook(self):
         body = _hook_body(ENFORCER.read_text(encoding="utf-8"), "tool.execute.before")

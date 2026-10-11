@@ -150,6 +150,8 @@ class TestBaselineCapture:
         failure → no field → cmd_done legacy semantics)."""
         src = (REPO_ROOT / ".opencode" / "lib" / "enforcer" / "phase_gate.ts"
                ).read_text(encoding="utf-8")
-        assert "tdd_check.py baseline" in src      # the producer call
+        # V1: $`uv run scripts/omt/tdd_check.py baseline` (one string);
+        # V2: runPyJson(env, ["run", "scripts/omt/tdd_check.py", "baseline"]).
+        assert ("tdd_check.py baseline" in src or '"baseline"' in src)      # the producer call
         assert "baseline_failures" in src          # stored on the phase record
         assert '"Programming"' in src              # scoped to Programming entry

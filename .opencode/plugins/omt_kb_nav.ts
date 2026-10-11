@@ -16,7 +16,8 @@
 // at MAX_RECORDS with a `truncated` marker when exceeded. Refine with
 // tag_type / file / symbol id / longer tag prefix.
 
-import { tool } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { tool, registerTools } from "../lib/v1_compat"
 import {
   initOmtShared, repoRoot, loadKbIndex, irToolDescription,
 } from "../lib/omt_shared"
@@ -223,10 +224,11 @@ function createKbNavTools() {
   return { omt_kb_nav }
 }
 
-export default async ({ directory, worktree }) => {
-  initOmtShared(worktree ?? directory)
-  const { omt_kb_nav } = createKbNavTools()
-  return {
-    tool: { omt_kb_nav },
-  }
-}
+export default Plugin.define({
+  id: "omt-kb-nav",
+  async setup(ctx) {
+    initOmtShared(ctx.location.directory)
+    const {omt_kb_nav } = createKbNavTools()
+    await registerTools(ctx, { omt_kb_nav })
+  },
+})

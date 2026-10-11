@@ -9,14 +9,29 @@
 //   • sessionIdleSweep     — event hook: repo-wide MVC++ sweep on session.idle.
 
 import { existsSync, readFileSync } from "node:fs"
+import { execFileSync } from "node:child_process"
 import { gateMsg } from "../omt_shared"
 import { OmtBlock, type EnforcerEnv } from "./session_state"
+
+// V2 (migrate-v1): `$` Bun helper replaced by node:child_process (no process
+// API on the plugin context — manage our own).
+function runMvcJson(env: EnforcerEnv, args: string[]): any | null {
+  try {
+    const out = execFileSync("uv", ["run", "scripts/omt/mvc_check.py", ...args], {
+      cwd: env.directory, encoding: "utf8", timeout: 30000,
+      stdio: ["ignore", "pipe", "ignore"],
+    } as any)
+    return JSON.parse(String(out || "{}"))
+  } catch {
+    return null
+  }
+}
 
 // --- MVC++ lint delta (block only NEWLY introduced hard errors) ----------
 async function lintFindings(env: EnforcerEnv, abs: string): Promise<any[]> {
   try {
-    const res = await env.$`uv run scripts/omt/mvc_check.py ${abs} --json`.cwd(env.directory).quiet().nothrow()
-    return JSON.parse(res.stdout.toString() || "{}").findings || []
+    const data = runMvcJson(env, [abs, "--json"])
+    return data?.findings || []
   } catch { return [] }
 }
 
@@ -92,8 +107,7 @@ export async function mvcAfterEdit(env: EnforcerEnv, abs: string, rel: string): 
 export async function sessionIdleSweep(env: EnforcerEnv, event: any): Promise<void> {
   if (event?.type !== "session.idle") return
   try {
-    const res = await env.$`uv run scripts/omt/mvc_check.py --json`.cwd(env.directory).quiet().nothrow()
-    const data = JSON.parse(res.stdout.toString() || "{}")
+    const data = runMvcJson(env, ["--json"]) || {}
     if ((data.errors || 0) > 0) {
       await env.notify(`MVC++ sweep: ${data.errors} architecture error(s) in src/. ` +
         "Run: uv run scripts/omt/mvc_check.py")

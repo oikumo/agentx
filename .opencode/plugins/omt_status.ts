@@ -5,7 +5,8 @@
 // description resolves from the compiled IR AFTER initOmtShared ran (a
 // module-level tool() would read the IR under the pre-init cwd — F2/F17).
 
-import { tool } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { tool, registerTools } from "../lib/v1_compat"
 import { existsSync, readFileSync, readdirSync, mkdirSync, statSync } from "node:fs"
 import { join, relative, dirname } from "node:path"
 import { execSync } from "node:child_process"
@@ -803,10 +804,11 @@ function createStatusTool() {
 // plugin registers the gate tools; this plugin registers status independently.
 // R1 (F2/F17): repo root = worktree ?? directory, injected into the shared lib
 // before any hook runs (all lib path getters are lazy — see lib header).
-export default async ({ directory, worktree }) => {
-  initOmtShared(worktree ?? directory)
-  const omt_status = createStatusTool()
-  return {
-    tool: { omt_status },
-  }
-}
+export default Plugin.define({
+  id: "omt-status",
+  async setup(ctx) {
+    initOmtShared(ctx.location.directory)
+    const omt_status = createStatusTool()
+    await registerTools(ctx, { omt_status })
+  },
+})

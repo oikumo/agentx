@@ -145,18 +145,24 @@ def test_build_prompt_carries_startup_contract() -> None:
 
 
 def _registered_omt_tools() -> set[str]:
-    """Tool names the plugins actually register: `tool: { ... }` map keys in
-    .opencode/plugins/omt_*.ts plus the `const omt_<x> = …` tool factories in
-    the enforcer lib modules (phase_gate uses `tool(...)`, tdd_hats its
-    `tddTool(...)` wrapper — both declare `const omt_<x> =`)."""
+    """Tool names the plugins actually register.
+    V1: `tool: { ... }` map keys in .opencode/plugins/omt_*.ts plus the
+    `const omt_<x> = …` factories in lib/enforcer (phase_gate `tool(...)`).
+    V2 (migrate-v1): `registerTools(ctx, { omt_x })`, `editor.add({ name: "omt_x" })`,
+    and `name: "omt_x"` definitions (manual net/session + lib intermediates)."""
     tools: set[str] = set()
     for path in sorted((REPO_ROOT / ".opencode" / "plugins").glob("omt_*.ts")):
         src = path.read_text(encoding="utf-8")
         for m in re.finditer(r"tool:\s*\{([^}]*)\}", src, re.DOTALL):
             tools.update(re.findall(r"\bomt_\w+\b", m.group(1)))
+        # V2: registerTools(ctx, { omt_a, omt_b }) and editor.add({ name: "omt_x" })
+        for m in re.finditer(r"registerTools\(ctx,\s*\{([^}]*)\}\)", src):
+            tools.update(re.findall(r"\bomt_\w+\b", m.group(1)))
+        tools.update(re.findall(r'name:\s*"((?:omt_)\w+)"', src))
     for path in sorted((REPO_ROOT / ".opencode" / "lib" / "enforcer").glob("*.ts")):
         src = path.read_text(encoding="utf-8")
         tools.update(re.findall(r"const\s+(omt_\w+)\s*=", src))
+        tools.update(re.findall(r'name:\s*"((?:omt_)\w+)"', src))
     return tools
 
 
