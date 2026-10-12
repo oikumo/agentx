@@ -7,8 +7,6 @@
 
 | project | state | features | created | last event |
 |---|---|---|---|---|
-| agentx_1_0_0 | draft | — | 2026-10-10 | 2026-10-10 |
-| agentx_concurrent_development | active | feature_119.ledger_backed_fix_preview | 2026-10-10 | 2026-10-10 |
 | feature_kb_akb | active | feature_kb_akb | 2026-10-10 | 2026-10-10 |
 | harness_reason | complete | feature_122.harness_reason_stage_0_contract_extraction, feature_123.harness_reason_stage_1_checker, feature_124.harness_reason_stage_2_composition, feature_125.harness_reason_stage_3_paired_experiment, feature_126.harness_reason_held_out_real_tasks, feature_127.harness_reason_tier_0_renderer, feature_128.harness_reason_tier_1_advisory_pilot, feature_129.harness_reason_real_token_measurement, feature_130.real_token_discharge | 2026-10-10 | 2026-10-10 |
 | meta_harness_10 | complete | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release, feature_106.mh10_p2b3_lane_integration_rewire, feature_107.mh10_p2b3b_lane_template_landing, feature_108.mh10_p2c_crash_reorder, feature_109.mh10_p2d_matrix_payback | 2026-10-10 | 2026-10-10 |
@@ -28,7 +26,5 @@
 | meta_harness_concurrent | complete | feature_039.adaptive_net_engine, feature_040.net_composition_supervisor, feature_041.resource_places_concurrency, feature_042.goal_net_synthesis, feature_043.meta_net_dashboard, feature_044.mined_behavioral_net, feature_045.work_md_net_driven, feature_046.omt_net_session_arg_whitelist, feature_047.wip_limited_pool, feature_048.wip_limited_pool, feature_049.session_start_menu | 2026-10-10 | 2026-10-10 |
 | net_enforced_harness | complete | feature_050.net_as_gate | 2026-10-10 | 2026-10-10 |
 | petri_net_library | complete | feature_031.petri_net_library | 2026-10-10 | 2026-10-10 |
-| petri_net_studio | active | feature_032.petri_net_format, feature_033.petri_net_io, feature_034.studio_v1_editor, feature_035.studio_v2_analysis, feature_036.studio_v3_graph | 2026-10-10 | 2026-10-10 |
 | project_lifecycle | active | feature_030.project_lifecycle | 2026-10-10 | 2026-10-10 |
-| rag_v2 | active | feature_027.rag_v2, feature_029.rag_v2_slash_commands | 2026-10-10 | 2026-10-10 |
 | workflows | active | meta.workflows_definition_layer | 2026-10-10 | 2026-10-10 |

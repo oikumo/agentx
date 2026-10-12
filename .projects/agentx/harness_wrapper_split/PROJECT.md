@@ -17,7 +17,8 @@ Runtime-orthogonal, dev-coupled separation of AgentX product and meta-harness:
 - **T3 (lanes):** DONE — per-bucket moves per sign-off table (R1-R6: scripts retired, features retired → `harness_meta/omt/` 72, `harness_meta/` 35/39, `agentx/` 13/56) + overlay lane proofs (147) + telemetry isolation (148); lanes 12F/2127P/5S same-12 pre-existing.
 - **T4 (TA strip):** DONE — py `ast.dump`-identical + TS comment-only pinned (146); logic-touch-alongside-TA enforcement + index `{location,owner}` + studio stripped-tsc + .opencode bun-parse goldens (150).
 - **T5 (per-mechanic receipts):** DONE — `@var receipt_slices_path` + `.meta/templates/receipt_slices.json` (q/net/split_proof) + `omt_shared.ts` slice branch (pure per-slice freshness, legacy byte-compat) + `scripts/omt/receipt.py` mint/status + 10 goldens (feature_151); mapped-file edits re-receipt via `receipt.py mint --slice <name>`.
-- **T6–T7:** per PROPOSAL_V7 (multi-root sync + relocations, vision fit).
+- **T6 (multi-root sync + relocations):** DONE — `project_state.projects_roots/find_home/all_homes` (archive-anchored discovery; env single-root compat) + per-root manifests + WORK.md `## Projects` union (no-clobber; `OMT_WORK_PATH=tmp` idiom retired) + `move` op (kind extend, state-transparent) + `new --root` + cross-root lookups + harnessc root-aware (feature_152); `harness_wrapper_split` backfilled (D8 revision — root-aware status check demanded it; Options 11 via surgical edit + workc, no net_to_md); 4 relocations executed → `.projects/agentx/` (states preserved, pending-moves draft retired).
+- **T7:** per PROPOSAL_V7 (Oracle `split_proof_meta` v2 §E — largely subsumed by the landed T2–T6 goldens + prove/verify chain; residual = program close tail).
 - **Oracle (feature_138):** DONE — `scripts/omt/split_proof.py` (prove/verify/attest-bridge/newcomer-probe) + `split_proof.{cert,attest}` chain kinds + `g.split_proof` (order 37, advisory-local/strict-CI) + `SECTION:split_proof`.
 
 ## Decisions log
@@ -34,3 +35,4 @@ Runtime-orthogonal, dev-coupled separation of AgentX product and meta-harness:
 - feature_149.triage_12_residual (triage-only: 12/12 fail solo, owned outside split — DONE)
 - feature_150.t4_ta_logic_touch_and_index (T4 closeout — DONE)
 - feature_151.t5_per_mechanic_receipts (T5 per-mechanic receipts — DONE)
+- feature_152.t6_multi_root_project_sync (T6 multi-root sync + move op + 4 relocations — DONE)

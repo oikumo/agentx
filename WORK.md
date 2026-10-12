@@ -28,7 +28,7 @@ Other enabled: none
 Blocked: none
 Resources: 4/4 free
 Pool: pending=0 active=0 done=7 (places 15/15)
-Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:meta_harness_14, proj:meta_harness_15, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, unscoped:001, unscoped:002
+Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:harness_wrapper_split, proj:meta_harness_14, proj:meta_harness_15, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, unscoped:001, unscoped:002
 Lanes: verification 0/1 free 1, integration 0/1 free 1
 ## Projects (synced by `uv run scripts/omt/project.py sync` — do not hand-edit)
 
@@ -36,6 +36,9 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 |---|---|---|
 | agentx_1_0_0 | draft | — |
 | agentx_concurrent_development | active | feature_119.ledger_backed_fix_preview |
+| harness_wrapper_split | active | feature_138.split_proof_oracle_firewall_slice, feature_152.t6_multi_root_project_sync |
+| petri_net_studio | active | feature_032.petri_net_format, feature_033.petri_net_io, feature_034.studio_v1_editor, feature_035.studio_v2_analysis, feature_036.studio_v3_graph |
+| rag_v2 | active | feature_027.rag_v2, feature_029.rag_v2_slash_commands |
 | feature_kb_akb | active | feature_kb_akb |
 | harness_reason | complete | feature_122.harness_reason_stage_0_contract_extraction, feature_123.harness_reason_stage_1_checker, feature_124.harness_reason_stage_2_composition, feature_125.harness_reason_stage_3_paired_experiment, feature_126.harness_reason_held_out_real_tasks, feature_127.harness_reason_tier_0_renderer, feature_128.harness_reason_tier_1_advisory_pilot, feature_129.harness_reason_real_token_measurement, feature_130.real_token_discharge |
 | meta_harness_10 | complete | feature_102.mh10_p1_global_projection, feature_103.mh10_p2_global_gate, feature_104.mh10_p2_rewire_claims_through_fire, feature_105.mh10_p2b2_template_fix_work_release, feature_106.mh10_p2b3_lane_integration_rewire, feature_107.mh10_p2b3b_lane_template_landing, feature_108.mh10_p2c_crash_reorder, feature_109.mh10_p2d_matrix_payback |
@@ -55,9 +58,7 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 | meta_harness_concurrent | complete | feature_039.adaptive_net_engine, feature_040.net_composition_supervisor, feature_041.resource_places_concurrency, feature_042.goal_net_synthesis, feature_043.meta_net_dashboard, feature_044.mined_behavioral_net, feature_045.work_md_net_driven, feature_046.omt_net_session_arg_whitelist, feature_047.wip_limited_pool, feature_048.wip_limited_pool, feature_049.session_start_menu |
 | net_enforced_harness | complete | feature_050.net_as_gate |
 | petri_net_library | complete | feature_031.petri_net_library |
-| petri_net_studio | active | feature_032.petri_net_format, feature_033.petri_net_io, feature_034.studio_v1_editor, feature_035.studio_v2_analysis, feature_036.studio_v3_graph |
 | project_lifecycle | active | feature_030.project_lifecycle |
-| rag_v2 | active | feature_027.rag_v2, feature_029.rag_v2_slash_commands |
 | workflows | active | meta.workflows_definition_layer |
 
 ---
@@ -71,7 +72,7 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 
 - [x] **feature_148 close-out — telemetry isolation DONE 2026-10-11** — `omt_q.ts` OMT_Q_TELEMETRY=off guard + 3 live probes live→off + new `test_telemetry_isolation_meta.py` 2 passed; targeted 35/36 (1 triaged bootstrap), overlay 6, lanes 12F/2127P/5S same-12, prove both clean verify STALE-valid cert-growth (+0q 242→246), check 281/0, receipt FRESH. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: 12-triage + T4–T6.
 
-- [x] **feature_147 close-out — T3 overlay lane proofs DONE 2026-10-11** — `scripts/omt/split_proof.py` overlay amendments (mvc stage-for-suite, manifest-filter missing-pins, harness src stage, verify-overlay fallback) + `.github/workflows/split.yml` + `test_overlay_meta.py` 6 + `feature147/test_overlay_feature_gate.py` 3; targeted 33 passed, lanes 12F/2125P/5S (same 12 pre-existing), product overlay GREEN 1 cert verify STALE-valid via overlay (row 224), harness overlay same 12 (1218P, no new), check 281/0, e2e 1 passed. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: telemetry isolation + T4–T6.
+- [x] **feature_152 close-out — T6 multi-root project sync DONE 2026-10-11** — `project_state` projects_roots/find_home/all_homes + archive-anchored default (hermetic) + per-root manifests + WORK.md ## Projects UNION (shape locked) + derive_state move-transparent; `project.py` move op (kind extend, no-op, archived-guard-first) + new --root + cross-root lookups; `harnessc` 4 checks + manifest byte-compare per root; 10 goldens (union, per-root, move+guards, row-invariant, --root, lookups, env compat, FSM); 030 43 zero-edits; harness_wrapper_split BACKFILLED (D8 revision — root-aware check demanded it; Options +1 surgical, no net_to_md); 4 relocations → .projects/agentx (states preserved, WORK rows byte-identical, pending-moves draft retired); lanes 12F/2154P/5S same-12 zero-new, prove both clean verify STALE-valid certs rm'd, check 282/0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: program close tail (UC0, bridge:, CI pinning, Q5, phantom-link, rev60-vs-live STALE).
 
 ## Agent Scratchpad (auto-managed, do not edit manually)
 

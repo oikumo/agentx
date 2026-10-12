@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-10-11k (T6 multi-root sync + 4 relocations LANDED, unit feature_152 complete)
+
+### Done
+
+- Resumed per pause v8 §13 (T6 next, relocations-gap note re-read FIRST — confirmed `link` ≠ project move; single-root sync clobbers `WORK.md ## Projects`). Baseline HEAD `ac54d04`, tree clean of code. User go on the design (D1–D8 + 2 commits + `--root` in + D8 exclusions) after a read-only analysis round.
+- Declared `omt_phase` major_feature Analysis/Design/Programming `feature_152.t6_multi_root_project_sync` (TDD auto-on) + tests canary; scaffolded via `new_feature.py --project harness_wrapper_split` with the UC8 hermetic idiom, pending-moves draft re-appended after (retired later when moves landed).
+- Artifacts: analysis_001 (code-evidence map + couplings), design_001 (D1–D8), operation_spec (signatures + stdout/exit contracts).
+- TDD: testlist 9 behaviors → RED at the union node (exit 1, TRUE-RED; 9F/1P — `env_compat` guard correctly green at RED) → GREEN 10/10 → REFACTOR → DONE (checklist verified; 12 pre-existing tolerated, byte-identical to baseline). Two-hats lesson: the tests canary must be minted AFTER the last phase record (fresh skip = active unlock); RED requires an existing failing node (argparse exit 4 records nothing).
+- **Impl (3 files, `harnessc stage` batch — NOT git add — + single e2e + mid-batch mint):** `project_state` projects_roots (archive-anchored discovery; anchored env-unset `projects_root` default keeps env-unset runs hermetic) + root_name/homes_in/all_homes/find_home (ValueError multi-root collision) + manifest_path/manifest_rows/build_manifest per-root + WORK.md union (3-col locked) + derive_state move-filter; `project.py` `_sync_all` per-root + `cmd_move` (archived-guard FIRST — archive homes live outside the roots, find_home can't see them; impl correction vs op spec, golden-exposed) + `new --root` + cross-root link/log/backfill/status/close/archive; `harnessc` structure/links/resume/status iterate all roots + manifest byte-compare per root (138's agentx hardcode subsumed).
+- **Honest finds:** RED-run hermetic hole (env-unset `projects_root()` → IR default = REAL repo; 4 ghost homes + regenerated real META.md — recovered, then fixed by the anchored fallback); dest-exists only reachable via non-dir straggler (find_home collision semantics); convention-line backtick closes after `/{…}`.
+- **Real-repo chain:** `project.py sync` (union row) → root-aware status check demanded → **`harness_wrapper_split` BACKFILLED** (D8 revision: unknown→active; UC8 manual home adopted via the designed `backfill`) → Options drift resolved surgically (`proj:harness_wrapper_split` into `## Tasks` Options + `workc build` → 11 options A–K; NO net_to_md — the close-tail STALE item owns net reconciliation) → check 282/0.
+- **4 relocations:** `move` ×4 → `.projects/agentx/` (agentx_concurrent_development, rag_v2, petri_net_studio active; agentx_1_0_0 draft — states preserved; WORK.md rows byte-identical; manifests 21 meta / 5 agentx; pending-moves draft section RETIRED; net hook 1-line proposals ×4, D4 never auto-applied).
+- Gates: goldens 10; 030 43 zero-edits; lanes **12F/2154P/5S same-12 zero-new** (+10); prove both clean (268+37, exempted 8) verify STALE-valid certs rm'd; check **282/0**; work_md 11255/11264 (147 rotated to WORK_ARCHIVE). Two server restarts mid-unit; state re-verified from ledger/git both times.
+- Close-out: WORK DONE row + 147 rotated, T1_SIGNOFF T6 note, PROJECT Scope/Features, artifacts (impl notes + test report), `omt_complete` → Done. 2 commits: (i) impl+goldens+artifacts+WORK surfaces, (ii) relocations+manifests+ledger.
+
+### Next
+
+- **Program close tail** (per PROPOSAL_V7 §8 + pause v8 §13): UC0 archival (sandbox delete-or-archive), `bridge:` backlog, CI cert pinning, Q5 opencode.jsonc webfetch-deny, phantom-link, **WORK.compiled rev60-vs-live rev0 STALE** (owns net reconciliation — rides WITH the menu/net agreement work).
+- T7 residual: subsumed by landed goldens + prove/verify chain; confirm at close (§E newcomer-probe answers).
+
+---
+
 ## 2026-10-11j (T5 per-mechanic receipts LANDED, unit feature_151 complete)
 
 ### Done
