@@ -5,6 +5,15 @@
 
 ---
 
+## 2026-10-12 (mini 8-trial REVISE — v2 server, pick A)
+
+- decision: REVISE — retain manual-only, drop autoinvoke until launcher slice; doc @ `sandbox/decision_revise_mini_8trial.md`.
+- evidence: mini 4x2x1=8 dry_run ok executed:false; compare quality-held no-cost-win + failed-quality inconclusive; 160 7/7; doctors 3 ok (v2).
+- live: 0/8 executed (run gated held); full 24 live deferred to launcher slice.
+- next: pause refresh + optional `project.py close` (human call).
+
+---
+
 ## 2026-10-12 (auto — feature_160.phase4_validation_smoke_24_trial_decision Done)
 
 - shipped: major_feature · test report @ 6.testing/features/feature_160.phase4_validation_smoke_24_trial_decision/test_report.md

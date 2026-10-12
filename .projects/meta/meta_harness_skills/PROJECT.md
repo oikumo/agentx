@@ -9,7 +9,7 @@
 
 > Procedural OpenCode skills layer over META HARNESS — not a product runtime.
 
-**Next:** Live 24-trial (gated run) + rollout decision retain/revise/drop; dry_run ✅ 160 (inconclusive, live gated).
+**Next:** Closed as REVISE (mini 8-trial proxy 2026-10-12) — pilots stay manual-only, autoinvoke dropped until launcher slice; see `sandbox/decision_revise_mini_8trial.md`.
 
 ---
 
@@ -62,7 +62,7 @@ Small procedural `SKILL.md` layer over existing OMT tools/gates/state to cut mis
 - [x] Phase2 pilots (recover-block skeleton ✅ + resume-work ✅ 157 + verify-closeout ✅ 158)
 - [x] Phase3 session-compat Done (159 versioned `version:1` + `from_session`; verify-closeout ✅ 158; doctors ✅)
 - [x] Phase4 dry_run Done (160 manifest 4x2x3=24 + 7 goldens; decision inconclusive live-gated; doctors ✅)
-- [ ] Phase4 live 24-trial + rollout decision retain/revise/drop/inconclusive
+- [x] Phase4 closed as REVISE (mini 8-trial 2026-10-12: quality held, no cost win, 0 live — retain manual-only, drop autoinvoke; see `sandbox/decision_revise_mini_8trial.md`)
 
 ---
 
