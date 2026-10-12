@@ -1,6 +1,6 @@
 # PROJECT: meta_harness_skills — Meta_Harness_Skills
 
-> Status: **active** · **v0.3 (2026-10-12)** — scope locked to ALL (A+B+C+D = full rollout). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_skills`; log sessions in CURRENT_STATE.md (newest on top).
+> Status: **complete** · **v0.3 (2026-10-12)** — scope locked to ALL (A+B+C+D = full rollout). Iterate freely (non-gated); spawn features with `new_feature.py "<name>" --type <tt> --project meta_harness_skills`; log sessions in CURRENT_STATE.md (newest on top).
 > Source idea: `.sandbox/ideas/meta_harness_skills/meta_harness_skills_review_analisys.md` (604 lines, ES) + companion `meta_harness_skills_review_2026-10-11.md` (proposal, 2026-10-11, SHA fef76600c3bb9447b3afb79b11c0dd8c0b5f9112).
 
 ---

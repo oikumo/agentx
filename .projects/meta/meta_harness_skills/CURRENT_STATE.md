@@ -5,6 +5,15 @@
 
 ---
 
+## 2026-10-12 (closed complete via project.py)
+
+- state: complete (was active v0.3 ALL). Features 153–161 all Done (base-green, contracts, pilots, session-compat, Phase4 dry_run 160, CI job 161).
+- outcome: REVISE — manual-only retained, autoinvoke dropped until launcher slice; live 24-trial deferred (gate NO_SAFE_LAUNCH proven, 0 executed).
+- automation: `skills-validation` CI job on every PR (pytest 160 + doctors); local opencode verification all-green (`ses_ecf07bc00ffex5BAMsr2W1QaWr`).
+- net proposals 150 pending left untouched (D4, owned by net reconciliation, never auto-applied).
+
+---
+
 ## 2026-10-12 (auto — feature_161.ci_skills_validation_job Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_161.ci_skills_validation_job/test_report.md
