@@ -9,7 +9,7 @@
 
 > Procedural OpenCode skills layer over META HARNESS — not a product runtime.
 
-**Next:** Phase4 validation (smoke + 24-trial + decision); session-compat ✅ 159.
+**Next:** Live 24-trial (gated run) + rollout decision retain/revise/drop; dry_run ✅ 160 (inconclusive, live gated).
 
 ---
 
@@ -61,7 +61,8 @@ Small procedural `SKILL.md` layer over existing OMT tools/gates/state to cut mis
 - [x] Phase1 contracts (skill.contract ✅ 154 + envelope ✅ 155 + StateScope ✅ 156)
 - [x] Phase2 pilots (recover-block skeleton ✅ + resume-work ✅ 157 + verify-closeout ✅ 158)
 - [x] Phase3 session-compat Done (159 versioned `version:1` + `from_session`; verify-closeout ✅ 158; doctors ✅)
-- [ ] Phase4 validation (smoke + 24-trial + decision)
+- [x] Phase4 dry_run Done (160 manifest 4x2x3=24 + 7 goldens; decision inconclusive live-gated; doctors ✅)
+- [ ] Phase4 live 24-trial + rollout decision retain/revise/drop/inconclusive
 
 ---
 

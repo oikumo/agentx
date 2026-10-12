@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-10-12 (auto — feature_160.phase4_validation_smoke_24_trial_decision Done)
+
+- shipped: major_feature · test report @ 6.testing/features/feature_160.phase4_validation_smoke_24_trial_decision/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+- Phase4 dry_run: `validation.py` manifest 4x2x3=24 + 7 goldens; smoke doctors OK; `gate_run` refusals prove run-gated; `compare` quality-gating proven; decision `inconclusive (dry_run only, live run gated)`.
+- next: user-gated live 24-trial + retain/revise/drop decision; refresh pause file + PROJECT Status Phase4.
+
+---
+
+
 ## 2026-10-12 (auto — feature_159.session_compat_versioned_error Done)
 
 - shipped: major_feature · test report @ 6.testing/features/feature_159.session_compat_versioned_error/test_report.md
