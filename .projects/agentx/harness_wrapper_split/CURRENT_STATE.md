@@ -5,6 +5,53 @@
 
 ---
 
+## 2026-10-12c (program CLOSED, user go `do all, no question`)
+
+### Done
+
+- `project.py close harness_wrapper_split` EXIT 0 (no --force needed — 138+152 complete records present; net hook 141 proposals pending D4, not applied).
+- Surgical Options -1 (T6 backfill precedent, no net_to_md): removed `proj:harness_wrapper_split` from `## Tasks` Options (O1 active-only — completed never in Options). Pool 0/0/7 15/15 + rev60 + NEXT preserved.
+- `workc build` → compiled 11 lines fresh: 8 active / 17 complete / 1 draft, Options 10 (proj:8 + unscoped:2). `harnessc check` OK 282/0 work_md 10957/11264.
+- Commit below (free-commit ask-free, push denied; `.sandbox/ideas/` + `sandbox/*.md` ?? excluded per project rule / sandbox isolation).
+
+### Next
+
+- None — program complete. Resume via this log + `sandbox/pause_2026-10-12.md` (superseded by close) if needed.
+
+---
+
+## 2026-10-12b (close-tail B-F LANDED, doc-only + proofs, user go `do all`)
+
+### Done
+
+- B UC0 archival (partial, canonical-safe): 9 tracked canonical files (PROPOSAL_V7/AUDIT_V8/SIGNOFF_V9 etc.) KEPT — PROJECT.md Quick Start references them, full rm -rf would break links + create tracked deletions (V7 untracked assumption no longer holds). Archived 7 untracked only to `/tmp/opencode/orthogonality_archive_2026-10-12/` (EXECUTE_V10, ORACLE_TRIAL_V11, R1/R2_R3/R4_R5/R6 dryruns, superseded pause_2026-10-11.md). Git status now clean of orthogonality `??`.
+- C bridge: backlog correctly-empty: T1 row #1 DELETE already done (`src/agentx/ui/test_omt_mvc_gate.py` absent); conforming `bridge:` 0 (attest-bridge confirms 0 conforming + 1 prose non-hit meta_harness_11:50, correctly excluded per V7 pin); studio carries tag only for harness slices — none exist yet. No mutation.
+- D CI pinning confirmed: `.github/workflows/split.yml` already pins (prove/verify/attest/newcomer, certs ≤2KiB uploaded never committed, tsc STRICT in CI). Nightly-full RED until 12 pre-existing go green — accepted per 149, owned outside split. No mutation.
+- E Q5 + phantom-link: Q5 CLOSED — `git diff -- opencode.jsonc` empty, webfetch deny present L291, AGENTS/META_HARNESS declare deny. Phantom-link×10 are T6-expected multi-root false positives (homes exist in `.projects/agentx/` 5/5, status union 26 rows correct, drift checks meta-only) — no `link` action (would duplicate + churn ledger).
+- F T7 residual confirm: `prove --lane both` clean 268+37 exempted 8 (matches T6), `verify` both STALE-valid (rows 34/35, ledger-grew expected), `attest-bridge` 0/1 as above, `newcomer-probe` pass 22 lines. Certs rm'd (root-stray gotcha, used /tmp). T7 subsumed confirmed.
+- Checks: `workc check` ok fresh 11 lines, `harnessc check` OK 282/0 work_md 10983/11264.
+
+### Next
+
+- Program close: commit? (2 ahead + WORK/META uncommitted — push denied, local commit per free-commit ask-free after pick). Then pause successor or project close (T7 §E answered, UC0 archived, bridge 0, CI pinned, Q5 closed, STALE A1 recorded).
+
+---
+
+## 2026-10-12a (STALE rev60-vs-live rev0 A1 doc-only, no mutation)
+
+### Done
+
+- Resumed per `sandbox/pause_2026-10-12.md` §0/§3/§5 (HEAD `8965049` verified, `M WORK.md + M WORK_ARCHIVE.md` expected-uncommitted, 5 agentx / 21 meta homes, feature_152 Done + move×4 + backfill).
+- Close-tail A picked, proposal `sandbox/stale_rev60_vs_live0_proposal.md` (A1 recommended doc-only). Declared `omt_phase` docs Analysis (no src/ edits).
+- Evidence: file rev60 Pool 0/0/7 places 15/15 Options 11 NEXT agentx_concurrent_development vs live rev0 7 places no bindings idle_empty next:none; push keeps NEXT (options[0]) but deletes Pool + downgrades rev; md_to_net proposes 141 pending (D4 never auto); invariant hold drift false; phantom-link×10 (138+152 incl); fix_preview rev:60 nothing linkable. Freshness fresh=true is sidecar-vs-live, not file-vs-live — STALE by construction, not drift.
+- A1 executed: no net/file mutation, both revs recorded here + proposal Result, file rev60 stays authoritative for menu, live rev0 idle expected. Checks: `workc check` ok fresh 11 lines, `harnessc check` OK 282/0 work_md 10983/11264.
+
+### Next
+
+- Remaining close tail: B UC0 archival, C bridge: backlog, D CI pinning, E Q5 + phantom-link, F T7 confirm. STALE owns net reconciliation — rides with menu/net agreement (never bare net_to_md).
+
+---
+
 ## 2026-10-11k (T6 multi-root sync + 4 relocations LANDED, unit feature_152 complete)
 
 ### Done

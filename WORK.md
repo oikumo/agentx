@@ -28,7 +28,7 @@ Other enabled: none
 Blocked: none
 Resources: 4/4 free
 Pool: pending=0 active=0 done=7 (places 15/15)
-Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:harness_wrapper_split, proj:meta_harness_14, proj:meta_harness_15, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, unscoped:001, unscoped:002
+Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:meta_harness_14, proj:meta_harness_15, proj:petri_net_studio, proj:project_lifecycle, proj:rag_v2, proj:workflows, unscoped:001, unscoped:002
 Lanes: verification 0/1 free 1, integration 0/1 free 1
 ## Projects (synced by `uv run scripts/omt/project.py sync` — do not hand-edit)
 
@@ -36,7 +36,7 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 |---|---|---|
 | agentx_1_0_0 | draft | — |
 | agentx_concurrent_development | active | feature_119.ledger_backed_fix_preview |
-| harness_wrapper_split | active | feature_138.split_proof_oracle_firewall_slice, feature_152.t6_multi_root_project_sync |
+| harness_wrapper_split | complete | feature_138.split_proof_oracle_firewall_slice, feature_152.t6_multi_root_project_sync |
 | petri_net_studio | active | feature_032.petri_net_format, feature_033.petri_net_io, feature_034.studio_v1_editor, feature_035.studio_v2_analysis, feature_036.studio_v3_graph |
 | rag_v2 | active | feature_027.rag_v2, feature_029.rag_v2_slash_commands |
 | feature_kb_akb | active | feature_kb_akb |
@@ -68,7 +68,7 @@ Lanes: verification 0/1 free 1, integration 0/1 free 1
 
 - [x] **feature_151 close-out — T5 per-mechanic receipts DONE 2026-10-11** — `@var receipt_slices_path` + `.meta/templates/receipt_slices.json` (3 seed slices) + `omt_shared.ts` slice branch (PURE passed_at vs mtime, digest-if-present, results_passed, policy_ver global; legacy byte-compat; fallback const OPT-E) + NEW `scripts/omt/receipt.py` mint/status (fail-closed, atomic, `--slice all` never touches global); 10 goldens (real-git-dirty roots); net ghost-path corrected (live mint fail-closed exposed it); TDD same-node RED→GREEN→REFACTOR→DONE; boundary e2e 1 + self-mints q/net/split_proof (digests 1/3/1); split_proof_meta 39, lanes 12F/2144P/5S same-12 zero-new, prove both clean verify STALE-valid certs rm'd, check 282/0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: T6 + program close.
 
-- [x] **feature_150 close-out — T4 TA strip DONE 2026-10-11** — index `{location,owner}` read-time enrichment (omt_shared) + logic-touch-alongside-TA enforcement (guardSrcPath snapshot → g.mvc `taLogicTouchCheck`, skip bypass bounded) + `test_ta_inversion_meta.py` 7 goldens (3 enforcement scenarios + index hermetic/live + studio stripped-tsc + .opencode bun-parse); targeted 79 (1 triaged bootstrap), lanes 12F/2134P/5S same-12, prove both clean, check 281/0, receipt FRESH. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: T5–T6 + program close.
+- [x] **pause 2026-10-12 — program close tail, nothing in-flight** — T6 landed (`6718e45`+`8965049`), tree clean, check 282/0, lanes 12F/2154P/5S; resume: `sandbox/pause_2026-10-12.md` (§0 read-order, §3 next, §5 baselines). Next: STALE reconciliation + UC0 + bridge: + CI pinning + Q5 + phantom-link.
 
 - [x] **feature_148 close-out — telemetry isolation DONE 2026-10-11** — `omt_q.ts` OMT_Q_TELEMETRY=off guard + 3 live probes live→off + new `test_telemetry_isolation_meta.py` 2 passed; targeted 35/36 (1 triaged bootstrap), overlay 6, lanes 12F/2127P/5S same-12, prove both clean verify STALE-valid cert-growth (+0q 242→246), check 281/0, receipt FRESH. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: 12-triage + T4–T6.
 

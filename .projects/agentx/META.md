@@ -9,6 +9,6 @@
 |---|---|---|---|---|
 | agentx_1_0_0 | draft | — | 2026-10-10 | 2026-10-12 |
 | agentx_concurrent_development | active | feature_119.ledger_backed_fix_preview | 2026-10-10 | 2026-10-12 |
-| harness_wrapper_split | active | feature_138.split_proof_oracle_firewall_slice, feature_152.t6_multi_root_project_sync | 2026-10-11 | 2026-10-11 |
+| harness_wrapper_split | complete | feature_138.split_proof_oracle_firewall_slice, feature_152.t6_multi_root_project_sync | 2026-10-11 | 2026-10-12 |
 | petri_net_studio | active | feature_032.petri_net_format, feature_033.petri_net_io, feature_034.studio_v1_editor, feature_035.studio_v2_analysis, feature_036.studio_v3_graph | 2026-10-10 | 2026-10-12 |
 | rag_v2 | active | feature_027.rag_v2, feature_029.rag_v2_slash_commands | 2026-10-10 | 2026-10-12 |

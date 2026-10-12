@@ -1,6 +1,6 @@
 # PROJECT: harness_wrapper_split — Harness↔Product Split
 
-> Status: **active** · **v0.1 (2026-10-10)** — promoted from `sandbox/orthogonality_001_wrapper_split` via UC8 (manual scaffold + `link --origin manual`; no `project.py new`, no root-override sync — multi-root sync deferred to T6). Iterate freely (non-gated).
+> Status: **complete** · **v0.1 (2026-10-10)** — promoted from `sandbox/orthogonality_001_wrapper_split` via UC8 (manual scaffold + `link --origin manual`; no `project.py new`, no root-override sync — multi-root sync deferred to T6). Iterate freely (non-gated).
 
 ---
 
