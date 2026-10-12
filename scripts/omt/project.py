@@ -223,12 +223,14 @@ def cmd_archive(args) -> int:
         return 2
     if src is None:
         src = ps.projects_root() / args.slug  # legacy path shape on missing home
+    from_root = ps.root_name(src.parent)
     dest = ps.projects_archive() / args.slug
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(src), str(dest))
     ps.sync_status_header(dest / "PROJECT.md", "archived")
     ps.write_record({"kind": "project", "op": "archive", "project": args.slug,
-                     "archived_to": f".projects/archive/{args.slug}"})
+                     "archived_to": f".projects/archive/{args.slug}",
+                     "from_root": from_root})
     _sync_all()
     _net_auto_sync("archive")
     print(f"✅ project {args.slug} archived → .projects/archive/{args.slug}/")
@@ -245,7 +247,25 @@ def cmd_reopen(args) -> int:
     if state == "archived":
         src = ps.projects_archive() / args.slug
         if src.is_dir():
-            shutil.move(str(src), str(ps.projects_root() / args.slug))
+            # T6 multi-root restore: archive records carry from_root (post-fix);
+            # pre-fix archives fall back to the default root.
+            want_root = next(
+                (r.get("from_root") for r in reversed(records)
+                 if r.get("kind") == "project" and r.get("op") == "archive"
+                 and r.get("project") == args.slug and r.get("from_root")),
+                None,
+            )
+            dest_root = next(
+                (rt for rt in ps.projects_roots() if ps.root_name(rt) == want_root),
+                None,
+            ) if want_root else None
+            if dest_root is None:
+                dest_root = ps.projects_root()
+            dest = dest_root / args.slug
+            if dest.exists():
+                print(f"error: {dest} already exists", file=sys.stderr)
+                return 2
+            shutil.move(str(src), str(dest))
     ps.write_record({"kind": "project", "op": "reopen", "project": args.slug})
     _sync_all()
     _net_auto_sync("reopen")

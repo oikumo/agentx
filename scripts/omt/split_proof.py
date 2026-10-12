@@ -409,7 +409,18 @@ def build_overlay(root: Path, lane: str, dest: Path, overlay: str = "tmpfs") -> 
             for rel in diff + untracked:
                 s = root / rel
                 d = dest / rel
-                if not s.exists() or s.is_dir():
+                if not s.exists():
+                    # Working-tree deletion: drop the HEAD copy from the overlay
+                    # (pre-fix code kept the stale HEAD file — overlay drift).
+                    try:
+                        if d.is_dir() and not d.is_symlink():
+                            shutil.rmtree(d)
+                        elif d.exists() or d.is_symlink():
+                            d.unlink()
+                    except OSError:
+                        pass
+                    continue
+                if s.is_dir():
                     continue
                 d.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(s, d)
@@ -634,6 +645,9 @@ def attest_bridge(root: Path) -> dict:
     conforming = 0
     prose: list[str] = []
     for proj in sorted((root / ".projects").rglob("PROJECT.md")):
+        # Archived homes are out of the active contract (T6 multi-root).
+        if "archive" in proj.parts:
+            continue
         try:
             lines = proj.read_text(encoding="utf-8").splitlines()
         except OSError:

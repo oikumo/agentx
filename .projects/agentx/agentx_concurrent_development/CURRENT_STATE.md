@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-10-11 (auto — project.py log)
+
+- T6 relocation 2026-10-11: moved .projects/meta/ -> .projects/agentx/ (state active preserved) — see harness_wrapper_split 2026-10-11k
+
+---
+
 ## 2026-09-20 (auto — feature_119.ledger_backed_fix_preview Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_119.ledger_backed_fix_preview/test_report.md

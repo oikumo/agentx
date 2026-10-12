@@ -106,6 +106,15 @@ def _write_receipt(checks: list[str]) -> None:
     # one re-mints — a truncate+write leaves a partial-JSON window that
     # fails that reader (observed 2026-10-10). os.replace gives readers
     # old-or-new, never partial.
+    # feature_151 T5: preserve per-slice blocks across global re-mints.
+    # The e2e owns the global block only; slice mints own slices.*. Without
+    # this merge every e2e run wipes slices (observed 2026-10-12: live
+    # receipt {global fresh, slices:{}} after T5 landed).
+    try:
+        prior = json.loads(RECEIPT_PATH.read_text(encoding="utf-8") or "{}")
+        prior_slices = prior.get("slices") if isinstance(prior, dict) else None
+    except (OSError, ValueError):
+        prior_slices = None
     tmp = RECEIPT_PATH.with_name(RECEIPT_PATH.name + ".tmp")
     tmp.write_text(
         json.dumps(
@@ -124,6 +133,7 @@ def _write_receipt(checks: list[str]) -> None:
                 # receipt whose recorded outcome is not a full pass is not
                 # evidence of anything (guard: receiptResultsPassed).
                 "results": {"status": "passed", "checks": len(checks)},
+                **({"slices": prior_slices} if isinstance(prior_slices, dict) else {}),
             },
             indent=2,
             sort_keys=True,

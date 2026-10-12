@@ -5,6 +5,12 @@
 
 ---
 
+## 2026-10-11 (auto — project.py log)
+
+- T6 relocation 2026-10-11: moved .projects/meta/ -> .projects/agentx/ (state draft preserved; WORK rows byte-identical) — see harness_wrapper_split 2026-10-11k
+
+---
+
 ## 2026-09-21 (auto — status active → draft, commit 11a85fc)
 
 - PROJECT.md header flips `Status: active → draft` (commit `11a85fc startup menu rework`); v1.0.0 release content unchanged (6/6 packages, 48 regressions, 1972 green).

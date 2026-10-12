@@ -960,7 +960,25 @@ function foldProjectDrift(): any[] {
     if (ev.op === "archive") return "archived"
     return hasLink(slug) ? "active" : "draft"
   }
-  const homesRoot = join(root, ".projects", "meta")
+  // feature_152 T6 multi-root: every dir under .projects/ except archive is a
+  // project-home root (project_state.projects_roots semantics). Pre-T6 this
+  // was meta-only, which false-positived agentx homes as phantom-links.
+  const projectsDir = join(root, ".projects")
+  let projectRoots: string[] = []
+  try {
+    projectRoots = readdirSync(projectsDir)
+      .filter((n) => {
+        try { return n !== "archive" && statSync(join(projectsDir, n)).isDirectory() } catch { return false }
+      })
+      .map((n) => join(projectsDir, n))
+      .sort()
+  } catch { /* no .projects dir */ }
+  if (!projectRoots.length) projectRoots = [join(root, ".projects", "meta")]
+  const homeExists = (slug: string) => projectRoots.some((r) => existsSync(join(r, slug)))
+  const findHome = (slug: string): string | null => {
+    for (const r of projectRoots) if (existsSync(join(r, slug))) return join(r, slug)
+    return null
+  }
   const featsRoot = join(root, ".meta", "software_development_process", "2.requirements", "features")
   const topLogDate = (csPath: string): string => {
     try {
@@ -969,8 +987,8 @@ function foldProjectDrift(): any[] {
     } catch { return "" }
   }
   for (const [feature, link] of links) {
-    const home = join(homesRoot, link.project)
-    if (!existsSync(home) && derivedState(link.project) !== "archived") {
+    const home = findHome(link.project) ?? join(projectRoots[0], link.project)
+    if (!homeExists(link.project) && derivedState(link.project) !== "archived") {
       out.push({ class: "phantom-link", feature, project: link.project, detail: `project home missing — fix: uv run scripts/omt/project.py link ${feature} ${link.project} --origin inferred` })
     }
     if (/^feature_\d+\./.test(feature) && !existsSync(join(featsRoot, feature))) {
@@ -992,7 +1010,7 @@ function foldProjectDrift(): any[] {
   }
   for (const r of records) {
     if (r.kind !== "phase" || !r.design_doc || !r.feature) continue
-    const m = String(r.design_doc).match(/^\.projects\/meta\/([^/]+)\//)
+    const m = String(r.design_doc).match(/^\.projects\/[^/]+\/([^/]+)\//)
     if (m && links.get(r.feature)?.project !== m[1]) {
       out.push({ class: "unlinked-project-backed", feature: r.feature, project: m[1],
                  detail: `design_doc under .projects/ without project_link — fix: uv run scripts/omt/project.py link ${r.feature} ${m[1]} --origin inferred` })
@@ -1007,10 +1025,13 @@ function foldProjectDrift(): any[] {
     }
   }
   try {
-    for (const slug of readdirSync(homesRoot)) {
+    for (const prow of projectRoots) {
+      let slugs: string[] = []
+      try { slugs = readdirSync(prow) } catch { continue }
+      for (const slug of slugs) {
       let header = ""
       try {
-        const m = readFileSync(join(homesRoot, slug, "PROJECT.md"), "utf8")
+        const m = readFileSync(join(prow, slug, "PROJECT.md"), "utf8")
           .match(/> Status: \*\*([a-z]+)\*\*/)
         header = m ? m[1] : ""
       } catch { continue }
@@ -1020,15 +1041,17 @@ function foldProjectDrift(): any[] {
                    detail: `header '${header}' != derived '${derived}' — project.py sync` })
       }
       try {
+        const projRel = String(join(prow, slug, "PROJECT.md")).slice(root.length + 1)
         const lastChange = execFileSync(
-          "git", ["log", "-1", "--format=%cs", "--", `.projects/meta/${slug}/PROJECT.md`],
+          "git", ["log", "-1", "--format=%cs", "--", projRel],
           { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim()
-        const top = topLogDate(join(homesRoot, slug, "CURRENT_STATE.md"))
+        const top = topLogDate(join(prow, slug, "CURRENT_STATE.md"))
         if (lastChange && top && lastChange > top) {
           out.push({ class: "iteration-log", project: slug,
                      detail: `PROJECT.md changed ${lastChange} > top log entry ${top}` })
         }
       } catch { /* git unavailable (probe tmp root) — class omitted */ }
+      }
     }
   } catch { /* no homes root */ }
   return out
