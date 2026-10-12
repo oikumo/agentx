@@ -45,7 +45,7 @@ Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:meta_harn
 | meta_harness_13 | complete | feature_131.opencode_session_inspection_and_experiments, feature_132.pilot_launch_path, feature_133.dispatcher_gate_wiring, feature_134.real_trial_launcher |
 | meta_harness_14 | active | feature_135.lean_start_v1_variant, feature_136.json_arg_object_coercion_transport_hardening |
 | meta_harness_15 | active | feature_137.trace_bounded_paging |
-| meta_harness_16 | active | feature_162.frictionless_session_start |
+| meta_harness_16 | active | feature_162.frictionless_session_start, feature_163.wire_frictionless_startup |
 | meta_harness_2 | complete | feature_020.meta_harness_navigation, feature_021.meta_harness_think_anywhere, feature_022.meta_harness_think_anywhere_v2, feature_023.meta_harness_improvement, feature_026.omt_q_interrogative_first_ops |
 | meta_harness_3 | complete | feature_028.feature_scoped_gating |
 | meta_harness_4 | complete | feature_037.tdd_testlist_prose_fallback |
@@ -74,7 +74,7 @@ Options: proj:agentx_concurrent_development, proj:feature_kb_akb, proj:meta_harn
 
 - [x] **feature_148 close-out — telemetry isolation DONE 2026-10-11** — `omt_q.ts` OMT_Q_TELEMETRY=off guard + 3 live probes live→off + new `test_telemetry_isolation_meta.py` 2 passed; targeted 35/36 (1 triaged bootstrap), overlay 6, lanes 12F/2127P/5S same-12, prove both clean verify STALE-valid cert-growth (+0q 242→246), check 281/0, receipt FRESH. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: 12-triage + T4–T6.
 
-- [x] **feature_152 close-out — T6 multi-root project sync DONE 2026-10-11** — `project_state` projects_roots/find_home/all_homes + archive-anchored default (hermetic) + per-root manifests + WORK.md ## Projects UNION (shape locked) + derive_state move-transparent; `project.py` move op (kind extend, no-op, archived-guard-first) + new --root + cross-root lookups; `harnessc` 4 checks + manifest byte-compare per root; 10 goldens (union, per-root, move+guards, row-invariant, --root, lookups, env compat, FSM); 030 43 zero-edits; harness_wrapper_split BACKFILLED (D8 revision — root-aware check demanded it; Options +1 surgical, no net_to_md); 4 relocations → .projects/agentx; lanes 12F/2154P/5S same-12 zero-new, prove both clean verify STALE-valid certs rm'd, check 282/0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: program close tail (UC0, bridge:, CI pinning, Q5, phantom-link, rev60-vs-live STALE).
+- [x] **feature_152 close-out — T6 multi-root project sync DONE 2026-10-11** — `project_state` projects_roots/find_home/all_homes + archive-anchored default (hermetic) + per-root manifests + WORK.md ## Projects UNION (shape locked) + derive_state move-transparent; `project.py` move op (kind extend, no-op, archived-guard-first) + new --root + cross-root lookups; `harnessc` 4 checks + manifest byte-compare per root; 10 goldens (union, per-root, move+guards, row-invariant, --root, lookups, env compat, FSM); 030 43 zero-edits; harness_wrapper_split BACKFILLED (D8 revision — root-aware check demanded it; Options +1 surgical, no net_to_md); 4 relocations → .projects/agentx; lanes 12F/2154P/5S same-12 zero-new, prove both clean verify STALE-valid certs rm'd, check 282/0. Detail: `.projects/agentx/harness_wrapper_split/CURRENT_STATE.md`. Next: close tail.
 
 ## Agent Scratchpad (auto-managed, do not edit manually)
 

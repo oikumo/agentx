@@ -2,7 +2,7 @@
 
 > GENERATED from .meta/META_HARNESS.omt — DO NOT EDIT; edit the source, then `uv run scripts/omt/harnessc.py build`.
 
-> **STARTUP:** At session start read WORK.compiled.md header (WORK.md on demand) + one omt_net probe (live status/menu/freshness). Show INTRO (1 para: this is your task picker, where data came from, reply with a letter) + GLOBAL (<=8 plain lines: status/rev, Pool Pending/Active/Done, free lanes/workers, Projects active/complete/draft, drift count, STALE means file NEXT differs from live probe and probe wins) + TASKS A/B/C (groups Projects/Drifts/New, hide proj:/drift:/unscoped: in labels but keep 1:1 ID map with no invented IDs, order NEXT then Other/Blocked/Resources, picking a letter selects that task, never question-tool) + SUGGESTED (<=5 advisory lines: drift-first + pool state + up to 2 ideas, S=accept, never auto-applied). Rest via omt_nav.
+> **STARTUP:** At session start: 1x omt_net probe (max_states=0) + WORK.compiled.md header. Live-first: picks ONLY from live next/other_enabled; file never supplies letters. Live empty (next:none+other:[]) -> lean <=3-line reply (state/rev, capacity, R=reconcile|?=detail), zero stale letters. Else INTRO(1 para)+GLOBAL(<=8)+TASKS A/B/C (live IDs, prefixes hidden, NEXT-first)+SUGGESTED(<=5,S=accept). STALE=file NEXT!=live next->probe wins. Titles from probe; history via logc --last. Rest via omt_nav.
 > **RUNTIME:** `uv` only (no bare `python`/`pip`/`pytest`). `src/` edits → `omt_phase` first. Harness self-inspection: `omt_session` (@doc comp.session). Vision: META_VISION.md (@doc vision).
 
 ## Enforcement

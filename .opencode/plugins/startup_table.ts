@@ -4,9 +4,10 @@
 // No registry change, no opencode.jsonc perm change — pure formatter, stdlib only.
 //
 // Reads WORK.compiled.md (11-line header built by `uv run scripts/omt/workc.py build`)
-// + optional live `omt_net probe` JSON (probeJson arg) and renders:
-//   INTRO (1 paragraph) + GLOBAL (<=8 plain lines) + TASKS letter list
-//   (A/B/C → stable OptionIDs, drift-filtered) + SUGGESTED (<=5 advisory lines, S=accept).
+// + live `omt_net probe` JSON (probeJson arg) and renders, live-first (feature_163):
+//   live empty (next:none + other:[]) → lean ≤3-line reply, zero stale letters;
+//   else INTRO (1 paragraph) + GLOBAL (<=8 plain lines) + TASKS letter list
+//   (A/B/C → live IDs only, drift-filtered) + SUGGESTED (<=5 advisory lines, S=accept).
 // Labels hide `proj:`/`unscoped:` prefixes,
 // mapping keeps full IDs 1:1 (D19: no invented IDs in TASKS).
 // TA: why: `startup_table` (no omt_ prefix) avoids isOmtHarness + TOOL registry churn — new `omt_*` plugin would need @tool row + harnessc build + e2e receipt; template stays usable prompt-side with zero harness edits.
@@ -75,8 +76,13 @@ function actionPlanFor(pick: string, rows: { letter: string; label: string; id: 
   const key = (pick || "").trim().toUpperCase()
   if (!key) return null
   if (key === "S") {
-    const target = p.next && !p.next.startsWith("none") ? p.next : (probeNext && probeNext !== "none" ? `proj:${probeNext}` : rows[0]?.id || "")
-    const found = rows.find((r) => r.id === target) || rows[0]
+    // Live-first: prefer the live probe target, then the file NEXT.
+    const cands = [
+      probeNext && probeNext !== "none" ? String(probeNext) : "",
+      probeNext && probeNext !== "none" && !String(probeNext).includes(":") ? `proj:${probeNext}` : "",
+      p.next || "",
+    ].filter(Boolean)
+    const found = cands.map((c) => rows.find((r) => r.id === c)).find(Boolean) || rows[0]
     if (!found) return null
     return actionPlanFor(found.letter, rows, p, probeNext)
   }
@@ -114,15 +120,26 @@ function actionText(r: { label: string; group: string }): string {
 
 function renderTables(p: Parsed, probe: any | null, pick?: string): { markdown: string; agent: Record<string, any> } {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-  const visibleIds = p.optionIds.filter((id) => !id.startsWith("drift:"))
-  const rows = visibleIds.map((id, i) => ({
-    letter: letters[i] ?? `?${i}`,
-    label: labelOf(id),
-    id,
-    group: groupOf(id),
-  }))
-
   const probeNext = probe?.menu?.next ?? probe?.next ?? null
+  const probeOther: string[] = Array.isArray(probe?.menu?.other_enabled) ? probe.menu.other_enabled.map(String) : []
+  const probeTitles: Record<string, string> = (probe?.menu as any)?.titles ?? {}
+  const liveEmpty = !!probe && (!probeNext || probeNext === "none") && probeOther.length === 0
+  // O1 live-first (feature_162/163): when a probe is present, picks come ONLY
+  // from live next/other_enabled — the compiled file is context and never
+  // supplies stale letters. Bare ids normalize to unscoped:.
+  const normLiveId = (id: string) => (/:/.test(id) ? id : `unscoped:${id}`)
+  const liveIds = probe ? [...(probeNext && probeNext !== "none" ? [String(probeNext)] : []), ...probeOther].filter((v, i, a) => v && a.indexOf(v) === i) : null
+  const visibleIds = (liveIds ?? p.optionIds).filter((id) => !id.startsWith("drift:"))
+  const rows = visibleIds.map((raw, i) => {
+    const id = liveIds ? normLiveId(raw) : raw
+    return {
+      letter: letters[i] ?? `?${i}`,
+      label: labelOf(id),
+      id,
+      group: groupOf(id),
+      title: probeTitles[raw] || probeTitles[id] || "",
+    }
+  })
   const probeObs = probe?.observation?.state ?? probe?.observation ?? ""
   const probeRev = probe?.revision ?? probe?.observation?.revision ?? ""
   const fresh = probe?.freshness
@@ -181,27 +198,36 @@ function renderTables(p: Parsed, probe: any | null, pick?: string): { markdown: 
   ]
 
   // TASKS (letter-shortcut list, grouped Projects/New, hide prefixes, 1:1 IDs, NEXT first).
-  const fmtRow = (r: { letter: string; label: string; group: string; id: string }): string => {
+  // O2 lean empty-pool: live present but nothing enabled → no stale letters.
+  const fmtRow = (r: { letter: string; label: string; group: string; id: string; title?: string }): string => {
     const short = r.label.replace(/^iteration-log:/, "")
+    const name = r.title && r.title !== short ? `${short} · ${r.title}` : short
     const nextMark = r.id === suggestedRow?.id ? ` [NEXT]` : ``
-    return `${r.letter} - ${short}${nextMark} — ${actionText(r)}`
+    return `${r.letter} - ${name}${nextMark} — ${actionText(r)}`
   }
-  const taskLines = [
-    `TASKS — reply a letter (never question-tool):`,
-    `Projects:`,
-    ...(projRows.length ? projRows.map(fmtRow) : [`- (none)`]),
-    `New:`,
-    ...(newRows.length ? newRows.map(fmtRow) : [`- (none)`]),
-  ]
+  const taskLines = liveEmpty
+    ? [`TASKS: none live — reply R to reconcile.`]
+    : [
+        `TASKS — reply a letter (never question-tool):`,
+        `Projects:`,
+        ...(projRows.length ? projRows.map(fmtRow) : [`- (none)`]),
+        `New:`,
+        ...(newRows.length ? newRows.map(fmtRow) : [`- (none)`]),
+      ]
 
   // SUGGESTED NEXT (advisory D19-exempt <=5 lines: pool state + S=accept, never auto-applied).
-  const suggestedLines = [
-    `SUGGESTED NEXT (advisory, S=accept, never auto-applied):`,
-    drained
-      ? `- pool drained (${p.pool}) — resume ${suggestedKey} (${nextFileLabel})`
-      : `- pool ${p.pool} — check probe menu, default resume ${suggestedKey} (${nextFileLabel})`,
-    `- S = accept ${suggestedKey} (${nextFileLabel})`,
-  ]
+  const suggestedLines = liveEmpty
+    ? [
+        `SUGGESTED (R=reconcile, never auto-applied):`,
+        `- R = reconcile live net before any pick`,
+      ]
+    : [
+        `SUGGESTED NEXT (advisory, S=accept, never auto-applied):`,
+        drained
+          ? `- pool drained (${p.pool}) — resume ${suggestedKey} (${nextFileLabel})`
+          : `- pool ${p.pool} — check probe menu, default resume ${suggestedKey} (${nextFileLabel})`,
+        `- S = accept ${suggestedKey} (${nextFileLabel})`,
+      ]
 
   // USER-ONLY markdown — INTRO + GLOBAL + TASKS + SUGGESTED, plain lines, letter shortcuts only.
   const markdown = [
