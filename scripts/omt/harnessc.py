@@ -740,21 +740,21 @@ import project_state as _ps  # noqa: E402 — lazy env paths; no import-time sta
 def check_projects_structure(c: Corpus) -> None:
     """Each home carries the canonical pair; dates newest-on-top; no *.bak.
     The archive root is exempt (moved homes keep their shape)."""
-    root = _ps.projects_root()
-    if not root.is_dir():
-        return
-    for d in sorted(p for p in root.iterdir() if p.is_dir()):
-        if not (d / "PROJECT.md").exists():
-            c.errors.append(f".projects: {d.name}/ missing PROJECT.md (canonical pair)")
-        cs = d / "CURRENT_STATE.md"
-        if not cs.exists():
-            c.errors.append(f".projects: {d.name}/ missing CURRENT_STATE.md (canonical pair)")
+    for root in _ps.projects_roots():
+        if not root.is_dir():
             continue
-        dates = re.findall(r"^## (\d{4}-\d{2}-\d{2})", cs.read_text(encoding="utf-8"), re.M)
-        if any(dates[i] < dates[i + 1] for i in range(len(dates) - 1)):
-            c.errors.append(f".projects: {d.name}/CURRENT_STATE.md date blocks out of order "
-                            "(newest-on-top convention)")
-    baks = sorted(str(p) for p in root.rglob("*.bak"))
+        for d in sorted(p for p in root.iterdir() if p.is_dir()):
+            if not (d / "PROJECT.md").exists():
+                c.errors.append(f".projects: {d.name}/ missing PROJECT.md (canonical pair)")
+            cs = d / "CURRENT_STATE.md"
+            if not cs.exists():
+                c.errors.append(f".projects: {d.name}/ missing CURRENT_STATE.md (canonical pair)")
+                continue
+            dates = re.findall(r"^## (\d{4}-\d{2}-\d{2})", cs.read_text(encoding="utf-8"), re.M)
+            if any(dates[i] < dates[i + 1] for i in range(len(dates) - 1)):
+                c.errors.append(f".projects: {d.name}/CURRENT_STATE.md date blocks out of order "
+                                "(newest-on-top convention)")
+    baks = sorted(str(p) for root in _ps.projects_roots() for p in root.rglob("*.bak"))
     if baks:
         c.errors.append(f".projects: stray *.bak files {baks} — delete (root-hygiene idiom)")
 
@@ -768,11 +768,9 @@ def check_projects_links(c: Corpus) -> None:
     feats_root = REPO_ROOT / ".meta" / "software_development_process" / "2.requirements" / "features"
     for feat, link in links.items():
         proj = link["project"]
-        # feature_138 UC8: a link target may live under the sibling agentx/
-        # home (validation-only tolerance — NOT multi-root sync, still T6).
-        home_here = (_ps.projects_root() / proj).is_dir()
-        home_agentx = (REPO_ROOT / ".projects" / "agentx" / proj).is_dir()
-        if not home_here and not home_agentx \
+        # feature_152 T6: home existence is root-aware across ALL `.projects/`
+        # roots (find_home semantics; the pre-T6 agentx hardcode is subsumed).
+        if not _ps.home_exists(proj) \
                 and _ps.derive_state(proj, records, links) != "archived":
             c.errors.append(f".projects: link {feat} → {proj}: project home missing (phantom link)")
         if re.match(r"feature_\d+\.", feat) and not (feats_root / feat).is_dir():
@@ -796,49 +794,52 @@ def check_projects_resume(c: Corpus) -> None:
     near the top (D7 — the rag_v2 organic pattern made mechanical; T3 cost)."""
     r = c.get("var", "project_resume_threshold_bytes")
     threshold = int(r.payload) if r and r.payload.isdigit() else 16384
-    root = _ps.projects_root()
-    for slug in _ps.homes():
-        pm = root / slug / "PROJECT.md"
-        if not pm.exists():
-            continue
-        text = pm.read_text(encoding="utf-8")
-        if len(text.encode("utf-8")) <= threshold:
-            continue
-        head = "\n".join(text.split("\n")[:80])
-        if not re.search(r"^## (New Session Quick Start|Resume)", head, re.M):
-            c.errors.append(f".projects: {slug}/PROJECT.md > {threshold} B without a "
-                            "## New Session Quick Start block in the first 80 lines")
+    for root in _ps.projects_roots():
+        for slug in _ps.homes_in(root):
+            pm = root / slug / "PROJECT.md"
+            if not pm.exists():
+                continue
+            text = pm.read_text(encoding="utf-8")
+            if len(text.encode("utf-8")) <= threshold:
+                continue
+            head = "\n".join(text.split("\n")[:80])
+            if not re.search(r"^## (New Session Quick Start|Resume)", head, re.M):
+                c.errors.append(f".projects: {slug}/PROJECT.md > {threshold} B without a "
+                                "## New Session Quick Start block in the first 80 lines")
 
 
 def check_projects_status(c: Corpus) -> None:
     """PROJECT.md Status header == ledger-derived state (headers are projections)."""
     records = _ps.read_ledger_all()
     links = _ps.derive_links(records)
-    root = _ps.projects_root()
-    for slug in _ps.homes():
-        derived = _ps.derive_state(slug, records, links)
-        header = _ps.parse_status_header(root / slug / "PROJECT.md")
-        if derived == "unknown":
-            c.errors.append(f".projects: {slug} has no lifecycle records — run: "
-                            f"uv run scripts/omt/project.py backfill {slug}")
-        elif header not in _ps.PROJECT_STATES:
-            c.errors.append(f".projects: {slug}/PROJECT.md Status header unparseable — run: "
-                            "uv run scripts/omt/project.py sync")
-        elif header != derived:
-            c.errors.append(f".projects: {slug} Status header '{header}' != derived '{derived}' "
-                            "— run: uv run scripts/omt/project.py sync")
+    for root in _ps.projects_roots():
+        for slug in _ps.homes_in(root):
+            derived = _ps.derive_state(slug, records, links)
+            header = _ps.parse_status_header(root / slug / "PROJECT.md")
+            if derived == "unknown":
+                c.errors.append(f".projects: {slug} has no lifecycle records — run: "
+                                f"uv run scripts/omt/project.py backfill {slug}")
+            elif header not in _ps.PROJECT_STATES:
+                c.errors.append(f".projects: {slug}/PROJECT.md Status header unparseable — run: "
+                                "uv run scripts/omt/project.py sync")
+            elif header != derived:
+                c.errors.append(f".projects: {slug} Status header '{header}' != derived '{derived}' "
+                                "— run: uv run scripts/omt/project.py sync")
 
 
 def check_projects_manifest(c: Corpus) -> None:
-    """The GENERATED manifest matches a fresh projection (byte-compare)."""
+    """Every root's GENERATED manifest matches a fresh projection
+    (byte-compare, per root — feature_152 T6)."""
     records = _ps.read_ledger_all()
-    manifest = _ps.manifest_path()
-    if not manifest.exists():
-        c.errors.append(".projects/meta/META.md missing — run: uv run scripts/omt/project.py sync")
-        return
-    expected = _ps.build_manifest(records, _ps.derive_links(records))
-    if manifest.read_text(encoding="utf-8") != expected:
-        c.errors.append(".projects/meta/META.md stale — run: uv run scripts/omt/project.py sync")
+    links = _ps.derive_links(records)
+    for root in _ps.projects_roots():
+        manifest = _ps.manifest_path(root)
+        name = f".projects/{root.name}/META.md"
+        if not manifest.exists():
+            c.errors.append(f"{name} missing — run: uv run scripts/omt/project.py sync")
+            continue
+        if manifest.read_text(encoding="utf-8") != _ps.build_manifest(records, links, root):
+            c.errors.append(f"{name} stale — run: uv run scripts/omt/project.py sync")
     check_work_projects_fresh(c)  # Option-1: the WORK.md surface rides the projects checks
 
 

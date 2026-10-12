@@ -43,11 +43,65 @@ def _ir_var(name: str) -> str | None:
 
 
 def projects_root() -> Path:
+    """Default root. OMT_PROJECTS_ROOT env wins; else the `meta` root under
+    the archive anchor (feature_152 T6: keeps env-unset runs hermetic — a tmp
+    OMT_PROJECTS_ARCHIVE anchors discovery away from the real repo); the
+    `@var projects_root` IR override stays as the nonstandard-layout fallback."""
     env = os.environ.get("OMT_PROJECTS_ROOT")
     if env:
         return Path(env)
+    anchored = projects_archive().parent / "meta"
+    if anchored.is_dir():
+        return anchored
     irv = _ir_var("projects_root")
     return (REPO_ROOT / irv) if irv else REPO_ROOT / ".projects" / "meta"
+
+
+def projects_roots() -> list[Path]:
+    """All project-home roots (feature_152 T6). OMT_PROJECTS_ROOT → single
+    root (030 hermetic idiom, byte-compatible); else every dir under the
+    archive anchor's parent except the archive itself. Falls back to the
+    default root when the anchor has no qualifying subdir (fresh checkout)."""
+    env = os.environ.get("OMT_PROJECTS_ROOT")
+    if env:
+        return [Path(env)]
+    anchor, arch = projects_archive().parent, projects_archive()
+    if anchor.is_dir():
+        roots = sorted(d for d in anchor.iterdir() if d.is_dir() and d != arch)
+        if roots:
+            return roots
+    return [projects_root()]
+
+
+def root_name(root: Path) -> str:
+    """Root identity for records/messages: the dir name under `.projects/`."""
+    return root.name
+
+
+def homes_in(root: Path) -> list[str]:
+    """Slugs under ONE root (the pre-T6 homes() body)."""
+    if not root.is_dir():
+        return []
+    return sorted(d.name for d in root.iterdir() if d.is_dir())
+
+
+def all_homes() -> list[tuple[Path, str]]:
+    """(root, slug) union across all roots — root order, then slug."""
+    return [(root, slug) for root in projects_roots() for slug in homes_in(root)]
+
+
+def find_home(slug: str) -> Path | None:
+    """Home dir across all roots; None when absent; ValueError when the slug
+    exists in >1 root (slug-uniqueness invariant — feature_152 D5)."""
+    hits = [r / slug for r in projects_roots() if (r / slug).is_dir()]
+    if len(hits) > 1:
+        raise ValueError(f"project home '{slug}' exists in multiple roots")
+    return hits[0] if hits else None
+
+
+def home_exists(slug: str) -> bool:
+    """Membership test, collision-tolerant (any root hit counts)."""
+    return any((r / slug).is_dir() for r in projects_roots())
 
 
 def projects_archive() -> Path:
@@ -58,8 +112,9 @@ def projects_archive() -> Path:
     return (REPO_ROOT / irv) if irv else REPO_ROOT / ".projects" / "archive"
 
 
-def manifest_path() -> Path:
-    return projects_root() / "META.md"
+def manifest_path(root: Path | None = None) -> Path:
+    """Per-root manifest (default root keeps the 030 no-arg pin)."""
+    return (root or projects_root()) / "META.md"
 
 
 def templates_dir() -> Path:
@@ -136,7 +191,7 @@ def duplicate_links(records: list[dict]) -> list[tuple[str, str]]:
 
 
 def derive_state(slug: str, records: list[dict], links: dict[str, dict]) -> str:
-    events = project_events(records, slug)
+    events = [r for r in project_events(records, slug) if r.get("op") != "move"]
     if not events:
         return "unknown"
     last_op = events[-1].get("op")
@@ -155,10 +210,8 @@ def project_of(feature: str, records: list[dict]) -> str | None:
 
 
 def homes() -> list[str]:
-    root = projects_root()
-    if not root.is_dir():
-        return []
-    return sorted(d.name for d in root.iterdir() if d.is_dir())
+    """Slugs under the DEFAULT root (030 pin — single-root view)."""
+    return homes_in(projects_root())
 
 
 # --- projections --------------------------------------------------------------
@@ -205,10 +258,11 @@ def normalize_status_header(project_md: Path, state: str) -> bool:
     return False
 
 
-def manifest_rows(records: list[dict], links: dict[str, dict]) -> tuple[list[str], list[str]]:
-    """(active_rows, archived_rows) for the GENERATED manifest."""
+def manifest_rows(records: list[dict], links: dict[str, dict],
+                  root: Path | None = None) -> tuple[list[str], list[str]]:
+    """(active_rows, archived_rows) for the GENERATED manifest (per root)."""
     active, archived = [], []
-    for slug in homes():
+    for slug in homes_in(root or projects_root()):
         state = derive_state(slug, records, links)
         events = project_events(records, slug)
         created = events[0].get("ts", "—")[:10] if events else "—"
@@ -234,14 +288,17 @@ def manifest_rows(records: list[dict], links: dict[str, dict]) -> tuple[list[str
     return active, archived
 
 
-def build_manifest(records: list[dict], links: dict[str, dict]) -> str:
-    active, archived = manifest_rows(records, links)
+def build_manifest(records: list[dict], links: dict[str, dict],
+                   root: Path | None = None) -> str:
+    """One root's manifest (feature_152: convention line names its root)."""
+    root = root or projects_root()
+    active, archived = manifest_rows(records, links, root)
     lines = [
         "# .projects/ — Project Homes (GENERATED)",
         "",
         "> GENERATED by `uv run scripts/omt/project.py sync` — do not hand-edit.",
         "> Truth: ledger `project`/`project_link` records + filesystem dirs.",
-        "> Convention: `.projects/meta/<slug>/{PROJECT.md, CURRENT_STATE.md}` —",
+        f"> Convention: `.projects/{root_name(root)}/<slug>/{{PROJECT.md, CURRENT_STATE.md}}` —",
         "> PROJECT.md canonical; CURRENT_STATE.md session log (newest on top).",
         "",
         "| project | state | features | created | last event |",
@@ -266,7 +323,7 @@ def build_work_projects_section(records: list[dict], links: dict[str, dict]) -> 
     manifest owns the archived list). Same records/links the manifest uses, so
     harnessc can byte-compare a fresh projection against the file."""
     rows = []
-    for slug in homes():
+    for root, slug in all_homes():
         state = derive_state(slug, records, links)
         if state == "archived":
             continue

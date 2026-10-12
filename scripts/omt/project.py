@@ -44,24 +44,28 @@ def _render(template: str, mapping: dict[str, str]) -> str:
 
 
 def _sync_all() -> list[str]:
-    """Regenerate the manifest + reconcile Status headers. Returns flip list."""
+    """Regenerate EVERY root manifest + reconcile Status headers (T6
+    multi-root); WORK.md `## Projects` is the cross-root union (Option-1).
+    Returns flip list."""
     records = ps.read_ledger_all()
     links = ps.derive_links(records)
-    ps.manifest_path().write_text(ps.build_manifest(records, links), encoding="utf-8")
-    ps.upsert_work_projects(records, links)  # WORK.md `## Projects` surface (Option-1)
+    for root in ps.projects_roots():
+        ps.manifest_path(root).write_text(ps.build_manifest(records, links, root), encoding="utf-8")
+    ps.upsert_work_projects(records, links)  # WORK.md `## Projects` union surface (Option-1)
     flips = []
-    for slug in ps.homes():
-        derived = ps.derive_state(slug, records, links)
-        if derived == "unknown":
-            continue
-        pm = ps.projects_root() / slug / "PROJECT.md"
-        header = ps.parse_status_header(pm)
-        if header is None:
-            if ps.normalize_status_header(pm, derived):
-                flips.append(f"{slug}: (legacy header) → {derived}")
-        elif header != derived:
-            if ps.sync_status_header(pm, derived):
-                flips.append(f"{slug}: {header} → {derived}")
+    for root in ps.projects_roots():
+        for slug in ps.homes_in(root):
+            derived = ps.derive_state(slug, records, links)
+            if derived == "unknown":
+                continue
+            pm = root / slug / "PROJECT.md"
+            header = ps.parse_status_header(pm)
+            if header is None:
+                if ps.normalize_status_header(pm, derived):
+                    flips.append(f"{slug}: (legacy header) → {derived}")
+            elif header != derived:
+                if ps.sync_status_header(pm, derived):
+                    flips.append(f"{slug}: {header} → {derived}")
     return flips
 
 
@@ -80,10 +84,16 @@ def _net_auto_sync(event: str) -> None:
 def cmd_new(args) -> int:
 # TA: xref: feature_041 (pause_2026-08-30d.md R6): lifecycle auto-sync hook — cmd_new/link/close/archive/reopen call net.state.lifecycle_sync_hook(event) via LAZY import in try/except (fail-open: net errors never block the lifecycle op; skip silently when the net bundle is unbootstrapped — bootstrap stays an explicit agent action per IDEA-002 §5.1); hook is proposal-only (D4) + ledger-audited; test_project_lifecycle.py must stay green (hook output to stdout is part of the contract — keep it one line).
     slug = args.slug or slugify(args.name)
-    home = ps.projects_root() / slug
-    if home.exists():
-        print(f"error: {home} already exists", file=sys.stderr)
+    roots = ps.projects_roots()
+    root = next((r for r in roots if r.name == (args.root or "meta")), None)
+    if root is None:
+        print(f"error: unknown root '{args.root or 'meta'}'", file=sys.stderr)
         return 2
+    dup = next((r for r in roots if (r / slug).exists()), None)
+    if dup is not None:
+        print(f"error: {dup / slug} already exists", file=sys.stderr)
+        return 2
+    home = root / slug
     mapping = {"SLUG": slug, "TITLE": args.name.strip().title(), "DATE": date.today().isoformat()}
     home.mkdir(parents=True)
     (home / "PROJECT.md").write_text(_render("project.md", mapping), encoding="utf-8")
@@ -91,14 +101,19 @@ def cmd_new(args) -> int:
     ps.write_record({"kind": "project", "op": "create", "project": slug})
     _sync_all()
     _net_auto_sync("create")
-    print(f"✅ created project home .projects/meta/{slug}/ (state: draft)")
+    print(f"✅ created project home .projects/{root.name}/{slug}/ (state: draft)")
     print("Next: iterate freely (non-gated); spawn features with "
           f"new_feature.py \"<name>\" --type <tt> --project {slug}")
     return 0
 
 
 def cmd_link(args) -> int:
-    if not (ps.projects_root() / args.project).is_dir():
+    try:
+        home = ps.find_home(args.project)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    if home is None:
         print(f"error: unknown project home '{args.project}'", file=sys.stderr)
         return 2
     records = ps.read_ledger_all()
@@ -117,7 +132,15 @@ def cmd_link(args) -> int:
 
 
 def cmd_log(args) -> int:
-    current = ps.projects_root() / args.slug / "CURRENT_STATE.md"
+    try:
+        home = ps.find_home(args.slug)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    if home is None:
+        print(f"error: unknown project home '{args.slug}'", file=sys.stderr)
+        return 2
+    current = home / "CURRENT_STATE.md"
     if not current.exists():
         print(f"error: {current} missing", file=sys.stderr)
         return 2
@@ -145,7 +168,7 @@ def cmd_log(args) -> int:
 def cmd_status(args) -> int:
     records = ps.read_ledger_all()
     links = ps.derive_links(records)
-    slugs = [args.slug] if args.slug else ps.homes()
+    slugs = [args.slug] if args.slug else [slug for _, slug in ps.all_homes()]
     print("| project | state | features | created | last event |")
     print("|---|---|---|---|---|")
     for slug in slugs:
@@ -173,7 +196,12 @@ def cmd_close(args) -> int:
                   " — finish them or --force", file=sys.stderr)
             return 3
     ps.write_record({"kind": "project", "op": "close", "project": args.slug})
-    ps.sync_status_header(ps.projects_root() / args.slug / "PROJECT.md", "complete")
+    try:
+        home = ps.find_home(args.slug)
+    except ValueError:
+        home = None  # degenerate multi-root collision: ledger close still lands
+    if home is not None:
+        ps.sync_status_header(home / "PROJECT.md", "complete")
     _sync_all()
     _net_auto_sync("close")
     print(f"✅ project {args.slug} closed (state: complete)")
@@ -188,7 +216,13 @@ def cmd_archive(args) -> int:
     if ps.derive_state(args.slug, records, links) != "complete":
         print(f"error: only a complete project can be archived (close first)", file=sys.stderr)
         return 2
-    src = ps.projects_root() / args.slug
+    try:
+        src = ps.find_home(args.slug)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    if src is None:
+        src = ps.projects_root() / args.slug  # legacy path shape on missing home
     dest = ps.projects_archive() / args.slug
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(src), str(dest))
@@ -231,7 +265,13 @@ def cmd_sync(_args) -> int:
 def cmd_backfill(args) -> int:
     """Adopt a pre-mechanic home: write the create record iff the slug has no
     lifecycle records yet (idempotent). Links use `link --origin backfill`."""
-    if not (ps.projects_root() / args.slug).is_dir():
+    try:
+        if ps.find_home(args.slug) is None:
+            raise LookupError(args.slug)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    except LookupError:
         print(f"error: unknown project home '{args.slug}'", file=sys.stderr)
         return 2
     records = ps.read_ledger_all()
@@ -246,14 +286,58 @@ def cmd_backfill(args) -> int:
     return 0
 
 
+def cmd_move(args) -> int:
+    """feature_152 T6: relocate a project home across `.projects/<root>/`s.
+    Ledger kind extend (op move, from_root/to_root); state-transparent — an
+    active project stays active (derive_state filters move ops). Archived
+    guard runs BEFORE the home lookup: archive homes live outside the roots,
+    so find_home can't see them (impl correction vs operation_spec — the
+    live golden exposed the order)."""
+    records = ps.read_ledger_all()
+    links = ps.derive_links(records)
+    if ps.derive_state(args.slug, records, links) == "archived":
+        print("error: cannot move an archived project (reopen first)", file=sys.stderr)
+        return 2
+    try:
+        home = ps.find_home(args.slug)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    if home is None:
+        print(f"error: unknown project home '{args.slug}'", file=sys.stderr)
+        return 2
+    dest = next((r for r in ps.projects_roots() if r.name == args.to_root), None)
+    if dest is None:
+        print(f"error: unknown root '{args.to_root}'", file=sys.stderr)
+        return 2
+    if home.parent == dest:
+        print(f"already at root {args.to_root}: {args.slug} (no-op)")
+        return 0
+    if (dest / args.slug).exists():
+        print(f"error: {dest / args.slug} already exists", file=sys.stderr)
+        return 2
+    shutil.move(str(home), str(dest / args.slug))
+    ps.write_record({"kind": "project", "op": "move", "project": args.slug,
+                     "from_root": ps.root_name(home.parent), "to_root": args.to_root})
+    _sync_all()
+    _net_auto_sync("move")
+    state = ps.derive_state(args.slug, ps.read_ledger_all(), links)
+    print(f"✅ moved {args.slug} → .projects/{args.to_root}/ (state: {state})")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="OMT++ project lifecycle CLI")
     sub = parser.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("new"); p.add_argument("name"); p.add_argument("--slug", default=None)
+    p.add_argument("--root", default="meta")
     p.set_defaults(fn=cmd_new)
     p = sub.add_parser("link"); p.add_argument("feature"); p.add_argument("project")
     p.add_argument("--origin", default="manual", choices=sorted(ps.VALID_LINK_ORIGINS))
     p.set_defaults(fn=cmd_link)
+    p = sub.add_parser("move"); p.add_argument("slug")
+    p.add_argument("--to-root", dest="to_root", required=True)
+    p.set_defaults(fn=cmd_move)
     p = sub.add_parser("log"); p.add_argument("slug"); p.add_argument("note")
     p.set_defaults(fn=cmd_log)
     p = sub.add_parser("status"); p.add_argument("slug", nargs="?", default=None)
