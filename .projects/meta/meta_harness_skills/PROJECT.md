@@ -9,7 +9,7 @@
 
 > Procedural OpenCode skills layer over META HARNESS — not a product runtime.
 
-**Next:** recover-block hardening only if witnesses demand, else `omt-verify-closeout` (Phase3).
+**Next:** session-compat leg (`omt_session` versioned error), then Phase4 validation.
 
 ---
 
@@ -59,7 +59,7 @@ Small procedural `SKILL.md` layer over existing OMT tools/gates/state to cut mis
 - [x] First linked feature (feature_153.ci_base_green Done 618ed88 — draft → active flipped)
 - [x] Phase0 base-green Done (uv.lock tracked, pr-critical job, split_proof_meta 39 passed)
 - [x] Phase1 contracts (skill.contract ✅ 154 + envelope ✅ 155 + StateScope ✅ 156)
-- [~] Phase2 pilots (recover-block skeleton ✅ + resume-work ✅ 157, hardening deferred)
+- [x] Phase2 pilots (recover-block skeleton ✅ + resume-work ✅ 157 + verify-closeout ✅ 158)
 - [ ] Phase3 evidence (session compat, verify-closeout, doctor)
 - [ ] Phase4 validation (smoke + 24-trial + decision)
 

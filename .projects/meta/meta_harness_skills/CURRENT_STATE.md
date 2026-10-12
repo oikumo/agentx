@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-10-12 (auto — feature_158.pilot_verify_closeout Done)
+
+- shipped: major_feature · test report @ 6.testing/features/feature_158.pilot_verify_closeout/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+- Verify-closeout pilot: contracted skill + checklist + 7 goldens; TDD single-cycle;
+  doctors OK, 158 7/7, 154–157 24/24, split_proof 39/39, WORK 11263/11264.
+- next: session-compat leg (Phase3 remainder), then validation.
+
+---
+
+
 ## 2026-10-12 (auto — feature_157.pilot_resume_work Done)
 
 - shipped: major_feature · test report @ 6.testing/features/feature_157.pilot_resume_work/test_report.md
