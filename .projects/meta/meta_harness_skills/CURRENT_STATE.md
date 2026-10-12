@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-10-12 (auto — feature_156.state_scope Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_156.state_scope/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+- StateScope: `state.scope.md` 5 owners + R1–R5 + `doctor` state_file lint + 3 goldens; closes Phase1 (154+155+156).
+- next: Phase2 pilots (`omt-recover-block`, `omt-resume-work` manual-only).
+
+---
+
+
 ## 2026-10-12 (auto — feature_155.omt_result_envelope Done)
 
 - shipped: major_feature · test report @ 6.testing/features/feature_155.omt_result_envelope/test_report.md

@@ -136,6 +136,9 @@ def cmd_doctor(skill_id: str) -> int:
     if not schema_path.exists():
         print("ERR result_schema_file: missing skill.result.schema.json")
         return 2
+    if (d / ".skill-state.json").exists():
+        print("ERR state_file: .skill-state.json forbidden (StateScope R3, skills own nothing)")
+        return 2
     print(f"✅ {skill_id} contract OK")
     return 0
 
