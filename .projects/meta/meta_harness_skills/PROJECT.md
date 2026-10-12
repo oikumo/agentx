@@ -9,7 +9,7 @@
 
 > Procedural OpenCode skills layer over META HARNESS — not a product runtime.
 
-**Next:** session-compat leg (`omt_session` versioned error), then Phase4 validation.
+**Next:** Phase4 validation (smoke + 24-trial + decision); session-compat ✅ 159.
 
 ---
 
@@ -60,7 +60,7 @@ Small procedural `SKILL.md` layer over existing OMT tools/gates/state to cut mis
 - [x] Phase0 base-green Done (uv.lock tracked, pr-critical job, split_proof_meta 39 passed)
 - [x] Phase1 contracts (skill.contract ✅ 154 + envelope ✅ 155 + StateScope ✅ 156)
 - [x] Phase2 pilots (recover-block skeleton ✅ + resume-work ✅ 157 + verify-closeout ✅ 158)
-- [ ] Phase3 evidence (session compat, verify-closeout, doctor)
+- [x] Phase3 session-compat Done (159 versioned `version:1` + `from_session`; verify-closeout ✅ 158; doctors ✅)
 - [ ] Phase4 validation (smoke + 24-trial + decision)
 
 ---

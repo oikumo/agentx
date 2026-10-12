@@ -43,9 +43,28 @@ _SHELL = (";", "rm ", "&&", "|", "$(", "`")
 
 DIRECTORY_CAP = 20
 
+SERVICE_VERSION = 1
+
+
+def _upper_code(name: str) -> str:
+    up = str(name or "").strip().upper()
+    import re as _re
+    up = _re.sub(r"[^A-Z0-9]+", "_", up).strip("_")
+    return up or "REFUSED"
+
 
 def _refuse(error: str, **extra: Any) -> dict[str, Any]:
-    out: dict[str, Any] = {"ok": False, "error": error}
+    out: dict[str, Any] = {"ok": False, "version": SERVICE_VERSION, "error": error}
+    out.update(extra)
+    if "code" not in out:
+        out["code"] = _upper_code(error)
+    if "read_only" not in out:
+        out["read_only"] = True
+    return out
+
+
+def _versioned_error(error: str, code: str, remediation: str, evidence: list, retryable: bool, **extra: Any) -> dict[str, Any]:
+    out: dict[str, Any] = {"ok": False, "version": SERVICE_VERSION, "error": error, "code": code, "remediation": remediation, "evidence": list(evidence), "retryable": bool(retryable), "read_only": True}
     out.update(extra)
     return out
 
@@ -169,6 +188,8 @@ def dispatch(op: str, args: dict[str, Any]) -> dict[str, Any]:
                                                  SessionSelector)
             from session_inspect.normalize import normalize_snapshot
             db = str(args.get("db", ""))
+            if not db.strip():
+                return _versioned_error("missing_db", "MISSING_DB", "pass explicit --db /path/to/opencode.db read-only mode=ro; skills must not hardcode path", ["service dispatch sessions"], True, detail="missing_db")
             ad = OpenCodeSqliteAdapter(db)
             directory = str(args.get("directory", "/repo"))
             raw_ids = args.get("session_ids")
@@ -198,7 +219,7 @@ def dispatch(op: str, args: dict[str, Any]) -> dict[str, Any]:
                     except Exception:
                         cnt = None
                     if isinstance(cnt, int) and cnt > DIRECTORY_CAP:
-                        return {"ok": False, "error": "query_limit_exceeded", "total": cnt, "cap": DIRECTORY_CAP, "cursor": f"sessions:0/{cnt}:cap{DIRECTORY_CAP}", "detail_ref": f"sessions:over-budget:{cnt}>cap{DIRECTORY_CAP}"}
+                        return _versioned_error("query_limit_exceeded", "QUERY_LIMIT_EXCEEDED", "bound with session_ids or time_from/time_to; see detail_ref cursor", [f"sessions:over-budget:{cnt}>cap{DIRECTORY_CAP}"], True, total=cnt, cap=DIRECTORY_CAP, cursor=f"sessions:0/{cnt}:cap{DIRECTORY_CAP}", detail=f"over-budget {cnt}>cap{DIRECTORY_CAP}", detail_ref=f"sessions:over-budget:{cnt}>cap{DIRECTORY_CAP}")
                 sel_kwargs = {"directory": directory}
                 if args.get("time_from"):
                     try:
@@ -217,14 +238,24 @@ def dispatch(op: str, args: dict[str, Any]) -> dict[str, Any]:
             result: dict[str, Any] = {"rows": rows,
                                       "total": len(norm["sessions"])}
             result["detail_ref"] = f"sessions:{len(rows)}/{len(rows)}"
+            result["version"] = SERVICE_VERSION
+            result["read_only"] = True
             body = json.dumps(result, default=str).encode()
             if len(body) > 2048:
                 result["rows"] = result["rows"][:1]
                 result["truncated"] = True
                 result["detail_ref"] = "sessions:truncated"
-            return {"ok": True, "result": result}
+            ok_body: dict[str, Any] = {"ok": True, "version": SERVICE_VERSION, "result": result, "read_only": True}
+            return ok_body
         except Exception as e:
-            return _refuse("sessions_failed", detail=str(e)[:200])
+            detail = str(e)[:200]
+            if "source_unreadable" in detail:
+                return _versioned_error("sessions_failed", "SOURCE_UNREADABLE", "check explicit --db path exists and is readable; adapter opens mode=ro read-only", ["service dispatch sessions"], True, detail=detail, source={"path": str(args.get("db", ""))})
+            if "schema_unsupported" in detail:
+                return _versioned_error("sessions_failed", "SCHEMA_UNSUPPORTED", "live schema drift: pin drizzle markers, do NOT create tables; bound with session_ids", ["service dispatch sessions"], False, detail=detail, source={"path": str(args.get("db", ""))})
+            if "query_limit_exceeded" in detail:
+                return _versioned_error("sessions_failed", "QUERY_LIMIT_EXCEEDED", "bound with session_ids or time_from/time_to", ["service dispatch sessions"], True, detail=detail)
+            return _versioned_error("sessions_failed", "SESSIONS_FAILED", "retry with explicit --db and bounded selector", ["service dispatch sessions"], False, detail=detail)
     if op == "profile":
         try:
             from session_inspect.adapter import (OpenCodeSqliteAdapter,
@@ -326,7 +357,7 @@ def dispatch(op: str, args: dict[str, Any]) -> dict[str, Any]:
                 return _refuse("cursor_stale", detail=msg[:200])
             return _refuse("query_failed", detail=msg[:200])
     # Remaining read ops: bounded pass-through skeleton (full logic in S1–S4 modules).
-    return {"ok": True, "result": {"op": op, "detail_ref": f"{op}:ok"}}
+    return {"ok": True, "version": SERVICE_VERSION, "result": {"op": op, "detail_ref": f"{op}:ok"}, "read_only": True}
 
 
 def main(argv: list[str] | None = None) -> int:

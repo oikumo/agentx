@@ -5,6 +5,7 @@
 // Built inside createSessionTool() so description resolves from compiled IR AFTER
 // initOmtShared (F2/F17, omt_net.ts R8 pattern).
 //
+// feature_159: SERVICE_VERSION=1 passthrough — service owns versioned envelope; plugin returns version:1 on its own refusals and passes service version through unchanged.
 // V2 (migrate-v1): Plugin.define + ctx.tool.transform with JSON-Schema input,
 // {content} results. OP_ARGS/OPS preserved for cross-source pins.
 
@@ -65,12 +66,12 @@ function createSessionTool() {
     async execute(args: any, _context: any) {
       const op = String(args?.op ?? "")
       if (!OPS.includes(op)) {
-        return { content: JSON.stringify({ ok: false, error: "unknown_op", op, message: `want ${OPS.join("|")}` }) }
+        return { content: JSON.stringify({ ok: false, version: 1, error: "unknown_op", code: "UNKNOWN_OP", op, message: `want ${OPS.join("|")}`, read_only: true }) }
       }
       if (op === "experiment") {
         const sub = String((args as any)?.sub ?? "")
         if (sub === "run") {
-          return { content: JSON.stringify({ ok: false, reason: "no_safe_launch", executed: false }) }
+          return { content: JSON.stringify({ ok: false, version: 1, reason: "no_safe_launch", code: "NO_SAFE_LAUNCH", executed: false, read_only: true }) }
         }
       }
       const argv = ["run", "python", "-m", "session_inspect.service", op]
@@ -93,7 +94,7 @@ function createSessionTool() {
       } catch (e: any) {
         const stdout = String(e?.stdout || "").trim()
         if (stdout) return { content: stdout }
-        return { content: JSON.stringify({ ok: false, error: "engine_error", op, message: String(e?.message || e) }) }
+        return { content: JSON.stringify({ ok: false, version: 1, error: "engine_error", code: "ENGINE_ERROR", op, message: String(e?.message || e), read_only: true }) }
       }
     },
   }

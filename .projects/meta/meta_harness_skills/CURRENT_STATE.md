@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-10-12 (auto — feature_159.session_compat_versioned_error Done)
+
+- shipped: major_feature · test report @ 6.testing/features/feature_159.session_compat_versioned_error/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+- Session-compat: service `version:1` on all paths + UPPER_SNAKE `code` + remediation + `read_only:true`; `skill_result.from_session` envelope mapping; plugin versioned refusals; TDD single-cycle 7/7; doctors OK; WORK 11261/11264.
+- next: Phase4 validation (smoke + 24-trial + decision).
+
+---
+
+
 ## 2026-10-12 (auto — feature_158.pilot_verify_closeout Done)
 
 - shipped: major_feature · test report @ 6.testing/features/feature_158.pilot_verify_closeout/test_report.md

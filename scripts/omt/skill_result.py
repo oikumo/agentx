@@ -125,6 +125,36 @@ def from_doctor(rc: int, skill_id: str) -> dict:
     return make_failed("DOCTOR_FAILED", f"doctor {skill_id} failed rc={rc}", [f"doctor {skill_id}"])
 
 
+def from_session(res: dict) -> dict:
+    """Map omt_session service dict to OmtResult envelope v1 (feature_159, fail-closed)."""
+    if not isinstance(res, dict):
+        return make_failed("SESSION_MAPPING_FAILED", "non-dict session result", ["omt_session"])
+    if res.get("ok") is True:
+        result = res.get("result", {}) if isinstance(res.get("result"), dict) else {}
+        ev = [str(result.get("detail_ref", "omt_session"))] if isinstance(result, dict) else ["omt_session"]
+        data = {"version": res.get("version", 1)}
+        return make_succeeded("OK", ev, data=data)
+    code = str(res.get("code", "") or res.get("error", "SESSIONS_FAILED") or "SESSIONS_FAILED")
+    import re as _re
+    code = _re.sub(r"[^A-Z0-9]+", "_", code.strip().upper()).strip("_") or "SESSIONS_FAILED"
+    if not CODE_RE.match(code):
+        code = "SESSIONS_FAILED"
+    detail = str(res.get("detail", "") or res.get("error", "sessions_failed"))
+    remediation = res.get("remediation")
+    ev_list = []
+    if isinstance(res.get("detail_ref"), str) and res["detail_ref"]:
+        ev_list.append(res["detail_ref"])
+    elif detail:
+        ev_list.append(detail[:200])
+    else:
+        ev_list.append("omt_session")
+    blocker: dict = {"gate": "omt_session", "code": code, "message": detail[:300] or code, "requiresApproval": False}
+    if isinstance(remediation, str) and remediation:
+        blocker["remediation"] = remediation[:500]
+    retryable = bool(res.get("retryable", False))
+    return make_blocked(code, blocker, ev_list, retryable)
+
+
 def from_stop_when(stop: str) -> dict:
     if stop == "operation_succeeds":
         return make_succeeded("OK", [stop])
