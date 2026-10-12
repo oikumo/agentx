@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-10-12 (auto — feature_157.pilot_resume_work Done)
+
+- shipped: major_feature · test report @ 6.testing/features/feature_157.pilot_resume_work/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+- Resume-work pilot: contracted manual-only skill + checklist + 7 goldens; TDD single-cycle;
+  doctors OK, 157 7/7, 154+155+156 17/17, split_proof 39/39, WORK 11251/11264.
+- next: recover-block hardening only if witnesses demand, else verify-closeout (Phase3).
+
+---
+
+
 ## 2026-10-12 (auto — feature_156.state_scope Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_156.state_scope/test_report.md
