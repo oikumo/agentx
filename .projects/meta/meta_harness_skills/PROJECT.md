@@ -9,7 +9,7 @@
 
 > Procedural OpenCode skills layer over META HARNESS — not a product runtime.
 
-**Next:** pick an alternative (A/B/C/D in session 2026-10-12 entry) → approve plan → spawn first feature.
+**Next:** Phase1 contracts — spawn `skill contract v1` + `OmtResult envelope` features → implement → Phase2 pilots.
 
 ---
 
@@ -56,9 +56,12 @@ Small procedural `SKILL.md` layer over existing OMT tools/gates/state to cut mis
 
 ## Status
 
-- [ ] First linked feature (header flips draft → active mechanically)
-- [x] Home created 2026-10-11/12, PROJECT.md v0.2 distilled from analisys
-- [ ] Awaiting user pick on alternatives (see CURRENT_STATE 2026-10-12)
+- [x] First linked feature (feature_153.ci_base_green Done 618ed88 — draft → active flipped)
+- [x] Phase0 base-green Done (uv.lock tracked, pr-critical job, split_proof_meta 39 passed)
+- [ ] Phase1 contracts (skill.contract + envelope + StateScope)
+- [ ] Phase2 pilots (recover-block, resume-work)
+- [ ] Phase3 evidence (session compat, verify-closeout, doctor)
+- [ ] Phase4 validation (smoke + 24-trial + decision)
 
 ---
 

@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-10-12 (auto — feature_154.skill_contract_v1 Done)
+
+- shipped: major_feature · test report @ 6.testing/features/feature_154.skill_contract_v1/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-10-12 (auto — feature_153.ci_base_green Done)
 
 - shipped: minor_feature · test report @ 6.testing/features/feature_153.ci_base_green/test_report.md
