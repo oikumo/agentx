@@ -15,6 +15,7 @@
 | meta_harness_13 | complete | feature_131.opencode_session_inspection_and_experiments, feature_132.pilot_launch_path, feature_133.dispatcher_gate_wiring, feature_134.real_trial_launcher | 2026-10-10 | 2026-10-10 |
 | meta_harness_14 | active | feature_135.lean_start_v1_variant, feature_136.json_arg_object_coercion_transport_hardening | 2026-10-10 | 2026-10-10 |
 | meta_harness_15 | active | feature_137.trace_bounded_paging | 2026-10-10 | 2026-10-10 |
+| meta_harness_16 | active | feature_162.frictionless_session_start | 2026-10-12 | 2026-10-12 |
 | meta_harness_2 | complete | feature_020.meta_harness_navigation, feature_021.meta_harness_think_anywhere, feature_022.meta_harness_think_anywhere_v2, feature_023.meta_harness_improvement, feature_026.omt_q_interrogative_first_ops | 2026-10-10 | 2026-10-10 |
 | meta_harness_3 | complete | feature_028.feature_scoped_gating | 2026-10-10 | 2026-10-10 |
 | meta_harness_4 | complete | feature_037.tdd_testlist_prose_fallback | 2026-10-10 | 2026-10-10 |
