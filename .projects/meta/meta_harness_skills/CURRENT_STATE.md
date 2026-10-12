@@ -1,0 +1,82 @@
+# CURRENT_STATE: meta_harness_skills
+
+> Session-by-session log + resume point. Companion to `PROJECT.md` (canonical).
+> Newest entry on top. One `## <date>` block per session.
+
+---
+
+## 2026-10-12 (auto — feature_153.ci_base_green Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_153.ci_base_green/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
+## 2026-10-12 (iter 2 — user said "do all", refined to full scope, plan proposed)
+
+### Done
+
+- User picked ALL (A+B+C+D merged = full 8-week rollout).
+- Refined idea: base-green + contracts + 2 pilots + evidence + validation, single track (see PROJECT.md v0.3 + plan below).
+- PROJECT.md v0.3 (scope locked to ALL).
+
+### In progress / Blocked
+
+- Step 6 PLAN PROPOSAL (this message) — STOP at second gate, no step-7 execution until plan approved.
+
+### Next
+
+- User approves plan (reply S) or requests changes → then spawn features + execute phase by phase.
+
+### Notes / context
+
+- ALL = A ⊇ B,C,D; no extra scope beyond analisys roadmap 10-12→12-04.
+- Resume: `PROJECT.md` §Quick Start → this entry → reply S to execute.
+
+---
+
+## 2026-10-12 (iter 1 — project distilled, awaiting alternative pick)
+
+### Done
+
+- Read `.sandbox/ideas/meta_harness_skills/meta_harness_skills_review_analisys.md` (full 604 lines) + `meta_harness_skills_review_2026-10-11.md` head + workflow chain `.workflows/META.md` → `meta_harness/META.md` → `loops/meta_harness_project.md` (steps 1-3).
+- Toolbox-only harness understand (no src search): `omt_nav{vision, comp.projects, comp.workflows}`.
+- `project.py new "meta_harness_skills"` → `.projects/meta/meta_harness_skills/` draft.
+- PROJECT.md v0.2 distilled (summary/purpose/scope/success/D1-D5/refs, 8-week dates 10-12→12-04).
+
+### In progress / Blocked
+
+- Step 4 PROPOSAL (this message) — STOP at approval gate, no execution past it.
+
+### Next
+
+- User picks A/B/C/D → refine idea → propose plan → `project.py log/status` → spawn first feature via `new_feature.py --project meta_harness_skills`.
+
+### Notes / context
+
+- Live net probe rev0 idle_empty STALE vs file rev60 (NEXT=agentx_concurrent_development) — probe wins; project home create still valid (non-gated, draft).
+- Key risks carried: OMT semantic-contract unequal (Alta), omt_session schema_unsupported (Alta), CI partial + uv.lock missing (Alta), dotenv override=True (Media-Alta), skills-as-instruction-surface (Media-Alta).
+- Resume: `PROJECT.md` §Quick Start → this entry → reply single letter.
+
+---
+
+## 2026-10-11 (iter 0 — project created)
+
+### Done
+
+- Project home created (`project.py new`, state: draft).
+
+### In progress / Blocked
+
+- _(nothing)_
+
+### Next
+
+- <!-- the single next action -->
+
+### Notes / context
+
+- Resume entry point: `PROJECT.md` §New Session Quick Start → this entry → §Next.
+- plan approved ALL 2026-10-12 — start Phase0 base-green
+- feature153 Testing: split_proof_meta 39 passed, preflights clear, ready to commit

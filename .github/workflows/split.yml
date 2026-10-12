@@ -48,3 +48,15 @@ jobs:
       - run: uv run scripts/omt/split_proof.py prove --lane both --out /tmp/opencode/
       - run: uv run scripts/omt/split_proof.py attest-bridge
       - run: uv run scripts/omt/split_proof.py newcomer-probe
+
+  # feature_153: critical pytest + dep check in every PR (not nightly-only).
+  pr-critical:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version-file: ".python-version" }
+      - run: uv sync --frozen
+      - run: uv pip check
+      - run: uv run pytest tests/agentx tests/harness_meta -q

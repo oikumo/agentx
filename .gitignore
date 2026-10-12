@@ -1,7 +1,7 @@
 node_modules/
 /test_sandbox/
 local_sessions/
-uv.lock
+# uv.lock TRACKED (feature_153): reproducible CI `uv sync --frozen` requires it.
 
 # OMT++ process enforcer runtime state (feature_006) — not an artifact.
 # R8: the two compiler-verified projections are tracked (verify-projections diffs
