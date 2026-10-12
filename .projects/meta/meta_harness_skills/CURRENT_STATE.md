@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-10-12 (auto — feature_161.ci_skills_validation_job Done)
+
+- shipped: minor_feature · test report @ 6.testing/features/feature_161.ci_skills_validation_job/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+
+---
+
+
 ## 2026-10-12 (mini 8-trial REVISE — v2 server, pick A)
 
 - decision: REVISE — retain manual-only, drop autoinvoke until launcher slice; doc @ `sandbox/decision_revise_mini_8trial.md`.

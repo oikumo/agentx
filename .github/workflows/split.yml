@@ -60,3 +60,18 @@ jobs:
       - run: uv sync --frozen
       - run: uv pip check
       - run: uv run pytest tests/agentx tests/harness_meta -q
+
+  # feature_161: skills validation on every PR (fast named signal, no live run).
+  skills-validation:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version-file: ".python-version" }
+      - run: uv sync --frozen
+      - run: uv run pytest tests/harness_meta/feature_160.phase4_validation_smoke_24_trial_decision/ -q
+      - run: uv run scripts/omt/skill.py list
+      - run: uv run scripts/omt/skill.py doctor omt-recover-block
+      - run: uv run scripts/omt/skill.py doctor omt-resume-work
+      - run: uv run scripts/omt/skill.py doctor omt-verify-closeout
