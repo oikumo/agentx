@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-10-12 (auto — feature_155.omt_result_envelope Done)
+
+- shipped: major_feature · test report @ 6.testing/features/feature_155.omt_result_envelope/test_report.md
+- logged by omt_complete; expand by hand if resume needs more.
+- envelope: `skill_result.py` + `skill.result.schema.json` + `skill.result.types.ts` + `skill.py` doctor check + 7 goldens; TDD batch single-cycle RED→GREEN same node; doctor OK, 155 7/7, 154 7/7, split_proof_meta 39/39, WORK 11232/11264.
+- next: feature_156 StateScope → Phase2 pilots (recover-block, resume-work manual-only).
+
+---
+
+
 ## 2026-10-12 (auto — feature_154.skill_contract_v1 Done)
 
 - shipped: major_feature · test report @ 6.testing/features/feature_154.skill_contract_v1/test_report.md

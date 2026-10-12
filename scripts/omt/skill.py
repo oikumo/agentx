@@ -132,6 +132,10 @@ def cmd_doctor(skill_id: str) -> int:
     if errs:
         print("\n".join(errs))
         return 2
+    schema_path = REPO / ".meta" / "templates" / "skill.result.schema.json"
+    if not schema_path.exists():
+        print("ERR result_schema_file: missing skill.result.schema.json")
+        return 2
     print(f"✅ {skill_id} contract OK")
     return 0
 

@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "outcome": "succeeded",
+  "code": "OK",
+  "evidence": [
+    "doctor omt-recover-block"
+  ],
+  "retryable": false
+}
